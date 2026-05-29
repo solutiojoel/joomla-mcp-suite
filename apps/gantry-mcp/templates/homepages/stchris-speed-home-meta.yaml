@@ -1,0 +1,64 @@
+site: https://stchris-speed.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+    notes: "alert bar"
+  - id: navigation
+    particles: [menu, blockcontent, logo]
+    notes: "center-of-attention nav style"
+  - id: slideshow
+    particles: [swiper, contentarray]
+    notes: "hero swiper"
+  - id: utility
+    particles: [contentarray]
+    notes: "mass times overlay"
+  - id: sidebar
+    particles: [custom, contentarray]
+  - id: mainbar
+    particles: [contentarray]
+    notes: "news content"
+  - id: extension
+    particles: [custom, timeline]
+    notes: "events timeline in extension area"
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - cal-button
+  - cal-title
+  - center-of-attention
+  - ec-row
+  - facebook-widget-container
+  - fullwidth-swiper
+  - headlines-spacing
+  - hidden-phone
+  - mass-times-overlay
+  - modern-alert
+  - news-button
+  - news-to-me
+  - parish-mission-wrapper
+  - ph-sideway-stack
+  - pop-up-block-2
+  - ql-toplinks-vertical-studius
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - standard-ql
+  - stock
+
+design_notes: |
+  Center-of-attention navigation style. Timeline in extension section for events.
+  Parish mission wrapper section. Sideway-stack photo headlines.
+  News-to-me news layout. Vertical QL toplinks. Mass times overlay.

@@ -1,0 +1,74 @@
+# Section Template: Link Boxes / Ministry Card Grid
+# Usage: Full-width card grid linking to ministry/resource pages
+# Place in: #Home outline, expanded section
+#
+# CUSTOMIZATION:
+#   Replace subcontents with 4-8 ministry or resource links.
+#   Images: gantry-media://template/{filename}.png or .jpg
+#   class: "full-image" on each item makes the image fill the card.
+
+id: expanded
+type: section
+
+grids:
+  - blocks:
+      - size: 100
+        blockClass: link-boxes
+        particle: blockcontent
+        title: "Links"
+        attributes:
+          source: particle
+          title: ""
+          subcontents:
+            - name: "Faith Formation"
+              button: "Faith Formation"
+              buttonlink: "/faith-formation"
+              buttontarget: "_self"
+              img: "gantry-media://template/faith-formation.jpg"
+              class: "full-image"
+              accent: none
+              icon: ""
+              subtitle: ""
+              description: ""
+              buttonclass: ""
+              rokboximage: ""
+              rokboxcaption: ""
+            - name: "Sacraments"
+              button: "Sacraments"
+              buttonlink: "/sacraments"
+              buttontarget: "_self"
+              img: "gantry-media://template/sacraments.jpg"
+              class: "full-image"
+              accent: none
+              icon: ""
+              subtitle: ""
+              description: ""
+              buttonclass: ""
+              rokboximage: ""
+              rokboxcaption: ""
+            - name: "Ministries"
+              button: "Ministries"
+              buttonlink: "/ministries"
+              buttontarget: "_self"
+              img: "gantry-media://template/ministries.jpg"
+              class: "full-image"
+              accent: none
+              icon: ""
+              subtitle: ""
+              description: ""
+              buttonclass: ""
+              rokboximage: ""
+              rokboxcaption: ""
+            - name: "Parish Life"
+              button: "Parish Life"
+              buttonlink: "/parish-life"
+              buttontarget: "_self"
+              img: "gantry-media://template/parish-life.jpg"
+              class: "full-image"
+              accent: none
+              icon: ""
+              subtitle: ""
+              description: ""
+              buttonclass: ""
+              rokboximage: ""
+              rokboxcaption: ""

@@ -1,0 +1,70 @@
+site: https://stwen-dick.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 14
+menu_item_url: /index.php?Itemid=184
+site_type: parish
+captured: 2026-05-21
+sections:
+  - id: top
+    particles: [contentarray, custom]
+  - id: navigation
+    particles: [menu, logo]
+  - id: slideshow
+    particles: [contentarray, swiper]
+  - id: header
+    particles: []
+  - id: above
+    particles: []
+  - id: feature
+    particles: []
+  - id: showcase
+    particles: []
+  - id: utility
+    particles: [blockcontent]
+  - id: sidebar
+    particles: []
+  - id: mainbar
+    particles: [contentarray, custom]
+  - id: aside
+    particles: []
+  - id: expanded
+    particles: [contentarray]
+  - id: extension
+    particles: [contentarray]
+  - id: bottom
+    particles: []
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+block_classes:
+  - calendar-widget-container
+  - circle-ql
+  - facebook-widget-container
+  - formed-container
+  - free-menu
+  - fullwidth-swiper
+  - headlines-rounded-square
+  - hidden-phone
+  - homily-widget-container
+  - modern-alert
+  - news-button
+  - news-title
+  - ph-rounded-square
+  - ph-rounded-square-mobile
+  - ph-wide
+  - pop-up-block-2
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - standard-ql
+  - stock
+  - swiper-mass-times-overlay
+  - welcome-container
+  - widget-container
+  - widget-parthenon-alt
+design_notes: |
+  Parish home. Free-menu nav style. Fullwidth swiper with mass-times overlay.
+  Rounded-square photo headers. News headlines. Calendar, Facebook, Formed, and Homily
+  widgets. Circle QL style. Welcome container present. Ads (901/902/903).

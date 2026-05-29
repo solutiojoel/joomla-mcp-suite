@@ -1,0 +1,62 @@
+site: https://stchris-speed.backup.solutiosoftware.com/
+outline_name: "#School Home"
+outline_id: 72
+menu_item_url: null
+menu_item_url_note: "No dedicated menu item found with templateStyleId=72"
+site_type: school
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [menu, blockcontent, logo]
+    notes: "center-of-attention nav"
+  - id: slideshow
+    particles: [swiper, contentarray]
+  - id: feature
+    particles: [blockcontent]
+    notes: "mass times block in feature section"
+  - id: utility
+    particles: [contentarray]
+  - id: mainbar
+    particles: [custom, contentarray]
+    notes: "school content"
+  - id: expanded
+    particles: [contentarray]
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - calbox-container
+  - center-of-attention
+  - facebook-widget-container
+  - floatator
+  - fullwidth-swiper
+  - grid
+  - grid-articles
+  - grid-columns-4
+  - grid-hover-scale
+  - grid-image-border-radius-1
+  - grid-img-box-shadow-50
+  - grid-mobile-horizontal-scroll
+  - grid-mobile-stacked
+  - grid-square
+  - grid-text-black
+  - grid-text-body
+  - grid-title-600
+  - grid-title-black
+  - grid-title-body
+  - hidden-phone
+  - mass-times-block
+  - modern-alert
+  - news-button
+  - pop-box
+  - pop-up-block-2
+
+design_notes: |
+  School variant with 4-column grid layout, square images, floatator rotator.
+  Mass times block, calbox container. Grid with hover scale, box shadow 50%.
+  Pop-box widget. Different grid style from other school homes (square vs rounded).

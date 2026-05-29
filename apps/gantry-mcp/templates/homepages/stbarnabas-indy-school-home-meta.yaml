@@ -1,0 +1,16 @@
+site: https://stbarnabas-indy.backup.solutiosoftware.com/
+outline_name: "School Home"
+outline_id: 33
+menu_item_url: null
+site_type: parish
+theme: rt_clarity
+captured: 2026-05-21
+notes: >
+  This site uses rt_clarity theme (not rt_studius). The export_outline_blueprint tool
+  returns empty layout (root: []) for rt_clarity outlines. Blueprint JSON saved as
+  placeholder only. School menu exists (school-menu, school-submenu) but no
+  Home menu item was checked for it.
+sections: []
+block_classes: []
+design_notes: |
+  School home. rt_clarity theme. Blueprint capture failed — empty layout returned.

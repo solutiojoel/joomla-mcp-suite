@@ -1,0 +1,77 @@
+name: position
+title: Module Position
+category: layout
+
+description: >
+  A named module position placeholder. Renders whatever Joomla modules are
+  published to the named position. Used for footer columns (Footer A/B/C),
+  ad blocks, and any area managed via Joomla's module manager rather than
+  Gantry particles. The position name must match the module position name
+  defined in the theme and used when publishing modules in Joomla.
+
+when_to_use:
+  - Footer column positions (footer-a, footer-b, footer-c)
+  - Ad/sponsor blocks (home-ads, side-ads)
+  - Any section where Joomla module manager controls the content
+
+when_not_to_use:
+  - Navigation (use menu particle)
+  - Structured content (use contentarray or blockcontent)
+
+common_block_classes:
+  ads-903 side-ads ads-901 ads-902: Home ads column block
+  "" : Footer positions typically have no extra block class
+
+standard_position_names:
+  footer-a: Left footer column
+  footer-b: Center footer column
+  footer-c: Right footer column
+  home-ads: Sidebar ad block on homepage
+  pop-up: Popup module position
+  subsite-navigation: Subsite navigation links
+  bottom: Bottom-of-page module strip
+
+attributes:
+  key:
+    type: string
+    description: >
+      The position name string (e.g. "footer-a", "home-ads"). This is the
+      value shown in Joomla's module position selector. Must match exactly.
+  chrome:
+    type: string
+    default: ""
+    description: Module chrome wrapper style (leave blank for default).
+  enabled:
+    type: integer
+    default: 1
+
+notes:
+  - >
+    The position particle subtype appears in two forms in the export YAML:
+    type:position subtype:position (named position) and
+    type:position subtype:module (module-type position).
+    For most footer and ad positions, use subtype:module.
+  - >
+    Position names are hardcoded in the rt_studius theme. Use only the
+    standard names listed above unless you have verified a custom position
+    exists in the theme's templateDetails.xml.
+
+rendered_html:
+  outer_wrapper: "div.g-block.{blockClass}"
+  inner_wrapper: "div.g-content"
+  particle_element: "div.g-position"
+
+examples:
+  footer_a:
+    description: Left footer column
+    blockClass: ""
+    type: position
+    subtype: position
+    title: "Footer A"
+
+  home_ads:
+    description: Sidebar ad block
+    blockClass: ads-903 side-ads ads-901 ads-902
+    type: position
+    subtype: module
+    title: "Home Ads"

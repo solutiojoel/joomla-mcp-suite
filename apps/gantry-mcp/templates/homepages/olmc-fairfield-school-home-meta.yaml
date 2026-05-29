@@ -1,0 +1,72 @@
+site: https://olmc-fairfield.backup.solutiosoftware.com/
+outline_name: "#School Home"
+outline_id: 72
+menu_item_url: null
+menu_item_url_note: "No dedicated menu item found with templateStyleId=72"
+site_type: school
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+    notes: "alert bar"
+  - id: navigation
+    particles: [menu, blockcontent, social, logo]
+    notes: "school nav with social icons"
+  - id: slideshow
+    particles: [swiper, blockcontent, custom]
+    notes: "school hero slideshow"
+  - id: header
+    particles: []
+  - id: above
+    particles: []
+  - id: feature
+    particles: []
+  - id: showcase
+    particles: []
+  - id: utility
+    particles: [blockcontent]
+  - id: sidebar
+    particles: [custom, contentarray]
+  - id: mainbar
+    particles: [custom, timeline]
+    notes: "school events timeline"
+  - id: aside
+    particles: []
+  - id: expanded
+    particles: [contentarray]
+  - id: extension
+    particles: []
+  - id: bottom
+    particles: []
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - calendar-button
+  - calendar-title
+  - crawl-space
+  - daily-readings-widget-container
+  - ec-vert
+  - facebook-widget-container
+  - formed-widget-container
+  - fullwidth-swiper
+  - grand-entry
+  - grid
+  - grid-articles
+  - grid-bg-primary
+  - grid-g-grid-border-radius-1-point-5
+  - grid-g-grid-box-shadow
+  - grid-hover-scale
+  - grid-image-border-radius-1
+  - grid-img-border-2-tertiary
+
+design_notes: |
+  School variant with timeline particle for events, grid news cards.
+  Grand-entry hero area. Calendar button/title for school calendar.
+  Daily readings widget. Grid with rounded images, box shadows, tertiary borders.

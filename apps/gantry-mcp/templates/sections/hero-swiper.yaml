@@ -1,0 +1,69 @@
+# Section Template: Hero Swiper + Mass Times Sidebar
+# Usage: Homepage slideshow section
+# Layout: 70% full-width slider | 30% mass times content block
+# Place in: #Home outline, slideshow section
+#
+# REQUIRED CONTEXT VARIABLES:
+#   {{mass_times_article_id}} — Joomla article ID of the mass times shell article
+
+id: slideshow
+type: section
+attributes:
+  class: "floatator slideshow-spacing"
+
+grids:
+  - blocks:
+      # Hero slider — 70% width
+      - size: 70
+        blockClass: fullwidth-swiper rotate-wide
+        particle: swiper
+        title: "Hero Slider"
+        attributes:
+          class: ""
+          source: joomla
+          image: img
+          height: "36vw"
+          heightMobile: "56vw"
+          nav: enabled
+          pagination: bullets
+          autoplay: enabled
+          autoplayTimeout: "8000"
+          loop: enabled
+          speed: "800"
+          slides_linkable: disabled
+          touchmove: enabled
+          overlaycolor: "rgba(255, 255, 255, 0)"
+          direction: horizontal
+          effect: slide
+          items: []
+          largedesktopslides: "1"
+          largedesktopgroup: "1"
+          largedesktopspace: "0"
+          desktopslides: "1"
+          desktopgroup: "1"
+          desktopspace: "0"
+          tabletslides: "1"
+          tabletgroup: "1"
+          tabletspace: "0"
+
+      # Mass times sidebar — 30% width
+      - size: 30
+        blockClass: mass-times-block
+        particle: contentarray
+        title: "Mass Times"
+        attributes:
+          article:
+            filter:
+              categories: ""
+              articles: "{{mass_times_article_id}}"
+              featured: include
+            limit:
+              total: "1"
+              columns: "1"
+              start: "0"
+            display:
+              pagination_buttons: ""
+              title: { enabled: "hide" }
+            sort:
+              orderby: ordering
+              ordering: ASC

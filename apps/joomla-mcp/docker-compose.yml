@@ -1,0 +1,12 @@
+services:
+  joomla-mcp:
+    build: .
+    ports:
+      - "18300:18300"
+    env_file:
+      - .env
+    environment:
+      HTTP_PORT: "18300"
+    volumes:
+      - C:\joomla-mcp-update:/app/workspace:ro
+    restart: unless-stopped

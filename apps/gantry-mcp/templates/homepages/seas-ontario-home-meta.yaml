@@ -1,0 +1,75 @@
+site: https://seas-ontario.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+    notes: "alert bar"
+  - id: navigation
+    particles: [logo, social, menu]
+    notes: "nav with social icons, crawl-space style"
+  - id: slideshow
+    particles: [swiper, contentarray]
+    notes: "hero swiper slideshow"
+  - id: header
+    particles: []
+  - id: above
+    particles: []
+  - id: feature
+    particles: []
+  - id: showcase
+    particles: []
+  - id: utility
+    particles: [blockcontent]
+    notes: "mass schedule overlay"
+  - id: sidebar
+    particles: [contentarray, custom]
+  - id: mainbar
+    particles: []
+  - id: aside
+    particles: []
+  - id: expanded
+    particles: [contentarray]
+  - id: extension
+    particles: []
+  - id: bottom
+    particles: []
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - crawl-space
+  - fullwidth-swiper
+  - grand-entry
+  - headlines-spacing
+  - hidden-phone
+  - modern-alert
+  - mt-overlay-schedule
+  - nav-social-icons
+  - news-button
+  - news-to-me
+  - ph-sidenews
+  - pop-up-block-2
+  - ql-circle-row
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - slideshow-spacing
+  - standard-ql
+  - stock
+  - welcome-box
+
+design_notes: |
+  Swiper hero with sidebar layout. Mass schedule overlay in utility section.
+  Grand-entry rotator style. News-to-me news section with circle quick links.
+  Welcome box feature. Standard QL quick links layout.

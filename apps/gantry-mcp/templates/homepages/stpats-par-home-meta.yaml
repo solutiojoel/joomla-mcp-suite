@@ -1,0 +1,71 @@
+site: https://stpats-par.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 29
+menu_item_url: /index.php?Itemid=1415
+menu_type: main-menu-cl
+site_type: parish
+captured: 2026-05-21
+note: "Site has multiple template systems (Gemini, Clarity, Studius). Studius #Home used in main-menu-cl menu."
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+    notes: "alert bar"
+  - id: navigation
+    particles: [blockcontent, logo, social, menu, contentarray]
+    notes: "crawl-space nav with social icons and nav-container"
+  - id: slideshow
+    particles: [swiper]
+    notes: "hero swiper, grand-entry style"
+  - id: header
+    particles: [contentarray]
+  - id: above
+    particles: [blockcontent]
+    notes: "mass schedule container"
+  - id: feature
+    particles: [contentarray]
+    notes: "news container"
+  - id: showcase
+    particles: [contentarray]
+  - id: utility
+    particles: [blockcontent]
+  - id: expanded
+    particles: [contentarray]
+  - id: extension
+    particles: [contentarray]
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - bulletin-widget-container
+  - calendar-widget
+  - crawl-space
+  - facebook-widget-container
+  - flocknotes-container
+  - fullwidth-swiper
+  - grand-entry
+  - hidden-phone
+  - mass-sched-container
+  - mission-container
+  - modern-alert
+  - nav-container
+  - nav-social-icons
+  - news-container
+  - pop-up-block-2
+  - ql-shamrocks
+  - ql-toplinks-studius
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - slideshow-spacing
+
+design_notes: |
+  St. Patrick's - crawl-space nav, shamrock QL style (ql-shamrocks).
+  Mission container, flocknotes, mass schedule, bulletin widget.
+  Grand-entry hero rotator. Multiple template systems on same site (Gemini/Clarity/Studius).

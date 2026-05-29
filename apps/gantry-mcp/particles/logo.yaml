@@ -1,0 +1,56 @@
+name: logo
+title: Logo / Branding
+category: navigation
+
+description: >
+  Displays the site logo image. The theme's logo particle pulls the logo
+  from Gantry's styles configuration (set via gantry_styles_edit). The
+  particle itself typically has no attributes beyond enabled — the actual
+  logo image path is stored in the theme styles, not in the particle.
+  Parish sites use two logo instances: one full-size for desktop/tablet
+  (hidden on phone), one smaller for mobile.
+
+when_to_use:
+  - Navigation section, left or center column
+  - Mobile logo (show-mobile block class) in a separate grid row at top of navigation
+
+when_not_to_use:
+  - Footer branding (use contentarray pointing to a footer article instead)
+
+common_block_classes:
+  hidden-phone: Desktop/tablet logo — hidden on mobile
+  show-mobile: Mobile-only logo shown at top of navigation on small screens
+
+attributes:
+  enabled:
+    type: integer
+    default: 1
+    description: 1 to show, 0 to hide. Always 1 for logo.
+
+rendered_html:
+  outer_wrapper: "div.g-block.{blockClass}"
+  inner_wrapper: "div.g-content"
+  particle_element: "div.g-logo"
+  logo_element: "a.g-logo img"
+
+notes:
+  - >
+    To change the logo image, use gantry_styles_edit to set the
+    logo/logoImage or branding/logo_image style variable — not the
+    particle attributes.
+  - >
+    The logo particle typically inherits from the #Outline base outline.
+    Do not override it in #Home or #Grid unless the logo genuinely differs.
+
+examples:
+  desktop_logo:
+    description: Full-size logo, hidden on mobile
+    blockClass: hidden-phone
+    attributes:
+      enabled: 1
+
+  mobile_logo:
+    description: Mobile-only logo at top of nav
+    blockClass: show-mobile
+    attributes:
+      enabled: 1

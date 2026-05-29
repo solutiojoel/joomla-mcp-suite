@@ -1,0 +1,66 @@
+site: https://stpats-par.backup.solutiosoftware.com/
+outline_name: "#School Home"
+outline_id: 63
+menu_item_url: /index.php?Itemid=1448
+menu_type: school-menu-cl
+site_type: school
+captured: 2026-05-21
+note: "School home for St. Patrick's Catholic School, Parsons KS"
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [logo, contentarray]
+    notes: "school nav"
+  - id: slideshow
+    particles: [swiper]
+    notes: "grand-entry hero"
+  - id: above
+    particles: [blockcontent]
+  - id: feature
+    particles: [contentarray]
+    notes: "news container"
+  - id: showcase
+    particles: [custom, timeline]
+    notes: "events timeline in showcase section"
+  - id: utility
+    particles: [blockcontent]
+  - id: expanded
+    particles: [contentarray]
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - bulletin-widget-container
+  - calendar-widget
+  - crawl-space
+  - facebook-widget-container
+  - fullwidth-swiper
+  - grand-entry
+  - modern-alert
+  - nav-container
+  - news-container
+  - pop-up-block-2
+  - ql-shamrocks
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - slideshow-spacing
+  - stack-container
+  - stewardship-container
+  - stock
+  - ue-button
+  - ue-sideitems
+  - ue-title
+
+design_notes: |
+  School home with timeline in showcase section. Unique UE (Universal Events?) widgets.
+  Stewardship container, stack container. Shamrock QL style matching parish.
+  Calendar widget, bulletin widget. No flocknotes in school version.

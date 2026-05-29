@@ -1,0 +1,66 @@
+site: https://stagnes-concord.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [contentarray, custom]
+  - id: navigation
+    particles: [logo, menu, social, blockcontent]
+    notes: "free-menu nav with social icons"
+  - id: slideshow
+    particles: [contentarray, swiper]
+    notes: "hero swiper"
+  - id: utility
+    particles: [blockcontent]
+    notes: "mass times block"
+  - id: sidebar
+    particles: [contentarray, custom]
+    notes: "sidenews, calendar"
+  - id: mainbar
+    particles: [contentarray]
+    notes: "news-to-me style"
+  - id: expanded
+    particles: [contentarray]
+  - id: extension
+    particles: [blockcontent, custom]
+    notes: "QL ilinks block"
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - calendar-container
+  - floatator
+  - free-menu
+  - fullwidth-swiper
+  - headlines-spacing
+  - hidden-phone
+  - ilinks-button
+  - mass-times-block
+  - modern-alert
+  - nav-social-icons
+  - news-button
+  - news-to-me
+  - ph-sidenews
+  - photoalbum-container
+  - pop-up-block-2
+  - ql-blocktitle
+  - ql-ilinks
+  - ql-toplinks-studius
+  - rotate-wide
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+
+design_notes: |
+  Free-menu navigation with social icons. QL-ilinks quick link style (icon links).
+  Sidenews sidebar. Photoalbum container. QL-blocktitle styling.
+  News-to-me news section. Floatator rotator.

@@ -1,0 +1,75 @@
+site: https://stbon-antonio.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+notes: No #School Home outline — parish-only site.
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [social, logo, menu]
+  - id: slideshow
+    particles: [swiper, contentarray]
+  - id: header
+    particles: [blockcontent]
+  - id: above
+    particles: []
+  - id: feature
+    particles: []
+  - id: showcase
+    particles: []
+  - id: utility
+    particles: []
+  - id: sidebar
+    particles: []
+  - id: mainbar
+    particles: [contentarray]
+  - id: aside
+    particles: []
+  - id: expanded
+    particles: [custom, contentarray]
+  - id: extension
+    particles: [contentarray]
+  - id: bottom
+    particles: []
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+block_classes:
+  - blfb-container
+  - bulletin-widget-container
+  - facebook-widget-container
+  - floatator
+  - fotm-container
+  - free-menu
+  - fullwidth-swiper
+  - grid
+  - grid-articles
+  - grid-bg-img-flush-white
+  - grid-hover-scale
+  - grid-mobile-stacked
+  - grid-no-img
+  - grid-title-secondary
+  - hidden-phone
+  - mass-times-block
+  - modern-alert
+  - nav-social-icons
+  - news-button
+  - pop-up-block-2
+  - ql-buttons
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - slideshow-spacing
+  - standard-ql
+  - stock
+  - widget-container
+design_notes: |
+  Parish-only home (no school). Free-menu nav style with social icons. Fullwidth swiper.
+  Grid articles with white-flush background. Mass times block. Bulletin, Facebook,
+  and FOTM (Formed/other) widgets. Floatator rotator present. QL buttons in expanded.
+  Ads (901/902/903) present.

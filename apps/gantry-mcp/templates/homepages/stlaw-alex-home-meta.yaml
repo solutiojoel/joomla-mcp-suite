@@ -1,0 +1,90 @@
+site: https://stlaw-alex.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+
+# Key sections observed in the layout tree
+sections:
+  - id: top
+    particles: [custom, contentarray]
+    notes: "alert bar / top strip"
+  - id: navigation
+    particles: [contentarray, menu, logo]
+    notes: "main nav with logo"
+  - id: slideshow
+    particles: [custom, contentarray, swiper]
+    notes: "hero slideshow area"
+  - id: header
+    particles: []
+  - id: above
+    particles: []
+  - id: feature
+    particles: []
+  - id: showcase
+    particles: []
+  - id: utility
+    particles: [blockcontent]
+    notes: "mass times / utility bar"
+  - id: sidebar
+    particles: [custom, contentarray]
+    notes: "sidebar widgets"
+  - id: mainbar
+    particles: [contentarray]
+    notes: "main news/content area"
+  - id: aside
+    particles: []
+  - id: expanded
+    particles: [contentarray]
+    notes: "expanded content row"
+  - id: extension
+    particles: [contentarray]
+  - id: bottom
+    particles: [blockcontent, contentarray]
+    notes: "bottom blocks / quick links"
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+# Block classes that appear in this layout (from blueprint scan)
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - bulletin-widget-container
+  - calendar-container
+  - crawl-space
+  - facebook-widget-container
+  - formed-widget-container
+  - fullwidth-swiper
+  - grand-entry
+  - headlines-spacing
+  - hidden-phone
+  - mass-schedule-overlay-button
+  - mass-times-overlay
+  - modern-alert
+  - nav-contactinfo
+  - news-button
+  - news-to-me
+  - ph-titlestack
+  - pop-up-block-2
+  - ql-boxtitle
+  - rotate-sw
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - sign-container
+  - sl-container
+  - slideshow-spacing
+  - standard-ql
+
+# What makes this layout visually distinctive
+design_notes: |
+  Swiper hero slideshow at top, crawl-space navigation style.
+  Sidebar + mainbar layout with news content and ads.
+  Mass schedule overlay, bulletin widget, calendar widget.
+  Bottom row uses blockcontent for quick-link blocks.
+  News-to-me style news section with rounded headlines.

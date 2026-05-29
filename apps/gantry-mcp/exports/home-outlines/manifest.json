@@ -1,0 +1,72 @@
+[
+  {
+    "site": "https://stagnes-concord.backup.solutiosoftware.com",
+    "outline": "33",
+    "file": "exports/home-outlines/stagnes-concord-home.yaml",
+    "ok": true,
+    "output": "Exported layout (outline 33) to exports/home-outlines/stagnes-concord-home.yaml (50050 bytes)"
+  },
+  {
+    "site": "https://stlaw-alex.backup.solutiosoftware.com",
+    "outline": "33",
+    "file": "exports/home-outlines/stlaw-alex-home.yaml",
+    "ok": true,
+    "output": "Exported layout (outline 33) to exports/home-outlines/stlaw-alex-home.yaml (47356 bytes)"
+  },
+  {
+    "site": "https://shelbyville.backup.solutiosoftware.com",
+    "outline": "20",
+    "file": "exports/home-outlines/shelbyville-home.yaml",
+    "ok": true,
+    "output": "Exported layout (outline 20) to exports/home-outlines/shelbyville-home.yaml (47219 bytes)"
+  },
+  {
+    "site": "https://assumption-center.backup.solutiosoftware.com",
+    "outline": "33",
+    "file": "exports/home-outlines/assumption-center-home.yaml",
+    "ok": true,
+    "output": "Exported layout (outline 33) to exports/home-outlines/assumption-center-home.yaml (37444 bytes)"
+  },
+  {
+    "site": "https://stgertrude-bay.backup.solutiosoftware.com",
+    "outline": "33",
+    "file": "exports/home-outlines/stgertrude-bay-home.yaml",
+    "ok": true,
+    "output": "Exported layout (outline 33) to exports/home-outlines/stgertrude-bay-home.yaml (46706 bytes)"
+  },
+  {
+    "site": "https://stbon-tipton.backup.solutiosoftware.com",
+    "outline": "33",
+    "file": "exports/home-outlines/stbon-tipton-home.yaml",
+    "ok": true,
+    "output": "Exported layout (outline 33) to exports/home-outlines/stbon-tipton-home.yaml (46180 bytes)"
+  },
+  {
+    "site": "https://stchris-speed.backup.solutiosoftware.com",
+    "outline": "33",
+    "file": "exports/home-outlines/stchris-speed-home.yaml",
+    "ok": true,
+    "output": "Exported layout (outline 33) to exports/home-outlines/stchris-speed-home.yaml (40945 bytes)"
+  },
+  {
+    "site": "https://stbosco-hammond.backup.solutiosoftware.com",
+    "outline": "56",
+    "file": "exports/home-outlines/stbosco-hammond-home.yaml",
+    "ok": false,
+    "output": "[https://stbosco-hammond.backup.solutiosoftware.com] Command failed: Layout fetch 404: <!DOCTYPE html>\n<html lang=\"en-gb\" dir=\"ltr\">\n<head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n    <meta ch"
+  },
+  {
+    "site": "https://dodge.backup.solutiosoftware.com",
+    "outline": "33",
+    "file": "exports/home-outlines/dodge-home.yaml",
+    "ok": false,
+    "output": "[https://dodge.backup.solutiosoftware.com] Command failed: Layout fetch 404: <!DOCTYPE html>\n<html lang=\"en-gb\" dir=\"ltr\">\n<head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n    <meta ch"
+  },
+  {
+    "site": "https://stliz-melville.backup.solutiosoftware.com",
+    "outline": "33",
+    "file": "exports/home-outlines/stliz-melville-home.yaml",
+    "ok": true,
+    "output": "Exported layout (outline 33) to exports/home-outlines/stliz-melville-home.yaml (46077 bytes)"
+  }
+]

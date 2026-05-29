@@ -1,0 +1,62 @@
+site: https://shelbyville.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 20
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+    notes: "alert bar"
+  - id: navigation
+    particles: [custom, blockcontent, menu, logo]
+    notes: "center-of-attention nav with blockcontent"
+  - id: slideshow
+    particles: [contentarray, swiper]
+    notes: "hero swiper"
+  - id: header
+    particles: [blockcontent, contentarray]
+    notes: "info boxes, mass times block"
+  - id: mainbar
+    particles: [custom, contentarray]
+    notes: "news content"
+  - id: expanded
+    particles: [contentarray]
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - beads-bottom
+  - calendar-widget-container
+  - center-of-attention
+  - facebook-widget-container
+  - floatator
+  - flocknotes-container
+  - formed-widget-container
+  - fullwidth-swiper
+  - headlines-rounded-square
+  - hidden-phone
+  - info-box-container
+  - mass-times-block
+  - modern-alert
+  - news-button
+  - news-title
+  - ph-shadowbox2
+  - pop-up-block-2
+  - ql-portraitbox
+  - ql-toplinks-studius
+  - rotate-wide
+  - s-padding-2
+  - s-vertical-padding-2
+
+design_notes: |
+  Center-of-attention nav. Beads-bottom decorative element.
+  Headlines-rounded-square news style. Portrait-box quick links.
+  Shadowbox2 photo display. Info-box and flocknotes containers.
+  Floatator rotator. Calendar widget.

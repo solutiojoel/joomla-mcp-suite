@@ -1,0 +1,62 @@
+[
+  {
+    "site": "https://stagnes-concord.backup.solutiosoftware.com",
+    "file": "exports/override-css/stagnes-concord-home.override.css",
+    "ok": true,
+    "message": "downloaded"
+  },
+  {
+    "site": "https://stlaw-alex.backup.solutiosoftware.com",
+    "file": "exports/override-css/stlaw-alex-1-home.override.css",
+    "ok": true,
+    "message": "downloaded"
+  },
+  {
+    "site": "https://shelbyville.backup.solutiosoftware.com",
+    "file": "exports/override-css/shelbyville-home.override.css",
+    "ok": true,
+    "message": "downloaded"
+  },
+  {
+    "site": "https://assumption-center.backup.solutiosoftware.com",
+    "file": "exports/override-css/assumption-center-home.override.css",
+    "ok": true,
+    "message": "downloaded"
+  },
+  {
+    "site": "https://stgertrude-bay.backup.solutiosoftware.com",
+    "file": "exports/override-css/stgertrude-bay-home.override.css",
+    "ok": true,
+    "message": "downloaded"
+  },
+  {
+    "site": "https://stbon-tipton.backup.solutiosoftware.com",
+    "file": "exports/override-css/stbon-tipton-home.override.css",
+    "ok": true,
+    "message": "downloaded"
+  },
+  {
+    "site": "https://stchris-speed.backup.solutiosoftware.com",
+    "file": "exports/override-css/stchris-speed-home.override.css",
+    "ok": true,
+    "message": "downloaded"
+  },
+  {
+    "site": "https://stbosco-hammond.backup.solutiosoftware.com",
+    "file": "exports/override-css/stbosco-hammond-1-home.override.css",
+    "ok": true,
+    "message": "downloaded"
+  },
+  {
+    "site": "https://dodge.backup.solutiosoftware.com",
+    "file": "exports/override-css/dodge-home.override.css",
+    "ok": true,
+    "message": "downloaded"
+  },
+  {
+    "site": "https://stliz-melville.backup.solutiosoftware.com",
+    "file": "exports/override-css/stliz-melville-home.override.css",
+    "ok": true,
+    "message": "downloaded"
+  }
+]

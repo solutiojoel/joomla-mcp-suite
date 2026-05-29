@@ -1,0 +1,71 @@
+# Section Template: 3-Column Footer + Copyright Bar
+# Usage: Standard parish footer with three module position columns,
+#        a footer content article, and a copyright/admin bar.
+# Place in: #Outline (base), container-footer
+#
+# REQUIRED CONTEXT VARIABLES:
+#   {{footer_article_id}} — Joomla article ID of the footer shell article
+#
+# Module positions footer-a, footer-b, footer-c are standard rt_studius positions.
+# Assign Joomla modules to these positions in the Joomla module manager.
+
+sections:
+  footer:
+    id: footer
+    type: footer
+    attributes:
+      class: "s-padding-2"
+    grids:
+      # Three-column module positions
+      - blocks:
+          - size: 33.3
+            particle: position
+            title: "Footer A"
+            position_type: position
+          - size: 33.3
+            particle: position
+            title: "Footer B"
+            position_type: position
+          - size: 33.3
+            particle: position
+            title: "Footer C"
+            position_type: position
+      # Footer content article (contact info, logo, links)
+      - blocks:
+          - size: 100
+            particle: contentarray
+            title: "Footer"
+            attributes:
+              article:
+                filter:
+                  categories: ""
+                  articles: "{{footer_article_id}}"
+                  featured: include
+                limit:
+                  total: "1"
+                  columns: "1"
+                display:
+                  pagination_buttons: ""
+                sort:
+                  orderby: ordering
+                  ordering: ASC
+
+  copyright:
+    id: copyright
+    type: section
+    grids:
+      - blocks:
+          - size: 100
+            particle: custom
+            title: "Admin Footer"
+            attributes:
+              html: |
+                <div class="adminfootericon" style="font-size: x-small; line-height: 1.3; text-shadow: 2px 2px #000000;">
+                  <a style="font-size: large;" href="/administrator/" target="_blank">
+                    <i class="fa fa-lock"></i></a>
+                  <br><br>
+                  <a style="color: #ffffff;" href="http://solutiosoftware.com/" target="_blank">Site by Solutio</a>
+                  <br>
+                  <a style="color: #ffffff;" href="https://solutiosoftware.com/web-policy" target="_blank" rel="noopener noreferrer">Analytics Privacy Policy</a>
+                </div>
+              enabled: 1

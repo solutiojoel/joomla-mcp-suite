@@ -1,0 +1,48 @@
+name: system-messages
+title: System Messages
+category: system
+particle_type: system
+particle_subtype: messages
+
+description: >
+  Renders Joomla's system messages (success, warning, error, notice alerts).
+  Required in every outline — without it, form submission feedback,
+  login errors, and module messages won't display. Always place in the top
+  section as the first particle in the layout. Always inherits from the
+  base outline; never needs to be overridden.
+
+when_to_use:
+  - Top section of every outline, as the first particle
+  - Always inherit — never define fresh in #Home or #Grid
+
+when_not_to_use:
+  - Anywhere except the top section
+
+common_block_classes:
+  "" : No block class needed
+
+attributes:
+  enabled:
+    type: integer
+    default: 1
+
+notes:
+  - >
+    This is a system particle (type: system, subtype: messages), not a
+    regular particle (type: particle). In the design YAML use:
+      particle: system/messages
+  - Always set inherit: true in #Home and #Grid — only define in #Outline.
+
+rendered_html:
+  outer_wrapper: "div.g-block"
+  inner_wrapper: "div.g-content"
+  particle_element: "div.g-messages"
+
+examples:
+  standard:
+    description: System messages particle in top section
+    blockClass: ""
+    type: system
+    subtype: messages
+    attributes:
+      enabled: 1

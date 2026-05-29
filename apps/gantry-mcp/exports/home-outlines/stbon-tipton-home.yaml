@@ -1,0 +1,1303 @@
+schema: 1
+source:
+  outline: '33'
+  theme: rt_studius
+  host: stbon-tipton.backup.solutiosoftware.com
+exportedAt: '2026-05-12T13:27:43.329Z'
+layout:
+  - attributes:
+      boxed: ''
+      class: ''
+      extra: []
+    id: container-top
+    layout: true
+    type: container
+    subtype: container
+    title: Container-top
+    children:
+      - id: grid-6700
+        type: grid
+        subtype: grid
+        layout: true
+        attributes: {}
+        children:
+          - id: block-9042
+            type: block
+            subtype: block
+            layout: true
+            attributes:
+              size: 100
+            children:
+              - type: section
+                attributes:
+                  boxed: '0'
+                  class: ''
+                  variations: ''
+                id: top
+                layout: true
+                subtype: section
+                title: Top
+                children:
+                  - id: grid-6603
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-6359
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - id: system-messages-6764
+                            title: System Messages
+                            type: system
+                            subtype: messages
+                            attributes:
+                              enabled: 1
+                        attributes:
+                          size: 100
+                  - id: grid-7950
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-7139
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Alert
+                            attributes:
+                              article:
+                                filter:
+                                  categories: '9'
+                                  articles: ''
+                                  featured: include
+                                limit:
+                                  total: '10'
+                                  columns: '1'
+                                  start: '0'
+                                display:
+                                  pagination_buttons: ''
+                                  title:
+                                    enabled: show
+                                sort:
+                                  orderby: ordering
+                                  ordering: ASC
+                              enabled: 1
+                            id: contentarray-4541
+                            type: particle
+                            subtype: contentarray
+                        attributes:
+                          id: modernAlert
+                          class: modern-alert
+                          size: 100
+                  - id: grid-1149
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-3328
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Pop Up
+                            attributes:
+                              html: |-
+                                <div id="pop-up-overlay-2"></div>
+                                <div id="pop-up-container-2">
+                                <div id="popup-2">
+                                <jdoc:include type="modules" name="pop-up" />
+                                </div>
+                                <button id="close-popup-button-2"><i class="fas fa-times-circle"></i></button>
+                                </div>
+                              enabled: 1
+                            id: custom-1172
+                            type: particle
+                            subtype: custom
+                        attributes:
+                          class: pop-up-block-2
+                          size: 100
+      - id: grid-9975
+        type: grid
+        subtype: grid
+        layout: true
+        attributes: {}
+        children:
+          - id: block-3058
+            type: block
+            subtype: block
+            layout: true
+            attributes:
+              size: 100
+            children:
+              - type: section
+                inherit:
+                  outline: default
+                  include:
+                    - attributes
+                    - block
+                    - children
+                id: navigation
+                layout: true
+                subtype: section
+                title: Navigation
+                attributes:
+                  boxed: '2'
+                  class: ole-faithful stock
+                  variations: ''
+                children:
+                  - id: grid-8726
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-5321
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Mobile Logo
+                            id: logo-8965
+                            type: particle
+                            subtype: logo
+                            attributes:
+                              enabled: 1
+                            inherit:
+                              outline: default
+                              include:
+                                - attributes
+                                - block
+                              particle: logo-4067
+                        attributes:
+                          class: show-mobile
+                          size: 100
+                  - id: grid-8100
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-8779
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Logo / Image
+                            attributes:
+                              url: /boniface
+                              enabled: 1
+                            id: logo-2397
+                            type: particle
+                            subtype: logo
+                            inherit:
+                              outline: default
+                              include:
+                                - attributes
+                                - block
+                              particle: logo-7577
+                        attributes:
+                          class: hidden-phone
+                          size: 50
+                      - id: block-4862
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - id: spacer-7509
+                            title: Spacer
+                            type: spacer
+                            subtype: spacer
+                            attributes:
+                              enabled: 1
+                            inherit:
+                              outline: default
+                              include:
+                                - attributes
+                                - block
+                              particle: spacer-6598
+                        attributes:
+                          size: 17
+                      - id: block-6971
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Header/Footer Social - School Button
+                            attributes:
+                              article:
+                                filter:
+                                  categories: ''
+                                  articles: '192'
+                                  featured: include
+                                limit:
+                                  total: '1'
+                                  columns: '1'
+                                  start: '0'
+                                display:
+                                  pagination_buttons: ''
+                                sort:
+                                  orderby: ordering
+                                  ordering: ASC
+                              enabled: 1
+                            id: contentarray-6574
+                            type: particle
+                            subtype: contentarray
+                            inherit:
+                              outline: default
+                              include:
+                                - attributes
+                                - block
+                              particle: contentarray-8666
+                        attributes:
+                          class: header-social-container
+                          size: 33
+                  - id: grid-8260
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-4643
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - attributes:
+                              menu: mainmenu
+                              enabled: 1
+                            id: menu-1289
+                            title: Menu
+                            type: particle
+                            subtype: menu
+                            inherit:
+                              outline: default
+                              include:
+                                - attributes
+                                - block
+                              particle: menu-2477
+                        attributes:
+                          size: 100
+      - id: grid-9311
+        type: grid
+        subtype: grid
+        layout: true
+        attributes: {}
+        children:
+          - id: block-1627
+            type: block
+            subtype: block
+            layout: true
+            attributes:
+              size: 100
+            children:
+              - type: section
+                attributes:
+                  boxed: '2'
+                  class: grand-entry slideshow-spacing
+                  variations: ''
+                id: slideshow
+                layout: true
+                subtype: section
+                title: Slideshow
+                children:
+                  - id: grid-1267
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-9474
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - attributes:
+                              class: ''
+                              source: joomla
+                              image: img
+                              height: 100%
+                              heightMobile: 100%
+                              nav: disabled
+                              pagination: ''
+                              autoplay: disabled
+                              autoplayTimeout: '8000'
+                              loop: enabled
+                              speed: '800'
+                              slides_linkable: disabled
+                              touchmove: enabled
+                              overlaycolor: rgba(255, 255, 255, 0)
+                              direction: horizontal
+                              effect: slide
+                              items: []
+                              largedesktopslides: '1'
+                              largedesktopgroup: '1'
+                              largedesktopspace: '0'
+                              desktopslides: '1'
+                              desktopgroup: '1'
+                              desktopspace: '0'
+                              tabletslides: '1'
+                              tabletgroup: '1'
+                              tabletspace: '0'
+                              mobileslides: '1'
+                              mobilegroup: '1'
+                              mobilespace: '0'
+                              thumbs: disabled
+                              thumbsHeight: 15vh
+                              thumbsMobileHeight: 150px
+                              thumbsnav: disabled
+                              thumbslayout: bottom
+                              largedesktopthumbs: '5'
+                              largedesktopthumbspace: '50'
+                              desktopthumbs: '4'
+                              desktopthumbspace: '40'
+                              tabletthumbs: '3'
+                              tabletthumbspace: '30'
+                              mobilethumbs: '2'
+                              mobilethumbspace: '20'
+                              article:
+                                filter:
+                                  categories: '10'
+                                  articles: ''
+                                  featured: include
+                                limit:
+                                  total: ''
+                                  start: '0'
+                                sort:
+                                  orderby: ordering
+                                  ordering: ASC
+                                display:
+                                  image:
+                                    enabled: full
+                                  text:
+                                    type: full
+                                    limit: ''
+                                  title:
+                                    enabled: ''
+                                    limit: ''
+                                  render_html_tags: '1'
+                                  link:
+                                    enabled: ''
+                                    label: ''
+                                    target: _self
+                              enabled: 1
+                            id: swiper-9733
+                            title: Swiper
+                            type: particle
+                            subtype: swiper
+                        attributes:
+                          id: rotate-addpic
+                          class: fullwidth-swiper
+                          size: 100
+  - attributes:
+      boxed: '2'
+      class: ''
+      variations: ''
+    id: header
+    layout: true
+    type: section
+    subtype: header
+    title: Header
+    children:
+      - id: grid-4745
+        type: grid
+        subtype: grid
+        layout: true
+        attributes: {}
+        children:
+          - id: block-2063
+            type: block
+            subtype: block
+            layout: true
+            children:
+              - title: Standard Quicklinks
+                attributes:
+                  source: particle
+                  class: ''
+                  title: ''
+                  icon: ''
+                  image: ''
+                  headline: ''
+                  description: ''
+                  linktext: ''
+                  link: ''
+                  linkclass: ''
+                  linktarget: _self
+                  subcontents:
+                    - accent: none
+                      icon: ''
+                      img: gantry-media://stories/template/quicklinks/ql1.jpg
+                      rokboximage: ''
+                      rokboxcaption: ''
+                      subtitle: ''
+                      description: ''
+                      class: ''
+                      button: Parish Registration
+                      buttonlink: /boniface/parish-registration
+                      buttonclass: ''
+                      buttontarget: _self
+                      name: Parish Registration
+                    - accent: none
+                      icon: ''
+                      img: gantry-media://stories/template/quicklinks/ql2.jpg
+                      rokboximage: ''
+                      rokboxcaption: ''
+                      subtitle: ''
+                      description: ''
+                      class: ''
+                      button: Online Giving
+                      buttonlink: https://givecfds.org/give/parish/
+                      buttonclass: ''
+                      buttontarget: _blank
+                      name: Online Giving
+                    - accent: none
+                      icon: ''
+                      img: gantry-media://stories/template/quicklinks/ql3.jpg
+                      rokboximage: ''
+                      rokboxcaption: ''
+                      subtitle: ''
+                      description: ''
+                      class: ''
+                      button: Bulletin
+                      buttonlink: /news/bulletin
+                      buttonclass: ''
+                      buttontarget: _self
+                      name: Bulletin
+                    - accent: none
+                      icon: ''
+                      img: gantry-media://stories/template/quicklinks/ql4.jpg
+                      rokboximage: ''
+                      rokboxcaption: ''
+                      subtitle: ''
+                      description: ''
+                      class: ''
+                      button: Ministry Schedule
+                      buttonlink: /news/ministry-schedule
+                      buttonclass: ''
+                      buttontarget: _self
+                      name: Ministry Schedule
+                    - accent: none
+                      icon: ''
+                      img: gantry-media://stories/template/quicklinks/ql5.jpg
+                      rokboximage: ''
+                      rokboxcaption: ''
+                      subtitle: ''
+                      description: ''
+                      class: ''
+                      button: School
+                      buttonlink: https://www.tiptoncatholichs.com/
+                      buttonclass: ''
+                      buttontarget: _blank
+                      name: School
+                  article:
+                    filter:
+                      categories: ''
+                      articles: ''
+                      featured: include
+                    limit:
+                      total: '5'
+                      start: '0'
+                    sort:
+                      orderby: publish_up
+                      ordering: ASC
+                    display:
+                      image:
+                        enabled: intro
+                      title:
+                        enabled: show
+                        limit: ''
+                      text:
+                        type: intro
+                        limit: ''
+                        formatting: text
+                      link:
+                        enabled: show
+                        label: ''
+                        target: _self
+                  enabled: 1
+                id: blockcontent-9668
+                type: particle
+                subtype: blockcontent
+            attributes:
+              class: ql-square-2
+              size: 100
+  - type: section
+    attributes:
+      boxed: '2'
+      class: ''
+      variations: ''
+    id: above
+    layout: true
+    subtype: section
+    title: Above
+    children:
+      - id: grid-3758
+        type: grid
+        subtype: grid
+        layout: true
+        attributes: {}
+        children:
+          - id: block-5442
+            type: block
+            subtype: block
+            layout: true
+            children:
+              - title: Welcome to St. Boniface
+                attributes:
+                  article:
+                    filter:
+                      categories: ''
+                      articles: '56'
+                      featured: include
+                    limit:
+                      total: '1'
+                      columns: '1'
+                      start: '0'
+                    display:
+                      pagination_buttons: ''
+                    sort:
+                      orderby: ordering
+                      ordering: ASC
+                  enabled: 1
+                id: contentarray-5893
+                type: particle
+                subtype: contentarray
+            attributes:
+              class: welcome-container
+              size: 50
+          - id: block-6118
+            type: block
+            subtype: block
+            layout: true
+            children:
+              - title: Mass Schedule
+                attributes:
+                  article:
+                    filter:
+                      categories: ''
+                      articles: '55'
+                      featured: include
+                    limit:
+                      total: '1'
+                      columns: '1'
+                      start: '0'
+                    display:
+                      pagination_buttons: ''
+                    sort:
+                      orderby: ordering
+                      ordering: ASC
+                  enabled: 1
+                id: contentarray-8629
+                type: particle
+                subtype: contentarray
+            attributes:
+              class: mt-container
+              size: 50
+  - type: section
+    attributes:
+      boxed: '2'
+      class: ''
+      variations: ''
+    id: feature
+    layout: true
+    subtype: section
+    title: Feature
+  - type: section
+    attributes:
+      boxed: '2'
+      class: ''
+      variations: ''
+    id: showcase
+    layout: true
+    subtype: section
+    title: Showcase
+  - type: section
+    attributes:
+      boxed: '2'
+      class: ''
+      variations: ''
+    id: utility
+    layout: true
+    subtype: section
+    title: Utility
+  - attributes:
+      boxed: '2'
+      class: ''
+      extra: []
+    id: container-main
+    layout: true
+    type: container
+    subtype: container
+    title: Container-main
+    children:
+      - id: grid-4663
+        type: grid
+        subtype: grid
+        layout: true
+        attributes: {}
+        children:
+          - id: block-6567
+            type: block
+            subtype: block
+            layout: true
+            attributes:
+              size: 5
+            children:
+              - type: section
+                subtype: aside
+                attributes:
+                  class: ''
+                  variations: ''
+                id: sidebar
+                layout: true
+                title: Sidebar
+          - id: block-7033
+            type: block
+            subtype: block
+            layout: true
+            attributes:
+              size: 80
+            children:
+              - type: section
+                subtype: main
+                title: Main
+                attributes:
+                  class: ''
+                  variations: ''
+                id: mainbar
+                layout: true
+                children:
+                  - id: grid-8428
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-7172
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Upcoming Events Title & Button
+                            attributes:
+                              html: |2-
+                                    <div class="news-header">
+                                        <h1 class="news-title">Upcoming Events</h1>
+                                        <a href="/news" class="button" class="view-all-button">View All</a>
+                                    </div>
+                              enabled: 1
+                            id: custom-9537
+                            type: particle
+                            subtype: custom
+                        attributes:
+                          size: 100
+                  - id: grid-8395
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-7183
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: News Lower Titles
+                            attributes:
+                              article:
+                                filter:
+                                  categories: 8,73
+                                  articles: ''
+                                  featured: include
+                                limit:
+                                  total: '4'
+                                  columns: '1'
+                                  start: '0'
+                                display:
+                                  pagination_buttons: ''
+                                  image:
+                                    enabled: full
+                                  text:
+                                    type: intro
+                                    limit: '90'
+                                    formatting: text
+                                    prepare: '1'
+                                  title:
+                                    enabled: show
+                                  read_more:
+                                    enabled: show
+                                sort:
+                                  orderby: ordering
+                                  ordering: ASC
+                              extra:
+                                - data-aos: default-animation
+                                - data-aos-once: 'true'
+                              enabled: 1
+                            id: contentarray-3524
+                            type: particle
+                            subtype: contentarray
+                        attributes:
+                          id: grid-addpic
+                          class: ph-hover-boxes
+                          size: 100
+          - id: block-2217
+            type: block
+            subtype: block
+            layout: true
+            attributes:
+              size: 15
+            children:
+              - attributes:
+                  class: ''
+                  variations: ''
+                id: aside
+                layout: true
+                type: section
+                subtype: aside
+                title: Aside
+                children:
+                  - id: grid-4004
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-8475
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Home Ads
+                            attributes:
+                              module_id: '106'
+                              key: home-ads
+                              enabled: 1
+                            id: position-module-7804
+                            type: position
+                            subtype: module
+                        attributes:
+                          class: side-ads ads-901 ads-902 ads-903
+                          size: 100
+  - type: section
+    attributes:
+      boxed: '2'
+      class: widget-parthenon-alt
+      variations: ''
+    id: expanded
+    layout: true
+    subtype: section
+    title: Expanded
+    children:
+      - id: grid-7776
+        type: grid
+        subtype: grid
+        layout: true
+        attributes: {}
+        children:
+          - id: block-8338
+            type: block
+            subtype: block
+            layout: true
+            children:
+              - title: Helpful Links
+                attributes:
+                  source: particle
+                  class: ''
+                  title: ''
+                  icon: ''
+                  image: ''
+                  headline: ''
+                  description: ''
+                  linktext: ''
+                  link: ''
+                  linkclass: ''
+                  linktarget: _self
+                  subcontents:
+                    - accent: none
+                      icon: ''
+                      img: gantry-media://stories/template/quicklinks/usccb.png
+                      rokboximage: ''
+                      rokboxcaption: ''
+                      subtitle: ''
+                      description: ''
+                      class: ''
+                      button: Daily Readings
+                      buttonlink: https://bible.usccb.org/daily-bible-reading
+                      buttonclass: ''
+                      buttontarget: _blank
+                      name: Daily Readings
+                    - accent: none
+                      icon: ''
+                      img: gantry-media://stories/template/quicklinks/saint of the day.png
+                      rokboximage: ''
+                      rokboxcaption: ''
+                      subtitle: ''
+                      description: ''
+                      class: ''
+                      button: Saint of the Day
+                      buttonlink: https://www.franciscanmedia.org/saint-of-the-day/
+                      buttonclass: ''
+                      buttontarget: _blank
+                      name: Saint of the Day
+                    - accent: none
+                      icon: ''
+                      img: gantry-media://stories/template/quicklinks/dio-salina.png
+                      rokboximage: ''
+                      rokboxcaption: ''
+                      subtitle: ''
+                      description: ''
+                      class: ''
+                      button: Diocese of Salina
+                      buttonlink: https://salinadiocese.org/
+                      buttonclass: ''
+                      buttontarget: _blank
+                      name: Diocese of Salina
+                    - accent: none
+                      icon: ''
+                      img: gantry-media://stories/template/quicklinks/vatican news.png
+                      rokboximage: ''
+                      rokboxcaption: ''
+                      subtitle: ''
+                      description: ''
+                      class: ''
+                      button: Vatican News
+                      buttonlink: https://www.vaticannews.va/en.html
+                      buttonclass: ''
+                      buttontarget: _blank
+                      name: Vatican News
+                  article:
+                    filter:
+                      categories: ''
+                      articles: ''
+                      featured: include
+                    limit:
+                      total: '5'
+                      start: '0'
+                    sort:
+                      orderby: publish_up
+                      ordering: ASC
+                    display:
+                      image:
+                        enabled: intro
+                      title:
+                        enabled: show
+                        limit: ''
+                      text:
+                        type: intro
+                        limit: ''
+                        formatting: text
+                      link:
+                        enabled: show
+                        label: ''
+                        target: _self
+                  enabled: 1
+                id: blockcontent-6989
+                type: particle
+                subtype: blockcontent
+            attributes:
+              class: helplinks
+              size: 33.3
+          - id: block-8964
+            type: block
+            subtype: block
+            layout: true
+            children:
+              - title: Calendar
+                attributes:
+                  article:
+                    filter:
+                      categories: ''
+                      articles: '74'
+                      featured: include
+                    limit:
+                      total: '1'
+                      columns: '1'
+                      start: '0'
+                    display:
+                      pagination_buttons: ''
+                    sort:
+                      orderby: ordering
+                      ordering: ASC
+                  css:
+                    class: ''
+                  extra: []
+                  enabled: 1
+                id: contentarray-3150
+                type: particle
+                subtype: contentarray
+            attributes:
+              class: calendar-widget-container widget-container
+              size: 33.3
+          - id: block-6878
+            type: block
+            subtype: block
+            layout: true
+            children:
+              - title: Formed
+                attributes:
+                  article:
+                    filter:
+                      categories: ''
+                      articles: '75'
+                      featured: include
+                    limit:
+                      total: '1'
+                      columns: '1'
+                      start: '0'
+                    display:
+                      pagination_buttons: ''
+                    sort:
+                      orderby: ordering
+                      ordering: ASC
+                  enabled: 1
+                id: contentarray-7651
+                type: particle
+                subtype: contentarray
+            attributes:
+              class: formed-widget-container widget-container
+              size: 33.3
+  - type: section
+    attributes:
+      boxed: '2'
+      class: ''
+      variations: ''
+    id: extension
+    layout: true
+    subtype: section
+    title: Extension
+  - type: section
+    inherit:
+      outline: default
+      include:
+        - attributes
+        - children
+    id: bottom
+    layout: true
+    subtype: section
+    title: Bottom
+    attributes:
+      boxed: '2'
+      class: s-vertical-padding-2
+      variations: ''
+    children:
+      - id: grid-6770
+        type: grid
+        subtype: grid
+        layout: true
+        attributes: {}
+        children:
+          - id: block-2590
+            type: block
+            subtype: block
+            layout: true
+            children:
+              - title: Bottom Ads
+                attributes:
+                  module_id: '103'
+                  key: bottom-ads
+                  enabled: 1
+                id: position-module-3459
+                type: position
+                subtype: module
+                inherit:
+                  outline: default
+                  include:
+                    - attributes
+                    - block
+                  particle: position-module-8098
+            attributes:
+              size: 100
+  - attributes:
+      boxed: '2'
+      class: ''
+      extra: []
+    id: container-footer
+    layout: true
+    type: container
+    subtype: container
+    title: Container-footer
+    children:
+      - id: grid-6431
+        type: grid
+        subtype: grid
+        layout: true
+        attributes: {}
+        children:
+          - id: block-1281
+            type: block
+            subtype: block
+            layout: true
+            attributes:
+              size: 100
+            children:
+              - inherit:
+                  outline: default
+                  include:
+                    - block
+                    - children
+                    - attributes
+                id: footer
+                layout: true
+                type: section
+                subtype: footer
+                title: Footer
+                attributes:
+                  boxed: '2'
+                  class: s-padding-2
+                  variations: ''
+                children:
+                  - id: grid-2969
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-4278
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Footer A
+                            attributes:
+                              key: footer-a
+                              enabled: 1
+                            id: position-position-2025
+                            type: position
+                            subtype: position
+                            inherit:
+                              outline: default
+                              include:
+                                - attributes
+                                - block
+                              particle: position-position-8208
+                        attributes:
+                          size: 33.3
+                      - id: block-9288
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Footer B
+                            attributes:
+                              key: footer-b
+                              enabled: 1
+                            id: position-position-2524
+                            type: position
+                            subtype: position
+                            inherit:
+                              outline: default
+                              include:
+                                - attributes
+                                - block
+                              particle: position-position-2580
+                        attributes:
+                          size: 33.3
+                      - id: block-9318
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Footer C
+                            attributes:
+                              key: footer-c
+                              enabled: 1
+                            id: position-position-2321
+                            type: position
+                            subtype: position
+                            inherit:
+                              outline: default
+                              include:
+                                - attributes
+                                - block
+                              particle: position-position-8331
+                        attributes:
+                          size: 33.3
+                  - id: grid-3499
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-4743
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Footer
+                            attributes:
+                              article:
+                                filter:
+                                  categories: ''
+                                  articles: '36'
+                                  featured: include
+                                limit:
+                                  total: '1'
+                                  columns: '1'
+                                  start: '0'
+                                display:
+                                  pagination_buttons: ''
+                                sort:
+                                  orderby: ordering
+                                  ordering: ASC
+                              enabled: 1
+                            id: contentarray-6541
+                            type: particle
+                            subtype: contentarray
+                            inherit:
+                              outline: default
+                              include:
+                                - attributes
+                                - block
+                              particle: contentarray-5059
+                        attributes:
+                          size: 100
+                  - id: grid-4344
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-6324
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Links Between Sites
+                            attributes:
+                              article:
+                                filter:
+                                  categories: ''
+                                  articles: '260'
+                                  featured: include
+                                limit:
+                                  total: '1'
+                                  columns: '1'
+                                  start: '0'
+                                display:
+                                  pagination_buttons: ''
+                                sort:
+                                  orderby: publish_up
+                                  ordering: ASC
+                              enabled: 1
+                            id: contentarray-4401
+                            type: particle
+                            subtype: contentarray
+                            inherit:
+                              outline: default
+                              include:
+                                - attributes
+                                - block
+                              particle: contentarray-6488
+                        attributes:
+                          size: 100
+              - type: section
+                inherit:
+                  outline: default
+                  include:
+                    - attributes
+                    - block
+                    - children
+                id: copyright
+                layout: true
+                subtype: section
+                title: Copyright
+                attributes:
+                  boxed: ''
+                  class: ''
+                  variations: ''
+                children:
+                  - id: grid-8573
+                    type: grid
+                    subtype: grid
+                    layout: true
+                    attributes: {}
+                    children:
+                      - id: block-8102
+                        type: block
+                        subtype: block
+                        layout: true
+                        children:
+                          - title: Admin Footer
+                            attributes:
+                              html: "<div class=\"adminfootericon\" style=\"font-size: x-small; line-height: 1.3; text-shadow: 2px 2px #000000; \">\n\t<a  style=\"font-size: large;\" href=\"https://stbon-tipton.solutiosoftware.com/administrator/\" target=\"_blank\">\n\t<i class=\"fa fa-lock\"></i></a>\n\t<br><br><a style=\"color: #ffffff;\" href=\"http://solutiosoftware.com/\" target=\"_blank\">Site by Solutio</a>\n<br><a  style=\"color: #ffffff;\"  href=\"https://solutiosoftware.com/web-policy\" target=\"_blank\" rel=\"noopener noreferrer\">Analytics Privacy Policy</a>\n</div>"
+                              enabled: 1
+                            id: custom-8357
+                            type: particle
+                            subtype: custom
+                            inherit:
+                              outline: default
+                              include:
+                                - attributes
+                                - block
+                              particle: custom-4985
+                        attributes:
+                          size: 100
+  - inherit:
+      outline: default
+      include:
+        - attributes
+        - children
+    id: offcanvas
+    layout: true
+    type: offcanvas
+    subtype: offcanvas
+    title: Offcanvas
+    attributes:
+      swipe: '0'
+    children:
+      - id: grid-6227
+        type: grid
+        subtype: grid
+        layout: true
+        attributes: {}
+        children:
+          - id: block-9269
+            type: block
+            subtype: block
+            layout: true
+            children:
+              - title: Mobile Menu
+                id: mobile-menu-9910
+                type: particle
+                subtype: mobile-menu
+                attributes:
+                  enabled: 1
+                inherit:
+                  outline: default
+                  include:
+                    - attributes
+                    - block
+                  particle: mobile-menu-9673
+            attributes:
+              size: 100
+      - id: grid-7465
+        type: grid
+        subtype: grid
+        layout: true
+        attributes: {}
+        children:
+          - id: block-1907
+            type: block
+            subtype: block
+            layout: true
+            children:
+              - title: Subsite Navigation
+                attributes:
+                  html: <div class="ql-toplinks-studius"><jdoc:include type="modules" name="subsite-navigation" /></div>
+                  enabled: 1
+                id: custom-2715
+                type: particle
+                subtype: custom
+                inherit:
+                  outline: default
+                  include:
+                    - attributes
+                    - block
+                  particle: custom-4724
+            attributes:
+              size: 100

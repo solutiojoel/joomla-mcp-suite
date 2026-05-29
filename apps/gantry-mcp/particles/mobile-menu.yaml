@@ -1,0 +1,42 @@
+name: mobile-menu
+title: Mobile Menu
+category: navigation
+
+description: >
+  Renders the off-canvas mobile navigation drawer. Always placed in the
+  offcanvas section. Triggered by the hamburger button on mobile. This
+  particle has no meaningful attributes — it just activates Gantry's
+  built-in mobile menu behavior. Always inherits from the base outline;
+  never needs to be overridden per-outline.
+
+when_to_use:
+  - Offcanvas section only, every outline
+
+when_not_to_use:
+  - Any section other than offcanvas
+  - Desktop navigation (use menu particle)
+
+common_block_classes:
+  "" : No block class needed
+
+attributes:
+  enabled:
+    type: integer
+    default: 1
+    description: Always 1.
+
+rendered_html:
+  outer_wrapper: "div.g-block"
+  inner_wrapper: "div.g-content"
+  particle_element: "div.g-mobile-menu"
+
+notes:
+  - This particle always inherits from the #Outline base outline.
+  - Never define it directly in #Home or #Grid — always let it inherit.
+
+examples:
+  offcanvas:
+    description: Standard off-canvas mobile menu
+    blockClass: ""
+    attributes:
+      enabled: 1

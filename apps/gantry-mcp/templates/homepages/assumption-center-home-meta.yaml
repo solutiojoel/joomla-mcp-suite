@@ -1,0 +1,65 @@
+site: https://assumption-center.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [logo, contentarray]
+  - id: slideshow
+    particles: [swiper, custom]
+  - id: header
+    particles: [contentarray]
+  - id: above
+    particles: []
+  - id: feature
+    particles: []
+  - id: showcase
+    particles: []
+  - id: utility
+    particles: [blockcontent]
+  - id: sidebar
+    particles: []
+  - id: mainbar
+    particles: [custom, contentarray]
+  - id: aside
+    particles: []
+  - id: expanded
+    particles: []
+  - id: extension
+    particles: [contentarray]
+  - id: bottom
+    particles: []
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+block_classes:
+  - crawl-space
+  - fullwidth-swiper
+  - grand-entry
+  - headlines-rounded-square
+  - modern-alert
+  - nav-main-menu
+  - news-button
+  - news-title
+  - ph-rounded-square
+  - ph-rounded-square-mobile
+  - ph-wide
+  - pop-up-block-2
+  - ql-sbound
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - slideshow-spacing
+  - stock
+  - swiper-overlay-title
+  - widget-parthenon-alt
+design_notes: |
+  Parish home. Crawl-space navigation style. Fullwidth swiper slideshow. 
+  Rounded-square photo headers. News headlines section. Utility bar with blockcontent.
+  Ads (901/902/903) present. pop-up-block-2 used.

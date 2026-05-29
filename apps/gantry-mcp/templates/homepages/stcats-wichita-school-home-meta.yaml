@@ -1,0 +1,58 @@
+site: https://stcats-wichita.backup.solutiosoftware.com/
+outline_name: "#St. Catherine School Home"
+outline_id: 72
+menu_item_url: null
+menu_item_url_note: "No dedicated menu item found; outline named #St. Catherine School Home"
+site_type: school
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [logo, search, menu, blockcontent]
+    notes: "crawl-space nav with search"
+  - id: slideshow
+    particles: [blockcontent, video, swiper]
+    notes: "hero with video support"
+  - id: sidebar
+    particles: [contentarray]
+  - id: mainbar
+    particles: [contentarray]
+    notes: "news-to-me style"
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - calendar-widget-container
+  - crawl-space
+  - facebook-widget-container
+  - fullwidth-swiper
+  - headlines-spacing
+  - hidden-phone
+  - modern-alert
+  - news-to-me
+  - pop-up-block-2
+  - ql-toplinks-studius
+  - rotate-sw
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - standard-ql
+  - stock
+  - swiper-qls-overlay
+  - video-bg
+  - widget-container
+  - widget-parthenon-alt
+
+design_notes: |
+  School home - video-bg in slideshow area. Swiper-qls-overlay for QL on slides.
+  Widget-parthenon-alt and widget-container for school widgets.
+  News-to-me style, sidebar+mainbar layout. No timeline particle (different from typical school).
+  Standard QL quick links.

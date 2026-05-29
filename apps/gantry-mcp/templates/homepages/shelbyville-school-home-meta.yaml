@@ -1,0 +1,57 @@
+site: https://shelbyville.backup.solutiosoftware.com/
+outline_name: "#School Home"
+outline_id: 54
+menu_item_url: null
+menu_item_url_note: "No dedicated menu item found with templateStyleId=54"
+site_type: school
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [blockcontent, menu, logo]
+    notes: "center-of-attention nav"
+  - id: slideshow
+    particles: [contentarray, swiper]
+  - id: header
+    particles: [blockcontent]
+    notes: "mass times block"
+  - id: expanded
+    particles: [contentarray]
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - beads-bottom
+  - center-of-attention
+  - enroll-container
+  - facebook-widget-container
+  - floatator
+  - fullwidth-swiper
+  - headlines-rounded-square
+  - hidden-phone
+  - mass-times-block
+  - modern-alert
+  - pop-up-block-2
+  - ql-icon-links
+  - ql-toplinks-studius
+  - rotate-wide
+  - s-padding-2
+  - s-vertical-padding-2
+  - sd-container
+  - show-mobile
+  - side-ads
+  - slideshow-spacing
+  - stock
+  - welcome-container
+
+design_notes: |
+  Simpler school home - no timeline particle. Headlines-rounded-square style.
+  Enroll container for school enrollment. Icon quick links (ql-icon-links).
+  Welcome container, beads-bottom decoration. SD container for school directory.

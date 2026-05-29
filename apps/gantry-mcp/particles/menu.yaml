@@ -1,0 +1,48 @@
+name: menu
+title: Menu
+category: navigation
+
+description: >
+  Renders a Joomla menu as a horizontal navigation bar. The menu particle
+  is placed in the navigation section, typically full-width below the logo
+  row. It reads the menu structure from Joomla and renders it with Gantry's
+  dropdown/megamenu support. Configuration is mostly in Gantry's menu editor,
+  not in particle attributes.
+
+when_to_use:
+  - Main navigation bar in the navigation section (full-width, below logo)
+  - Secondary navigation if the site has a multi-menu layout
+
+when_not_to_use:
+  - Off-canvas mobile menu (use mobile-menu particle)
+  - Quick utility links in the header (use blockcontent with subcontents)
+
+common_block_classes:
+  "" : Standard — no block class needed for the main menu
+
+attributes:
+  enabled:
+    type: integer
+    default: 1
+    description: 1 to show, 0 to hide.
+
+rendered_html:
+  outer_wrapper: "div.g-block"
+  inner_wrapper: "div.g-content"
+  particle_element: "nav.g-menu"
+
+notes:
+  - >
+    Menu content and structure are managed in the Gantry Menu Editor
+    (gantry_page_edit / gantry_styles_edit), not in particle attributes.
+    The particle simply renders whatever menu is configured in the editor.
+  - >
+    The menu particle almost always inherits from the #Outline base outline.
+    Only override it if this outline needs a genuinely different menu.
+
+examples:
+  main_menu:
+    description: Standard main navigation menu
+    blockClass: ""
+    attributes:
+      enabled: 1

@@ -1,0 +1,319 @@
+# Gantry 5 Homepage Blueprint Capture Summary
+# Generated: 2026-05-21
+# Task: Capture #Home and #School Home outline blueprints from 18 parish/school/cemetery sites
+
+capture_date: 2026-05-21
+total_sites: 18
+tool_theme_default: rt_studius
+output_directory: gantry-mcp/templates/homepages/
+
+sites:
+
+  - slug: stlaw-alex
+    url: https://stlaw-alex.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: 72
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    files:
+      - stlaw-alex-home.json
+      - stlaw-alex-home-meta.yaml
+      - stlaw-alex-school-home.json
+      - stlaw-alex-school-home-meta.yaml
+    status: complete
+
+  - slug: olmc-fairfield
+    url: https://olmc-fairfield.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: 72
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    files:
+      - olmc-fairfield-home.json
+      - olmc-fairfield-home-meta.yaml
+      - olmc-fairfield-school-home.json
+      - olmc-fairfield-school-home-meta.yaml
+    status: complete
+
+  - slug: seas-ontario
+    url: https://seas-ontario.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: 72
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    files:
+      - seas-ontario-home.json
+      - seas-ontario-home-meta.yaml
+      - seas-ontario-school-home.json
+      - seas-ontario-school-home-meta.yaml
+    status: complete
+
+  - slug: stchris-speed
+    url: https://stchris-speed.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: 72
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    files:
+      - stchris-speed-home.json
+      - stchris-speed-home-meta.yaml
+      - stchris-speed-school-home.json
+      - stchris-speed-school-home-meta.yaml
+    status: complete
+
+  - slug: stmary-wood
+    url: https://stmary-wood.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 36
+    school_home_outline_id: 70
+    home_menu_itemid: 595
+    home_menu_type: main-menu-st
+    school_home_menu_itemid: null
+    notes: Different outline IDs from standard (36/70 instead of 33/72). Home menu in main-menu-st not mainmenu.
+    files:
+      - stmary-wood-home.json
+      - stmary-wood-home-meta.yaml
+      - stmary-wood-school-home.json
+      - stmary-wood-school-home-meta.yaml
+    status: complete
+
+  - slug: sd-cemetery
+    url: https://sd-cemetery.backup.solutiosoftware.com/
+    site_type: cemetery
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: null
+    home_menu_itemid: 101
+    notes: Cemetery site — no school. Has sub-site outlines for multiple cemetery locations (#Good Shepherd Home=74, #Holy Cross Home=72, #TBD Home=77).
+    files:
+      - sd-cemetery-home.json
+      - sd-cemetery-home-meta.yaml
+    status: complete
+
+  - slug: stbern-levit
+    url: https://stbern-levit.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 17
+    school_home_outline_id: 51
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    notes: Different outline IDs (17/51 instead of 33/72).
+    files:
+      - stbern-levit-home.json
+      - stbern-levit-home-meta.yaml
+      - stbern-levit-school-home.json
+      - stbern-levit-school-home-meta.yaml
+    status: complete
+
+  - slug: shelbyville
+    url: https://shelbyville.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 20
+    school_home_outline_id: 54
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    notes: Different outline IDs (20/54 instead of 33/72).
+    files:
+      - shelbyville-home.json
+      - shelbyville-home-meta.yaml
+      - shelbyville-school-home.json
+      - shelbyville-school-home-meta.yaml
+    status: complete
+
+  - slug: stpats-par
+    url: https://stpats-par.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 29
+    school_home_outline_id: 63
+    home_menu_itemid: 1415
+    home_menu_type: main-menu-cl
+    school_home_menu_itemid: 1448
+    school_home_menu_type: school-menu-cl
+    notes: Multi-template site (Gemini/Clarity/Studius). Studius home is Itemid=1415 in main-menu-cl, not the default Gemini home (Itemid=1398). Different outline IDs (29/63).
+    files:
+      - stpats-par-home.json
+      - stpats-par-home-meta.yaml
+      - stpats-par-school-home.json
+      - stpats-par-school-home-meta.yaml
+    status: complete
+
+  - slug: stgertrude-bay
+    url: https://stgertrude-bay.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: 72
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    files:
+      - stgertrude-bay-home.json
+      - stgertrude-bay-home-meta.yaml
+      - stgertrude-bay-school-home.json
+      - stgertrude-bay-school-home-meta.yaml
+    status: complete
+
+  - slug: stagnes-concord
+    url: https://stagnes-concord.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: 72
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    files:
+      - stagnes-concord-home.json
+      - stagnes-concord-home-meta.yaml
+      - stagnes-concord-school-home.json
+      - stagnes-concord-school-home-meta.yaml
+    status: complete
+
+  - slug: stcats-wichita
+    url: https://stcats-wichita.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: 72
+    school_home_outline_name: "#St. Catherine School Home"
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    notes: School home outline uses non-standard name "#St. Catherine School Home" instead of "#School Home".
+    files:
+      - stcats-wichita-home.json
+      - stcats-wichita-home-meta.yaml
+      - stcats-wichita-school-home.json
+      - stcats-wichita-school-home-meta.yaml
+    status: complete
+
+  - slug: stliz-melville
+    url: https://stliz-melville.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: 72
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    files:
+      - stliz-melville-home.json
+      - stliz-melville-home-meta.yaml
+      - stliz-melville-school-home.json
+      - stliz-melville-school-home-meta.yaml
+    status: complete
+
+  - slug: assumption-center
+    url: https://assumption-center.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: 72
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    files:
+      - assumption-center-home.json
+      - assumption-center-home-meta.yaml
+      - assumption-center-school-home.json
+      - assumption-center-school-home-meta.yaml
+    status: complete
+
+  - slug: stbon-antonio
+    url: https://stbon-antonio.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: null
+    home_menu_itemid: 101
+    notes: Parish-only site — no #School Home outline present.
+    files:
+      - stbon-antonio-home.json
+      - stbon-antonio-home-meta.yaml
+    status: complete
+
+  - slug: stwen-dick
+    url: https://stwen-dick.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 14
+    school_home_outline_id: 48
+    home_menu_itemid: 184
+    school_home_menu_itemid: null
+    notes: Different outline IDs (14/48 instead of 33/72). Home menu Itemid=184.
+    files:
+      - stwen-dick-home.json
+      - stwen-dick-home-meta.yaml
+      - stwen-dick-school-home.json
+      - stwen-dick-school-home-meta.yaml
+    status: complete
+
+  - slug: stbarnabas-indy
+    url: https://stbarnabas-indy.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_clarity
+    home_outline_id: 15
+    home_outline_name: "Site Home"
+    school_home_outline_id: 33
+    school_home_outline_name: "School Home"
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    notes: >
+      Uses rt_clarity theme (not rt_studius). Outline names do not use "#" prefix.
+      The export_outline_blueprint tool returns empty layout (root: []) for rt_clarity
+      outlines — blueprint capture failed. Placeholder JSON files saved. Manual export
+      required for full blueprint data.
+    blueprint_capture: failed_empty
+    files:
+      - stbarnabas-indy-home.json
+      - stbarnabas-indy-home-meta.yaml
+      - stbarnabas-indy-school-home.json
+      - stbarnabas-indy-school-home-meta.yaml
+    status: partial
+
+  - slug: sh-emporia
+    url: https://sh-emporia.backup.solutiosoftware.com/
+    site_type: parish
+    theme: rt_studius
+    home_outline_id: 33
+    school_home_outline_id: 72
+    home_menu_itemid: 101
+    school_home_menu_itemid: null
+    files:
+      - sh-emporia-home.json
+      - sh-emporia-home-meta.yaml
+      - sh-emporia-school-home.json
+      - sh-emporia-school-home-meta.yaml
+    status: complete
+
+# Summary Statistics
+statistics:
+  total_sites: 18
+  complete: 17
+  partial: 1
+  failed: 0
+  rt_studius_sites: 17
+  rt_clarity_sites: 1
+  parish_only_sites: 2       # stbon-antonio (no school), sd-cemetery (cemetery type)
+  parish_with_school: 15
+  cemetery_sites: 1          # sd-cemetery
+  sites_with_standard_ids_33_72: 10   # stlaw-alex, olmc-fairfield, seas-ontario, stchris-speed, stgertrude-bay, stagnes-concord, stcats-wichita, stliz-melville, assumption-center, sh-emporia
+  sites_with_nonstandard_ids: 5       # stmary-wood(36/70), stbern-levit(17/51), shelbyville(20/54), stpats-par(29/63), stwen-dick(14/48)
+
+# Notable Findings
+findings:
+  - Most rt_studius sites share outline IDs 33 (#Home) and 72 (#School Home)
+  - Older/custom sites have different ID sequences (stbern-levit, shelbyville, stpats-par, stwen-dick, stmary-wood)
+  - stpats-par is a multi-template site (Gemini/Clarity/Studius) requiring careful menu item resolution
+  - stcats-wichita uses school-specific name for school home outline
+  - stbarnabas-indy uses rt_clarity theme; blueprint export returns empty layout for this theme
+  - Cemetery site (sd-cemetery) has multiple sub-site home outlines for different cemetery locations
+  - No school home menu items found on any site — school outlines are assigned via templateStyleId, not dedicated menu items
+  - stbon-antonio is parish-only (no school section/outline)

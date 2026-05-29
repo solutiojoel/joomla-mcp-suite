@@ -1,0 +1,60 @@
+site: https://stgertrude-bay.backup.solutiosoftware.com/
+outline_name: "#School Home"
+outline_id: 72
+menu_item_url: null
+menu_item_url_note: "No dedicated menu item found with templateStyleId=72"
+site_type: school
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [logo, blockcontent, social, menu]
+    notes: "crawl-space school nav with social"
+  - id: slideshow
+    particles: [custom, blockcontent, swiper]
+    notes: "grand-entry hero"
+  - id: utility
+    particles: [blockcontent]
+  - id: sidebar
+    particles: [custom, contentarray]
+  - id: mainbar
+    particles: [timeline, custom]
+    notes: "events timeline"
+  - id: expanded
+    particles: [contentarray]
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - calendar-button
+  - calendar-title
+  - crawl-space
+  - daily-readings-widget-container
+  - ec-vert
+  - facebook-widget-container
+  - formed-widget-container
+  - fullwidth-swiper
+  - grand-entry
+  - grid
+  - grid-articles
+  - grid-bg-primary
+  - grid-g-grid-border-radius-1-point-5
+  - grid-g-grid-box-shadow
+  - grid-hover-scale
+  - grid-image-border-radius-1
+  - grid-img-border-2-tertiary
+  - grid-mobile-horizontal-scroll
+  - grid-mobile-stacked
+  - grid-sideways
+  - grid-text-white
+  - grid-title-tertiary
+
+design_notes: |
+  Standard school home: timeline, grid news, grand-entry hero, crawl-space nav.

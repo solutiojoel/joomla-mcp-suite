@@ -1,0 +1,17 @@
+site: https://stbarnabas-indy.backup.solutiosoftware.com/
+outline_name: "Site Home"
+outline_id: 15
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+theme: rt_clarity
+captured: 2026-05-21
+notes: >
+  This site uses rt_clarity theme (not rt_studius). The export_outline_blueprint tool
+  returns empty layout (root: []) for rt_clarity outlines — the theme likely stores
+  layouts in the database or a non-standard path that the export tool cannot read.
+  Blueprint JSON saved as placeholder; layout capture requires manual export or
+  a different extraction method.
+sections: []
+block_classes: []
+design_notes: |
+  Parish home. rt_clarity theme. Blueprint capture failed — empty layout returned.

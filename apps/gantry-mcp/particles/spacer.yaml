@@ -1,0 +1,39 @@
+name: spacer
+title: Spacer
+category: layout
+particle_type: spacer
+
+description: >
+  An empty block used purely for layout spacing in a grid row. Typically
+  used in the navigation section to create horizontal space between the
+  logo block and the utility links block. Has no rendered content —
+  it just occupies width in the grid. Size is set via the block's size
+  attribute (same as any other block).
+
+when_to_use:
+  - Navigation section to push logo and toplinks apart (e.g. logo=65, spacer=10, toplinks=25)
+  - Any grid row where empty space is needed between particles
+
+when_not_to_use:
+  - Vertical spacing between sections (use section CSS padding instead)
+
+common_block_classes:
+  "" : No block class needed for spacers
+
+attributes: {}
+
+notes:
+  - "Spacer type in design YAML: particle: spacer"
+  - In Gantry JSON the type is spacer and subtype is spacer
+
+rendered_html:
+  outer_wrapper: "div.g-block.size-{N}"
+  inner_wrapper: ""
+  particle_element: "(empty)"
+
+examples:
+  nav_spacer:
+    description: 10% spacer between logo and toplinks in navigation
+    size: 10
+    blockClass: ""
+    type: spacer

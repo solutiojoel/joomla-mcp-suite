@@ -1,0 +1,57 @@
+# Section Template: Header Navigation
+# Usage: Navigation section with logo, spacer, toplinks, and main menu
+# Covers: desktop logo (hidden-phone), mobile logo (show-mobile), spacer,
+#         utility toplinks (ql-toplinks-studius), main menu (full-width)
+#
+# This section almost always inherits from #Outline. Only define it fresh
+# when setting up the base outline for the first time.
+
+id: navigation
+type: section
+attributes:
+  class: "ole-faithful stock"
+
+grids:
+  # Row 1 (mobile): mobile logo shown only on phones
+  - blocks:
+      - size: 100
+        blockClass: show-mobile
+        particle: logo
+        title: "Mobile Logo"
+
+  # Row 2 (desktop): logo left, spacer center, toplinks right
+  - blocks:
+      - size: 65
+        blockClass: hidden-phone
+        particle: logo
+        title: "Logo / Image"
+      - size: 10
+        particle: spacer
+        title: "Spacer"
+      - size: 25
+        blockClass: ql-toplinks-studius
+        particle: blockcontent
+        title: "Toplinks"
+        attributes:
+          source: particle
+          title: ""
+          subcontents:
+            # Populate with 2-3 utility links (Mass Times, Contact Us, etc.)
+            - name: "Mass Times"
+              button: "Mass Times"
+              buttonlink: "/mass-times"
+              buttontarget: "_self"
+              accent: none
+            - name: "Contact Us"
+              button: "Contact Us"
+              buttonlink: "/contact-us"
+              buttontarget: "_self"
+              accent: none
+
+  # Row 3: full-width main menu
+  - blocks:
+      - size: 100
+        particle: menu
+        title: "Menu"
+        attributes:
+          enabled: 1

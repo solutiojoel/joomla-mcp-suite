@@ -1,0 +1,279 @@
+name: contentarray
+title: Content Array
+category: content
+
+description: >
+  Pulls and displays Joomla articles dynamically. The workhorse for any
+  section that needs live CMS content — news, events, mass times, calendar,
+  social feeds, footer content, and announcements. Supports filtering by
+  category or specific article IDs, column layout, display options for
+  images/intro text/read-more buttons, and sorting.
+
+when_to_use:
+  - News & Events feed (filter by category)
+  - Mass Times display (point to a single shell article)
+  - Calendar section (point to calendar article)
+  - Alert/announcement banner (point to alert article, category-filtered)
+  - Footer content (point to footer shell article)
+  - Social media embed widget (point to social widget article)
+  - Any section pulling live content managed in Joomla
+
+when_not_to_use:
+  - Static linked items with images (use blockcontent)
+  - Navigation (use menu)
+  - Raw HTML not managed as an article (use custom)
+
+common_block_classes:
+  ph-sideway-stack: News/events stack in the sidebar
+  mass-times-block: Mass times sidebar block in slideshow section
+  facebook-widget-container widget-container: Social widget block
+  calendar-container: Calendar section block
+  instagram-container: Instagram/social section block
+  modern-alert: Alert banner at top of page
+  news-button: Container for "View All" button below news feed
+
+attributes:
+  title:
+    type: string
+    default: ""
+    description: Optional heading shown above the article list.
+
+  enabled:
+    type: integer
+    default: 1
+    description: 1 to show, 0 to hide.
+
+  article:
+    type: object
+    description: All display and filter configuration lives here.
+    properties:
+      filter:
+        type: object
+        description: Controls which articles are fetched.
+        properties:
+          categories:
+            type: string
+            default: ""
+            description: >
+              Joomla category ID (as string). Use this to pull a dynamic feed.
+              E.g. "8" for the news category. Leave blank if using articles filter.
+          articles:
+            type: string
+            default: ""
+            description: >
+              Specific article ID(s) as comma-separated string. Use this to
+              point to a single shell article (mass times, footer, social widget).
+              E.g. "55" or "55,76". Leave blank if using categories filter.
+          featured:
+            type: string
+            default: "include"
+            options: [include, exclude, only]
+            description: Whether to include featured articles in the results.
+
+      limit:
+        type: object
+        properties:
+          total:
+            type: string
+            default: "10"
+            description: Maximum number of articles to show.
+          columns:
+            type: string
+            default: "1"
+            description: Number of columns in the grid layout.
+          start:
+            type: string
+            default: "0"
+            description: Offset — skip this many articles (for pagination).
+
+      display:
+        type: object
+        description: Controls what fields are shown for each article.
+        properties:
+          pagination_buttons:
+            type: string
+            default: ""
+            description: Show pagination buttons. Leave blank to hide.
+          image:
+            type: object
+            properties:
+              enabled:
+                type: string
+                default: ""
+                options: ["", "full", "intro"]
+                description: >
+                  "" = no image, "full" = full image, "intro" = intro image.
+                  Use "full" for news cards with thumbnails.
+          title:
+            type: object
+            properties:
+              enabled:
+                type: string
+                default: ""
+                options: ["", "show", "hide"]
+                description: Show or hide the article title.
+          text:
+            type: object
+            description: Intro text display settings.
+            properties:
+              type:
+                type: string
+                default: ""
+                options: ["", "intro", "full"]
+              limit:
+                type: string
+                default: ""
+                description: Character limit on intro text (e.g. "90").
+              formatting:
+                type: string
+                default: ""
+                options: ["", "text", "html"]
+          read_more:
+            type: object
+            properties:
+              enabled:
+                type: string
+                default: ""
+                options: ["", "show", "hide"]
+                description: Show "Read More" link.
+          date:
+            type: object
+            properties:
+              enabled:
+                type: string
+                default: ""
+                options: ["", "show", "hide"]
+
+      sort:
+        type: object
+        properties:
+          orderby:
+            type: string
+            default: "ordering"
+            options: [ordering, date, title, hits]
+          ordering:
+            type: string
+            default: "ASC"
+            options: [ASC, DESC]
+
+rendered_html:
+  outer_wrapper: "div.g-block.{blockClass}"
+  inner_wrapper: "div.g-content"
+  particle_element: "div.g-contentarray"
+  article_item: "div.contentarray-item"
+
+examples:
+  news_feed:
+    description: News & Events feed — 4 articles with images and intro text
+    blockClass: ph-sideway-stack
+    attributes:
+      title: "News & Events"
+      article:
+        filter:
+          categories: "8"
+          articles: ""
+          featured: include
+        limit:
+          total: "4"
+          columns: "1"
+          start: "0"
+        display:
+          image: { enabled: "full" }
+          title: { enabled: "show" }
+          text: { type: "intro", limit: "90", formatting: "text" }
+          read_more: { enabled: "show" }
+          pagination_buttons: ""
+        sort:
+          orderby: ordering
+          ordering: ASC
+
+  mass_times_shell:
+    description: Single shell article for mass times (no image, full content)
+    blockClass: mass-times-block
+    attributes:
+      article:
+        filter:
+          categories: ""
+          articles: "55"
+          featured: include
+        limit:
+          total: "1"
+          columns: "1"
+        display:
+          title: { enabled: "hide" }
+          pagination_buttons: ""
+        sort:
+          orderby: ordering
+          ordering: ASC
+
+  alert_banner:
+    description: Alert article pulled by category — shown at top of page
+    blockClass: modern-alert
+    attributes:
+      article:
+        filter:
+          categories: "9"
+          articles: ""
+          featured: include
+        limit:
+          total: "10"
+          columns: "1"
+        display:
+          pagination_buttons: ""
+          title: { enabled: "show" }
+        sort:
+          orderby: ordering
+          ordering: ASC
+
+  social_widget:
+    description: Social media embed from a single shell article
+    blockClass: facebook-widget-container widget-container
+    attributes:
+      article:
+        filter:
+          categories: ""
+          articles: "76"
+          featured: include
+        limit:
+          total: "1"
+          columns: "1"
+        display:
+          pagination_buttons: ""
+        sort:
+          orderby: ordering
+          ordering: ASC
+
+  footer_content:
+    description: Footer shell article (contact info, logo, links)
+    attributes:
+      article:
+        filter:
+          categories: ""
+          articles: "36"
+          featured: include
+        limit:
+          total: "1"
+          columns: "1"
+        display:
+          pagination_buttons: ""
+        sort:
+          orderby: ordering
+          ordering: ASC
+
+  calendar:
+    description: Calendar article in a section
+    blockClass: calendar-container
+    attributes:
+      article:
+        filter:
+          categories: ""
+          articles: "74"
+          featured: include
+        limit:
+          total: "1"
+          columns: "1"
+        display:
+          pagination_buttons: ""
+        sort:
+          orderby: ordering
+          ordering: ASC

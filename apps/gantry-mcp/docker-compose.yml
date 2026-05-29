@@ -1,0 +1,12 @@
+services:
+  gantry-mcp:
+    build: .
+    ports:
+      - "18301:18301"
+    env_file:
+      - .env
+    environment:
+      HTTP_PORT: "18301"
+    volumes:
+      - C:\joomla-mcp-update:/app/workspace:ro
+    restart: unless-stopped

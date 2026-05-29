@@ -1,0 +1,70 @@
+site: https://stmary-wood.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 36
+menu_item_url: /index.php?Itemid=595
+site_type: parish
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+    notes: "alert bar"
+  - id: navigation
+    particles: [social, menu, logo]
+    notes: "free-menu style nav with social icons"
+  - id: slideshow
+    particles: [swiper, custom, blockcontent]
+    notes: "swiper hero with overlay title/QL"
+  - id: header
+    particles: [contentarray]
+  - id: above
+    particles: [blockcontent]
+    notes: "quick access blocks"
+  - id: feature
+    particles: [custom, contentarray]
+    notes: "give/donate section"
+  - id: utility
+    particles: [contentarray]
+  - id: expanded
+    particles: [contentarray]
+    notes: "expanded news"
+  - id: extension
+    particles: [custom, contentarray]
+    notes: "contact/accordion area"
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - contact-overlay-container
+  - contact-title
+  - free-menu
+  - fullwidth-swiper
+  - give-container
+  - grand-entry
+  - hidden-phone
+  - modern-alert
+  - nav-social-icons
+  - ph-accordian-list
+  - pop-up-block-2
+  - ql-title-overlay
+  - quote-overlay
+  - rotate-sw
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - slideshow-spacing
+  - stock
+  - swiper-overlay-title
+  - swiper-ql-overlay
+
+design_notes: |
+  Free-menu navigation style. Swiper hero with QL overlay directly on slides.
+  Quote overlay and contact overlay container. Give/donate feature section.
+  Accordion list particle for ministry details. Grand-entry rotator.
+  Distinctive swiper-ql-overlay pattern with navigation overlaid on slideshow.

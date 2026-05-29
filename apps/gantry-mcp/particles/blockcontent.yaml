@@ -1,0 +1,229 @@
+name: blockcontent
+title: Block Content
+category: content
+
+description: >
+  Flexible content particle. Renders a block with an optional title, body
+  content, and a repeater array of sub-items (subcontents). Each sub-item
+  can carry an image, icon, label, button link, and button text. The most
+  frequently used particle on parish sites — used for quicklinks bars,
+  card grids, sponsor rows, and call-to-action sections.
+
+when_to_use:
+  - Quick-link navigation bars in the utility section
+  - Card/icon grids linking to ministries or resources
+  - Sponsor or partner logo rows
+  - Call-to-action button groups
+  - Any section that is primarily a set of linked items with images or icons
+
+when_not_to_use:
+  - Dynamic article content from Joomla (use contentarray)
+  - Primary navigation (use menu particle)
+  - Full-width HTML injection (use custom particle)
+
+common_block_classes:
+  ql-window-title: Standard utility quicklinks bar — 4 to 6 items with images
+  ql-united: Full-width unified quicklinks strip across the entire utility section
+  link-boxes: Card-style link grid in the expanded section
+  welcome-title: Decorative title/heading block placed before a quicklinks row
+  ql-toplinks-studius: Small top-of-header navigation links
+
+attributes:
+  source:
+    type: string
+    default: "particle"
+    description: Always "particle" for static content. Do not change.
+
+  title:
+    type: string
+    default: ""
+    description: >
+      Section heading shown above sub-items. Leave blank to suppress
+      the heading entirely. Most parish site quicklinks have no title.
+
+  class:
+    type: string
+    default: ""
+    description: >
+      Extra CSS class applied to the particle's inner wrapper div (inside
+      g-content). Different from blockClass which is on the outer g-block
+      wrapper. Rarely needed — prefer blockClass for CSS targeting.
+
+  icon:
+    type: string
+    default: ""
+    description: Font Awesome class for a particle-level icon (e.g. "fas fa-church").
+
+  image:
+    type: string
+    default: ""
+    description: Particle-level image path (rarely used; prefer per-item images).
+
+  headline:
+    type: string
+    default: ""
+    description: Large decorative headline text above sub-items.
+
+  description:
+    type: string
+    default: ""
+    description: Paragraph text beneath the headline.
+
+  link:
+    type: string
+    default: ""
+    description: Makes the entire particle a single clickable link.
+
+  linktext:
+    type: string
+    default: ""
+    description: Text for the particle-level link.
+
+  linkclass:
+    type: string
+    default: ""
+
+  linktarget:
+    type: string
+    default: "_self"
+    options: [_self, _blank, _top]
+
+  subcontents:
+    type: repeater
+    description: >
+      Array of sub-items. Each renders as a linked card or button.
+      Typical quicklinks bar has 4–6 items.
+    item_schema:
+      name:
+        type: string
+        description: Item title text (shown as the card label).
+      button:
+        type: string
+        description: Button label text. Usually same as name.
+      buttonlink:
+        type: string
+        description: Button href URL. Use relative paths for internal links.
+      buttontarget:
+        type: string
+        default: "_self"
+        options: [_self, _blank, _top]
+      buttonclass:
+        type: string
+        default: ""
+        description: Extra CSS class on the button element.
+      icon:
+        type: string
+        default: ""
+        description: Font Awesome class (e.g. "fas fa-phone"). Use OR image, not both.
+      img:
+        type: string
+        default: ""
+        description: >
+          Image path. Template quicklink images live at:
+          gantry-media://stories/template/quicklinks/{filename}.jpg
+          Common images: computer2.jpg, church.jpg, register.jpg, giving.jpg,
+          bulletin.jpg, calendar.jpg, staff.jpg, sacraments.jpg
+      rokboximage:
+        type: string
+        default: ""
+      rokboxcaption:
+        type: string
+        default: ""
+      subtitle:
+        type: string
+        default: ""
+      description:
+        type: string
+        default: ""
+      class:
+        type: string
+        default: ""
+        description: Extra CSS class on this item's wrapper. Use "full-image" for logo/sponsor rows.
+      accent:
+        type: string
+        default: "none"
+        options: [none, "1", "2", "3"]
+
+rendered_html:
+  outer_wrapper: "div.g-block.{blockClass}"
+  inner_wrapper: "div.g-content"
+  particle_element: "div.g-blockcontent"
+  item_element: "div.blockcontent-item"
+  button_element: "a.button.{buttontarget}"
+
+examples:
+  standard_quicklinks:
+    description: 5-item quicklinks bar in the utility section
+    blockClass: ql-united
+    attributes:
+      source: particle
+      title: ""
+      subcontents:
+        - name: "What's New"
+          button: "What's New"
+          buttonlink: "/whats-new"
+          buttontarget: "_self"
+          img: "gantry-media://stories/template/quicklinks/computer2.jpg"
+          accent: none
+        - name: "Site Registration"
+          button: "Site Registration"
+          buttonlink: "/registration"
+          buttontarget: "_self"
+          img: "gantry-media://stories/template/quicklinks/register.jpg"
+          accent: none
+        - name: "What's Changed"
+          button: "What's Changed"
+          buttonlink: "/whats-changed"
+          buttontarget: "_self"
+          img: "gantry-media://stories/template/quicklinks/bulletin.jpg"
+          accent: none
+        - name: "Bulletin"
+          button: "Bulletin"
+          buttonlink: "/bulletin"
+          buttontarget: "_self"
+          img: "gantry-media://stories/template/quicklinks/church.jpg"
+          accent: none
+        - name: "Online Giving"
+          button: "Online Giving"
+          buttonlink: "/giving"
+          buttontarget: "_self"
+          img: "gantry-media://stories/template/quicklinks/giving.jpg"
+          accent: none
+
+  link_boxes:
+    description: Card grid linking to ministry pages
+    blockClass: link-boxes
+    attributes:
+      source: particle
+      title: ""
+      subcontents:
+        - name: "Faith Formation"
+          button: "Faith Formation"
+          buttonlink: "/faith-formation"
+          img: "gantry-media://template/faith-formation.jpg"
+          class: "full-image"
+          accent: none
+        - name: "Sacraments"
+          button: "Sacraments"
+          buttonlink: "/sacraments"
+          img: "gantry-media://template/sacraments.jpg"
+          class: "full-image"
+          accent: none
+
+  toplinks:
+    description: Small utility links in top-right of navigation
+    blockClass: ql-toplinks-studius
+    attributes:
+      source: particle
+      title: ""
+      subcontents:
+        - name: "Mass Times"
+          button: "Mass Times"
+          buttonlink: "/mass-times"
+          buttontarget: "_self"
+          accent: none
+        - name: "Contact Us"
+          button: "Contact Us"
+          buttonlink: "/contact"
+          buttontarget: "_self"
+          accent: none

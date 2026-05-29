@@ -1,0 +1,87 @@
+site: https://assumption-center.backup.solutiosoftware.com/
+outline_name: "#School Home"
+outline_id: 72
+menu_item_url: null
+site_type: parish
+captured: 2026-05-21
+notes: No dedicated school-home menu item found; outline assigned via templateStyleId on school section pages.
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [menu, social, logo, blockcontent]
+  - id: slideshow
+    particles: [swiper, custom, blockcontent]
+  - id: header
+    particles: []
+  - id: above
+    particles: []
+  - id: feature
+    particles: []
+  - id: showcase
+    particles: []
+  - id: utility
+    particles: [blockcontent]
+  - id: sidebar
+    particles: [custom, contentarray]
+  - id: mainbar
+    particles: [custom, timeline]
+  - id: aside
+    particles: []
+  - id: expanded
+    particles: [contentarray]
+  - id: extension
+    particles: []
+  - id: bottom
+    particles: []
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+block_classes:
+  - calendar-button
+  - calendar-title
+  - crawl-space
+  - daily-readings-widget-container
+  - ec-vert
+  - facebook-widget-container
+  - formed-widget-container
+  - fullwidth-swiper
+  - grand-entry
+  - grid
+  - grid-articles
+  - grid-bg-primary
+  - grid-hover-scale
+  - grid-mobile-horizontal-scroll
+  - grid-mobile-stacked
+  - grid-sideways
+  - grid-text-white
+  - grid-title-tertiary
+  - grid-wide
+  - headlines-spacing
+  - hidden-phone
+  - modern-alert
+  - nav-social-icons
+  - news-button
+  - news-to-me
+  - pop-up-block-2
+  - ql-dm
+  - ql-height-13vw
+  - ql-square-1
+  - ql-toplinks-studius
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - slideshow-spacing
+  - standard-ql
+  - stock
+  - swiper-overlay-title
+  - swiper-ql-overlay
+  - widget-container
+  - widget-parthenon-alt
+design_notes: |
+  School home. Crawl-space nav with social icons. Fullwidth swiper with overlays.
+  Grid articles section. Calendar, Facebook, Formed, and Daily Readings widgets.
+  Timeline in mainbar. QL links (toplinks-studius, dm, square). News-to-me section.
+  Sidebar present with custom/contentarray content.

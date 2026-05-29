@@ -1,0 +1,175 @@
+name: swiper
+title: Swiper Slider
+category: media
+
+description: >
+  Full-width image carousel/slider using the Swiper.js library. The primary
+  hero element on parish homepages. Can pull slides from Joomla articles
+  (source: joomla, using article images and content) or from manually defined
+  slide items (source: particle). Parish sites almost always use source:joomla
+  with a dedicated slider category. The slider typically occupies 70% of the
+  slideshow section width, with mass times in the remaining 30%.
+
+when_to_use:
+  - Hero section on the homepage (#Home outline)
+  - Any full-width image carousel
+
+when_not_to_use:
+  - Content pages (#Grid outline) — hero sliders only on homepage
+  - Sections needing static images without slide behavior (use blockcontent with images)
+
+common_block_classes:
+  fullwidth-swiper rotate-wide: Standard hero slider block — full-bleed with rotation effect
+
+attributes:
+  class:
+    type: string
+    default: ""
+    description: Extra CSS class on the particle wrapper.
+
+  source:
+    type: string
+    default: "joomla"
+    options: [joomla, particle]
+    description: >
+      "joomla" = pull slides from Joomla articles (recommended for parish sites).
+      "particle" = define slides manually in the items array.
+
+  # --- Joomla source settings (used when source: joomla) ---
+  image:
+    type: string
+    default: "img"
+    options: [img, intro, full]
+    description: Which Joomla article image to use as the slide background.
+
+  # --- Display settings ---
+  height:
+    type: string
+    default: "36vw"
+    description: >
+      Slider height as a CSS value. "36vw" is standard for desktop.
+      Adjust for different aspect ratios.
+
+  heightMobile:
+    type: string
+    default: "56vw"
+    description: Slider height on mobile devices.
+
+  nav:
+    type: string
+    default: "enabled"
+    options: [enabled, disabled]
+    description: Show previous/next navigation arrows.
+
+  pagination:
+    type: string
+    default: "bullets"
+    options: [bullets, fraction, progressbar, disabled]
+    description: Pagination indicator style.
+
+  autoplay:
+    type: string
+    default: "enabled"
+    options: [enabled, disabled]
+    description: Auto-advance slides.
+
+  autoplayTimeout:
+    type: string
+    default: "8000"
+    description: Milliseconds between auto-advance (8000 = 8 seconds).
+
+  loop:
+    type: string
+    default: "enabled"
+    options: [enabled, disabled]
+    description: Loop back to first slide after last.
+
+  speed:
+    type: string
+    default: "800"
+    description: Slide transition speed in milliseconds.
+
+  effect:
+    type: string
+    default: "slide"
+    options: [slide, fade, cube, coverflow, flip]
+    description: Transition effect between slides.
+
+  direction:
+    type: string
+    default: "horizontal"
+    options: [horizontal, vertical]
+
+  touchmove:
+    type: string
+    default: "enabled"
+    options: [enabled, disabled]
+    description: Enable touch/swipe on mobile.
+
+  slides_linkable:
+    type: string
+    default: "disabled"
+    options: [enabled, disabled]
+    description: Make entire slide a clickable link.
+
+  overlaycolor:
+    type: string
+    default: "rgba(255, 255, 255, 0)"
+    description: CSS color overlay on slides. Use rgba with 0 alpha for no overlay.
+
+  # --- Responsive column settings ---
+  largedesktopslides:
+    type: string
+    default: "1"
+  desktopslides:
+    type: string
+    default: "1"
+  tabletslides:
+    type: string
+    default: "1"
+
+  # --- Manual slides (used when source: particle) ---
+  items:
+    type: repeater
+    default: []
+    description: >
+      Manual slide definitions. Only used when source is "particle".
+      Each item: { image, title, description, link, linktext }
+
+rendered_html:
+  outer_wrapper: "div.g-block.{blockClass}"
+  inner_wrapper: "div.g-content"
+  particle_element: "div.g-swiper"
+  slide_element: "div.swiper-slide"
+
+examples:
+  hero_slider_joomla:
+    description: Standard homepage hero slider pulling from Joomla articles
+    blockClass: fullwidth-swiper rotate-wide
+    attributes:
+      class: ""
+      source: joomla
+      image: img
+      height: "36vw"
+      heightMobile: "56vw"
+      nav: enabled
+      pagination: bullets
+      autoplay: enabled
+      autoplayTimeout: "8000"
+      loop: enabled
+      speed: "800"
+      slides_linkable: disabled
+      touchmove: enabled
+      overlaycolor: "rgba(255, 255, 255, 0)"
+      direction: horizontal
+      effect: slide
+      items: []
+      largedesktopslides: "1"
+      largedesktopgroup: "1"
+      largedesktopspace: "0"
+      desktopslides: "1"
+      desktopgroup: "1"
+      desktopspace: "0"
+      tabletslides: "1"
+      tabletgroup: "1"
+      tabletspace: "0"

@@ -1,0 +1,66 @@
+site: https://stgertrude-bay.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [logo, blockcontent, menu]
+    notes: "ole-faithful nav style"
+  - id: slideshow
+    particles: [contentarray, swiper]
+    notes: "hero swiper"
+  - id: utility
+    particles: [custom, blockcontent]
+    notes: "mass times block, custom utility"
+  - id: sidebar
+    particles: [custom, contentarray]
+    notes: "sideway stack, links"
+  - id: mainbar
+    particles: [contentarray]
+    notes: "news content, news-to-me style"
+  - id: expanded
+    particles: [blockcontent]
+    notes: "link boxes"
+  - id: extension
+    particles: [contentarray]
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - calendar-container
+  - facebook-widget-container
+  - floatator
+  - fullwidth-swiper
+  - headlines-spacing
+  - hidden-phone
+  - instagram-container
+  - link-boxes
+  - mass-times-block
+  - modern-alert
+  - news-button
+  - news-to-me
+  - ole-faithful
+  - ph-sideway-stack
+  - pop-up-block-2
+  - ql-toplinks-studius
+  - ql-united
+  - rotate-wide
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+
+design_notes: |
+  Ole-faithful navigation. Sideway-stack photo headlines. News-to-me news section.
+  Link-boxes blockcontent. Instagram container and calendar container in sidebar.
+  QL-United quick link style. Floatator rotator. Headlines spacing style.

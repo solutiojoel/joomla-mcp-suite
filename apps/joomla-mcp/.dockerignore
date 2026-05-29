@@ -1,0 +1,8 @@
+node_modules
+scripts
+snapshots
+blueprints
+docs
+.env
+dist
+.puppeteer-cache

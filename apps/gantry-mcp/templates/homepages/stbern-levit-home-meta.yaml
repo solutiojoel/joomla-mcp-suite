@@ -1,0 +1,63 @@
+site: https://stbern-levit.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 17
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+    notes: "alert bar"
+  - id: navigation
+    particles: [contentarray, logo, menu]
+    notes: "ole-faithful nav style, header contact info"
+  - id: slideshow
+    particles: [swiper, contentarray]
+    notes: "hero swiper"
+  - id: header
+    particles: [contentarray]
+  - id: utility
+    particles: [blockcontent]
+    notes: "mass times block"
+  - id: sidebar
+    particles: [custom, contentarray]
+    notes: "sideway stack, bulletin widget"
+  - id: expanded
+    particles: [contentarray]
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - bulletin-widget-container
+  - facebook-widget-container
+  - floatator
+  - fullwidth-swiper
+  - header-contact-container
+  - headlines-spacing
+  - hidden-phone
+  - links-widget-container
+  - mass-times-block
+  - mission-container
+  - modern-alert
+  - news-button
+  - news-to-me
+  - ole-faithful
+  - ph-sideway-stack
+  - pop-up-block-2
+  - ql-under-title
+  - rotate-wide
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+
+design_notes: |
+  Ole-faithful navigation style. Mission container section.
+  Sideway-stack photo headline layout. Bulletin widget, links widget.
+  Floatator rotator. Header contact container. News-to-me section.

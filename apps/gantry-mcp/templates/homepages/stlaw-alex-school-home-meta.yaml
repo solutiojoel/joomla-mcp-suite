@@ -1,0 +1,88 @@
+site: https://stlaw-alex.backup.solutiosoftware.com/
+outline_name: "#School Home"
+outline_id: 72
+menu_item_url: null
+menu_item_url_note: "No dedicated menu item found with templateStyleId=72 on any menu"
+site_type: school
+captured: 2026-05-21
+
+# Key sections observed in the layout tree
+sections:
+  - id: top
+    particles: [custom, contentarray]
+    notes: "alert bar / top strip"
+  - id: navigation
+    particles: [blockcontent, menu, social, logo]
+    notes: "school nav with social icons"
+  - id: slideshow
+    particles: [custom, blockcontent, swiper]
+    notes: "school hero slideshow"
+  - id: header
+    particles: []
+  - id: above
+    particles: []
+  - id: feature
+    particles: []
+  - id: showcase
+    particles: []
+  - id: utility
+    particles: [blockcontent]
+    notes: "utility bar"
+  - id: sidebar
+    particles: [custom, contentarray]
+  - id: mainbar
+    particles: [custom, timeline]
+    notes: "school events timeline + custom content"
+  - id: aside
+    particles: []
+  - id: expanded
+    particles: [contentarray]
+  - id: extension
+    particles: []
+  - id: bottom
+    particles: []
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+# Block classes that appear in this layout (from blueprint scan)
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - calendar-button
+  - calendar-title
+  - crawl-space
+  - daily-readings-widget-container
+  - ec-vert
+  - facebook-widget-container
+  - formed-widget-container
+  - fullwidth-swiper
+  - grand-entry
+  - grid
+  - grid-articles
+  - grid-bg-primary
+  - grid-g-grid-border-radius-1-point-5
+  - grid-g-grid-box-shadow
+  - grid-hover-scale
+  - grid-image-border-radius-1
+  - grid-img-border-2-tertiary
+  - grid-mobile-horizontal-scroll
+  - grid-mobile-stacked
+  - grid-sideways
+  - grid-text-white
+  - grid-title-tertiary
+  - grid-wide
+  - headlines-spacing
+  - hidden-phone
+  - modern-alert
+  - nav-social-icons
+
+# What makes this layout visually distinctive
+design_notes: |
+  School variant with timeline particle in mainbar for events.
+  Uses grid-* classes for news grid with rounded images, box shadows.
+  Navigation includes social icons and blockcontent blocks.
+  Daily readings widget and calendar button for school content.
+  Swiper slideshow with grand-entry style for hero area.

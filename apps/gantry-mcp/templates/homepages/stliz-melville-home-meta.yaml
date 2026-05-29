@@ -1,0 +1,60 @@
+site: https://stliz-melville.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [social, menu, blockcontent, logo]
+    notes: "free-menu nav with social icons"
+  - id: slideshow
+    particles: [contentarray, swiper]
+    notes: "hero swiper"
+  - id: utility
+    particles: [blockcontent]
+    notes: "mass times block"
+  - id: mainbar
+    particles: [custom, contentarray]
+    notes: "full-width mainbar, imgcard style"
+  - id: expanded
+    particles: [contentarray]
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - column-container
+  - floatator
+  - free-menu
+  - fullwidth-swiper
+  - headlines-spacing
+  - hidden-phone
+  - mass-times-block
+  - modern-alert
+  - nav-social-icons
+  - news-button
+  - news-to-me
+  - ph-imgcard
+  - pop-up-block-2
+  - ql-toplinks-studius
+  - ql-windowsill
+  - rotate-wide
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - slideshow-spacing
+  - stock
+
+design_notes: |
+  Free-menu navigation. PH-imgcard photo card style. QL-windowsill quick links.
+  Column container layout. News-to-me style. No sidebar - mainbar only layout.
+  Floatator rotator. Rotate-wide style.

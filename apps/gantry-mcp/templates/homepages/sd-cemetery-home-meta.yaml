@@ -1,0 +1,71 @@
+site: https://sd-cemetery.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: cemetery
+captured: 2026-05-21
+school_home_note: "No #School Home outline. Site has custom cemetery sub-site outlines: #Good Shepherd Home (74), #Holy Cross Home (72), #TBD Home (77)"
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+    notes: "alert bar"
+  - id: navigation
+    particles: [contentarray, menu, logo]
+    notes: "center-of-attention nav style"
+  - id: slideshow
+    particles: [swiper, custom, blockcontent]
+    notes: "swiper hero with overlay QL"
+  - id: header
+    particles: [contentarray]
+  - id: above
+    particles: [contentarray]
+  - id: utility
+    particles: [custom, contentarray]
+    notes: "linksources, info container"
+  - id: expanded
+    particles: [blockcontent, contentarray]
+    notes: "2-column grid, cemetery sections"
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - association-container
+  - center-of-attention
+  - choose-container
+  - connected-container
+  - fullwidth-swiper
+  - grand-entry
+  - grid
+  - grid-articles
+  - grid-columns-2
+  - grid-hover-scale
+  - grid-img-box-shadow-50
+  - grid-mobile-horizontal-scroll
+  - grid-mobile-stacked
+  - grid-no-text
+  - grid-wide
+  - hidden-phone
+  - info-container
+  - linksources
+  - modern-alert
+  - news-button
+  - pop-up-block-2
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - slideshow-spacing
+  - stock
+  - swiper-overlay-title
+  - swiper-ql-overlay
+  - translate-container
+  - welcome-container
+
+design_notes: |
+  Cemetery site - very different from parish sites. No mass schedule, no events.
+  Custom containers: association, choose, connected, info, welcome, translate.
+  2-column grid with box shadows for cemetery section showcase.
+  Swiper hero with QL overlay. Linksources widget. Translation container.
+  Also has multiple sub-cemetery home outlines (#Good Shepherd, #Holy Cross, #TBD).

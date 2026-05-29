@@ -1,0 +1,74 @@
+site: https://olmc-fairfield.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+    notes: "alert bar"
+  - id: navigation
+    particles: [menu, blockcontent, social, logo]
+    notes: "nav with social icons, crawl-space style"
+  - id: slideshow
+    particles: [swiper, contentarray]
+    notes: "hero swiper slideshow"
+  - id: header
+    particles: [contentarray]
+  - id: above
+    particles: [blockcontent]
+    notes: "mass times block"
+  - id: feature
+    particles: []
+  - id: showcase
+    particles: []
+  - id: utility
+    particles: []
+  - id: sidebar
+    particles: [contentarray]
+    notes: "sidebar news/widgets"
+  - id: mainbar
+    particles: [custom, contentarray]
+    notes: "main news content"
+  - id: aside
+    particles: []
+  - id: expanded
+    particles: []
+  - id: extension
+    particles: [contentarray]
+  - id: bottom
+    particles: []
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - calendar-widget-container
+  - crawl-space
+  - floatator
+  - fullwidth-swiper
+  - headlines-spacing
+  - hidden-phone
+  - instagram-widget-container
+  - mass-times-block
+  - modern-alert
+  - nav-social-icons
+  - news-button
+  - news-to-me
+  - ph-sidenews
+  - pop-up-block-2
+  - ql-circle-row
+  - ql-toplinks-studius
+  - rotate-wide
+
+design_notes: |
+  Swiper hero with sidebar layout. Mass times block prominent in above section.
+  Crawl-space navigation with social icons. News-to-me style news section.
+  Instagram widget and calendar widget in sidebar. Floatator rotator style.
+  Spanish-language support (gantry-subtitle: Incio).

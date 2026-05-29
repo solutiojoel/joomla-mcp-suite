@@ -1,0 +1,53 @@
+site: https://stmary-wood.backup.solutiosoftware.com/
+outline_name: "#School Home"
+outline_id: 70
+menu_item_url: null
+menu_item_url_note: "No dedicated menu item found with templateStyleId=70"
+site_type: school
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: slideshow
+    particles: [swiper, custom, blockcontent]
+  - id: utility
+    particles: [blockcontent]
+  - id: sidebar
+    particles: [custom, contentarray]
+  - id: mainbar
+    particles: [custom, timeline]
+    notes: "school events timeline"
+  - id: expanded
+    particles: [contentarray]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - calendar-button
+  - calendar-title
+  - daily-readings-widget-container
+  - ec-vert
+  - facebook-widget-container
+  - formed-widget-container
+  - fullwidth-swiper
+  - grand-entry
+  - grid
+  - grid-articles
+  - grid-bg-primary
+  - grid-g-grid-border-radius-1-point-5
+  - grid-g-grid-box-shadow
+  - grid-hover-scale
+  - grid-image-border-radius-1
+  - grid-img-border-2-tertiary
+  - grid-mobile-horizontal-scroll
+  - grid-mobile-stacked
+  - grid-sideways
+  - grid-text-white
+  - grid-title-tertiary
+  - grid-wide
+
+design_notes: |
+  Standard school home pattern: timeline events, grid news cards, grand-entry hero.
+  Calendar button/title, daily readings, sideways grid layout.

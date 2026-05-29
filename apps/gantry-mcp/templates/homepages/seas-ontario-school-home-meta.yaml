@@ -1,0 +1,56 @@
+site: https://seas-ontario.backup.solutiosoftware.com/
+outline_name: "#School Home"
+outline_id: 72
+menu_item_url: null
+menu_item_url_note: "No dedicated menu item found with templateStyleId=72"
+site_type: school
+captured: 2026-05-21
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [logo, social, blockcontent, menu]
+    notes: "school nav with social icons"
+  - id: slideshow
+    particles: [blockcontent, swiper, custom]
+    notes: "school hero slideshow"
+  - id: utility
+    particles: [blockcontent]
+  - id: sidebar
+    particles: [contentarray, custom]
+  - id: mainbar
+    particles: [timeline, custom]
+    notes: "school events timeline"
+  - id: expanded
+    particles: [contentarray]
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - calendar-button
+  - calendar-title
+  - crawl-space
+  - daily-readings-widget-container
+  - ec-vert
+  - facebook-widget-container
+  - formed-widget-container
+  - fullwidth-swiper
+  - grand-entry
+  - grid
+  - grid-articles
+  - grid-bg-primary
+  - grid-g-grid-border-radius-1-point-5
+  - grid-g-grid-box-shadow
+  - grid-hover-scale
+  - grid-image-border-radius-1
+  - grid-img-border-2-tertiary
+
+design_notes: |
+  School variant - timeline mainbar, grand-entry hero, grid news cards.
+  Calendar button/title, daily readings widget, grid with rounded images.

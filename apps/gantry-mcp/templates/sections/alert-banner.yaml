@@ -1,0 +1,40 @@
+# Section Template: Alert / Announcement Banner
+# Usage: Dynamic alert pulled from a Joomla category — shown at top of page
+#        when articles exist in the alert category.
+# Place in: #Home outline or #Outline, top section (as a second grid row)
+#
+# REQUIRED CONTEXT VARIABLES:
+#   {{alert_category_id}} — Joomla category ID for alerts/announcements
+#
+# TIP: Publish/unpublish articles in the alert category to control visibility.
+# The banner disappears when no articles are published in that category.
+
+id: top
+type: section
+# NOTE: This template is meant to be ADDED to the existing top section,
+# not replace it. The top section already contains system-messages.
+# Add this as an additional grid row.
+
+# Additional grid row for alert banner:
+grid:
+  blocks:
+    - size: 100
+      blockClass: modern-alert
+      particle: contentarray
+      title: "Alert"
+      attributes:
+        article:
+          filter:
+            categories: "{{alert_category_id}}"
+            articles: ""
+            featured: include
+          limit:
+            total: "10"
+            columns: "1"
+            start: "0"
+          display:
+            pagination_buttons: ""
+            title: { enabled: "show" }
+          sort:
+            orderby: ordering
+            ordering: ASC

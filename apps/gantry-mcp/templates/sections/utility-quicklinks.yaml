@@ -1,0 +1,106 @@
+# Section Template: Utility Quicklinks Bar
+# Usage: Homepage utility section — welcome title + quicklinks strip
+# Place in: #Home outline, utility section
+#
+# REQUIRED CONTEXT VARIABLES:
+#   {{parish_name}}   — Full parish name for the welcome heading
+#
+# CUSTOMIZATION:
+#   Replace the subcontents array with 4-6 site-specific quicklinks.
+#   Standard parish quicklinks: What's New, Site Registration,
+#   What's Changed, Bulletin, Online Giving, Staff Directory
+#   Image paths: gantry-media://stories/template/quicklinks/{filename}.jpg
+#   Common image filenames: computer2, register, bulletin, church,
+#                           giving, calendar, staff, sacraments
+
+id: utility
+type: section
+attributes:
+  class: "standard-ql"
+
+grids:
+  # Row 1: Welcome heading
+  - blocks:
+      - size: 100
+        blockClass: welcome-title
+        particle: custom
+        title: "Welcome Title"
+        attributes:
+          html: '<h3 class="g-title">Welcome to {{parish_name}}</h3>'
+          enabled: 1
+
+  # Row 2: Quicklinks strip
+  - blocks:
+      - size: 100
+        blockClass: ql-united
+        particle: blockcontent
+        title: "Standard Quicklinks"
+        attributes:
+          source: particle
+          title: ""
+          subcontents:
+            - name: "What's New"
+              button: "What's New"
+              buttonlink: "/whats-new"
+              buttontarget: "_self"
+              img: "gantry-media://stories/template/quicklinks/computer2.jpg"
+              accent: none
+              class: ""
+              icon: ""
+              subtitle: ""
+              description: ""
+              buttonclass: ""
+              rokboximage: ""
+              rokboxcaption: ""
+            - name: "Site Registration"
+              button: "Site Registration"
+              buttonlink: "/site-registration"
+              buttontarget: "_self"
+              img: "gantry-media://stories/template/quicklinks/register.jpg"
+              accent: none
+              class: ""
+              icon: ""
+              subtitle: ""
+              description: ""
+              buttonclass: ""
+              rokboximage: ""
+              rokboxcaption: ""
+            - name: "What's Changed"
+              button: "What's Changed"
+              buttonlink: "/whats-changed"
+              buttontarget: "_self"
+              img: "gantry-media://stories/template/quicklinks/bulletin.jpg"
+              accent: none
+              class: ""
+              icon: ""
+              subtitle: ""
+              description: ""
+              buttonclass: ""
+              rokboximage: ""
+              rokboxcaption: ""
+            - name: "Bulletin"
+              button: "Bulletin"
+              buttonlink: "/bulletin"
+              buttontarget: "_self"
+              img: "gantry-media://stories/template/quicklinks/church.jpg"
+              accent: none
+              class: ""
+              icon: ""
+              subtitle: ""
+              description: ""
+              buttonclass: ""
+              rokboximage: ""
+              rokboxcaption: ""
+            - name: "Online Giving"
+              button: "Online Giving"
+              buttonlink: "/giving"
+              buttontarget: "_self"
+              img: "gantry-media://stories/template/quicklinks/giving.jpg"
+              accent: none
+              class: ""
+              icon: ""
+              subtitle: ""
+              description: ""
+              buttonclass: ""
+              rokboximage: ""
+              rokboxcaption: ""

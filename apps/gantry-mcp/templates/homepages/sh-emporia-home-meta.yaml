@@ -1,0 +1,68 @@
+site: https://sh-emporia.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+sections:
+  - id: top
+    particles: [contentarray, custom]
+  - id: navigation
+    particles: [blockcontent, menu, social, logo]
+  - id: slideshow
+    particles: [blockcontent, swiper, custom]
+  - id: header
+    particles: [contentarray]
+  - id: above
+    particles: []
+  - id: feature
+    particles: []
+  - id: showcase
+    particles: []
+  - id: utility
+    particles: [contentarray]
+  - id: sidebar
+    particles: []
+  - id: mainbar
+    particles: [timeline, custom]
+  - id: aside
+    particles: []
+  - id: expanded
+    particles: [contentarray, custom]
+  - id: extension
+    particles: []
+  - id: bottom
+    particles: []
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+block_classes:
+  - calendar-button
+  - calendar-title
+  - crawl-space
+  - ec-row
+  - fullwidth-swiper
+  - grand-entry
+  - hidden-phone
+  - mass-times-container
+  - modern-alert
+  - nav-social-icons
+  - news-button
+  - ph-side-circles
+  - pop-up-block-2
+  - ql-toplinks-studius
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - slideshow-spacing
+  - special-message-container
+  - stock
+  - swiper-overlay-title
+  - swiper-ql-overlay
+design_notes: |
+  Parish home. Crawl-space nav with social icons. Grand-entry rotator. Fullwidth swiper
+  with overlay QL links (toplinks-studius). Side-circles photo header style.
+  Calendar, Mass times, and special message containers. Timeline in mainbar.
+  EC row layout. Ads (901/902/903).

@@ -1,0 +1,93 @@
+# Section Template: News & Events Grid
+# Usage: Homepage main content area — news sidebar + social feed + ads
+# Layout: 55% news sidebar | 30% social/Facebook widget | 15% ads column
+# Place in: #Home outline, container-main
+#
+# REQUIRED CONTEXT VARIABLES:
+#   {{news_category_id}}      — Joomla category ID for News & Events
+#   {{social_article_id}}     — Joomla article ID for social widget shell article
+#
+# This template produces a container-main with sidebar/mainbar/aside sections.
+
+sections:
+  sidebar:
+    id: sidebar
+    type: aside
+    attributes:
+      class: "news-to-me headlines-spacing"
+    grids:
+      # News feed
+      - blocks:
+          - size: 100
+            blockClass: ph-sideway-stack
+            particle: contentarray
+            title: "News & Events"
+            attributes:
+              article:
+                filter:
+                  categories: "{{news_category_id}}"
+                  articles: ""
+                  featured: include
+                limit:
+                  total: "4"
+                  columns: "1"
+                  start: "0"
+                display:
+                  pagination_buttons: ""
+                  image: { enabled: "full" }
+                  title: { enabled: "show" }
+                  text: { type: "intro", limit: "90", formatting: "text" }
+                  read_more: { enabled: "show" }
+                sort:
+                  orderby: ordering
+                  ordering: ASC
+      # View All News button
+      - blocks:
+          - size: 100
+            blockClass: news-button
+            particle: custom
+            title: "View All News & Events Button"
+            attributes:
+              html: '<a href="/news" class="button">View All News</a>'
+              enabled: 1
+
+  mainbar:
+    id: mainbar
+    type: main
+    attributes:
+      class: "news-to-me headlines-spacing"
+    grids:
+      # Social widget / Facebook embed
+      - blocks:
+          - size: 100
+            blockClass: facebook-widget-container widget-container
+            particle: contentarray
+            title: "Social Feed"
+            attributes:
+              article:
+                filter:
+                  categories: ""
+                  articles: "{{social_article_id}}"
+                  featured: include
+                limit:
+                  total: "1"
+                  columns: "1"
+                display:
+                  pagination_buttons: ""
+                sort:
+                  orderby: ordering
+                  ordering: ASC
+
+  aside:
+    id: aside
+    type: aside
+    attributes:
+      class: "news-to-me headlines-spacing"
+    grids:
+      # Sidebar ad module position
+      - blocks:
+          - size: 100
+            blockClass: ads-903 side-ads ads-901 ads-902
+            particle: position
+            title: "Home Ads"
+            position_type: module

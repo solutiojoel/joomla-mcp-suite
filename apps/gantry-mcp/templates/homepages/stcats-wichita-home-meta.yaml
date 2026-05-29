@@ -1,0 +1,63 @@
+site: https://stcats-wichita.backup.solutiosoftware.com/
+outline_name: "#Home"
+outline_id: 33
+menu_item_url: /index.php?Itemid=101
+site_type: parish
+captured: 2026-05-21
+school_outline_note: "School outline named '#St. Catherine School Home' (ID 72)"
+
+sections:
+  - id: top
+    particles: [custom, contentarray]
+  - id: navigation
+    particles: [logo, search, menu, blockcontent]
+    notes: "crawl-space nav with search particle"
+  - id: slideshow
+    particles: [blockcontent, video, swiper]
+    notes: "hero with video particle support"
+  - id: mainbar
+    particles: [contentarray, custom]
+    notes: "headlines-rounded-square news"
+  - id: expanded
+    particles: [contentarray]
+  - id: extension
+    particles: [contentarray]
+  - id: bottom
+    particles: [contentarray]
+  - id: footer
+    particles: [contentarray]
+  - id: copyright
+    particles: [custom]
+
+block_classes:
+  - ads-901
+  - ads-902
+  - ads-903
+  - calendar-widget-container
+  - crawl-space
+  - formed-widget-container
+  - fullwidth-swiper
+  - hallow-widget-container
+  - headlines-rounded-square
+  - hidden-phone
+  - mass-times-container
+  - modern-alert
+  - news-button
+  - news-title
+  - ph-rounded-square
+  - ph-rounded-square-mobile
+  - ph-wide
+  - pop-up-block-2
+  - ql-toplinks-studius
+  - rotate-sw
+  - s-padding-2
+  - s-vertical-padding-2
+  - show-mobile
+  - side-ads
+  - stock
+
+design_notes: |
+  Video particle in slideshow (unique feature). Search in navigation.
+  Headlines-rounded-square news style. PH-rounded-square photo headlines.
+  Hallow (Formed app) widget. Mass times container. PH-wide wide photo layout.
+  No sidebar - full-width mainbar layout. Rotate-sw rotator style.
