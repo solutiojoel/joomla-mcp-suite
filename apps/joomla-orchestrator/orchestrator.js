@@ -1,0 +1,570 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * Joomla Orchestrator — MCP server that routes tool calls to downstream servers.
+ *
+ * Content tools (articles, categories, menus, modules) → joomla-mcp
+ * Design tools  (gantry layouts, outlines, styles)      → gantry-mcp
+ *
+ * Workflow:
+ *   1. User says "I want to work on a site"
+ *   2. Orchestrator asks for the site URL
+ *   3. User provides URL → set_active_site is called
+ *   4. Subsequent tool calls are routed to the right downstream server
+ *
+ * This is the foundation — routing logic, intent classification, multi-site
+ * support, and credential management can all be extended here.
+ */
+
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+
+const { Server }   = require('@modelcontextprotocol/sdk/server/index.js');
+const { Client }   = require('@modelcontextprotocol/sdk/client/index.js');
+const { StreamableHTTPClientTransport } = require('@modelcontextprotocol/sdk/client/streamableHttp.js');
+const { StdioServerTransport }          = require('@modelcontextprotocol/sdk/server/stdio.js');
+const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
+const {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
+} = require('@modelcontextprotocol/sdk/types.js');
+const http = require('http');
+const { randomUUID } = require('crypto');
+const fs   = require('fs');
+const path = require('path');
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+const JOOMLA_MCP_URL   = process.env.JOOMLA_MCP_URL   || 'http://host.docker.internal:9300/mcp';
+const JOOMLA_MCP_TOKEN = process.env.JOOMLA_MCP_TOKEN || '';
+const GANTRY_MCP_URL   = process.env.GANTRY_MCP_URL   || 'http://host.docker.internal:9301/mcp';
+const GANTRY_MCP_TOKEN = process.env.GANTRY_MCP_TOKEN || '';
+
+// ─── Session state ────────────────────────────────────────────────────────────
+// TODO: move into per-session scope when multi-tenant support is needed
+
+let activeSiteUrl = null;
+
+// ─── Persistent site notes ────────────────────────────────────────────────────
+// Notes are stored in notes.json next to the server file so they survive restarts.
+
+const NOTES_FILE = path.join(__dirname, 'site-notes.json');
+
+function loadNotes() {
+  try {
+    if (fs.existsSync(NOTES_FILE)) return JSON.parse(fs.readFileSync(NOTES_FILE, 'utf8'));
+  } catch {}
+  return {};
+}
+
+function saveNotes(notes) {
+  try { fs.writeFileSync(NOTES_FILE, JSON.stringify(notes, null, 2), 'utf8'); } catch (e) {
+    log(`WARNING: could not save notes — ${e.message}`);
+  }
+}
+
+function getNoteKey(url) {
+  try { return new URL(url).hostname; } catch { return url; }
+}
+
+// ─── Auto-URL extraction ──────────────────────────────────────────────────────
+// If activeSiteUrl is not set but a tool argument looks like a site URL, use it.
+
+function extractSiteUrlFromArgs(args) {
+  if (!args || typeof args !== 'object') return null;
+  for (const val of Object.values(args)) {
+    if (typeof val === 'string' && /^https?:\/\//.test(val)) {
+      // Return the origin (scheme + host) only
+      try { return new URL(val).origin; } catch {}
+    }
+  }
+  return null;
+}
+
+// ─── Downstream clients ───────────────────────────────────────────────────────
+// We create a fresh MCP client per call rather than holding a persistent
+// connection. Persistent StreamableHTTP connections time out after inactivity
+// and don't auto-reconnect, which makes the proxy flaky. Fresh-per-call is
+// slightly slower (one extra round-trip for initialize) but always reliable.
+
+const joomlaToolMap = new Map(); // tool name → tool definition
+const gantryToolMap = new Map();
+
+async function createClient(label, url, token) {
+  const client = new Client(
+    { name: `orchestrator→${label}`, version: '1.0.0' },
+    { capabilities: {} }
+  );
+  const transport = new StreamableHTTPClientTransport(new URL(url), {
+    requestInit: token ? { headers: { Authorization: `Bearer ${token}` } } : {},
+  });
+  await client.connect(transport);
+  return client;
+}
+
+/**
+ * Call a tool on a downstream server.
+ * Creates a fresh client, calls the tool, then closes cleanly.
+ * Retries once automatically on any transport/connection error.
+ */
+async function callDownstream(label, url, token, toolName, toolArgs) {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    let client;
+    try {
+      client = await createClient(label, url, token);
+      const result = await client.callTool({ name: toolName, arguments: toolArgs });
+      client.close().catch(() => {});
+      return result;
+    } catch (err) {
+      if (client) client.close().catch(() => {});
+      if (attempt === 2) throw err;
+      log(`${label} call failed (attempt ${attempt}), retrying — ${err.message}`);
+    }
+  }
+}
+
+async function loadDownstreamTools() {
+  for (const [label, url, token, toolMap] of [
+    ['joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN, joomlaToolMap],
+    ['gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN, gantryToolMap],
+  ]) {
+    try {
+      const client = await createClient(label, url, token);
+      const { tools = [] } = await client.listTools();
+      client.close().catch(() => {});
+      toolMap.clear();
+      tools.forEach(t => toolMap.set(t.name, t));
+      log(`loaded ${toolMap.size} tools from ${label}`);
+    } catch (err) {
+      log(`WARNING: could not load ${label} tools — ${err.message}`);
+    }
+  }
+}
+
+// ─── Server builder ───────────────────────────────────────────────────────────
+
+function buildServer() {
+  const server = new Server(
+    { name: 'joomla-orchestrator', version: '1.0.0' },
+    { capabilities: { tools: {}, prompts: {} } }
+  );
+
+  // ── Prompts ──────────────────────────────────────────────────────────────────
+  // Prompts are conversation starters. When a user says "I want to work on a
+  // site", the client surfaces the work_on_site prompt which guides the LLM to
+  // ask for a URL before doing anything else.
+
+  server.setRequestHandler(ListPromptsRequestSchema, async () => ({
+    prompts: [
+      {
+        name: 'work_on_site',
+        description: 'Start a Joomla working session. Use this when the user wants to work on a site.',
+      },
+    ],
+  }));
+
+  server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    if (request.params.name !== 'work_on_site') {
+      throw new Error(`Unknown prompt: ${request.params.name}`);
+    }
+    const siteNote = activeSiteUrl
+      ? `The currently active site is **${activeSiteUrl}**.`
+      : 'No site is currently active.';
+    const storedNotes = (() => {
+      if (!activeSiteUrl) return '';
+      const notes = loadNotes();
+      const entry = notes[getNoteKey(activeSiteUrl)];
+      return entry ? `\n\n**Stored site notes:**\n${entry.notes}` : '';
+    })();
+
+    return {
+      description: 'Joomla site working session starter',
+      messages: [
+        {
+          role: 'assistant',
+          content: {
+            type: 'text',
+            text: [
+              `I can help you work on your Joomla site. ${siteNote}${storedNotes}`,
+              '',
+              'Which site would you like to work on? Please provide the full site URL (e.g. `https://example.com`).',
+              '',
+              'Once I have the site, tell me what you\'d like to do:',
+              '- **Content** — articles, categories, menus, modules',
+              '- **Design** — Gantry layouts, outlines, styles, particles',
+            ].join('\n'),
+          },
+        },
+      ],
+    };
+  });
+
+  // ── Tools ─────────────────────────────────────────────────────────────────────
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
+    // Own management tools come first so the LLM encounters them early
+    const ownTools = [
+      {
+        name: 'set_active_site',
+        description:
+          'Set the active Joomla site URL for this session. ' +
+          'Always call this as soon as the user provides a site URL before using any other tools.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            url: { type: 'string', description: 'Site URL, e.g. https://example.com' },
+          },
+          required: ['url'],
+        },
+      },
+      {
+        name: 'get_active_site',
+        description: 'Get the currently active Joomla site URL.',
+        inputSchema: { type: 'object', properties: {} },
+      },
+      {
+        name: 'set_site_notes',
+        description:
+          'Save persistent notes about the active site (e.g. admin credentials, theme name, ' +
+          'content conventions, known issues). Notes are stored per-hostname and survive server ' +
+          'restarts. Call this whenever you learn something important about a site.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            notes: { type: 'string', description: 'Free-form notes to store for the active site' },
+          },
+          required: ['notes'],
+        },
+      },
+      {
+        name: 'get_site_notes',
+        description:
+          'Retrieve the stored notes for the active site. Always call this at the start of a ' +
+          'session to recall context about the site (credentials, theme, quirks, etc.).',
+        inputSchema: { type: 'object', properties: {} },
+      },
+      {
+        name: 'append_site_notes',
+        description:
+          'Append a new entry to the stored notes for the active site without overwriting existing notes.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            notes: { type: 'string', description: 'Text to append to existing notes' },
+          },
+          required: ['notes'],
+        },
+      },
+      {
+        name: 'gantry_reconnect',
+        description:
+          'Force gantry-mcp to drop its cached session for the active site and re-authenticate. ' +
+          'Call this if gantry tools are returning auth errors, stale session errors, or ' +
+          'unexpected failures after a period of inactivity.',
+        inputSchema: { type: 'object', properties: {} },
+      },
+      {
+        name: 'reload_tools',
+        description:
+          'Reload the tool lists from both joomla-mcp and gantry-mcp. ' +
+          'Call this if tools appear missing or if either downstream server was restarted.',
+        inputSchema: { type: 'object', properties: {} },
+      },
+    ];
+
+    return {
+      tools: [
+        ...ownTools,
+        ...Array.from(joomlaToolMap.values()),
+        ...Array.from(gantryToolMap.values()),
+      ],
+    };
+  });
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: args = {} } = request.params;
+
+    // ── Own tools ──
+
+    if (name === 'set_active_site') {
+      activeSiteUrl = args.url;
+
+      // Auto-login: immediately prime the joomla-mcp session for this site.
+      // This avoids the first tool call failing because no session exists yet.
+      // We fire-and-forget (non-fatal if it fails — credentials may not be set).
+      let loginNote = '';
+      try {
+        const loginResult = await callDownstream(
+          'joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN,
+          'joomla_login', { site_url: activeSiteUrl }
+        );
+        const loginText = loginResult?.content?.[0]?.text || '';
+        let parsed = null;
+        try { parsed = JSON.parse(loginText); } catch {}
+        if (parsed?.success === false) {
+          loginNote = `\n\nNote: auto-login attempt returned: ${parsed.message || loginText.slice(0, 120)}`;
+        } else {
+          loginNote = '\n\nJoomla session established automatically.';
+        }
+      } catch (e) {
+        loginNote = `\n\nNote: auto-login attempt failed (${e.message}) — call joomla_login manually if needed.`;
+      }
+
+      return {
+        content: [{
+          type: 'text',
+          text: `Active site set to: ${activeSiteUrl}${loginNote}\n\nYou can now use content tools (articles, categories, menus, modules) or design tools (Gantry layouts, outlines, styles).`,
+        }],
+      };
+    }
+
+    if (name === 'get_active_site') {
+      return {
+        content: [{
+          type: 'text',
+          text: activeSiteUrl
+            ? `Active site: ${activeSiteUrl}`
+            : 'No active site set. Call set_active_site with the site URL first.',
+        }],
+      };
+    }
+
+    if (name === 'set_site_notes') {
+      if (!activeSiteUrl) {
+        return { isError: true, content: [{ type: 'text', text: 'No active site set. Call set_active_site first.' }] };
+      }
+      const notes = loadNotes();
+      notes[getNoteKey(activeSiteUrl)] = { url: activeSiteUrl, notes: args.notes, updatedAt: new Date().toISOString() };
+      saveNotes(notes);
+      return { content: [{ type: 'text', text: `Notes saved for ${activeSiteUrl}` }] };
+    }
+
+    if (name === 'get_site_notes') {
+      if (!activeSiteUrl) {
+        return { isError: true, content: [{ type: 'text', text: 'No active site set. Call set_active_site first.' }] };
+      }
+      const notes = loadNotes();
+      const entry = notes[getNoteKey(activeSiteUrl)];
+      return {
+        content: [{
+          type: 'text',
+          text: entry
+            ? `Notes for ${activeSiteUrl} (updated ${entry.updatedAt}):\n\n${entry.notes}`
+            : `No notes stored for ${activeSiteUrl} yet. Use set_site_notes to save context about this site.`,
+        }],
+      };
+    }
+
+    if (name === 'append_site_notes') {
+      if (!activeSiteUrl) {
+        return { isError: true, content: [{ type: 'text', text: 'No active site set. Call set_active_site first.' }] };
+      }
+      const notes = loadNotes();
+      const key = getNoteKey(activeSiteUrl);
+      const existing = notes[key]?.notes || '';
+      const timestamp = new Date().toISOString().slice(0, 10);
+      notes[key] = {
+        url: activeSiteUrl,
+        notes: existing ? `${existing}\n\n[${timestamp}] ${args.notes}` : `[${timestamp}] ${args.notes}`,
+        updatedAt: new Date().toISOString(),
+      };
+      saveNotes(notes);
+      return { content: [{ type: 'text', text: `Notes appended for ${activeSiteUrl}` }] };
+    }
+
+    if (name === 'gantry_reconnect') {
+      if (!activeSiteUrl) {
+        return { isError: true, content: [{ type: 'text', text: 'No active site set. Call set_active_site first.' }] };
+      }
+      // Ask gantry-mcp to drop its cached ctx by calling a lightweight tool
+      // that will fail gracefully, then reload the tool map to confirm connectivity.
+      let msg = '';
+      try {
+        // Pass a force-refresh hint via a no-op style tool call
+        await callDownstream('gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN,
+          'gantry_outlines_list', { site: activeSiteUrl });
+        msg = 'Gantry session is alive and responding.';
+      } catch (e) {
+        msg = `Gantry session appears stale (${e.message}). Reloading tool map…`;
+      }
+      // Always reload the tool map on reconnect
+      try {
+        const c = await createClient('gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN);
+        const { tools = [] } = await c.listTools();
+        c.close().catch(() => {});
+        gantryToolMap.clear();
+        tools.forEach(t => gantryToolMap.set(t.name, t));
+        msg += ` Tool map reloaded (${gantryToolMap.size} tools).`;
+      } catch (e) {
+        msg += ` Tool map reload failed: ${e.message}`;
+      }
+      return { content: [{ type: 'text', text: msg }] };
+    }
+
+    if (name === 'reload_tools') {
+      await loadDownstreamTools();
+      return {
+        content: [{
+          type: 'text',
+          text: `Tools reloaded — joomla-mcp: ${joomlaToolMap.size} tools, gantry-mcp: ${gantryToolMap.size} tools.`,
+        }],
+      };
+    }
+
+    // ── Guard: site must be set before routing downstream ──
+    // Auto-detect site URL from tool arguments if not yet set.
+
+    if (!activeSiteUrl) {
+      const detected = extractSiteUrlFromArgs(args);
+      if (detected) {
+        activeSiteUrl = detected;
+        log(`auto-detected site URL from tool args: ${activeSiteUrl}`);
+      } else {
+        return {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: 'No active site is set. Please call set_active_site with the site URL before using any tools.',
+          }],
+        };
+      }
+    }
+
+    // ── Route to joomla-mcp (content tools) ──
+    // Inject site_url so joomla-mcp switches to the active site before each call.
+    // joomla-mcp handles site_url at the top of its CallTool handler.
+
+    if (joomlaToolMap.has(name)) {
+      try {
+        return await callDownstream('joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN, name, { ...args, site_url: activeSiteUrl });
+      } catch (err) {
+        // Auth error → re-login and retry once
+        if (/401|403|login|csrf|cookie|session/i.test(err.message)) {
+          log(`joomla-mcp auth error, re-logging in and retrying: ${err.message}`);
+          try { await callDownstream('joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN, 'joomla_login', { site_url: activeSiteUrl }); } catch {}
+          try {
+            return await callDownstream('joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN, name, { ...args, site_url: activeSiteUrl });
+          } catch (err2) {
+            return { isError: true, content: [{ type: 'text', text: `joomla-mcp error (after re-login): ${err2.message}` }] };
+          }
+        }
+        return { isError: true, content: [{ type: 'text', text: `joomla-mcp error: ${err.message}` }] };
+      }
+    }
+
+    // ── Route to gantry-mcp (design tools) ──
+    // gantry-mcp expects a `site` argument on every call, so we inject it.
+    // If the tool map is empty (startup race) or the tool isn't found, attempt
+    // a lazy reload once before giving up.
+
+    if (gantryToolMap.has(name) || gantryToolMap.size === 0) {
+      // Lazy reload if tool map is empty — gantry-mcp may have started after us
+      if (gantryToolMap.size === 0) {
+        log(`gantryToolMap empty, attempting lazy reload before routing ${name}…`);
+        try {
+          const c = await createClient('gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN);
+          const { tools = [] } = await c.listTools();
+          c.close().catch(() => {});
+          gantryToolMap.clear();
+          tools.forEach(t => gantryToolMap.set(t.name, t));
+          log(`lazy reload: ${gantryToolMap.size} gantry tools loaded`);
+        } catch (reloadErr) {
+          log(`lazy reload failed: ${reloadErr.message}`);
+        }
+      }
+
+      if (!gantryToolMap.has(name)) {
+        return { isError: true, content: [{ type: 'text', text: `Unknown tool: ${name} (gantry-mcp tool map has ${gantryToolMap.size} entries)` }] };
+      }
+
+      const gantryArgs = { ...args, site: activeSiteUrl };
+      try {
+        return await callDownstream('gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN, name, gantryArgs);
+      } catch (err) {
+        // Transport/connection error — callDownstream already retried once.
+        // Force a tool-map reload so next call gets fresh session data.
+        log(`gantry-mcp transport error on ${name}, will reload tool map: ${err.message}`);
+        try {
+          const c = await createClient('gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN);
+          const { tools = [] } = await c.listTools();
+          c.close().catch(() => {});
+          gantryToolMap.clear();
+          tools.forEach(t => gantryToolMap.set(t.name, t));
+        } catch {}
+        return { isError: true, content: [{ type: 'text', text: `gantry-mcp error: ${err.message}` }] };
+      }
+    }
+
+    return {
+      isError: true,
+      content: [{ type: 'text', text: `Unknown tool: ${name}` }],
+    };
+  });
+
+  return server;
+}
+
+// ─── HTTP transport ───────────────────────────────────────────────────────────
+
+async function startHttp(port) {
+  const sessions = new Map();
+
+  const httpServer = http.createServer(async (req, res) => {
+    const urlPath = new URL(req.url, `http://localhost:${port}`).pathname;
+    if (urlPath !== '/mcp') { res.writeHead(404); res.end(); return; }
+
+    const sessionId = req.headers['mcp-session-id'];
+
+    if (req.method === 'POST') {
+      let transport = sessions.get(sessionId);
+      if (!transport) {
+        const server = buildServer();
+        transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (id) => sessions.set(id, transport),
+        });
+        transport.onclose = () => sessions.delete(sessionId);
+        await server.connect(transport);
+      }
+      await transport.handleRequest(req, res);
+    } else if (req.method === 'GET') {
+      const transport = sessions.get(sessionId);
+      if (!transport) { res.writeHead(404); res.end(); return; }
+      await transport.handleRequest(req, res);
+    } else if (req.method === 'DELETE') {
+      sessions.delete(sessionId); res.writeHead(200); res.end();
+    } else {
+      res.writeHead(405); res.end();
+    }
+  });
+
+  await new Promise((resolve) => httpServer.listen(port, resolve));
+  log(`HTTP server ready on port ${port}`);
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function log(msg) {
+  process.stderr.write(`[orchestrator] ${msg}\n`);
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
+(async () => {
+  log('loading tools from downstream servers…');
+  await loadDownstreamTools();
+
+  const rawPort  = process.env.HTTP_PORT || process.env.PORT;
+  const httpPort = rawPort ? parseInt(rawPort, 10) : null;
+
+  if (httpPort) {
+    await startHttp(httpPort);
+  } else {
+    const server    = buildServer();
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    log('stdio ready');
+  }
+})();

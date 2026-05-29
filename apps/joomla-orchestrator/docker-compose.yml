@@ -1,0 +1,13 @@
+services:
+  joomla-orchestrator:
+    build: .
+    ports:
+      - "18302:18302"
+    env_file:
+      - .env
+    environment:
+      HTTP_PORT: "18302"
+    # Allows the container to reach joomla-mcp and gantry-mcp running on the host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

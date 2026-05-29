@@ -1,0 +1,14 @@
+services:
+  joomla-mcp-suite:
+    build: .
+    container_name: joomla-mcp-suite
+    env_file:
+      - .env
+    environment:
+      ORCHESTRATOR_PORT: "18302"
+      JOOMLA_MCP_PORT: "18300"
+      GANTRY_MCP_PORT: "18301"
+      HTTP_PORT: "18302"
+    ports:
+      - "18302:18302"
+    restart: unless-stopped
