@@ -20,7 +20,8 @@ COPY scripts ./scripts
 COPY .env.example ./
 COPY README.md ./
 
-RUN chmod +x ./scripts/start-all.sh
+# Normalize potential CRLF from Windows checkouts before running with bash.
+RUN sed -i 's/\r$//' ./scripts/start-all.sh && chmod +x ./scripts/start-all.sh
 
 # Install dependencies for each app.
 RUN cd apps/gantry-mcp && npm ci
