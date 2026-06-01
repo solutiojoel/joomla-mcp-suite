@@ -660,6 +660,3 @@ function log(msg) {
     log('stdio ready');
   }
 })();
-y');
-  }
-})();
