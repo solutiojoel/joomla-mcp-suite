@@ -296,11 +296,55 @@ File always starts with:
 --------------------------------------------
 */
 
-Standard opening blocks (always present in this order):
+---
+
+## PAGE TARGETING RULES — CRITICAL
+
+This is the most important scoping rule in override CSS. The wrong selector is the
+most common CSS mistake on Solutio sites.
+
+### html body.site-home {}
+Homepage ONLY. Put here:
+- Section background color variables (--section-slideshow-bg, --section-expanded-bg, etc.)
+- Slideshow sizing and spacing
+- Homepage hero/utility section visual treatments
+- Any style that only applies to the front page and would look wrong on subpages
+
+### html body.site-sub {}
+Subpages ONLY. Put here:
+- Subpage banner/header styles
+- Content area typography and spacing tweaks for article pages
+- Subpage-specific section treatments
+- Styles for sections that appear differently on inner pages
+NOTE: Most homepage section overrides (slideshow colours, utility backgrounds, etc.)
+must NOT go in .site-sub. The subpage has none of those sections.
+
+### html body {} (all pages)
+Put here:
+- Side menu variables (--side-menu-bg, --side-menu-font-size-desktop, etc.)
+- Global font/colour tokens that apply everywhere
+- Anything that must be consistent across home AND subpages
+
+### html body #g-navigation {} and html body #g-footer {} (all pages)
+Navigation and footer CSS always goes here — NOT inside .site-home or .site-sub.
+These sections are inherited from the default outline and appear on every page.
+Scoping their styles inside .site-home would break the navigation on subpages.
+
+### Practical decision rule:
+Ask: "Does this section appear on subpages?"
+  YES (navigation, footer, copyright, side menu) → html body {} or html body #g-{id} {}
+  NO  (slideshow, utility, expanded, header, above) → html body.site-home {}
+  SUBPAGE ONLY (inner banner, article layout) → html body.site-sub {}
+
+---
+
+## STANDARD OPENING BLOCK ORDER (always written in this sequence)
+
+/* ARTWORK NOTES ----------- */
 
 html body.site-home {
     --section-above-bg: var(--secondary-color);
-    /* additional section-bg overrides as needed */
+    /* section-specific bg overrides for homepage sections */
 }
 
 html body {
@@ -324,57 +368,88 @@ html body #g-navigation {
     padding: 0!important;
 }
 
-SECTION BACKGROUND VARIABLES (in html body.site-home {}):
-  --section-{id}-bg: var(--primary-color);   e.g. --section-slideshow-bg, --section-expanded-bg
+---
 
-NAVIGATION BACKGROUND (standard pattern):
-#g-navigation {
+## SECTION BACKGROUND VARIABLES
+
+Set in html body.site-home {} (homepage only — these sections don't exist on subpages):
+  --section-slideshow-bg
+  --section-header-bg
+  --section-above-bg       ← always set, default: var(--secondary-color)
+  --section-utility-bg
+  --section-container-main-bg
+  --section-expanded-bg
+  --section-extension-bg
+  --section-bottom-bg
+
+Set in html body {} (all pages — navigation and footer appear everywhere):
+  --section-navigation-bg  (if needed — usually handled in #g-navigation directly)
+  --section-footer-bg      (if needed — usually handled in #g-footer directly)
+  --section-copyright-bg   (if needed)
+
+---
+
+## NAVIGATION BACKGROUND (standard pattern — in html body #g-navigation, NOT .site-home)
+
+html body #g-navigation {
     background: url('/images/template/bg-header.jpg') 50% 50% no-repeat;
     background-size: cover;
     position: relative;
 }
-#g-navigation:before {
+html body #g-navigation:before {
     content: '';
     background: rgba(var(--primary-color-rgb), .85);
     backdrop-filter: blur(7px);
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     z-index: 1;
 }
-#g-navigation > .g-container {
+html body #g-navigation > .g-container {
     position: relative; z-index: 2;
 }
 
 School nav uses: /images/template/school26/bg-header.jpg
 
-RESPONSIVE BREAKPOINTS (always use these exact values):
-  Desktop: @media only screen and (min-width: 50.99rem)
-  Mobile:  @media only screen and (max-width: 50.99rem)
+---
 
-SIZING CONVENTION: min(Nvw, Nrem) where both values match:
+## RESPONSIVE BREAKPOINTS (always use these exact values)
+
+Desktop: @media only screen and (min-width: 50.99rem)
+Mobile:  @media only screen and (max-width: 50.99rem)
+
+---
+
+## SIZING CONVENTION
+
+min(Nvw, Nrem) where both values always match:
   min(1vw, 1rem)  min(1.25vw, 1.25rem)  min(1.5vw, 1.5rem)
   min(2vw, 2rem)  min(3vw, 3rem)  min(4vw, 4rem)
 
-CSS VARIABLES (use these — never hardcode hex values):
+---
+
+## CSS VARIABLES (never hardcode hex values)
+
   --primary-color          Site primary brand color
   --secondary-color        Secondary brand color
   --tertiary-color         Accent color
-  --default-white          White (#ffffff or equivalent)
+  --default-white          White
   --default-black          Black
   --background-color       Page background
   --footer-color           Footer background
-  --primary-color-rgb      RGB values of primary (for rgba())
+  --primary-color-rgb      RGB tuple for use in rgba()
   --title-font-family      Heading font
   --body-font-family       Body font
   --default-box-shadow     Standard box shadow
 
-CSS SECTION ID SELECTORS: #g-{section-id}
-  e.g. #g-navigation, #g-slideshow, #g-expanded, #g-footer
+---
 
-BODY CLASS TARGETING:
-  html body.site-home {}    Homepage only
-  html body.site-sub {}     Subpages only
-  html body {}              All pages
-  html body.withmaxwidth {} When max-width container is active
+## CSS SECTION ID SELECTORS
+
+#g-{section-id} — e.g. #g-navigation, #g-slideshow, #g-expanded, #g-footer
+
+Always scope with body class for specificity:
+  html body.site-home #g-slideshow {}    ← slideshow on homepage only
+  html body #g-navigation {}             ← navigation on ALL pages
+  html body #g-footer {}                 ← footer on ALL pages
 
 ---
 
@@ -413,14 +488,75 @@ Inherit config: { outline: "default", include: ["attributes", "block", "children
 
   css: `
 Standard CSS pattern:
-- File: /content/override.css
+- File: /content/override.css (parish), /content/override-school.css (school)
 - Starts with: /* ARTWORK NOTES ----------- */
 - Always includes: .g-array-item-text { margin: 0!important; padding: 0!important; }
 - Breakpoints: min-width: 50.99rem (desktop), max-width: 50.99rem (mobile)
 - Sizing: min(Nvw, Nrem) — values always match (e.g. min(1.5vw, 1.5rem))
-- Colors: always CSS variables (--primary-color, --secondary-color, --default-white, etc.)
-- Section backgrounds: --section-{id}-bg variables in html body.site-home {}
-- Navigation background: bg-header.jpg with rgba primary color overlay + backdrop-filter blur
+- Colors: always CSS variables — never hardcode hex values
+
+PAGE SCOPING RULES:
+  html body.site-home {}     Homepage sections ONLY (slideshow, utility, expanded, etc.)
+  html body.site-sub {}      Subpages ONLY (inner banner, article layout)
+  html body {}               All pages (side menu vars, global tokens)
+  html body #g-navigation {} All pages — navigation is NEVER scoped to .site-home
+  html body #g-footer {}     All pages — footer is NEVER scoped to .site-home
+
+KEY RULE: Navigation and footer CSS goes in html body {} or html body #g-navigation/footer {}.
+Scoping it inside .site-home breaks the navigation and footer on every subpage.
+
+Section backgrounds for homepage: --section-{id}-bg in html body.site-home {}
+Section backgrounds for nav/footer: in html body {} or directly on #g-navigation/#g-footer
+Navigation background: bg-header.jpg with rgba primary color overlay + backdrop-filter blur
+`.trim(),
+
+  page_targeting: `
+## Solutio CSS Page Targeting Rules
+
+### The core question before writing any CSS rule:
+Does this section appear on subpages?
+
+  YES → use  html body {}  or  html body #g-{id} {}
+  NO  → use  html body.site-home #g-{id} {}  or  html body.site-home {}
+  SUBPAGE VARIANT → use  html body.site-sub #g-{id} {}
+
+### Sections that appear on EVERY page (scope to html body or #g-id):
+  navigation, footer, copyright, offcanvas, side menu
+
+### Sections that are HOMEPAGE ONLY (scope to html body.site-home):
+  slideshow, header, above, feature, showcase, utility,
+  container-main, sidebar, mainbar, aside, expanded, extension, bottom
+
+### Sections that are SUBPAGE ONLY (scope to html body.site-sub):
+  Subpage hero banner, breadcrumbs, article content area
+
+### Common mistakes to avoid:
+  WRONG: html body.site-home #g-navigation {}   ← breaks nav on subpages
+  RIGHT: html body #g-navigation {}
+
+  WRONG: html body #g-slideshow {}              ← bleeds onto subpages
+  RIGHT: html body.site-home #g-slideshow {}
+
+  WRONG: html body.site-home #g-footer {}       ← footer broken on subpages
+  RIGHT: html body #g-footer {}
+
+### Standard scoping for each section:
+
+  /* All pages */
+  html body #g-navigation { ... }
+  html body #g-footer { ... }
+  html body #g-copyright { ... }
+
+  /* Homepage only */
+  html body.site-home #g-slideshow { ... }
+  html body.site-home #g-utility { ... }
+  html body.site-home #g-expanded { ... }
+  html body.site-home #g-container-main { ... }
+  html body.site-home { --section-above-bg: ...; --section-slideshow-bg: ...; }
+
+  /* Subpages only */
+  html body.site-sub #g-header { ... }
+  html body.site-sub #g-container-main { ... }
 `.trim(),
 
   parish: `

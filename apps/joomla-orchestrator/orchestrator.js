@@ -330,7 +330,7 @@ function buildServer() {
           properties: {
             section: {
               type: 'string',
-              enum: ['full', 'overview', 'inherit_rules', 'css', 'parish', 'school', 'checklist', 'naming'],
+              enum: ['full', 'overview', 'inherit_rules', 'css', 'page_targeting', 'parish', 'school', 'checklist', 'naming'],
               description: 'Which part of the guide to return. Omit or use "full" for the complete reference.',
             },
           },
@@ -658,5 +658,8 @@ function log(msg) {
     const transport = new StdioServerTransport();
     await server.connect(transport);
     log('stdio ready');
+  }
+})();
+y');
   }
 })();
