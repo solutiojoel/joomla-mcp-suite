@@ -1,0 +1,169 @@
+@import url('//fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400;1,700&family=Marcellus&display=swap');
+/************ TEMPLATE  ************
+Rotator Size: 1600x669 (super wide, 2.39:1)
+
+/************ FONTS  ************
+Serif: Marcellus
+Sans Serif: Lato
+
+/************ COLORS  ************
+Blue: #002056; rgba(0,32,86,1)
+Green: #009448; rgba(0,148,72,1)
+White: #FFFFFF; rgba(255,255,255,1)
+Light Grey: #F1F2F2
+
+/************ NOTES ************
+*Rotator Text Background: White Gradient from 80% to 0% - rgba(255,255,255,.8)
+*Quicklinks: Blue at 50% - rgba(0,32,86,.5)
+*Green places: menu bar, links, module titles below quicklinks, news article titles, news 'read more', Flocknote 'sign up' button
+*School colors - could easily flip parish colors for everything there. School images are provided
+**************************************/
+
+body {color: #333; font-family: 'Lato', sans-serif;}
+
+h1, h2, h3, h4, h5, h6 {margin: .75rem 0; line-height: 1.3; font-weight: normal;}
+p {line-height: 1.3;}
+.page-header h1 {text-transform: none; font-size: 3rem;}
+h1 {color: #002056; font-size: 3.5rem; font-weight: bold; font-family: 'Marcellus', serif;}
+h2, .page-header h2 {font-variant-caps: small-caps; color: #009448; font-size: 2.2rem; font-family: 'Marcellus', serif; font-weight: bold;}
+h3 {color: #009448; font-size: 1.8rem; border-bottom: 1px solid #002056; line-height: 1.3; margin: 0 0 10px 0; font-weight: normal; font-family: 'Marcellus', serif;}
+h4 {color: #002056; font-size: 1.8rem; font-family: 'Marcellus', serif;}
+h5 {background: #002056; font-size: 1.75rem;color: white; border-radius: .2rem; padding: .5rem;}
+h6 {color: #002056; font-size: 1.4rem; text-transform: uppercase; font-weight: bold;}
+a {color: #009448;}
+a:hover {color: black;}
+
+@media only screen and (min-width: 768px) and (max-width: 1199px) {
+    h1 {font-size: 2.2rem;}
+    h2 {font-size: 1.75rem;}
+    h3 {font-size: 1.75rem;}
+    h4 {font-size: 1.75rem;}
+    h5 {font-size: 1.2rem;}
+    h6 {font-size: 1.2rem;}
+    p {font-size: 1rem; margin-bottom: 4px;}
+    h1, h2, h3 {line-height: 1.2;}
+    h4, h5, h6, p{line-height: 1.1;}
+}
+
+@media only screen and (max-width: 767px) {
+ h1 {font-size: 2.2rem;}
+ h2 {font-size: 1.75rem;}
+ h3 {font-size: 1.75rem;}
+ h4 {font-size: 1.75rem;}
+ h5 {font-size: 1.2rem;}
+ h6 {font-size: 1.2rem;}
+ p {font-size: 1rem; margin-bottom: 4px;}
+ h1, h2, h3 {line-height: 1.2;}
+ h4, h5, h6, p{line-height: 1.1;}
+}
+
+.readon, .button, .btn, p.readmore .btn, .sprocket-lists-portrait-container > li .sprocket-lists-portrait-item > a span, .listentobutton.moduletable a {
+    background: #002056;
+}
+
+/*************** HOMELAYOUT ***************/
+.homelayout.schoollayout .button {background: #009448;}
+.homelayout.schoollayout .button:hover {background: #777;}
+
+
+/*************** OFFCANVAS ****************/
+/*************** TOP **********************/
+.outline-14 #g-top {background: url('/images/template/header.jpg') 0% 0% no-repeat; background-size: cover;}
+.outline-15 #g-top {background: url('/images/template/header-school.jpg') 0% 0% no-repeat; background-size: cover;}
+#g-top .g-logo img {margin-bottom: -50px;}
+
+        /*Call | Email*/
+.call-mail {padding-top: 2vw; padding-right: 2vw; color: #ffffff;}
+.call-mail a {color: #ffffff;}
+ 
+@media only screen and (max-width: 767px) {
+    #g-top .g-logo img {margin-bottom: 0;}
+
+    .call-mail p {text-align: center!important;}
+}
+
+/*************** NAVIGATION ***************
+.homelayout .g-main-nav ul.g-toplevel {margin-left: 180px;}*/
+
+/*************** SLIDESHOW ****************/
+/*************** HEADER *******************/
+/*************** ABOVE ********************/
+/*************** SHOWCASE *****************/
+        /*Rotator*/
+.fwrgradientback .layout-slideshow .sprocket-features-title, .fwrgradientback .layout-slideshow .sprocket-features-desc {background: linear-gradient(to right, rgba(255,255,255, 0.8), rgba(255,255,255, 0.6), rgba(255,255,255, 0) );}
+.sprocket-features-desc h2 {padding-left: 1vw!important;}
+.sprocket-features-desc :is(h1,h2,h3,h4,h5,h6,p) {color: #002056!important;}
+.sprocket-features-desc a.button {background: none; border: 1px solid #002056; color: #002056;}
+.sprocket-features-desc a.button:hover {background: #002056; color: #ffffff;}
+
+@media only screen and (max-width: 767px) {
+    .fwrgradientback .layout-slideshow .sprocket-features-title, .fwrgradientback .layout-slideshow .sprocket-features-desc {background: #F1F2F2;}
+    .fwrsuperwide .layout-slideshow .sprocket-features-img-container, .fwrwide .layout-slideshow .sprocket-features-img-container, .fwrultrawide .layout-slideshow .sprocket-features-img-container {padding-bottom: 438px;}
+    .fwrotator .layout-slideshow .sprocket-features-content {height: 398px; top: 42vw;}
+
+    .outline-14.homelayout .fwrbigarrows .layout-slideshow .sprocket-features-arrows .arrow {top: 10%;}
+
+    .homelayout.schoollayout :is(.fwrsuperwide .layout-slideshow .sprocket-features-img-container, .fwrwide .layout-slideshow .sprocket-features-img-container, .fwrultrawide .layout-slideshow .sprocket-features-img-container) {padding-bottom: 0;}
+    .homelayout.schoollayout .fwrotator .layout-slideshow .sprocket-features-content {display: none;}
+    .homelayout.schoollayout .fwrbigarrows .layout-slideshow .sprocket-features-arrows .arrow {top: 25%;}
+}
+
+/*************** UTILITY ******************/
+        /*Quicklinks*/
+.qloverlaybackpic .sprocket-strips-content {background: rgba(0,32,86,.5);}
+.qloverlaybackpic .sprocket-strips-content:hover {background: rgba(0,32,86,.7);}
+
+@media only screen and (max-width: 767px) {
+	.qloverlaybackpic .sprocket-strips-content, .qloverlaybackpic .sprocket-strips-content:hover {background: none;}
+	.qloverlaybackpic li {background: rgba(0,32,86,1);}
+    .qloverlaybackpic li:hover {background: #009448;}
+    .sprocket-strips-container > li {margin: 0px 1%;}
+
+    .homelayout.schoollayout .qloverlaybackpic {margin-top: 1vw;}
+}
+
+/*************** FEATURE ******************/
+/*************** EXPANDED *****************/
+        /*Parish Headlines*/
+.zoompics h4.sprocket-lists-portrait-title {color: #009448;}        
+
+.homelayout #g-expanded {background: url('/images/template/bg-church.jpg') 100% 100% no-repeat; background-size: 55%;}
+.homelayout #g-expanded .sprocket-lists-portrait-container li {border-color: #002056;}
+
+.homelayout.schoollayout #g-expanded {background: url('/images/template/bg-school.jpg') 100% 100% no-repeat; background-size: 55%;}
+
+@media only screen and (max-width: 767px) {
+    .homelayout #g-expanded {background: none;}
+    .homelayout.schoollayout #g-expanded {background: none;}
+}
+
+/*************** EXTENSION ****************/
+.homelayout #g-extension { background: url('/images/template/paralax1.jpg') 50% 0 no-repeat; background-size: cover; }
+.homelayout #g-extension p {color: #002056;}
+.homelayout #g-extension h1 {font-weight: 400; font-variant: small-caps;}
+.homelayout #g-extension a.button {background: #009448;}
+.homelayout #g-extension a.button:hover {background: #777;}
+
+/*************** BOTTOM *******************/
+#g-bottom {padding: 0 5%;}
+
+/*************** FOOTER *******************/
+/*************** COPYRIGHT ****************/
+
+/*************** MODULES ******************/
+.moduletable .nav.menu, .moduletable .unstyled {background: #002056;}
+.moduletable .nav.menu li.current.active a, .moduletable .nav.menu li a:hover {
+    color: #ffffff;
+    background: #009448;
+}
+
+/*************** SECTIONS *****************/
+#g-footer a {color: #ffffff;}
+
+/*************** MOBILE *******************/
+.g-offcanvas-toggle {color: #ffffff;}
+
+/*************** ADS **********************/
+/**sponsor options**/
+.layout-top .sprocket-tabs-nav > li.active { border-bottom: 5px solid #009448 !important;}
+.sprocket-tabs-nav li .sprocket-tabs-inner {text-transform: none;}

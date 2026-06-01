@@ -1,0 +1,217 @@
+{
+  "downloadedAt": "2026-06-01T15:19:50.828Z",
+  "candidates": [
+    "override.css",
+    "override-school.css",
+    "override2026.css",
+    "custom.css",
+    "user.css"
+  ],
+  "sites": [
+    {
+      "siteName": "assumption-center",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 31271,
+          "url": "https://assumption-center.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "olmc-fairfield",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 44182,
+          "url": "https://olmc-fairfield.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "sd-cemetery",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 46672,
+          "url": "https://sd-cemetery.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "seas-ontario",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 42429,
+          "url": "https://seas-ontario.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "sh-emporia",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 51379,
+          "url": "https://sh-emporia.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "shelbyville",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 17326,
+          "url": "https://shelbyville.solutiosoftware.com/content/override.css"
+        },
+        {
+          "file": "override-school.css",
+          "bytes": 40904,
+          "url": "https://shelbyville.solutiosoftware.com/content/override-school.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stagnes-concord",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 54718,
+          "url": "https://stagnes-concord.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stbarnabas-indy",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 54239,
+          "url": "https://stbarnabas-indy.solutiosoftware.com/content/override.css"
+        },
+        {
+          "file": "override-school.css",
+          "bytes": 79480,
+          "url": "https://stbarnabas-indy.solutiosoftware.com/content/override-school.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stbern-levit",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 44695,
+          "url": "https://stbern-levit.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stbon-antonio",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 45368,
+          "url": "https://stbon-antonio.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stcats-wichita",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 51672,
+          "url": "https://stcats-wichita.solutiosoftware.com/content/override.css"
+        },
+        {
+          "file": "override-school.css",
+          "bytes": 36347,
+          "url": "https://stcats-wichita.solutiosoftware.com/content/override-school.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stchris-speed",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 37191,
+          "url": "https://stchris-speed.solutiosoftware.com/content/override.css"
+        },
+        {
+          "file": "override-school.css",
+          "bytes": 42797,
+          "url": "https://stchris-speed.solutiosoftware.com/content/override-school.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stgertrude-bay",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 63335,
+          "url": "https://stgertrude-bay.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stlaw-alex",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 75179,
+          "url": "https://stlaw-alex.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stliz-melville",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 44717,
+          "url": "https://stliz-melville.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stmary-wood",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 43154,
+          "url": "https://stmary-wood.solutiosoftware.com/content/override.css"
+        },
+        {
+          "file": "override-school.css",
+          "bytes": 46890,
+          "url": "https://stmary-wood.solutiosoftware.com/content/override-school.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stpats-par",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 7972,
+          "url": "https://stpats-par.solutiosoftware.com/content/override.css"
+        }
+      ]
+    },
+    {
+      "siteName": "stwen-dick",
+      "files": [
+        {
+          "file": "override.css",
+          "bytes": 32719,
+          "url": "https://stwen-dick.solutiosoftware.com/content/override.css"
+        }
+      ]
+    }
+  ]
+}

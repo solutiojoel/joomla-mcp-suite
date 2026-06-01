@@ -19,6 +19,8 @@
 
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
+const { STYLE_GUIDE, SECTIONS } = require('./solutio-conventions.js');
+
 const { Server }   = require('@modelcontextprotocol/sdk/server/index.js');
 const { Client }   = require('@modelcontextprotocol/sdk/client/index.js');
 const { StreamableHTTPClientTransport } = require('@modelcontextprotocol/sdk/client/streamableHttp.js');
@@ -162,10 +164,51 @@ function buildServer() {
         name: 'work_on_site',
         description: 'Start a Joomla working session. Use this when the user wants to work on a site.',
       },
+      {
+        name: 'build_solutio_site',
+        description:
+          'Start a full site build following Solutio conventions. ' +
+          'Loads the complete style guide and guides the LLM through building a parish or school home outline correctly.',
+      },
     ],
   }));
 
   server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    if (request.params.name === 'build_solutio_site') {
+      return {
+        description: 'Solutio site build session',
+        messages: [
+          {
+            role: 'assistant',
+            content: {
+              type: 'text',
+              text: [
+                '## Solutio Site Build',
+                '',
+                'I\'ll help you build this site the Solutio way. Before we start, here are the house conventions I\'ll follow:',
+                '',
+                '**Theme:** rt_studius',
+                '**Standard outlines:** Parish Home (outline 33) | School Home (outline 72)',
+                '',
+                '**Non-negotiable rules:**',
+                '- `navigation`, `footer`, `copyright`, `bottom` always inherit from the default outline',
+                '- Every site has `system/messages` + Alert contentarray in the `top` section',
+                '- Exactly one swiper particle in `slideshow`',
+                '- Offcanvas always has `mobile-menu` + subsite-navigation HTML',
+                '- Footer always has `footer-a/b/c` positions (33.3% each) + footer article',
+                '- Copyright always has the Solutio admin footer HTML',
+                '- CSS uses min(Nvw, Nrem) sizing, 50.99rem breakpoints, CSS variables only',
+                '',
+                'Call `solutio_style_guide` at any point for the full reference, or with a `section` parameter for a focused part (inherit_rules, css, parish, school, checklist, naming).',
+                '',
+                'Which site are we building, and is it a **parish home**, **school home**, or another page type?',
+              ].join('\n'),
+            },
+          },
+        ],
+      };
+    }
+
     if (request.params.name !== 'work_on_site') {
       throw new Error(`Unknown prompt: ${request.params.name}`);
     }
@@ -194,6 +237,8 @@ function buildServer() {
               'Once I have the site, tell me what you\'d like to do:',
               '- **Content** — articles, categories, menus, modules',
               '- **Design** — Gantry layouts, outlines, styles, particles',
+              '',
+              'For builds and design work, use `solutio_style_guide` to load the Solutio house conventions, or start with the `build_solutio_site` prompt.',
             ].join('\n'),
           },
         },
@@ -271,6 +316,25 @@ function buildServer() {
           'Reload the tool lists from both joomla-mcp and gantry-mcp. ' +
           'Call this if tools appear missing or if either downstream server was restarted.',
         inputSchema: { type: 'object', properties: {} },
+      },
+      {
+        name: 'solutio_style_guide',
+        description:
+          'Return the Solutio Software house style guide for Gantry 5 site builds. ' +
+          'Call this at the start of any build or design task to ensure consistency with ' +
+          'the established conventions across the client fleet. ' +
+          'Use the "section" parameter to request a focused part of the guide, or omit it for the full reference. ' +
+          'Available sections: overview, inherit_rules, css, parish, school, checklist, naming.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            section: {
+              type: 'string',
+              enum: ['full', 'overview', 'inherit_rules', 'css', 'parish', 'school', 'checklist', 'naming'],
+              description: 'Which part of the guide to return. Omit or use "full" for the complete reference.',
+            },
+          },
+        },
       },
     ];
 
@@ -409,6 +473,17 @@ function buildServer() {
         content: [{
           type: 'text',
           text: `Tools reloaded — joomla-mcp: ${joomlaToolMap.size} tools, gantry-mcp: ${gantryToolMap.size} tools.`,
+        }],
+      };
+    }
+
+    if (name === 'solutio_style_guide') {
+      const section = args.section || 'full';
+      const content = section === 'full' ? STYLE_GUIDE : (SECTIONS[section] || STYLE_GUIDE);
+      return {
+        content: [{
+          type: 'text',
+          text: content,
         }],
       };
     }
