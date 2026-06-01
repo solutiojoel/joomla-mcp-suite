@@ -41,9 +41,9 @@ Categories organize articles so Gantry 5 Joomla Articles particles can filter by
 
 ## Build Order
 
-### 1. Login and confirm site
-- Call `joomla_login` with the target site URL
-- Call `joomla_get_site` to confirm the active session before any edits
+### 1. Confirm site
+- Call `set_active_site` with the target URL if not already set
+- Call `get_active_site` to confirm before any edits
 
 ### 2. Create the menu
 - `joomla_create_menu` — set a descriptive title and a clean type slug (e.g., `shannon-eec`)
@@ -110,7 +110,7 @@ Fetch `joomla-docs://agents/kb/staff-grid.md` for the full module config, articl
 
 ## Checklist
 
-- [ ] Site confirmed via `joomla_get_site` before any edits
+- [ ] Site confirmed via `get_active_site` before any edits
 - [ ] Menu created with correct title and slug
 - [ ] Section categories created with "Items" suffix
 - [ ] Page Content category exists for landing page articles

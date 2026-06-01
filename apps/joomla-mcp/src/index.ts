@@ -76,10 +76,6 @@ function normalizeUrl(url: string): string {
   return u.startsWith("http") ? u : `https://${u}`;
 }
 
-function getSiteNotesPath(baseUrl: string): string {
-  const hostname = new URL(normalizeUrl(baseUrl)).hostname;
-  return path.join(process.cwd(), "docs", "sites", `${hostname}.md`);
-}
 
 function buildServer(joomla: JoomlaClient): Server {
   let isLoggedIn = false;
@@ -134,56 +130,6 @@ const tools = [
         },
       },
       required: [],
-    },
-  },
-  {
-    name: "joomla_get_site",
-    description: "Return the active site URL and username. Call at conversation start before any other action.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-      required: [],
-    },
-  },
-  {
-    name: "joomla_read_site_notes",
-    description: "Read the notes file for the active site. Call after joomla_get_site each session.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-      required: [],
-    },
-  },
-  {
-    name: "joomla_append_site_note",
-    description: "Append a timestamped note to the active site's notes file when you discover something non-obvious.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        note: {
-          type: "string",
-          description: "The note. Include what you discovered, where, and why it matters.",
-        },
-        category: {
-          type: "string",
-          description: "Category heading (e.g. Modules, Menus, Content, Quirks, Template).",
-        },
-      },
-      required: ["note"],
-    },
-  },
-  {
-    name: "joomla_write_site_notes",
-    description: "Overwrite the entire notes file for the active site. Read current notes first.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        content: {
-          type: "string",
-          description: "Full markdown content to write (replaces entire file).",
-        },
-      },
-      required: ["content"],
     },
   },
   {
@@ -1370,55 +1316,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
         return {
           content: [{ type: "text", text: formatResult(result) }],
           isError: !result.success,
-        };
-      }
-
-      case "joomla_get_site": {
-        const cfg = joomla.getConfig();
-        return {
-          content: [{ type: "text", text: formatResult({ success: true, message: "Active site", data: { site: cfg.baseUrl, username: cfg.username } }) }],
-        };
-      }
-
-      case "joomla_read_site_notes": {
-        const notesPath = getSiteNotesPath(joomla.getConfig().baseUrl);
-        if (!fs.existsSync(notesPath)) {
-          return {
-            content: [{ type: "text", text: formatResult({ success: true, message: "No notes yet for this site.", data: null }) }],
-          };
-        }
-        const notes = fs.readFileSync(notesPath, "utf8");
-        return {
-          content: [{ type: "text", text: formatResult({ success: true, message: "Site notes loaded.", data: notes }) }],
-        };
-      }
-
-      case "joomla_append_site_note": {
-        const note = args?.note as string;
-        if (!note) return { content: [{ type: "text", text: "Error: note is required" }], isError: true };
-        const category = (args?.category as string) || "General";
-        const notesPath = getSiteNotesPath(joomla.getConfig().baseUrl);
-        const timestamp = new Date().toISOString().replace("T", " ").substring(0, 16) + " UTC";
-        const entry = `\n**[${timestamp}] ${category}** — ${note}\n`;
-        if (!fs.existsSync(notesPath)) {
-          const hostname = new URL(normalizeUrl(joomla.getConfig().baseUrl)).hostname;
-          fs.mkdirSync(path.dirname(notesPath), { recursive: true });
-          fs.writeFileSync(notesPath, `# Site Notes: ${hostname}\n\nNotes logged by AI agents as they discover site-specific quirks and conventions.\n`);
-        }
-        fs.appendFileSync(notesPath, entry);
-        return {
-          content: [{ type: "text", text: formatResult({ success: true, message: "Note appended.", data: entry.trim() }) }],
-        };
-      }
-
-      case "joomla_write_site_notes": {
-        const content = args?.content as string;
-        if (!content) return { content: [{ type: "text", text: "Error: content is required" }], isError: true };
-        const notesPath = getSiteNotesPath(joomla.getConfig().baseUrl);
-        fs.mkdirSync(path.dirname(notesPath), { recursive: true });
-        fs.writeFileSync(notesPath, content, "utf8");
-        return {
-          content: [{ type: "text", text: formatResult({ success: true, message: "Site notes updated." }) }],
         };
       }
 
@@ -2640,7 +2537,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
   }
 });
 
-  const DOCS_DIR = path.join(process.cwd(), "docs", "agents");
+  const DOCS_DIR = path.join(__dirname, "..", "..", "..", "docs", "agents");
 
   server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => {
     return { resourceTemplates: [] };

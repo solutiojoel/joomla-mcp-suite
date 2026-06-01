@@ -49,28 +49,6 @@ const GANTRY_MCP_TOKEN = process.env.GANTRY_MCP_TOKEN || '';
 
 let activeSiteUrl = null;
 
-// ─── Persistent site notes ────────────────────────────────────────────────────
-// Notes are stored in notes.json next to the server file so they survive restarts.
-
-const NOTES_FILE = path.join(__dirname, 'site-notes.json');
-
-function loadNotes() {
-  try {
-    if (fs.existsSync(NOTES_FILE)) return JSON.parse(fs.readFileSync(NOTES_FILE, 'utf8'));
-  } catch {}
-  return {};
-}
-
-function saveNotes(notes) {
-  try { fs.writeFileSync(NOTES_FILE, JSON.stringify(notes, null, 2), 'utf8'); } catch (e) {
-    log(`WARNING: could not save notes — ${e.message}`);
-  }
-}
-
-function getNoteKey(url) {
-  try { return new URL(url).hostname; } catch { return url; }
-}
-
 // ─── Auto-URL extraction ──────────────────────────────────────────────────────
 // If activeSiteUrl is not set but a tool argument looks like a site URL, use it.
 
@@ -215,12 +193,6 @@ function buildServer() {
     const siteNote = activeSiteUrl
       ? `The currently active site is **${activeSiteUrl}**.`
       : 'No site is currently active.';
-    const storedNotes = (() => {
-      if (!activeSiteUrl) return '';
-      const notes = loadNotes();
-      const entry = notes[getNoteKey(activeSiteUrl)];
-      return entry ? `\n\n**Stored site notes:**\n${entry.notes}` : '';
-    })();
 
     return {
       description: 'Joomla site working session starter',
@@ -230,7 +202,7 @@ function buildServer() {
           content: {
             type: 'text',
             text: [
-              `I can help you work on your Joomla site. ${siteNote}${storedNotes}`,
+              `I can help you work on your Joomla site. ${siteNote}`,
               '',
               'Which site would you like to work on? Please provide the full site URL (e.g. `https://example.com`).',
               '',
@@ -270,36 +242,34 @@ function buildServer() {
         inputSchema: { type: 'object', properties: {} },
       },
       {
-        name: 'set_site_notes',
-        description:
-          'Save persistent notes about the active site (e.g. admin credentials, theme name, ' +
-          'content conventions, known issues). Notes are stored per-hostname and survive server ' +
-          'restarts. Call this whenever you learn something important about a site.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            notes: { type: 'string', description: 'Free-form notes to store for the active site' },
-          },
-          required: ['notes'],
-        },
-      },
-      {
         name: 'get_site_notes',
         description:
-          'Retrieve the stored notes for the active site. Always call this at the start of a ' +
-          'session to recall context about the site (credentials, theme, quirks, etc.).',
+          'Read the notes file for the active site. Call after switching sites to review known quirks, conventions, and history.',
         inputSchema: { type: 'object', properties: {} },
       },
       {
-        name: 'append_site_notes',
+        name: 'append_site_note',
         description:
-          'Append a new entry to the stored notes for the active site without overwriting existing notes.',
+          'Append a timestamped note to the active site\'s notes file when you discover something non-obvious. ' +
+          'Use this whenever you learn a site quirk, client preference, or non-standard configuration.',
         inputSchema: {
           type: 'object',
           properties: {
-            notes: { type: 'string', description: 'Text to append to existing notes' },
+            note: { type: 'string', description: 'What you discovered, where, and why it matters.' },
+            category: { type: 'string', description: 'Category heading, e.g. Modules, Menus, Content, Quirks, Template.' },
           },
-          required: ['notes'],
+          required: ['note'],
+        },
+      },
+      {
+        name: 'write_site_notes',
+        description: 'Overwrite the entire notes file for the active site. Always read current notes first.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            content: { type: 'string', description: 'Full markdown content to write (replaces entire file).' },
+          },
+          required: ['content'],
         },
       },
       {
@@ -357,10 +327,15 @@ function buildServer() {
       },
     ];
 
+    // joomla_login is internal plumbing — the orchestrator calls it automatically
+    // via set_active_site and on auth error recovery. Hiding it prevents the AI
+    // from calling it directly, which would bypass activeSiteUrl tracking.
+    const HIDDEN_JOOMLA_TOOLS = new Set(['joomla_login']);
+
     return {
       tools: [
         ...ownTools,
-        ...Array.from(joomlaToolMap.values()),
+        ...Array.from(joomlaToolMap.values()).filter(t => !HIDDEN_JOOMLA_TOOLS.has(t.name)),
         ...Array.from(gantryToolMap.values()),
       ],
     };
@@ -392,7 +367,7 @@ function buildServer() {
           loginNote = '\n\nJoomla session established automatically.';
         }
       } catch (e) {
-        loginNote = `\n\nNote: auto-login attempt failed (${e.message}) — call joomla_login manually if needed.`;
+        loginNote = `\n\nNote: auto-login attempt failed (${e.message}) — check credentials or call set_active_site again.`;
       }
 
       return {
@@ -414,47 +389,41 @@ function buildServer() {
       };
     }
 
-    if (name === 'set_site_notes') {
+    if (name === 'get_site_notes' || name === 'append_site_note' || name === 'write_site_notes') {
       if (!activeSiteUrl) {
         return { isError: true, content: [{ type: 'text', text: 'No active site set. Call set_active_site first.' }] };
       }
-      const notes = loadNotes();
-      notes[getNoteKey(activeSiteUrl)] = { url: activeSiteUrl, notes: args.notes, updatedAt: new Date().toISOString() };
-      saveNotes(notes);
-      return { content: [{ type: 'text', text: `Notes saved for ${activeSiteUrl}` }] };
-    }
+      const hostname = (() => { try { return new URL(activeSiteUrl).hostname; } catch { return activeSiteUrl; } })();
+      const notesPath = path.join(__dirname, '..', '..', 'docs', 'sites', `${hostname}.md`);
 
-    if (name === 'get_site_notes') {
-      if (!activeSiteUrl) {
-        return { isError: true, content: [{ type: 'text', text: 'No active site set. Call set_active_site first.' }] };
+      if (name === 'get_site_notes') {
+        if (!fs.existsSync(notesPath)) {
+          return { content: [{ type: 'text', text: `No notes yet for ${hostname}.` }] };
+        }
+        return { content: [{ type: 'text', text: fs.readFileSync(notesPath, 'utf8') }] };
       }
-      const notes = loadNotes();
-      const entry = notes[getNoteKey(activeSiteUrl)];
-      return {
-        content: [{
-          type: 'text',
-          text: entry
-            ? `Notes for ${activeSiteUrl} (updated ${entry.updatedAt}):\n\n${entry.notes}`
-            : `No notes stored for ${activeSiteUrl} yet. Use set_site_notes to save context about this site.`,
-        }],
-      };
-    }
 
-    if (name === 'append_site_notes') {
-      if (!activeSiteUrl) {
-        return { isError: true, content: [{ type: 'text', text: 'No active site set. Call set_active_site first.' }] };
+      if (name === 'append_site_note') {
+        const note = args.note;
+        if (!note) return { isError: true, content: [{ type: 'text', text: 'note is required' }] };
+        const category = args.category || 'General';
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16) + ' UTC';
+        const entry = `\n**[${timestamp}] ${category}** — ${note}\n`;
+        if (!fs.existsSync(notesPath)) {
+          fs.mkdirSync(path.dirname(notesPath), { recursive: true });
+          fs.writeFileSync(notesPath, `# Site Notes: ${hostname}\n\nNotes logged by AI agents as they discover site-specific quirks and conventions.\n`);
+        }
+        fs.appendFileSync(notesPath, entry);
+        return { content: [{ type: 'text', text: `Note appended to ${hostname}` }] };
       }
-      const notes = loadNotes();
-      const key = getNoteKey(activeSiteUrl);
-      const existing = notes[key]?.notes || '';
-      const timestamp = new Date().toISOString().slice(0, 10);
-      notes[key] = {
-        url: activeSiteUrl,
-        notes: existing ? `${existing}\n\n[${timestamp}] ${args.notes}` : `[${timestamp}] ${args.notes}`,
-        updatedAt: new Date().toISOString(),
-      };
-      saveNotes(notes);
-      return { content: [{ type: 'text', text: `Notes appended for ${activeSiteUrl}` }] };
+
+      if (name === 'write_site_notes') {
+        const content = args.content;
+        if (!content) return { isError: true, content: [{ type: 'text', text: 'content is required' }] };
+        fs.mkdirSync(path.dirname(notesPath), { recursive: true });
+        fs.writeFileSync(notesPath, content, 'utf8');
+        return { content: [{ type: 'text', text: `Site notes updated for ${hostname}` }] };
+      }
     }
 
     if (name === 'gantry_reconnect') {

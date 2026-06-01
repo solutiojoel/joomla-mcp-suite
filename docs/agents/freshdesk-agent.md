@@ -35,21 +35,21 @@ Announce a brief summary before doing anything else:
 
 ## Step 2 — Switch to the Client Site
 
-Use the `site_url` returned by `freshdesk_get_company` to switch the Joomla session:
+Use the `site_url` returned by `freshdesk_get_company` to switch the active site:
 
 ```
-joomla_login(site_url: "[site_url from company]")
-joomla_get_site()   ← always confirm the switch
+set_active_site(url: "[site_url from company]")
+get_active_site()   ← always confirm the switch
 ```
 
-Announce the confirmed active site. If `joomla_login` fails or returns the wrong site, stop and report the error to the user — do not proceed with Joomla work.
+Announce the confirmed active site. If `set_active_site` fails or returns the wrong site, stop and report the error to the user — do not proceed with Joomla work.
 
 ---
 
 ## Step 3 — Read Site Notes
 
 ```
-joomla_read_site_notes()
+get_site_notes()
 ```
 
 Review any known quirks for this site before starting investigation.
@@ -103,7 +103,7 @@ After all work is complete:
 
 **1. Site note** (if you discovered something non-obvious):
 ```
-joomla_append_site_note(note: "...", category: "...")
+append_site_note(note: "...", category: "...")
 ```
 
 **2. Freshdesk note** (always — document what was done):
@@ -142,7 +142,7 @@ freshdesk_update_ticket(ticket_id: ..., status: 4)   ← 4 = Resolved
 
 | Situation | Action |
 |-----------|--------|
-| `joomla_login` fails for the derived `site_url` | Report to user, ask if the site URL needs adjustment |
+| `set_active_site` fails for the derived `site_url` | Report to user, ask if the site URL needs adjustment |
 | Ticket has no `company_id` | Check contact's `company_id`; if still missing, ask user for the site code |
 | Freshdesk API 401 | Check `FRESHDESK_DOMAIN` and `FRESHDESK_API_KEY` in server env |
 | Issue is not Joomla-related | Summarize findings, note what was checked, ask user how to proceed |

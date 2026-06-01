@@ -1,22 +1,22 @@
-# Joomla MCP — Universal Editing Rules
+# Joomla MCP Suite — Universal Editing Rules
 
 All agents must follow these rules regardless of the task being performed.
 
 ## Session Start (Required — in this order)
 
-1. Call `joomla_get_site` and announce the active site to the user:
-   > "Active site: https://example.com (user: shannon)"
+1. Call `get_active_site` and announce the active site to the user:
+   > "Active site: https://example.com"
 
 
 ## Switching Sites 
 
 When asked to switch to a different site:
-1. If the new active site is obvious or the user already sent you a site go ahead and switch to that site.
-2. Call `joomla_login` with the new `site_url`
-3. Immediately call `joomla_get_site` to confirm the switch succeeded
+1. If the new active site is obvious or the user already sent you a site, go ahead and switch.
+2. Call `set_active_site` with the new URL (this also logs in automatically)
+3. Immediately call `get_active_site` to confirm the switch succeeded
 4. Announce the new active site to the user
-5. Never assume a switch succeeded — always verify, Do not perform any edits until the user has acknowledged the active site.
-6. Call `joomla_read_site_notes` and review any known quirks for this site before starting work.
+5. Never assume a switch succeeded — always verify. Do not perform any edits until the user has acknowledged the active site.
+6. Call `get_site_notes` and review any known quirks for this site before starting work.
 
 ## Credentials
 
@@ -49,11 +49,11 @@ When searching for content:
 ## Site Notes
 
 When you discover something non-obvious about the current site, save it immediately:
-- Call `joomla_append_site_note` with what you found and an optional `category` (e.g. Modules, Menus, Template, Content, Quirks)
+- Call `append_site_note` with what you found and an optional `category` (e.g. Modules, Menus, Template, Content, Quirks)
 - Examples worth noting: unexpected module assignments, non-standard alias patterns, broken features, extension quirks, client preferences
 
 When existing notes become stale or incorrect:
-- Call `joomla_read_site_notes`, revise the content in context, then call `joomla_write_site_notes` with the full updated text
+- Call `get_site_notes`, revise the content in context, then call `write_site_notes` with the full updated text
 
 ## FTP Access Limitations
 
