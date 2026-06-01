@@ -124,6 +124,74 @@ Restart Claude — the 11 tools will appear automatically.
 
 ---
 
+## Docker / Tailscale (HTTP transport)
+
+Set `MCP_TRANSPORT=http` to switch from stdio to a network-accessible HTTP server.
+
+### docker-compose.yml snippet
+
+```yaml
+services:
+  cdp-inspector:
+    build: .
+    ports:
+      - "3100:3100"   # MCP + bridge on one port
+    environment:
+      MCP_TRANSPORT: http
+      MCP_PORT: 3100
+      MCP_HOST: 0.0.0.0
+      CORS_ORIGIN: "*"
+      FTP_HOST: your-server.com
+      FTP_USER: username
+      FTP_PASSWORD: password
+      FTP_DEFAULT_CSS_PATH: /templates/g5_hydrogen/custom/css/custom.css
+    restart: unless-stopped
+```
+
+### Dockerfile
+
+```dockerfile
+FROM node:20-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+CMD ["node", "index.js"]
+```
+
+### Tailscale
+
+As long as:
+1. The container can reach the Tailscale network (either via `tailscale` in the container or via the host's Tailscale IP routing), and
+2. `MCP_HOST=0.0.0.0` so the server binds to all interfaces,
+
+— then you can register it in Claude using the Tailscale IP:
+
+```json
+{
+  "mcpServers": {
+    "cdp-inspector": {
+      "type": "http",
+      "url": "http://100.x.x.x:3100/mcp"
+    }
+  }
+}
+```
+
+### Why the browser got a CORS error
+
+The MCP client UI runs at `http://localhost:8090`. When it fetches
+`http://100.x.x.x:3100/mcp` that is a **cross-origin** request. Without
+`Access-Control-Allow-Origin` headers the browser blocks it before it even
+hits the network. The updated server sets these headers on every response,
+including the `OPTIONS` preflight.
+
+If you still see a CORS error:
+- Confirm `CORS_ORIGIN=*` (or your specific origin) is set in the container env
+- Make sure a reverse proxy (nginx, Caddy) isn't stripping the CORS headers downstream
+
+---
+
 ## Browser extension
 
 See `../inspector-extension/` for the companion Chrome extension.

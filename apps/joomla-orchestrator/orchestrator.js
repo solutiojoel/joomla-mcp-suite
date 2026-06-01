@@ -512,6 +512,22 @@ async function startHttp(port) {
   const sessions = new Map();
 
   const httpServer = http.createServer(async (req, res) => {
+    // ── CORS — must be set on every response including errors ─────────────────
+    res.setHeader('Access-Control-Allow-Origin',  process.env.CORS_ORIGIN || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    // Reflect whatever headers the client asks for — handles mcp-protocol-version
+    // and any future MCP headers without needing further changes here.
+    res.setHeader('Access-Control-Allow-Headers',
+      req.headers['access-control-request-headers'] ||
+      'Content-Type, Accept, Authorization, Mcp-Session-Id, Mcp-Protocol-Version, ' +
+      'X-Requested-With, Last-Event-Id, Cache-Control');
+    res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id, Mcp-Protocol-Version');
+    // Disable buffering for SSE streams (nginx / reverse proxies)
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+    // ── end CORS ──────────────────────────────────────────────────────────────
+
     const urlPath = new URL(req.url, `http://localhost:${port}`).pathname;
     if (urlPath !== '/mcp') { res.writeHead(404); res.end(); return; }
 
@@ -540,8 +556,9 @@ async function startHttp(port) {
     }
   });
 
-  await new Promise((resolve) => httpServer.listen(port, resolve));
-  log(`HTTP server ready on port ${port}`);
+  const host = process.env.HTTP_HOST || '0.0.0.0';
+  await new Promise((resolve) => httpServer.listen(port, host, resolve));
+  log(`HTTP server ready on port ${port} (${host})`);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
