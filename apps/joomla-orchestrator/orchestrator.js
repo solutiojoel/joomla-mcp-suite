@@ -19,7 +19,7 @@
 
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
-const { STYLE_GUIDE, SECTIONS } = require('./solutio-conventions.js');
+const { STYLE_GUIDE, SECTIONS, PARTICLES } = require('./solutio-conventions.js');
 
 const { Server }   = require('@modelcontextprotocol/sdk/server/index.js');
 const { Client }   = require('@modelcontextprotocol/sdk/client/index.js');
@@ -336,6 +336,25 @@ function buildServer() {
           },
         },
       },
+      {
+        name: 'solutio_particles',
+        description:
+          'Return the Solutio particle reference — every particle type with purpose, visual role, ' +
+          'complete field schema, standard configurations, and a decision guide for choosing the right particle. ' +
+          'Call this before adding or editing any Gantry particle. ' +
+          'Use the particle parameter to look up a specific type.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            particle: {
+              type: 'string',
+              enum: ['all', 'contentarray', 'swiper', 'blockcontent', 'custom', 'logo',
+                     'menu', 'mobile-menu', 'social', 'timeline', 'position', 'system'],
+              description: 'Particle type to look up. Omit or "all" for the full reference.',
+            },
+          },
+        },
+      },
     ];
 
     return {
@@ -486,6 +505,20 @@ function buildServer() {
           text: content,
         }],
       };
+    }
+
+    if (name === 'solutio_particles') {
+      const particle = args.particle || 'all';
+      let out = PARTICLES;
+      if (particle !== 'all') {
+        const heading = '## ' + particle;
+        const start = out.indexOf(heading);
+        if (start !== -1) {
+          const next = out.indexOf('\n## ', start + 4);
+          out = next !== -1 ? out.slice(start, next) : out.slice(start);
+        }
+      }
+      return { content: [{ type: 'text', text: out }] };
     }
 
     // ── Guard: site must be set before routing downstream ──
