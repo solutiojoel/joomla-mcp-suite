@@ -27,7 +27,8 @@
       "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-97c0ebda-cc45-4840-af1d-681ec6882eaf\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/FriendsofSt.ChristopherSchool\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "304": {
       "id": "304",
@@ -38,7 +39,8 @@
       "introtext": "\t<div class=\"calendar-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Calendar</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box ec-row\">{loadmoduleid 158}</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"parent-student-resources/calendar\">View All Events</a></div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "305": {
       "id": "305",
@@ -49,7 +51,8 @@
       "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-content\">\n<h1><a href=\"school\">St. Christopher School</a></h1>\n<p><a href=\"about-st-christopher-school/contact-us\">5335 W. 16th Street, Speedway, IN 46224</a><br />Office: <a href=\"tel:3172416315\" target=\"_blank\" rel=\"noopener noreferrer\">(317) 241-6315</a> Fax: (317) 244-6678</p>\n</div>\n<div class=\"footer-buttons\"><a class=\"button\" href=\"admissions/apply-now-or-re-enroll\">Apply Now or Re-Enroll</a><a class=\"button\" href=\"admissions/why-choose-catholic-education\">The Benefits of Catholic Education</a><a class=\"button\" href=\"https://www.archindy.org/\" target=\"_blank\" rel=\"noopener noreferrer\">ArchdioceseWebsite</a><a class=\"button\" href=\"https://www.youtube.com/watch?v=xmmtD-2qS6I\" target=\"_blank\" rel=\"noopener noreferrer\">SGO<br />Informational<br />Video</a><a class=\"button\" href=\"https://www.i4qed.org/sgo/donors\" target=\"_blank\" rel=\"noopener noreferrer\">SGO Tax CreditScholarship DonorPage</a></div>\n<div class=\"ptp-wrapper\">\n<div class=\"ptp-logo\"><img src=\"images/template/promise-to-protect.png\" alt=\"\" /></div>\n<div class=\"ptp-content\">\n<h3>Our Promise to Protect</h3>\n<p>Ensuring a safe environment for all, especially children and vulnerable adults, is a top priority of the clergy, staff, and parishioners of St. Christopher Parish in Speedway, Indiana. We are committed to upholding the highest standards of conduct and fostering a culture of awareness, accountability, and care. We invite you to review the “Promise to Protect” materials and Safe Environment policies available in the parish office and on our bulletin boards. If you have questions or would like more information about how we can work together to keep our parish, homes, and community safe, please contact our Safe Environment Coordinator. <br /><br />To report suspected abuse of a minor, please contact the Archdiocese of Indianapolis Victim Assistance Line at <span style=\"color: #000000;\"><a style=\"color: #000000;\" href=\"(317) 236-1548\">(317) 236-1548</a> or (<a style=\"color: #000000;\" href=\"800) 382-9836\">800) 382-9836</a>, ext. 1548</span>, or emai<span style=\"color: #000000;\">l <a style=\"color: #000000;\" href=\"mailto:victimassistance@archindy.org\" target=\"_blank\" rel=\"noopener noreferrer\">victimassistance@archindy.org</a>.  </span>Reports may also be made directly to local law enforcement authorities. The Archdiocese of Indianapolis is committed to reporting all allegations of abuse to the appropriate authorities and supporting all those affected..</p>\n</div>\n</div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "306": {
       "id": "306",
@@ -60,7 +63,8 @@
       "introtext": "\t<h1>School Mission</h1>\n<p>St. Christopher School strives to provide an exceptional education permeated with Catholic Christian values, promoting spiritual, moral, intellectual, physical and social growth for our students, preschool through sixth grade.</p>\n<p>St. Christopher School seeks to be an extension of our students' homes, challenging them to achieve their potential and helping them to realize their great worth as children of God, capable of making significant contributions at home and throughout the world.</p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "316": {
       "id": "316",
@@ -71,7 +75,8 @@
       "introtext": "\t<p>Register Today<br />For 2026-27!</p>\n<p><a class=\"button\" href=\"admissions/apply-now-or-re-enroll\">Click Here</a></p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     }
   },
   "sectionContent": {

@@ -1,0 +1,1406 @@
+{
+  "source_file": "C:\\Users\\Jqelp\\.codex\\attachments\\bb50958c-cdec-4516-b45c-9a2833830d7c\\pasted-text.txt",
+  "output_root": "C:\\Users\\Jqelp\\OneDrive\\Documents\\test servers\\homepage-articles-export",
+  "site_count": 18,
+  "generated_at": "2026-06-02T17:02:15Z",
+  "sites": [
+    {
+      "slug": "stlaw-alex",
+      "site_url": "https://stlaw-alex.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles",
+      "category_id": "24",
+      "article_count": 9,
+      "generated_at": "2026-06-02T16:58:30Z",
+      "articles": [
+        {
+          "id": "226",
+          "title": "Bulletins",
+          "alias": "bulletins",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "226-bulletins.html",
+          "relative_path": "stlaw-alex/226-bulletins.html"
+        },
+        {
+          "id": "225",
+          "title": "Sign Up for Parish Email",
+          "alias": "sign-up-for-parish-email",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "225-sign-up-for-parish-email.html",
+          "relative_path": "stlaw-alex/225-sign-up-for-parish-email.html"
+        },
+        {
+          "id": "224",
+          "title": "Welcome",
+          "alias": "welcome",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "224-welcome.html",
+          "relative_path": "stlaw-alex/224-welcome.html"
+        },
+        {
+          "id": "223",
+          "title": "Navigation Contact Info",
+          "alias": "navigation-contact-info",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "223-navigation-contact-info.html",
+          "relative_path": "stlaw-alex/223-navigation-contact-info.html"
+        },
+        {
+          "id": "76",
+          "title": "Facebook",
+          "alias": "facebook",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "76-facebook.html",
+          "relative_path": "stlaw-alex/76-facebook.html"
+        },
+        {
+          "id": "75",
+          "title": "Formed",
+          "alias": "formed",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "75-formed.html",
+          "relative_path": "stlaw-alex/75-formed.html"
+        },
+        {
+          "id": "74",
+          "title": "Calendar",
+          "alias": "calendar",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "74-calendar.html",
+          "relative_path": "stlaw-alex/74-calendar.html"
+        },
+        {
+          "id": "55",
+          "title": "Mass Times",
+          "alias": "mass-times",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "55-mass-times.html",
+          "relative_path": "stlaw-alex/55-mass-times.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "stlaw-alex/36-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "olmc-fairfield",
+      "site_url": "https://olmc-fairfield.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles",
+      "category_id": "24",
+      "article_count": 5,
+      "generated_at": "2026-06-02T16:58:40Z",
+      "articles": [
+        {
+          "id": "77",
+          "title": "Instagram",
+          "alias": "instagram",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "77-instagram.html",
+          "relative_path": "olmc-fairfield/77-instagram.html"
+        },
+        {
+          "id": "74",
+          "title": "Upcoming Events",
+          "alias": "calendar",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "74-calendar.html",
+          "relative_path": "olmc-fairfield/74-calendar.html"
+        },
+        {
+          "id": "56",
+          "title": "Welcome",
+          "alias": "welcome",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "56-welcome.html",
+          "relative_path": "olmc-fairfield/56-welcome.html"
+        },
+        {
+          "id": "55",
+          "title": "Mass Times",
+          "alias": "mass-times",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "55-mass-times.html",
+          "relative_path": "olmc-fairfield/55-mass-times.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "olmc-fairfield/36-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "seas-ontario",
+      "site_url": "https://seas-ontario.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles",
+      "category_id": "24",
+      "article_count": 4,
+      "generated_at": "2026-06-02T16:58:48Z",
+      "articles": [
+        {
+          "id": "240",
+          "title": "Header Contact Info",
+          "alias": "header-contact-info",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "240-header-contact-info.html",
+          "relative_path": "seas-ontario/240-header-contact-info.html"
+        },
+        {
+          "id": "76",
+          "title": "Welcome",
+          "alias": "facebook",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "76-facebook.html",
+          "relative_path": "seas-ontario/76-facebook.html"
+        },
+        {
+          "id": "55",
+          "title": "Mass Times",
+          "alias": "mass-times",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "55-mass-times.html",
+          "relative_path": "seas-ontario/55-mass-times.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "seas-ontario/36-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "stchris-speed",
+      "site_url": "https://stchris-speed.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles",
+      "category_id": "24",
+      "article_count": 11,
+      "generated_at": "2026-06-02T16:59:08Z",
+      "articles": [
+        {
+          "id": "81",
+          "title": "Mass Times - Dual Boxes",
+          "alias": "mass-times-dual-boxes",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "81-mass-times-dual-boxes.html",
+          "relative_path": "stchris-speed/81-mass-times-dual-boxes.html"
+        },
+        {
+          "id": "80",
+          "title": "Mass Times Boxes",
+          "alias": "mass-times-boxes",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "80-mass-times-boxes.html",
+          "relative_path": "stchris-speed/80-mass-times-boxes.html"
+        },
+        {
+          "id": "79",
+          "title": "Daily Readings",
+          "alias": "daily-readings",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "79-daily-readings.html",
+          "relative_path": "stchris-speed/79-daily-readings.html"
+        },
+        {
+          "id": "78",
+          "title": "Flocknote",
+          "alias": "flocknote",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "78-flocknote.html",
+          "relative_path": "stchris-speed/78-flocknote.html"
+        },
+        {
+          "id": "77",
+          "title": "Instagram",
+          "alias": "instagram",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "77-instagram.html",
+          "relative_path": "stchris-speed/77-instagram.html"
+        },
+        {
+          "id": "76",
+          "title": "Facebook",
+          "alias": "facebook",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "76-facebook.html",
+          "relative_path": "stchris-speed/76-facebook.html"
+        },
+        {
+          "id": "75",
+          "title": "Formed",
+          "alias": "formed",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "75-formed.html",
+          "relative_path": "stchris-speed/75-formed.html"
+        },
+        {
+          "id": "74",
+          "title": "",
+          "alias": "article",
+          "category_id": "",
+          "category_name": "",
+          "state": "",
+          "file_name": "74-article.html",
+          "relative_path": "stchris-speed/74-article.html"
+        },
+        {
+          "id": "56",
+          "title": "Parish Mission",
+          "alias": "mission-statement",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "56-mission-statement.html",
+          "relative_path": "stchris-speed/56-mission-statement.html"
+        },
+        {
+          "id": "55",
+          "title": "Mass Times",
+          "alias": "mass-times",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "55-mass-times.html",
+          "relative_path": "stchris-speed/55-mass-times.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "stchris-speed/36-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "stmary-wood",
+      "site_url": "https://stmary-wood.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Church Homepage Articles",
+      "category_id": "278",
+      "article_count": 5,
+      "generated_at": "2026-06-02T16:59:19Z",
+      "articles": [
+        {
+          "id": "1306",
+          "title": "Contact Form",
+          "alias": "contact-form",
+          "category_id": "278",
+          "category_name": "- Church Homepage Articles",
+          "state": "1",
+          "file_name": "1306-contact-form.html",
+          "relative_path": "stmary-wood/1306-contact-form.html"
+        },
+        {
+          "id": "1305",
+          "title": "Mary Overlay Quote",
+          "alias": "mary-overlay-quote",
+          "category_id": "278",
+          "category_name": "- Church Homepage Articles",
+          "state": "1",
+          "file_name": "1305-mary-overlay-quote.html",
+          "relative_path": "stmary-wood/1305-mary-overlay-quote.html"
+        },
+        {
+          "id": "1304",
+          "title": "Looking to Give?",
+          "alias": "looking-to-give",
+          "category_id": "278",
+          "category_name": "- Church Homepage Articles",
+          "state": "1",
+          "file_name": "1304-looking-to-give.html",
+          "relative_path": "stmary-wood/1304-looking-to-give.html"
+        },
+        {
+          "id": "1303",
+          "title": "Welcome From Fr. Sean",
+          "alias": "welcome-from-fr-sean",
+          "category_id": "278",
+          "category_name": "- Church Homepage Articles",
+          "state": "1",
+          "file_name": "1303-welcome-from-fr-sean.html",
+          "relative_path": "stmary-wood/1303-welcome-from-fr-sean.html"
+        },
+        {
+          "id": "1302",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "278",
+          "category_name": "- Church Homepage Articles",
+          "state": "1",
+          "file_name": "1302-footer.html",
+          "relative_path": "stmary-wood/1302-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "sd-cemetery",
+      "site_url": "https://sd-cemetery.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Good Shepherd Homepage Articles",
+      "category_id": "61",
+      "article_count": 5,
+      "generated_at": "2026-06-02T16:59:29Z",
+      "articles": [
+        {
+          "id": "259",
+          "title": "Stay Connected",
+          "alias": "stay-connected",
+          "category_id": "61",
+          "category_name": "- Good Shepherd Homepage Articles",
+          "state": "1",
+          "file_name": "259-stay-connected.html",
+          "relative_path": "sd-cemetery/259-stay-connected.html"
+        },
+        {
+          "id": "260",
+          "title": "Tradition, Faith, & Commitment ",
+          "alias": "tradition-faith-commitment",
+          "category_id": "61",
+          "category_name": "- Good Shepherd Homepage Articles",
+          "state": "1",
+          "file_name": "260-tradition-faith-commitment.html",
+          "relative_path": "sd-cemetery/260-tradition-faith-commitment.html"
+        },
+        {
+          "id": "258",
+          "title": "Welcome",
+          "alias": "welcome",
+          "category_id": "61",
+          "category_name": "- Good Shepherd Homepage Articles",
+          "state": "1",
+          "file_name": "258-welcome.html",
+          "relative_path": "sd-cemetery/258-welcome.html"
+        },
+        {
+          "id": "257",
+          "title": "Top Translate Button - Phone Icon",
+          "alias": "top-translate-button-phone-icon",
+          "category_id": "61",
+          "category_name": "- Good Shepherd Homepage Articles",
+          "state": "1",
+          "file_name": "257-top-translate-button-phone-icon.html",
+          "relative_path": "sd-cemetery/257-top-translate-button-phone-icon.html"
+        },
+        {
+          "id": "256",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "61",
+          "category_name": "- Good Shepherd Homepage Articles",
+          "state": "1",
+          "file_name": "256-footer.html",
+          "relative_path": "sd-cemetery/256-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "stbern-levit",
+      "site_url": "https://stbern-levit.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles - Edit Only",
+      "category_id": "118",
+      "article_count": 7,
+      "generated_at": "2026-06-02T16:59:45Z",
+      "articles": [
+        {
+          "id": "1557",
+          "title": "Header Contact Info",
+          "alias": "header-contact-info",
+          "category_id": "118",
+          "category_name": "- Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "1557-header-contact-info.html",
+          "relative_path": "stbern-levit/1557-header-contact-info.html"
+        },
+        {
+          "id": "1547",
+          "title": "Helpful Links",
+          "alias": "helpful-links",
+          "category_id": "118",
+          "category_name": "- Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "1547-helpful-links.html",
+          "relative_path": "stbern-levit/1547-helpful-links.html"
+        },
+        {
+          "id": "1546",
+          "title": "Bulletins",
+          "alias": "bulletins",
+          "category_id": "118",
+          "category_name": "- Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "1546-bulletins.html",
+          "relative_path": "stbern-levit/1546-bulletins.html"
+        },
+        {
+          "id": "1545",
+          "title": "Facebook",
+          "alias": "facebook",
+          "category_id": "118",
+          "category_name": "- Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "1545-facebook.html",
+          "relative_path": "stbern-levit/1545-facebook.html"
+        },
+        {
+          "id": "1544",
+          "title": "Our Mission",
+          "alias": "our-mission",
+          "category_id": "118",
+          "category_name": "- Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "1544-our-mission.html",
+          "relative_path": "stbern-levit/1544-our-mission.html"
+        },
+        {
+          "id": "1542",
+          "title": "Mass Times",
+          "alias": "mass-times",
+          "category_id": "118",
+          "category_name": "- Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "1542-mass-times.html",
+          "relative_path": "stbern-levit/1542-mass-times.html"
+        },
+        {
+          "id": "1541",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "118",
+          "category_name": "- Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "1541-footer.html",
+          "relative_path": "stbern-levit/1541-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "shelbyville",
+      "site_url": "https://shelbyville.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles (Church)",
+      "category_id": "146",
+      "article_count": 8,
+      "generated_at": "2026-06-02T17:00:02Z",
+      "articles": [
+        {
+          "id": "145791",
+          "title": "Temp. Facebook",
+          "alias": "temp-facebook",
+          "category_id": "146",
+          "category_name": "- Homepage Articles (Church)",
+          "state": "1",
+          "file_name": "145791-temp-facebook.html",
+          "relative_path": "shelbyville/145791-temp-facebook.html"
+        },
+        {
+          "id": "143399",
+          "title": "Flocknotes",
+          "alias": "flocknotes",
+          "category_id": "146",
+          "category_name": "- Homepage Articles (Church)",
+          "state": "1",
+          "file_name": "143399-flocknotes.html",
+          "relative_path": "shelbyville/143399-flocknotes.html"
+        },
+        {
+          "id": "143398",
+          "title": "Formed",
+          "alias": "formed",
+          "category_id": "146",
+          "category_name": "- Homepage Articles (Church)",
+          "state": "1",
+          "file_name": "143398-formed.html",
+          "relative_path": "shelbyville/143398-formed.html"
+        },
+        {
+          "id": "143397",
+          "title": "Calendar",
+          "alias": "calendar",
+          "category_id": "146",
+          "category_name": "- Homepage Articles (Church)",
+          "state": "1",
+          "file_name": "143397-calendar.html",
+          "relative_path": "shelbyville/143397-calendar.html"
+        },
+        {
+          "id": "143396",
+          "title": "Facebook",
+          "alias": "facebook",
+          "category_id": "146",
+          "category_name": "- Homepage Articles (Church)",
+          "state": "1",
+          "file_name": "143396-facebook.html",
+          "relative_path": "shelbyville/143396-facebook.html"
+        },
+        {
+          "id": "143395",
+          "title": "Info Boxes",
+          "alias": "info-boxes",
+          "category_id": "146",
+          "category_name": "- Homepage Articles (Church)",
+          "state": "1",
+          "file_name": "143395-info-boxes.html",
+          "relative_path": "shelbyville/143395-info-boxes.html"
+        },
+        {
+          "id": "143394",
+          "title": "Mass Times",
+          "alias": "mass-times",
+          "category_id": "146",
+          "category_name": "- Homepage Articles (Church)",
+          "state": "1",
+          "file_name": "143394-mass-times.html",
+          "relative_path": "shelbyville/143394-mass-times.html"
+        },
+        {
+          "id": "143393",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "146",
+          "category_name": "- Homepage Articles (Church)",
+          "state": "1",
+          "file_name": "143393-footer.html",
+          "relative_path": "shelbyville/143393-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "stpats-par",
+      "site_url": "https://stpats-par.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles",
+      "category_id": "2042",
+      "article_count": 9,
+      "generated_at": "2026-06-02T17:00:21Z",
+      "articles": [
+        {
+          "id": "36188",
+          "title": "Events & News",
+          "alias": "events-news",
+          "category_id": "2042",
+          "category_name": "- Homepage Articles",
+          "state": "1",
+          "file_name": "36188-events-news.html",
+          "relative_path": "stpats-par/36188-events-news.html"
+        },
+        {
+          "id": "36187",
+          "title": "Flocknote",
+          "alias": "flocknote",
+          "category_id": "2042",
+          "category_name": "- Homepage Articles",
+          "state": "1",
+          "file_name": "36187-flocknote.html",
+          "relative_path": "stpats-par/36187-flocknote.html"
+        },
+        {
+          "id": "36186",
+          "title": "Calendar",
+          "alias": "calendar",
+          "category_id": "2042",
+          "category_name": "- Homepage Articles",
+          "state": "1",
+          "file_name": "36186-calendar.html",
+          "relative_path": "stpats-par/36186-calendar.html"
+        },
+        {
+          "id": "36185",
+          "title": "Bulletins",
+          "alias": "bulletins",
+          "category_id": "2042",
+          "category_name": "- Homepage Articles",
+          "state": "1",
+          "file_name": "36185-bulletins.html",
+          "relative_path": "stpats-par/36185-bulletins.html"
+        },
+        {
+          "id": "36184",
+          "title": "Facebook",
+          "alias": "facebook",
+          "category_id": "2042",
+          "category_name": "- Homepage Articles",
+          "state": "1",
+          "file_name": "36184-facebook.html",
+          "relative_path": "stpats-par/36184-facebook.html"
+        },
+        {
+          "id": "36182",
+          "title": "Navigation",
+          "alias": "navigation",
+          "category_id": "2042",
+          "category_name": "- Homepage Articles",
+          "state": "1",
+          "file_name": "36182-navigation.html",
+          "relative_path": "stpats-par/36182-navigation.html"
+        },
+        {
+          "id": "36181",
+          "title": "Mass Schedule",
+          "alias": "mass-schedule",
+          "category_id": "2042",
+          "category_name": "- Homepage Articles",
+          "state": "1",
+          "file_name": "36181-mass-schedule.html",
+          "relative_path": "stpats-par/36181-mass-schedule.html"
+        },
+        {
+          "id": "36180",
+          "title": "Mission Statement",
+          "alias": "mission-statement",
+          "category_id": "2042",
+          "category_name": "- Homepage Articles",
+          "state": "1",
+          "file_name": "36180-mission-statement.html",
+          "relative_path": "stpats-par/36180-mission-statement.html"
+        },
+        {
+          "id": "36179",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "2042",
+          "category_name": "- Homepage Articles",
+          "state": "1",
+          "file_name": "36179-footer.html",
+          "relative_path": "stpats-par/36179-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "stgertrude-bay",
+      "site_url": "https://stgertrude-bay.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles",
+      "category_id": "24",
+      "article_count": 5,
+      "generated_at": "2026-06-02T17:00:30Z",
+      "articles": [
+        {
+          "id": "77",
+          "title": "Instagram",
+          "alias": "instagram",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "77-instagram.html",
+          "relative_path": "stgertrude-bay/77-instagram.html"
+        },
+        {
+          "id": "76",
+          "title": "Facebook",
+          "alias": "facebook",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "76-facebook.html",
+          "relative_path": "stgertrude-bay/76-facebook.html"
+        },
+        {
+          "id": "74",
+          "title": "Bulletins",
+          "alias": "calendar",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "74-calendar.html",
+          "relative_path": "stgertrude-bay/74-calendar.html"
+        },
+        {
+          "id": "55",
+          "title": "Mass Schedule",
+          "alias": "mass-times",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "55-mass-times.html",
+          "relative_path": "stgertrude-bay/55-mass-times.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "stgertrude-bay/36-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "stagnes-concord",
+      "site_url": "https://stagnes-concord.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles",
+      "category_id": "24",
+      "article_count": 4,
+      "generated_at": "2026-06-02T17:00:39Z",
+      "articles": [
+        {
+          "id": "243",
+          "title": "Photo Albums",
+          "alias": "photo-albums",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "243-photo-albums.html",
+          "relative_path": "stagnes-concord/243-photo-albums.html"
+        },
+        {
+          "id": "74",
+          "title": "Calendar",
+          "alias": "calendar",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "74-calendar.html",
+          "relative_path": "stagnes-concord/74-calendar.html"
+        },
+        {
+          "id": "55",
+          "title": "Mass Times",
+          "alias": "mass-times",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "55-mass-times.html",
+          "relative_path": "stagnes-concord/55-mass-times.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "stagnes-concord/36-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "stcats-wichita",
+      "site_url": "https://stcats-wichita.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles",
+      "category_id": "24",
+      "article_count": 7,
+      "generated_at": "2026-06-02T17:00:53Z",
+      "articles": [
+        {
+          "id": "407",
+          "title": "Vocations from our Parish",
+          "alias": "vocations-from-our-parish",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "407-vocations-from-our-parish.html",
+          "relative_path": "stcats-wichita/407-vocations-from-our-parish.html"
+        },
+        {
+          "id": "350",
+          "title": "YouTube Widget Feed",
+          "alias": "youtube-widget-feed",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "350-youtube-widget-feed.html",
+          "relative_path": "stcats-wichita/350-youtube-widget-feed.html"
+        },
+        {
+          "id": "79",
+          "title": "Hallow",
+          "alias": "daily-readings",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "79-daily-readings.html",
+          "relative_path": "stcats-wichita/79-daily-readings.html"
+        },
+        {
+          "id": "75",
+          "title": "Formed",
+          "alias": "formed",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "75-formed.html",
+          "relative_path": "stcats-wichita/75-formed.html"
+        },
+        {
+          "id": "74",
+          "title": "Calendar",
+          "alias": "calendar",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "74-calendar.html",
+          "relative_path": "stcats-wichita/74-calendar.html"
+        },
+        {
+          "id": "55",
+          "title": "Mass Schedule & Parish Information",
+          "alias": "mass-times",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "55-mass-times.html",
+          "relative_path": "stcats-wichita/55-mass-times.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "stcats-wichita/36-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "stliz-melville",
+      "site_url": "https://stliz-melville.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles",
+      "category_id": "24",
+      "article_count": 6,
+      "generated_at": "2026-06-02T17:01:04Z",
+      "articles": [
+        {
+          "id": "241",
+          "title": "Mass Times (2)",
+          "alias": "mass-times-2",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "0",
+          "file_name": "241-mass-times-2.html",
+          "relative_path": "stliz-melville/241-mass-times-2.html"
+        },
+        {
+          "id": "185",
+          "title": "Funeral Notices",
+          "alias": "funeral-notices",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "185-funeral-notices.html",
+          "relative_path": "stliz-melville/185-funeral-notices.html"
+        },
+        {
+          "id": "184",
+          "title": "Connect With Us",
+          "alias": "connect-with-us",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "184-connect-with-us.html",
+          "relative_path": "stliz-melville/184-connect-with-us.html"
+        },
+        {
+          "id": "183",
+          "title": "Bulletins",
+          "alias": "bulletins",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "183-bulletins.html",
+          "relative_path": "stliz-melville/183-bulletins.html"
+        },
+        {
+          "id": "55",
+          "title": "Mass Times",
+          "alias": "mass-times",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "55-mass-times.html",
+          "relative_path": "stliz-melville/55-mass-times.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "stliz-melville/36-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "assumption-center",
+      "site_url": "https://assumption-center.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles",
+      "category_id": "24",
+      "article_count": 7,
+      "generated_at": "2026-06-02T17:01:17Z",
+      "articles": [
+        {
+          "id": "222",
+          "title": "Navigation",
+          "alias": "navigation",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "222-navigation.html",
+          "relative_path": "assumption-center/222-navigation.html"
+        },
+        {
+          "id": "56",
+          "title": "Our Mission",
+          "alias": "mission-statement",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "56-mission-statement.html",
+          "relative_path": "assumption-center/56-mission-statement.html"
+        },
+        {
+          "id": "55",
+          "title": "Mass Schedule",
+          "alias": "mass-times",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "55-mass-times.html",
+          "relative_path": "assumption-center/55-mass-times.html"
+        },
+        {
+          "id": "221",
+          "title": "Join Us Online",
+          "alias": "join-us-online",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "221-join-us-online.html",
+          "relative_path": "assumption-center/221-join-us-online.html"
+        },
+        {
+          "id": "77",
+          "title": "Youtube",
+          "alias": "instagram",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "77-instagram.html",
+          "relative_path": "assumption-center/77-instagram.html"
+        },
+        {
+          "id": "74",
+          "title": "Calendar",
+          "alias": "calendar",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "74-calendar.html",
+          "relative_path": "assumption-center/74-calendar.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "assumption-center/36-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "stbon-antonio",
+      "site_url": "https://stbon-antonio.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles - Edit Only",
+      "category_id": "24",
+      "article_count": 5,
+      "generated_at": "2026-06-02T17:01:27Z",
+      "articles": [
+        {
+          "id": "179",
+          "title": "Bulletins",
+          "alias": "bulletins",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "179-bulletins.html",
+          "relative_path": "stbon-antonio/179-bulletins.html"
+        },
+        {
+          "id": "178",
+          "title": "Footer",
+          "alias": "footer-2",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "178-footer-2.html",
+          "relative_path": "stbon-antonio/178-footer-2.html"
+        },
+        {
+          "id": "76",
+          "title": "Facebook",
+          "alias": "facebook",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "76-facebook.html",
+          "relative_path": "stbon-antonio/76-facebook.html"
+        },
+        {
+          "id": "55",
+          "title": "Mass Times",
+          "alias": "mass-times",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "55-mass-times.html",
+          "relative_path": "stbon-antonio/55-mass-times.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer - Landing",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "stbon-antonio/36-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "stwen-dick",
+      "site_url": "https://stwen-dick.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles - Edit Only",
+      "category_id": "57",
+      "article_count": 8,
+      "generated_at": "2026-06-02T17:01:45Z",
+      "articles": [
+        {
+          "id": "222752",
+          "title": "Welcome",
+          "alias": "welcome",
+          "category_id": "57",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "222752-welcome.html",
+          "relative_path": "stwen-dick/222752-welcome.html"
+        },
+        {
+          "id": "222751",
+          "title": "Latest Homilies",
+          "alias": "latest-homilies",
+          "category_id": "57",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "222751-latest-homilies.html",
+          "relative_path": "stwen-dick/222751-latest-homilies.html"
+        },
+        {
+          "id": "218232",
+          "title": "Facebook",
+          "alias": "facebook",
+          "category_id": "57",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "218232-facebook.html",
+          "relative_path": "stwen-dick/218232-facebook.html"
+        },
+        {
+          "id": "218231",
+          "title": "Formed",
+          "alias": "formed",
+          "category_id": "57",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "218231-formed.html",
+          "relative_path": "stwen-dick/218231-formed.html"
+        },
+        {
+          "id": "218230",
+          "title": "Calendar",
+          "alias": "calendar",
+          "category_id": "57",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "218230-calendar.html",
+          "relative_path": "stwen-dick/218230-calendar.html"
+        },
+        {
+          "id": "218229",
+          "title": "Mission Statement",
+          "alias": "mission-statement",
+          "category_id": "57",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "218229-mission-statement.html",
+          "relative_path": "stwen-dick/218229-mission-statement.html"
+        },
+        {
+          "id": "218228",
+          "title": "Mass Times",
+          "alias": "mass-times",
+          "category_id": "57",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "218228-mass-times.html",
+          "relative_path": "stwen-dick/218228-mass-times.html"
+        },
+        {
+          "id": "218227",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "57",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "218227-footer.html",
+          "relative_path": "stwen-dick/218227-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "stbarnabas-indy",
+      "site_url": "https://stbarnabas-indy.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles - Edit Only",
+      "category_id": "24",
+      "article_count": 10,
+      "generated_at": "2026-06-02T17:02:05Z",
+      "articles": [
+        {
+          "id": "219",
+          "title": "Connect With Us",
+          "alias": "connect-with-us",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "219-connect-with-us.html",
+          "relative_path": "stbarnabas-indy/219-connect-with-us.html"
+        },
+        {
+          "id": "218",
+          "title": "Hospitality - Prayer - Formation - Service Title",
+          "alias": "hospitality-prayer-formation-service-title",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "218-hospitality-prayer-formation-service-title.html",
+          "relative_path": "stbarnabas-indy/218-hospitality-prayer-formation-service-title.html"
+        },
+        {
+          "id": "217",
+          "title": "Calendar",
+          "alias": "calendar",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "217-calendar.html",
+          "relative_path": "stbarnabas-indy/217-calendar.html"
+        },
+        {
+          "id": "216",
+          "title": "",
+          "alias": "article",
+          "category_id": "",
+          "category_name": "",
+          "state": "",
+          "file_name": "216-article.html",
+          "relative_path": "stbarnabas-indy/216-article.html"
+        },
+        {
+          "id": "215",
+          "title": "Facebook",
+          "alias": "facebook",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "215-facebook.html",
+          "relative_path": "stbarnabas-indy/215-facebook.html"
+        },
+        {
+          "id": "214",
+          "title": "Where You Belong",
+          "alias": "where-you-belong",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "214-where-you-belong.html",
+          "relative_path": "stbarnabas-indy/214-where-you-belong.html"
+        },
+        {
+          "id": "213",
+          "title": "Navigation Contact Information",
+          "alias": "navigation-contact-information",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "213-navigation-contact-information.html",
+          "relative_path": "stbarnabas-indy/213-navigation-contact-information.html"
+        },
+        {
+          "id": "56",
+          "title": "Mission Statement",
+          "alias": "mission-statement",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "56-mission-statement.html",
+          "relative_path": "stbarnabas-indy/56-mission-statement.html"
+        },
+        {
+          "id": "55",
+          "title": "Mass Times",
+          "alias": "mass-times",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "55-mass-times.html",
+          "relative_path": "stbarnabas-indy/55-mass-times.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "stbarnabas-indy/36-footer.html"
+        }
+      ]
+    },
+    {
+      "slug": "sh-emporia",
+      "site_url": "https://sh-emporia.backup.solutiosoftware.com/",
+      "status": "ok",
+      "category_title": "Homepage Articles - Edit Only",
+      "category_id": "24",
+      "article_count": 5,
+      "generated_at": "2026-06-02T17:02:15Z",
+      "articles": [
+        {
+          "id": "195",
+          "title": "Weekend Mass",
+          "alias": "weekend-mass",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "195-weekend-mass.html",
+          "relative_path": "sh-emporia/195-weekend-mass.html"
+        },
+        {
+          "id": "196",
+          "title": "Weekday Mass",
+          "alias": "weekday-mass",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "196-weekday-mass.html",
+          "relative_path": "sh-emporia/196-weekday-mass.html"
+        },
+        {
+          "id": "197",
+          "title": "Confessions",
+          "alias": "confessions",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "197-confessions.html",
+          "relative_path": "sh-emporia/197-confessions.html"
+        },
+        {
+          "id": "36",
+          "title": "Footer",
+          "alias": "footer",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "36-footer.html",
+          "relative_path": "sh-emporia/36-footer.html"
+        },
+        {
+          "id": "74",
+          "title": "Calendar",
+          "alias": "calendar",
+          "category_id": "24",
+          "category_name": "Homepage Articles - Edit Only",
+          "state": "1",
+          "file_name": "74-calendar.html",
+          "relative_path": "sh-emporia/74-calendar.html"
+        }
+      ]
+    }
+  ]
+}

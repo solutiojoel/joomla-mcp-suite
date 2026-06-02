@@ -1,0 +1,61 @@
+{
+  "slug": "stbon-antonio",
+  "site_url": "https://stbon-antonio.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles - Edit Only",
+  "category_id": "24",
+  "article_count": 5,
+  "generated_at": "2026-06-02T17:01:27Z",
+  "articles": [
+    {
+      "id": "179",
+      "title": "Bulletins",
+      "alias": "bulletins",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "179-bulletins.html",
+      "relative_path": "stbon-antonio/179-bulletins.html"
+    },
+    {
+      "id": "178",
+      "title": "Footer",
+      "alias": "footer-2",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "178-footer-2.html",
+      "relative_path": "stbon-antonio/178-footer-2.html"
+    },
+    {
+      "id": "76",
+      "title": "Facebook",
+      "alias": "facebook",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "76-facebook.html",
+      "relative_path": "stbon-antonio/76-facebook.html"
+    },
+    {
+      "id": "55",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "55-mass-times.html",
+      "relative_path": "stbon-antonio/55-mass-times.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer - Landing",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "stbon-antonio/36-footer.html"
+    }
+  ]
+}

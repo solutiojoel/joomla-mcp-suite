@@ -1,0 +1,111 @@
+{
+  "slug": "stbarnabas-indy",
+  "site_url": "https://stbarnabas-indy.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles - Edit Only",
+  "category_id": "24",
+  "article_count": 10,
+  "generated_at": "2026-06-02T17:02:05Z",
+  "articles": [
+    {
+      "id": "219",
+      "title": "Connect With Us",
+      "alias": "connect-with-us",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "219-connect-with-us.html",
+      "relative_path": "stbarnabas-indy/219-connect-with-us.html"
+    },
+    {
+      "id": "218",
+      "title": "Hospitality - Prayer - Formation - Service Title",
+      "alias": "hospitality-prayer-formation-service-title",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "218-hospitality-prayer-formation-service-title.html",
+      "relative_path": "stbarnabas-indy/218-hospitality-prayer-formation-service-title.html"
+    },
+    {
+      "id": "217",
+      "title": "Calendar",
+      "alias": "calendar",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "217-calendar.html",
+      "relative_path": "stbarnabas-indy/217-calendar.html"
+    },
+    {
+      "id": "216",
+      "title": "",
+      "alias": "article",
+      "category_id": "",
+      "category_name": "",
+      "state": "",
+      "file_name": "216-article.html",
+      "relative_path": "stbarnabas-indy/216-article.html"
+    },
+    {
+      "id": "215",
+      "title": "Facebook",
+      "alias": "facebook",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "215-facebook.html",
+      "relative_path": "stbarnabas-indy/215-facebook.html"
+    },
+    {
+      "id": "214",
+      "title": "Where You Belong",
+      "alias": "where-you-belong",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "214-where-you-belong.html",
+      "relative_path": "stbarnabas-indy/214-where-you-belong.html"
+    },
+    {
+      "id": "213",
+      "title": "Navigation Contact Information",
+      "alias": "navigation-contact-information",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "213-navigation-contact-information.html",
+      "relative_path": "stbarnabas-indy/213-navigation-contact-information.html"
+    },
+    {
+      "id": "56",
+      "title": "Mission Statement",
+      "alias": "mission-statement",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "56-mission-statement.html",
+      "relative_path": "stbarnabas-indy/56-mission-statement.html"
+    },
+    {
+      "id": "55",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "55-mass-times.html",
+      "relative_path": "stbarnabas-indy/55-mass-times.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "stbarnabas-indy/36-footer.html"
+    }
+  ]
+}

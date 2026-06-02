@@ -24,10 +24,11 @@
       "alias": "footer",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-info\">\n<div class=\"footer-title\">\n<div class=\"footer-info-logo\"><a href=\"home\"><img src=\"images/template/leaf-graphic.svg\" alt=\"\" /></a></div>\n<h2><a href=\"home\">St. Lawrence<br />Catholic Church</a></h2>\n</div>\n<div class=\"footer-content\">\n<p><a href=\"about/contact-us\">6222 Franconia Road<br />Alexandria, VA, 22310</a><br /><a href=\"tel:7039714378\" target=\"_blank\" rel=\"noopener noreferrer\">(703) 971-4378</a><br /><a href=\"mailto:office@stlawrencealex.org\" target=\"_blank\" rel=\"noopener noreferrer\">office@stlawrencealex.org</a></p>\n</div>\n</div>\n<div class=\"footer-links-icon\">\n<div class=\"footer-links\"><a href=\"about/parish-registration\">Parish Registration</a><a href=\"https://giving.myparishsoft.io//app/giving/FD-325\" target=\"_blank\" rel=\"noopener noreferrer\">Online Giving</a><a href=\"https://www.arlingtondiocese.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan Website</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.franciscanmedia.org/saint-of-the-day/\" target=\"_blank\" rel=\"noopener noreferrer\">Saint of the Day</a></div>\n<div class=\"footer-icon\"><img src=\"images/template/logomark.svg\" alt=\"\" /></div>\n</div>\n</div>",
+      "introtext": "<div class=\"footer-wrapper\">\r\n<div class=\"footer-info\">\r\n<div class=\"footer-title\">\r\n<div class=\"footer-info-logo\"><a href=\"home\"><img src=\"images/template/leaf-graphic.svg\" alt=\"\" /></a></div>\r\n<h2><a href=\"home\">St. Lawrence<br />Catholic Church</a></h2>\r\n</div>\r\n<div class=\"footer-content\">\r\n<p><a href=\"about/contact-us\">6222 Franconia Road<br />Alexandria, VA, 22310</a><br /><a href=\"tel:7039714378\" target=\"_blank\" rel=\"noopener noreferrer\">(703) 971-4378</a><br /><a href=\"mailto:office@stlawrencealex.org\" target=\"_blank\" rel=\"noopener noreferrer\">office@stlawrencealex.org</a></p>\r\n</div>\r\n</div>\r\n<div class=\"footer-links-icon\">\r\n<div class=\"footer-links\"><a href=\"about/parish-registration\">Parish Registration</a><a href=\"https://giving.myparishsoft.io//app/giving/FD-325\" target=\"_blank\" rel=\"noopener noreferrer\">Online Giving</a><a href=\"https://www.arlingtondiocese.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan Website</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.franciscanmedia.org/saint-of-the-day/\" target=\"_blank\" rel=\"noopener noreferrer\">Saint of the Day</a></div>\r\n<div class=\"footer-icon\"><img src=\"images/template/logomark.svg\" alt=\"\" /></div>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "55": {
       "id": "55",
@@ -35,10 +36,11 @@
       "alias": "mass-times",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<h2>Sunday Masses</h2>\n<p>Saturday Vigil: 5:00 p.m.<br />Sunday: 7:30, 9:00 and 11:00 a.m.</p>\n<h2>Weekday Masses</h2>\n<p>M - F: 6:15 and 9:00 a.m. Saturday 9:00 a.m.</p>\n<h2>Confessions</h2>\n<p>Monday: 9:30 a.m.<br />Wednesday: 7:00 - 7:45 p.m.<br />Friday: 6:45 a.m. <br />Saturday: 3:30 - 4:30 p.m.</p>\n<h2>Adoration &amp; Novena</h2>\n<p>Wednesday: 9 a.m. - 1 p.m. &amp; Holy Hour 7:15 p.m. - 8:15 p.m.<br />Monday: 7:15 p.m. <em>Novena to Our Lady of Perpetual Help</em></p>",
+      "introtext": "<h2>Sunday Masses</h2>\r\n<p>Saturday Vigil: 5:00 p.m.<br />Sunday: 7:30, 9:00 and 11:00 a.m.</p>\r\n<h2>Weekday Masses</h2>\r\n<p>M - F: 6:15 and 9:00 a.m. Saturday 9:00 a.m.</p>\r\n<h2>Confessions</h2>\r\n<p>Monday: 9:30 a.m.<br />Wednesday: 7:00 - 7:45 p.m.<br />Friday: 6:45 a.m. <br />Saturday: 3:30 - 4:30 p.m.</p>\r\n<h2>Adoration &amp; Novena</h2>\r\n<p>Wednesday: 9 a.m. - 1 p.m. &amp; Holy Hour 7:15 p.m. - 8:15 p.m.<br />Monday: 7:15 p.m. <em>Novena to Our Lady of Perpetual Help</em></p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "74": {
       "id": "74",
@@ -46,10 +48,11 @@
       "alias": "calendar",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"calendar-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Calendar</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://calendarfeed.solutiocloud.us/embed/StLaw-Alex.js\"></script>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news/calendar\">View Full Calendar</a></div>\n</div>",
+      "introtext": "<div class=\"calendar-widget-wrapper widget-wrapper\">\r\n<div class=\"widget-title\">\r\n<h3 class=\"g-title\">Calendar</h3>\r\n</div>\r\n<div class=\"widget-feed\">\r\n<div class=\"widget-feed-inner-box\">\r\n<script src=\"https://calendarfeed.solutiocloud.us/embed/StLaw-Alex.js\"></script>\r\n</div>\r\n</div>\r\n<div class=\"widget-button\"><a class=\"button\" href=\"news/calendar\">View Full Calendar</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "75": {
       "id": "75",
@@ -57,10 +60,11 @@
       "alias": "formed",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"formed-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Formed</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed.png\" alt=\"\" /></a></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Watch Now</a></div>\n</div>",
+      "introtext": "<div class=\"formed-widget-wrapper widget-wrapper\">\r\n<div class=\"widget-title\">\r\n<h3 class=\"g-title\">Formed</h3>\r\n</div>\r\n<div class=\"widget-feed\">\r\n<div class=\"widget-feed-inner-box\"><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed.png\" alt=\"\" /></a></div>\r\n</div>\r\n<div class=\"widget-button\"><a class=\"button\" href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Watch Now</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "76": {
       "id": "76",
@@ -68,10 +72,11 @@
       "alias": "facebook",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/p/St-Lawrence-Roman-Catholic-Church-100064653311142/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
+      "introtext": "<div class=\"facebook-widget-wrapper widget-wrapper\">\r\n<div class=\"widget-title\">\r\n<h3 class=\"g-title\">Facebook</h3>\r\n</div>\r\n<div class=\"widget-feed\">\r\n<div class=\"widget-feed-inner-box\">\r\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\r\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\r\n</div>\r\n</div>\r\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/p/St-Lawrence-Roman-Catholic-Church-100064653311142/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "223": {
       "id": "223",
@@ -79,10 +84,11 @@
       "alias": "navigation-contact-info",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<p style=\"text-align: right;\"><a href=\"about/contact-us\">6222 Franconia Road<br />Alexandria, VA, 22310</a><br /><a href=\"tel:7039714378\" target=\"_blank\" rel=\"noopener noreferrer\">(703) 971-4378</a><br /><a href=\"mailto:office@stlawrencealex.org\" target=\"_blank\" rel=\"noopener noreferrer\">office@stlawrencealex.org</a></p>",
+      "introtext": "<p style=\"text-align: right;\"><a href=\"about/contact-us\">6222 Franconia Road<br />Alexandria, VA, 22310</a><br /><a href=\"tel:7039714378\" target=\"_blank\" rel=\"noopener noreferrer\">(703) 971-4378</a><br /><a href=\"mailto:office@stlawrencealex.org\" target=\"_blank\" rel=\"noopener noreferrer\">office@stlawrencealex.org</a></p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "224": {
       "id": "224",
@@ -90,10 +96,11 @@
       "alias": "welcome",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"welcome-wrapper\">\n<div class=\"welcome-title\">\n<h3 class=\"g-title\">Welcome</h3>\n</div>\n<div class=\"welcome-content\">\n<p>Welcome to St. Lawrence the Martyr Catholic Church. Whether you are a longtime parishioner, new to the area, or visiting for the first time, we are grateful that you are here. Our parish is a community centered on Jesus Christ and nourished by the Holy Eucharist, where individuals and families grow in faith through prayer, the Sacraments, and service to others. I invite you to join us for Mass, become involved in the life of the parish, and allow our patron, St. Lawrence the Martyr, to inspire us to live the Gospel with faith, generosity, and joy. May God bless you and your family, and know that you are always welcome here.</p>\n</div>\n<div class=\"welcome-bottom-icon\"><img src=\"images/template/leaf-graphic.svg\" alt=\"\" /></div>\n</div>",
+      "introtext": "<div class=\"welcome-wrapper\">\r\n<div class=\"welcome-title\">\r\n<h3 class=\"g-title\">Welcome</h3>\r\n</div>\r\n<div class=\"welcome-content\">\r\n<p>Welcome to St. Lawrence the Martyr Catholic Church. Whether you are a longtime parishioner, new to the area, or visiting for the first time, we are grateful that you are here. Our parish is a community centered on Jesus Christ and nourished by the Holy Eucharist, where individuals and families grow in faith through prayer, the Sacraments, and service to others. I invite you to join us for Mass, become involved in the life of the parish, and allow our patron, St. Lawrence the Martyr, to inspire us to live the Gospel with faith, generosity, and joy. May God bless you and your family, and know that you are always welcome here.</p>\r\n</div>\r\n<div class=\"welcome-bottom-icon\"><img src=\"images/template/leaf-graphic.svg\" alt=\"\" /></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "225": {
       "id": "225",
@@ -101,10 +108,11 @@
       "alias": "sign-up-for-parish-email",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<p>Receive occasional emails with parish news, upcoming events, ministry opportunities, and important announcements to help you stay connected with the life of the parish.</p>\n<!-- Begin Constant Contact Active Forms -->\n<script>// <![CDATA[\nvar _ctct_m = \"06b9d6346338bdc94ca55bfe42823dac\";\n// ]]></script>\n<script id=\"signupScript\" src=\"//static.ctctcdn.com/js/signup-form-widget/current/signup-form-widget.min.js\" async=\"\" defer=\"defer\"></script>\n<!-- End Constant Contact Active Forms -->\n<p> </p>\n<!-- Begin Constant Contact Inline Form Code -->\n<div class=\"ctct-inline-form\" data-form-id=\"d28bde00-32b3-49c6-884d-dc5e994dff39\"> </div>\n<!-- End Constant Contact Inline Form Code -->",
+      "introtext": "<p>Receive occasional emails with parish news, upcoming events, ministry opportunities, and important announcements to help you stay connected with the life of the parish.</p>\r\n<!-- Begin Constant Contact Active Forms -->\r\n<script>// <![CDATA[\r\nvar _ctct_m = \"06b9d6346338bdc94ca55bfe42823dac\";\r\n// ]]></script>\r\n<script id=\"signupScript\" src=\"//static.ctctcdn.com/js/signup-form-widget/current/signup-form-widget.min.js\" async=\"\" defer=\"defer\"></script>\r\n<!-- End Constant Contact Active Forms -->\r\n<p> </p>\r\n<!-- Begin Constant Contact Inline Form Code -->\r\n<div class=\"ctct-inline-form\" data-form-id=\"d28bde00-32b3-49c6-884d-dc5e994dff39\"> </div>\r\n<!-- End Constant Contact Inline Form Code -->",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "226": {
       "id": "226",
@@ -112,10 +120,11 @@
       "alias": "bulletins",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"bulletin-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Bulletins</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"bulletin-content widget-feed-inner-box\">{loadmoduleid 87}</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news/bulletin\">View Archive</a></div>\n</div>",
+      "introtext": "<div class=\"bulletin-widget-wrapper widget-wrapper\">\r\n<div class=\"widget-title\">\r\n<h3 class=\"g-title\">Bulletins</h3>\r\n</div>\r\n<div class=\"widget-feed\">\r\n<div class=\"bulletin-content widget-feed-inner-box\">{loadmoduleid 87}</div>\r\n</div>\r\n<div class=\"widget-button\"><a class=\"button\" href=\"news/bulletin\">View Archive</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     }
   },
   "sectionContent": {

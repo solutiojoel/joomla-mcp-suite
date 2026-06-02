@@ -1,0 +1,51 @@
+{
+  "slug": "seas-ontario",
+  "site_url": "https://seas-ontario.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles",
+  "category_id": "24",
+  "article_count": 4,
+  "generated_at": "2026-06-02T16:58:48Z",
+  "articles": [
+    {
+      "id": "240",
+      "title": "Header Contact Info",
+      "alias": "header-contact-info",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "240-header-contact-info.html",
+      "relative_path": "seas-ontario/240-header-contact-info.html"
+    },
+    {
+      "id": "76",
+      "title": "Welcome",
+      "alias": "facebook",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "76-facebook.html",
+      "relative_path": "seas-ontario/76-facebook.html"
+    },
+    {
+      "id": "55",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "55-mass-times.html",
+      "relative_path": "seas-ontario/55-mass-times.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "seas-ontario/36-footer.html"
+    }
+  ]
+}

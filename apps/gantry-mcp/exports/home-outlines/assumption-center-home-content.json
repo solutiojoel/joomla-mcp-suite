@@ -24,10 +24,11 @@
       "alias": "footer",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-logo-links\">\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/logo.png\" alt=\"Footer Logo\" /></a></div>\n<div class=\"footer-social-icons\">{loadmoduleid 155}</div>\n</div>\n<div class=\"footer-content\">\n<p><a href=\"get-connected/193-contact-us-directions\">20 Chestnut Street Centereach, NY 11720</a><br />Phone: <a href=\"tel:6315858760\" target=\"_blank\" rel=\"noopener noreferrer\">631-585-8760</a><br /><a href=\"mailto:rectory@abvmcentereach.com\" target=\"_blank\" rel=\"noopener noreferrer\">rectory@abvmcentereach.com</a></p>\n</div>\n</div>",
+      "introtext": "<div class=\"footer-wrapper\">\r\n<div class=\"footer-logo-links\">\r\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/logo.png\" alt=\"Footer Logo\" /></a></div>\r\n<div class=\"footer-social-icons\">{loadmoduleid 155}</div>\r\n</div>\r\n<div class=\"footer-content\">\r\n<p><a href=\"get-connected/193-contact-us-directions\">20 Chestnut Street Centereach, NY 11720</a><br />Phone: <a href=\"tel:6315858760\" target=\"_blank\" rel=\"noopener noreferrer\">631-585-8760</a><br /><a href=\"mailto:rectory@abvmcentereach.com\" target=\"_blank\" rel=\"noopener noreferrer\">rectory@abvmcentereach.com</a></p>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "55": {
       "id": "55",
@@ -35,10 +36,11 @@
       "alias": "mass-times",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<h2>Mass Schedule</h2>\n<p><strong>Saturday Vigil:</strong> 5:30pm<br /><strong>Sunday:</strong> 9:30am &amp; 11:30am<br /><strong>Monday - Thursday:</strong> 9:00am</p>",
+      "introtext": "<h2>Mass Schedule</h2>\r\n<p><strong>Saturday Vigil:</strong> 5:30pm<br /><strong>Sunday:</strong> 9:30am &amp; 11:30am<br /><strong>Monday - Thursday:</strong> 9:00am</p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "56": {
       "id": "56",
@@ -46,10 +48,11 @@
       "alias": "mission-statement",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<h2>Our Mission</h2>\n<p>Love God. Serve Others. Grow Disciples<br />You Matter + You Belong</p>\n<p><a class=\"button\" href=\"about-us/who-we-are\">Who We Are</a></p>",
+      "introtext": "<h2>Our Mission</h2>\r\n<p>Love God. Serve Others. Grow Disciples<br />You Matter + You Belong</p>\r\n<p><a class=\"button\" href=\"about-us/who-we-are\">Who We Are</a></p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "77": {
       "id": "77",
@@ -57,10 +60,11 @@
       "alias": "instagram",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<!-- Elfsight YouTube Gallery | Assumption-Center -->\n<script src=\"https://elfsightcdn.com/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-deb77ccf-b145-4df2-b8f8-f64c80779dca\" data-elfsight-app-lazy=\"\"> </div>",
+      "introtext": "<!-- Elfsight YouTube Gallery | Assumption-Center -->\r\n<script src=\"https://elfsightcdn.com/platform.js\" async=\"\"></script>\r\n<div class=\"elfsight-app-deb77ccf-b145-4df2-b8f8-f64c80779dca\" data-elfsight-app-lazy=\"\"> </div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "221": {
       "id": "221",
@@ -68,10 +72,11 @@
       "alias": "join-us-online",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<h2>Join Us Online</h2>\n<p>If you cannot join us in person, unite with our parish through the live broadcast</p>\n<p><a class=\"button\" href=\"https://www.youtube.com/channel/UC4o_wSrH-47z9LfYQIf6XqA\" target=\"_blank\" rel=\"noopener noreferrer\">View Livestream</a></p>",
+      "introtext": "<h2>Join Us Online</h2>\r\n<p>If you cannot join us in person, unite with our parish through the live broadcast</p>\r\n<p><a class=\"button\" href=\"https://abvmcentereach.online.church\" target=\"_blank\" rel=\"noopener noreferrer\">View Livestream</a></p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "222": {
       "id": "222",
@@ -79,10 +84,11 @@
       "alias": "navigation",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"nav-wrapper\">\n<div class=\"nav-menu-bar\">\n<div class=\"nav-logo\">{loadmoduleid 158}</div>\n<div class=\"nav-links-menu\">\n<div class=\"nav-links ql-toplinks-studius\">{loadmoduleid 159}</div>\n<div class=\"nav-menu-button\">{loadmoduleid 160}</div>\n</div>\n</div>\n<div id=\"menuHold\" class=\"nav-menu-hold\">{loadmoduleid 161}</div>\n</div>",
+      "introtext": "<div class=\"nav-wrapper\">\r\n<div class=\"nav-menu-bar\">\r\n<div class=\"nav-logo\">{loadmoduleid 158}</div>\r\n<div class=\"nav-links-menu\">\r\n<div class=\"nav-links ql-toplinks-studius\">{loadmoduleid 159}</div>\r\n<div class=\"nav-menu-button\">{loadmoduleid 160}</div>\r\n</div>\r\n</div>\r\n<div id=\"menuHold\" class=\"nav-menu-hold\">{loadmoduleid 161}</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     }
   },
   "sectionContent": {

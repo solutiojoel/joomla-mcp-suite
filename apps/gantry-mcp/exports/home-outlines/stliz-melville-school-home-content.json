@@ -24,10 +24,11 @@
       "alias": "footer",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/logo-white.png\" alt=\"Footer Logo\" /></a></div>\n<div class=\"footer-content-boxes\">\n<div class=\"footer-content\">\n<p><a href=\"about/contact\"><strong>175 Wolf Hill Rd<br />Melville, NY 11747</strong></a><br />Phone: <a href=\"tel:6312714455\" target=\"_blank\" rel=\"noopener noreferrer\">(631) 271-4455</a><br /><a href=\"mailto:center@stelizabeth.org\" target=\"_blank\" rel=\"noopener noreferrer\">center@stelizabeth.org</a></p>\n</div>\n<div class=\"footer-links\">\n<div class=\"footer-inner-links\"><a href=\"about/parish-registration\">Parish Registration</a><a href=\"subscribe\">Subscribe</a><a href=\"https://swipesimple.com/links/lnk_40212c10\" target=\"_blank\" rel=\"noopener noreferrer\">Online Giving</a><a href=\"mass-intentions\">Mass Intentions</a><a href=\"https://www.drvc.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan News</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.franciscanmedia.org/saint-of-the-day/\" target=\"_blank\" rel=\"noopener noreferrer\">Saint of the Day</a></div>\n</div>\n</div>\n</div>",
+      "introtext": "<div class=\"footer-wrapper\">\r\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/logo-white.png\" alt=\"Footer Logo\" /></a></div>\r\n<div class=\"footer-content-boxes\">\r\n<div class=\"footer-content\">\r\n<p><a href=\"about/contact\"><strong>175 Wolf Hill Rd<br />Melville, NY 11747</strong></a><br />Phone: <a href=\"tel:6312714455\" target=\"_blank\" rel=\"noopener noreferrer\">(631) 271-4455</a><br /><a href=\"mailto:center@stelizabeth.org\" target=\"_blank\" rel=\"noopener noreferrer\">center@stelizabeth.org</a></p>\r\n</div>\r\n<div class=\"footer-links\">\r\n<div class=\"footer-inner-links\"><a href=\"about/parish-registration\">Parish Registration</a><a href=\"subscribe\">Subscribe</a><a href=\"https://swipesimple.com/links/lnk_40212c10\" target=\"_blank\" rel=\"noopener noreferrer\">Online Giving</a><a href=\"mass-intentions\">Mass Intentions</a><a href=\"https://www.drvc.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan News</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.franciscanmedia.org/saint-of-the-day/\" target=\"_blank\" rel=\"noopener noreferrer\">Saint of the Day</a></div>\r\n</div>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "75": {
       "id": "75",
@@ -38,7 +39,8 @@
       "introtext": "\t<div class=\"formed-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Formed</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed.png\" alt=\"\" /></a></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Learn More</a></div>\n</div>",
       "fulltext": "",
       "state": "-2",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "76": {
       "id": "76",
@@ -49,7 +51,8 @@
       "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"#\">Read More</a></div>\n</div>",
       "fulltext": "",
       "state": "-2",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "79": {
       "id": "79",
@@ -60,7 +63,8 @@
       "introtext": "\t<div class=\"daily-readings-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Daily Readings</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<div class=\"dr-feed-image\"><img src=\"images/template/dr-feed.jpg\" alt=\"\" /></div>\n<div class=\"dr-feed-box\">{loadmoduleid 141}</div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Read More</a></div>\n</div>",
       "fulltext": "",
       "state": "-2",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     }
   },
   "sectionContent": {

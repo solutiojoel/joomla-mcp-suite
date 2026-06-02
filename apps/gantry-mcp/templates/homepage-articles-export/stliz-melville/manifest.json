@@ -1,0 +1,71 @@
+{
+  "slug": "stliz-melville",
+  "site_url": "https://stliz-melville.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles",
+  "category_id": "24",
+  "article_count": 6,
+  "generated_at": "2026-06-02T17:01:04Z",
+  "articles": [
+    {
+      "id": "241",
+      "title": "Mass Times (2)",
+      "alias": "mass-times-2",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "0",
+      "file_name": "241-mass-times-2.html",
+      "relative_path": "stliz-melville/241-mass-times-2.html"
+    },
+    {
+      "id": "185",
+      "title": "Funeral Notices",
+      "alias": "funeral-notices",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "185-funeral-notices.html",
+      "relative_path": "stliz-melville/185-funeral-notices.html"
+    },
+    {
+      "id": "184",
+      "title": "Connect With Us",
+      "alias": "connect-with-us",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "184-connect-with-us.html",
+      "relative_path": "stliz-melville/184-connect-with-us.html"
+    },
+    {
+      "id": "183",
+      "title": "Bulletins",
+      "alias": "bulletins",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "183-bulletins.html",
+      "relative_path": "stliz-melville/183-bulletins.html"
+    },
+    {
+      "id": "55",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "55-mass-times.html",
+      "relative_path": "stliz-melville/55-mass-times.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "stliz-melville/36-footer.html"
+    }
+  ]
+}

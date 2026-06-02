@@ -1,0 +1,61 @@
+{
+  "slug": "olmc-fairfield",
+  "site_url": "https://olmc-fairfield.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles",
+  "category_id": "24",
+  "article_count": 5,
+  "generated_at": "2026-06-02T16:58:40Z",
+  "articles": [
+    {
+      "id": "77",
+      "title": "Instagram",
+      "alias": "instagram",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "77-instagram.html",
+      "relative_path": "olmc-fairfield/77-instagram.html"
+    },
+    {
+      "id": "74",
+      "title": "Upcoming Events",
+      "alias": "calendar",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "74-calendar.html",
+      "relative_path": "olmc-fairfield/74-calendar.html"
+    },
+    {
+      "id": "56",
+      "title": "Welcome",
+      "alias": "welcome",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "56-welcome.html",
+      "relative_path": "olmc-fairfield/56-welcome.html"
+    },
+    {
+      "id": "55",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "55-mass-times.html",
+      "relative_path": "olmc-fairfield/55-mass-times.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "olmc-fairfield/36-footer.html"
+    }
+  ]
+}

@@ -24,10 +24,11 @@
       "alias": "mass-times",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles - Edit Only",
-      "introtext": "\t<h1 class=\"mt-big-title\">Mass Times</h1>\n<h1>Weekend Mass</h1>\n<p><strong>Saturday:</strong> 5:00pm<br /><strong>1st Saturday:</strong> 11:00am<br /><strong>Sunday:</strong> 8:30am, 10:30am (<em>Español</em>), 12:30pm</p>\n<h1>Confession Times</h1>\n<p><strong>Wednesday:</strong> 9:30-11:00am<br /><strong>Saturday:</strong> 4:00-4:50pm<br /><strong>Or by appointment:</strong> 210-922-1685</p>\n<p> </p>",
+      "introtext": "<h1 class=\"mt-big-title\">Mass Times</h1>\r\n<h1>Weekend Mass</h1>\r\n<p><strong>Saturday:</strong> 5:00pm<br /><strong>1st Saturday:</strong> 11:00am<br /><strong>Sunday:</strong> 8:30am, 10:30am (<em>Español</em>), 12:30pm</p>\r\n<h1>Confession Times</h1>\r\n<p><strong>Wednesday:</strong> 9:30-11:00am<br /><strong>Saturday:</strong> 4:00-4:50pm<br /><strong>Or by appointment:</strong> 210-922-1685</p>\r\n<p> </p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "76": {
       "id": "76",
@@ -35,10 +36,11 @@
       "alias": "facebook",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles - Edit Only",
-      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><!-- Elfsight Facebook Feed | StBon-Antonio -->\n<script src=\"https://elfsightcdn.com/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-d4235946-9bf9-4644-a768-f9b7daa78636\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/people/St-Bonaventure-Catholic-Church-San-Antonio-Texas/100064657300759/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
+      "introtext": "<div class=\"facebook-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\r\n<div class=\"widget-title\">\r\n<h3 class=\"g-title\">Facebook</h3>\r\n</div>\r\n<div class=\"widget-feed\">\r\n<div class=\"widget-feed-inner-box\"><!-- Elfsight Facebook Feed | StBon-Antonio -->\r\n<script src=\"https://elfsightcdn.com/platform.js\" async=\"\"></script>\r\n<div class=\"elfsight-app-d4235946-9bf9-4644-a768-f9b7daa78636\" data-elfsight-app-lazy=\"\"> </div>\r\n</div>\r\n</div>\r\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/people/St-Bonaventure-Catholic-Church-San-Antonio-Texas/100064657300759/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "178": {
       "id": "178",
@@ -46,10 +48,11 @@
       "alias": "footer-2",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles - Edit Only",
-      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-content\">\n<h1><a href=\"home\">St. Bonaventure<br />Catholic Church</a></h1>\n<p><strong><a href=\"about-us/contact-us\">1918 Palo Alto Rd.<br />San Antonio, TX 78211</a></strong><br />Phone: <a href=\"tel:2109221685\" target=\"_blank\" rel=\"noopener noreferrer\">210-922-1685</a></p>\n</div>\n<div class=\"footer-links\">\n<div class=\"footer-important-links\"><a href=\"about-us/join-our-parish\">Parish Registration</a><a href=\"news/donate\">Online Giving</a><a href=\"https://archsa.org/news/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan News</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.ewtn.com/\" target=\"_blank\" rel=\"noopener noreferrer\">EWTN</a></div>\n</div>\n</div>",
+      "introtext": "<div class=\"footer-wrapper\">\r\n<div class=\"footer-content\">\r\n<h1><a href=\"home\">St. Bonaventure<br />Catholic Church</a></h1>\r\n<p><strong><a href=\"about-us/contact-us\">1918 Palo Alto Rd.<br />San Antonio, TX 78211</a></strong><br />Phone: <a href=\"tel:2109221685\" target=\"_blank\" rel=\"noopener noreferrer\">210-922-1685</a></p>\r\n</div>\r\n<div class=\"footer-links\">\r\n<div class=\"footer-important-links\"><a href=\"about-us/join-our-parish\">Parish Registration</a><a href=\"news/donate\">Online Giving</a><a href=\"https://archsa.org/news/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan News</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.ewtn.com/\" target=\"_blank\" rel=\"noopener noreferrer\">EWTN</a></div>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "179": {
       "id": "179",
@@ -57,10 +60,11 @@
       "alias": "bulletins",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles - Edit Only",
-      "introtext": "\t<div class=\"bulletin-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Bulletins</h3>\n</div>\n<div class=\"widget-feed bulletin-feed\">\n<div class=\"widget-feed-inner-box\">{loadmoduleid 87}</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news/bulletin\">View All Bulletins</a></div>\n</div>",
+      "introtext": "<div class=\"bulletin-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\r\n<div class=\"widget-title\">\r\n<h3 class=\"g-title\">Bulletins</h3>\r\n</div>\r\n<div class=\"widget-feed bulletin-feed\">\r\n<div class=\"widget-feed-inner-box\">{loadmoduleid 87}</div>\r\n</div>\r\n<div class=\"widget-button\"><a class=\"button\" href=\"news/bulletin\">View All Bulletins</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     }
   },
   "sectionContent": {

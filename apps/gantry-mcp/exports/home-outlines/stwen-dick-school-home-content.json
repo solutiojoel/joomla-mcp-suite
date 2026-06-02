@@ -27,7 +27,8 @@
       "introtext": "\t<p>Group Photos for the Parish Directory will be taken March 15. All groups are asked to arrive 5 minutes prior to their scheduled time. </p>\n<p><a class=\"doclink\" href=\"index.php?option=com_docman&amp;view=document&amp;alias=21-group-photo-schedule&amp;category_slug=parish&amp;Itemid=120\" target=\"_blank\">Group Photo Schedule</a></p>",
       "fulltext": "",
       "state": "-2",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "76": {
       "id": "76",
@@ -38,7 +39,8 @@
       "introtext": "\t<p style=\"text-align: left;\"><img src=\"images/stories/FIDANZATI-X.jpg\" border=\"0\" alt=\"\" style=\"float: right;\" />\"Make [your wedding] a real celebration — because marriage is a celebration — a Christian celebration, not a worldly feast! . . . What happened in Cana 2,000 years ago, happens today at every wedding celebration: that which makes your wedding full and profoundly true will be the presence of the Lord who reveals himself and gives his grace. It is his presence that offers the 'good wine,' he is the secret to full joy, that which truly warms the heart. It is good that your wedding be simple and make what is truly important stand out. Some are more concerned with the exterior details, with the banquet, the photographs, the clothes, the flowers. . . These are important for a celebration, but only if they point to the real reason for your joy: the Lord's blessing on your love.\"<br /><span style=\"text-align: right; font-size: 12.1599998474121px; line-height: 1.3em;\">Address to engaged couples in Rome, February 14, 2014 (From the USCCB website)</span></p>\n<p style=\"text-align: left;\"><a href=\"http://www.catholicnews.com/data/stories/cns/1400657.htm\" target=\"_blank\" title=\"The Pope's Advice for a loving and lasting union\" style=\"font-size: 12.1599998474121px; line-height: 1.3em;\">The Pope also shared advice for a loving and lasting union</a><span style=\"font-size: 12.1599998474121px; line-height: 1.3em;\">. </span></p>\n<p> </p>",
       "fulltext": "",
       "state": "-2",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     }
   },
   "sectionContent": {

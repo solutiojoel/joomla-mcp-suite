@@ -1,0 +1,91 @@
+{
+  "slug": "shelbyville",
+  "site_url": "https://shelbyville.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles (Church)",
+  "category_id": "146",
+  "article_count": 8,
+  "generated_at": "2026-06-02T17:00:02Z",
+  "articles": [
+    {
+      "id": "145791",
+      "title": "Temp. Facebook",
+      "alias": "temp-facebook",
+      "category_id": "146",
+      "category_name": "- Homepage Articles (Church)",
+      "state": "1",
+      "file_name": "145791-temp-facebook.html",
+      "relative_path": "shelbyville/145791-temp-facebook.html"
+    },
+    {
+      "id": "143399",
+      "title": "Flocknotes",
+      "alias": "flocknotes",
+      "category_id": "146",
+      "category_name": "- Homepage Articles (Church)",
+      "state": "1",
+      "file_name": "143399-flocknotes.html",
+      "relative_path": "shelbyville/143399-flocknotes.html"
+    },
+    {
+      "id": "143398",
+      "title": "Formed",
+      "alias": "formed",
+      "category_id": "146",
+      "category_name": "- Homepage Articles (Church)",
+      "state": "1",
+      "file_name": "143398-formed.html",
+      "relative_path": "shelbyville/143398-formed.html"
+    },
+    {
+      "id": "143397",
+      "title": "Calendar",
+      "alias": "calendar",
+      "category_id": "146",
+      "category_name": "- Homepage Articles (Church)",
+      "state": "1",
+      "file_name": "143397-calendar.html",
+      "relative_path": "shelbyville/143397-calendar.html"
+    },
+    {
+      "id": "143396",
+      "title": "Facebook",
+      "alias": "facebook",
+      "category_id": "146",
+      "category_name": "- Homepage Articles (Church)",
+      "state": "1",
+      "file_name": "143396-facebook.html",
+      "relative_path": "shelbyville/143396-facebook.html"
+    },
+    {
+      "id": "143395",
+      "title": "Info Boxes",
+      "alias": "info-boxes",
+      "category_id": "146",
+      "category_name": "- Homepage Articles (Church)",
+      "state": "1",
+      "file_name": "143395-info-boxes.html",
+      "relative_path": "shelbyville/143395-info-boxes.html"
+    },
+    {
+      "id": "143394",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "category_id": "146",
+      "category_name": "- Homepage Articles (Church)",
+      "state": "1",
+      "file_name": "143394-mass-times.html",
+      "relative_path": "shelbyville/143394-mass-times.html"
+    },
+    {
+      "id": "143393",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "146",
+      "category_name": "- Homepage Articles (Church)",
+      "state": "1",
+      "file_name": "143393-footer.html",
+      "relative_path": "shelbyville/143393-footer.html"
+    }
+  ]
+}

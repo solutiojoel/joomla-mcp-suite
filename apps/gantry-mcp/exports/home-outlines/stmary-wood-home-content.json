@@ -24,10 +24,11 @@
       "alias": "footer",
       "categoryId": "278",
       "categoryTitle": "- Church Homepage Articles",
-      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-title\">\n<h2><a href=\"home\">St. Mary Catholic Church</a></h2>\n</div>\n<div class=\"footer-content\">\n<div class=\"footer-content-column\">\n<div class=\"footer-content-cell footer-text\">\n<div>\n<p><a href=\"home/contact-us-directions\">312 Lincoln Avenue,<br />Woodstock, IL 60098</a><br />Phone: <a href=\"tel:8153383377\" target=\"_blank\" rel=\"noopener noreferrer\">(815) 338-3377</a><br /><a href=\"mailto:parish@stmary-woodstock.org\" target=\"_blank\" rel=\"noopener noreferrer\">parish@stmary-woodstock.org</a></p>\n</div>\n<div>{loadmoduleid 256}</div>\n</div>\n<div class=\"footer-content-cell footer-hours\">\n<p><strong>Office Hours:</strong><br />Monday - Friday: 8:00AM - 4:00PM<br /><em>The office is closed daily from<br />12:30PM - 1:30PM for Mass<br />and lunch.</em></p>\n</div>\n<div class=\"footer-content-cell footer-link-wrapper\">\n<p><strong>Quick Links</strong></p>\n<div class=\"footer-links\"><a href=\"home/registration\">Parish Registration</a><a href=\"https://giving.ncsservices.org/App/Giving/ncs-1615\" target=\"_blank\" rel=\"noopener noreferrer\">Online Giving</a><a href=\"https://www.rockforddiocese.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan News</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.franciscanmedia.org/saint-of-the-day/\" target=\"_blank\" rel=\"noopener noreferrer\">Saint of the Day</a></div>\n</div>\n</div>\n<div class=\"footer-logo-icon\"><a href=\"home\"><img src=\"images/template/2026-church/emblem.svg\" alt=\"\" /></a></div>\n</div>\n</div>",
+      "introtext": "<div class=\"footer-wrapper\">\r\n<div class=\"footer-title\">\r\n<h2><a href=\"home\">St. Mary Catholic Church</a></h2>\r\n</div>\r\n<div class=\"footer-content\">\r\n<div class=\"footer-content-column\">\r\n<div class=\"footer-content-cell footer-text\">\r\n<div>\r\n<p><a href=\"home/contact-us-directions\">312 Lincoln Avenue,<br />Woodstock, IL 60098</a><br />Phone: <a href=\"tel:8153383377\" target=\"_blank\" rel=\"noopener noreferrer\">(815) 338-3377</a><br /><a href=\"mailto:parish@stmary-woodstock.org\" target=\"_blank\" rel=\"noopener noreferrer\">parish@stmary-woodstock.org</a></p>\r\n</div>\r\n<div>{loadmoduleid 256}</div>\r\n</div>\r\n<div class=\"footer-content-cell footer-hours\">\r\n<p><strong>Office Hours:</strong><br />Monday - Friday: 8:00AM - 4:00PM<br /><em>The office is closed daily from<br />12:30PM - 1:30PM for Mass<br />and lunch.</em></p>\r\n</div>\r\n<div class=\"footer-content-cell footer-link-wrapper\">\r\n<p><strong>Quick Links</strong></p>\r\n<div class=\"footer-links\"><a href=\"home/registration\">Parish Registration</a><a href=\"https://giving.ncsservices.org/App/Giving/ncs-1615\" target=\"_blank\" rel=\"noopener noreferrer\">Online Giving</a><a href=\"https://www.rockforddiocese.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan News</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.franciscanmedia.org/saint-of-the-day/\" target=\"_blank\" rel=\"noopener noreferrer\">Saint of the Day</a></div>\r\n</div>\r\n</div>\r\n<div class=\"footer-logo-icon\"><a href=\"home\"><img src=\"images/template/2026-church/emblem.svg\" alt=\"\" /></a></div>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "1303": {
       "id": "1303",
@@ -35,10 +36,11 @@
       "alias": "welcome-from-fr-sean",
       "categoryId": "278",
       "categoryTitle": "- Church Homepage Articles",
-      "introtext": "\t<div class=\"welc-wrapper\">\n<div class=\"welc-video\"><iframe width=\"640\" height=\"480\" src=\"https://drive.google.com/file/d/1gdYyAjWlZgYz2WogHfRds-3iN211B-QD/preview\"></iframe></div>\n<div class=\"welc-inner-box\">\n<div class=\"welc-title\">\n<h2>Welcome From Fr. Sean</h2>\n</div>\n<div class=\"welc-content\">\n<p>Welcome to St. Mary Catholic Church. We are a diverse community on a shared pilgrim journey, united by our mission: <strong>Love God. Love Neighbor. Go Make Disciples.</strong></p>\n<p>Whether you're visiting, returning, or looking for a parish home, you are truly welcome here. Join us as we worship the Lord, grow in faith together, and live as disciples in our families and community.</p>\n</div>\n<div class=\"welc-button\"><a class=\"button\" href=\"https://www.youtube.com/playlist?list=PLsc9ELefgyybumyc3BZobAcuRqg7b3dFQ\" target=\"_blank\" rel=\"noopener noreferrer\">Dose of the Ghost</a></div>\n</div>\n</div>",
+      "introtext": "<div class=\"welc-wrapper\">\r\n<div class=\"welc-video\"><iframe width=\"640\" height=\"480\" src=\"https://drive.google.com/file/d/1gdYyAjWlZgYz2WogHfRds-3iN211B-QD/preview\"></iframe></div>\r\n<div class=\"welc-inner-box\">\r\n<div class=\"welc-title\">\r\n<h2>Welcome From Fr. Sean</h2>\r\n</div>\r\n<div class=\"welc-content\">\r\n<p>Welcome to St. Mary Catholic Church. We are a diverse community on a shared pilgrim journey, united by our mission: <strong>Love God. Love Neighbor. Go Make Disciples.</strong></p>\r\n<p>Whether you're visiting, returning, or looking for a parish home, you are truly welcome here. Join us as we worship the Lord, grow in faith together, and live as disciples in our families and community.</p>\r\n</div>\r\n<div class=\"welc-button\"><a class=\"button\" href=\"https://www.youtube.com/playlist?list=PLsc9ELefgyybumyc3BZobAcuRqg7b3dFQ\" target=\"_blank\" rel=\"noopener noreferrer\">Dose of the Ghost</a></div>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "1304": {
       "id": "1304",
@@ -46,10 +48,11 @@
       "alias": "looking-to-give",
       "categoryId": "278",
       "categoryTitle": "- Church Homepage Articles",
-      "introtext": "\t<div class=\"give-wrapper\">\n<div class=\"give-content\">\n<div class=\"give-inner-content\">\n<h3>Looking to Give?</h3>\n<p>Stewardship is love in action. Your gift keeps our parish thriving and supports future generations through our endowments.</p>\n</div>\n</div>\n<div class=\"give-button\"><a class=\"button\" href=\"https://giving.ncsservices.org/App/Giving/ncs-1615\" target=\"_blank\" rel=\"noopener noreferrer\">Donate</a></div>\n</div>",
+      "introtext": "<div class=\"give-wrapper\">\r\n<div class=\"give-content\">\r\n<div class=\"give-inner-content\">\r\n<h3>Looking to Give?</h3>\r\n<p>Stewardship is love in action. Your gift keeps our parish thriving and supports future generations through our endowments.</p>\r\n</div>\r\n</div>\r\n<div class=\"give-button\"><a class=\"button\" href=\"https://giving.ncsservices.org/App/Giving/ncs-1615\" target=\"_blank\" rel=\"noopener noreferrer\">Donate</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "1305": {
       "id": "1305",
@@ -57,10 +60,11 @@
       "alias": "mary-overlay-quote",
       "categoryId": "278",
       "categoryTitle": "- Church Homepage Articles",
-      "introtext": "\t<h2>\"Let us run to Mary, and, as her little children, cast ourselves into her arms with a perfect confidence.\"</h2>\n<h6>- Saint Francis De Sales</h6>",
+      "introtext": "<h2>\"Let us run to Mary, and, as her little children, cast ourselves into her arms with a perfect confidence.\"</h2>\r\n<h6>- Saint Francis De Sales</h6>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "1306": {
       "id": "1306",
@@ -68,10 +72,11 @@
       "alias": "contact-form",
       "categoryId": "278",
       "categoryTitle": "- Church Homepage Articles",
-      "introtext": "\t<p><strong>Fields marked with an * are required.</strong></p>\n<p>\n<script type=\"text/javascript\" src=\"https://form.jotform.com/jsform/261134831270045\"></script>\n</p>",
+      "introtext": "<p><strong>Fields marked with an * are required.</strong></p>\r\n<p>\r\n<script type=\"text/javascript\" src=\"https://form.jotform.com/jsform/261134831270045\"></script>\r\n</p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     }
   },
   "sectionContent": {

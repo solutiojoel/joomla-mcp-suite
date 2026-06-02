@@ -1,0 +1,101 @@
+{
+  "slug": "stlaw-alex",
+  "site_url": "https://stlaw-alex.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles",
+  "category_id": "24",
+  "article_count": 9,
+  "generated_at": "2026-06-02T16:58:30Z",
+  "articles": [
+    {
+      "id": "226",
+      "title": "Bulletins",
+      "alias": "bulletins",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "226-bulletins.html",
+      "relative_path": "stlaw-alex/226-bulletins.html"
+    },
+    {
+      "id": "225",
+      "title": "Sign Up for Parish Email",
+      "alias": "sign-up-for-parish-email",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "225-sign-up-for-parish-email.html",
+      "relative_path": "stlaw-alex/225-sign-up-for-parish-email.html"
+    },
+    {
+      "id": "224",
+      "title": "Welcome",
+      "alias": "welcome",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "224-welcome.html",
+      "relative_path": "stlaw-alex/224-welcome.html"
+    },
+    {
+      "id": "223",
+      "title": "Navigation Contact Info",
+      "alias": "navigation-contact-info",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "223-navigation-contact-info.html",
+      "relative_path": "stlaw-alex/223-navigation-contact-info.html"
+    },
+    {
+      "id": "76",
+      "title": "Facebook",
+      "alias": "facebook",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "76-facebook.html",
+      "relative_path": "stlaw-alex/76-facebook.html"
+    },
+    {
+      "id": "75",
+      "title": "Formed",
+      "alias": "formed",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "75-formed.html",
+      "relative_path": "stlaw-alex/75-formed.html"
+    },
+    {
+      "id": "74",
+      "title": "Calendar",
+      "alias": "calendar",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "74-calendar.html",
+      "relative_path": "stlaw-alex/74-calendar.html"
+    },
+    {
+      "id": "55",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "55-mass-times.html",
+      "relative_path": "stlaw-alex/55-mass-times.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "stlaw-alex/36-footer.html"
+    }
+  ]
+}

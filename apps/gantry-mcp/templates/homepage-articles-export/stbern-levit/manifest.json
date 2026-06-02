@@ -1,0 +1,81 @@
+{
+  "slug": "stbern-levit",
+  "site_url": "https://stbern-levit.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles - Edit Only",
+  "category_id": "118",
+  "article_count": 7,
+  "generated_at": "2026-06-02T16:59:45Z",
+  "articles": [
+    {
+      "id": "1557",
+      "title": "Header Contact Info",
+      "alias": "header-contact-info",
+      "category_id": "118",
+      "category_name": "- Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "1557-header-contact-info.html",
+      "relative_path": "stbern-levit/1557-header-contact-info.html"
+    },
+    {
+      "id": "1547",
+      "title": "Helpful Links",
+      "alias": "helpful-links",
+      "category_id": "118",
+      "category_name": "- Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "1547-helpful-links.html",
+      "relative_path": "stbern-levit/1547-helpful-links.html"
+    },
+    {
+      "id": "1546",
+      "title": "Bulletins",
+      "alias": "bulletins",
+      "category_id": "118",
+      "category_name": "- Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "1546-bulletins.html",
+      "relative_path": "stbern-levit/1546-bulletins.html"
+    },
+    {
+      "id": "1545",
+      "title": "Facebook",
+      "alias": "facebook",
+      "category_id": "118",
+      "category_name": "- Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "1545-facebook.html",
+      "relative_path": "stbern-levit/1545-facebook.html"
+    },
+    {
+      "id": "1544",
+      "title": "Our Mission",
+      "alias": "our-mission",
+      "category_id": "118",
+      "category_name": "- Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "1544-our-mission.html",
+      "relative_path": "stbern-levit/1544-our-mission.html"
+    },
+    {
+      "id": "1542",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "category_id": "118",
+      "category_name": "- Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "1542-mass-times.html",
+      "relative_path": "stbern-levit/1542-mass-times.html"
+    },
+    {
+      "id": "1541",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "118",
+      "category_name": "- Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "1541-footer.html",
+      "relative_path": "stbern-levit/1541-footer.html"
+    }
+  ]
+}

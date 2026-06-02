@@ -24,10 +24,11 @@
       "alias": "footer",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles - Edit Only",
-      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-content\">\n<div class=\"footer-logo-icon\"><a href=\"home\"><img src=\"images/template/logo-footer.png\" alt=\"\" /></a></div>\n<div class=\"footer-content-text\">\n<div class=\"footer-logo-text\"><a href=\"about-us/contact-us\"><img src=\"images/template/footer-text.svg\" alt=\"\" /></a></div>\n<div class=\"footer-inner-content\">\n<p><a class=\"phone-icon\" href=\"tel:6203421061\" target=\"_blank\" rel=\"noopener noreferrer\">Phone: 620-342-1061</a><br /><a class=\"env-icon\" href=\"mailto:emporiacatholics@shemporia.org\" target=\"_blank\" rel=\"noopener noreferrer\">emporiacatholics@shemporia.org</a></p>\n</div>\n</div>\n</div>\n<div class=\"footer-important-links\">\n<div class=\"footer-important-links-inner\"><a href=\"about-us/parish-registration\">Parish Registration</a><a href=\"https://pushpay.com/g/shemporia\" target=\"_blank\" rel=\"noopener noreferrer\">Make a Donation</a><a href=\"https://salinadiocese.org/news-and-updates/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan News</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Formed</a></div>\n</div>\n</div>\n<div class=\"sub-footer-box\">\n<p><strong>© 2025 Sacred Heart Catholic Church</strong></p>\n</div>",
+      "introtext": "<div class=\"footer-wrapper\">\r\n<div class=\"footer-content\">\r\n<div class=\"footer-logo-icon\"><a href=\"home\"><img src=\"images/template/logo-footer.png\" alt=\"\" /></a></div>\r\n<div class=\"footer-content-text\">\r\n<div class=\"footer-logo-text\"><a href=\"about-us/contact-us\"><img src=\"images/template/footer-text.svg\" alt=\"\" /></a></div>\r\n<div class=\"footer-inner-content\">\r\n<p><a class=\"phone-icon\" href=\"tel:6203421061\" target=\"_blank\" rel=\"noopener noreferrer\">Phone: 620-342-1061</a><br /><a class=\"env-icon\" href=\"mailto:emporiacatholics@shemporia.org\" target=\"_blank\" rel=\"noopener noreferrer\">emporiacatholics@shemporia.org</a></p>\r\n</div>\r\n</div>\r\n</div>\r\n<div class=\"footer-important-links\">\r\n<div class=\"footer-important-links-inner\"><a href=\"about-us/parish-registration\">Parish Registration</a><a href=\"https://pushpay.com/g/shemporia\" target=\"_blank\" rel=\"noopener noreferrer\">Make a Donation</a><a href=\"https://salinadiocese.org/news-and-updates/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan News</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Formed</a></div>\r\n</div>\r\n</div>\r\n<div class=\"sub-footer-box\">\r\n<p><strong>© 2025 Sacred Heart Catholic Church</strong></p>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "195": {
       "id": "195",
@@ -35,10 +36,11 @@
       "alias": "weekend-mass",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles - Edit Only",
-      "introtext": "\t<h1>Weekend Mass</h1>\n<p><strong>Saturday:</strong> 4:00 p.m.<br /><strong>Sunday:</strong> 8:00 a.m. and 10:00 a.m.</p>",
+      "introtext": "<h1>Weekend Mass</h1>\r\n<p><strong>Saturday:</strong> 4:00 p.m.<br /><strong>Sunday:</strong> 8:00 a.m. and 10:00 a.m.</p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "197": {
       "id": "197",
@@ -46,10 +48,11 @@
       "alias": "confessions",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles - Edit Only",
-      "introtext": "\t<h1>Confessions</h1>\n<p><em><strong>15 minutes before each Mass and:</strong></em><br /><strong>Wednesday:</strong> 6:00 - 6:30 p.m.<br /><strong>Saturday:</strong> 3:00 - 3:50 p.m.</p>",
+      "introtext": "<h1>Confessions</h1>\r\n<p><em><strong>15 minutes before each Mass and:</strong></em><br /><strong>Wednesday:</strong> 6:00 - 6:30 p.m.<br /><strong>Saturday:</strong> 3:00 - 3:50 p.m.</p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     }
   },
   "sectionContent": {

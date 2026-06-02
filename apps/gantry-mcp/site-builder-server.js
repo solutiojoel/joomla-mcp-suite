@@ -111,14 +111,18 @@ app.post('/api/deploy', async (req, res) => {
       layout:  layoutArray,
       dryRun:  Boolean(dryRun),
     });
-    steps.push('[LAYOUT] ' + (typeof importResult === 'string'
+    const layoutMsg = typeof importResult === 'string'
       ? importResult
-      : (importResult?.message || (importResult?.imported ? 'Imported OK' : JSON.stringify(importResult)))));
+      : (importResult?.message || (importResult?.imported ? 'Imported OK' : JSON.stringify(importResult)));
+    if (/error|failed|refused/i.test(layoutMsg) && !importResult?.imported) {
+      throw new Error('Layout import failed: ' + layoutMsg);
+    }
+    steps.push('[LAYOUT] ' + layoutMsg);
 
     // ── Step 2: CSS upload + page settings ────────────────────────────────────
     if (cssContent) {
       const domain    = domainOf(siteUrl);
-      const cssFile   = 'site-builder-composite.css';
+      const cssFile   = '_template.css';
       const marker    = '<!-- site-builder-css -->';
       const endMarker = '<!-- /site-builder-css -->';
 
@@ -132,21 +136,26 @@ app.post('/api/deploy', async (req, res) => {
 
         try {
           const ftpConf = await callTool(joomla, 'ftp_site_config', { domain });
-          if (ftpConf && typeof ftpConf === 'object') {
-            // upload_path is the FTP write-user's allowed directory — prefer it over pub_path
-            // which is the read-user's filesystem path and may differ.
-            if (ftpConf.upload_path) pubPath = ftpConf.upload_path;
-            else if (ftpConf.pub_path) pubPath = ftpConf.pub_path;
-            if (ftpConf.pub_url) pubUrl = ftpConf.pub_url.replace(/\/$/, '');
+                    // ftp_site_config returns { data: { upload_path, pub_path, pub_url } }
+          const ftpData = (ftpConf?.data && typeof ftpConf.data === 'object') ? ftpConf.data : ftpConf;
+          if (ftpData && typeof ftpData === 'object') {
+            if (ftpData.upload_path && !String(ftpData.upload_path).includes('not set'))
+              pubPath = ftpData.upload_path;
+            else if (ftpData.pub_path) pubPath = ftpData.pub_path;
+            if (ftpData.pub_url) pubUrl = ftpData.pub_url.replace(/\/$/, '');
           }
         } catch (e) {
           steps.push('[CSS WARN] Could not read ftp_site_config (' + e.message + ') — using default paths');
         }
 
         const remotePath = pubPath.replace(/\/$/, '') + '/' + cssFile;
-        const cssUrl     = pubUrl + '/' + cssFile;
+        // Use a root-relative path so the link works regardless of domain
+        let pubWebPath = pubUrl;
+        try { pubWebPath = new URL(pubUrl).pathname; } catch (_) {}
+        const cssUrl     = pubWebPath.replace(/\/$/, '') + '/' + cssFile;
 
         // 2b. Upload CSS via FTP (write user)
+        try { await callTool(joomla, 'ftp_mkdir', { domain, path: pubPath.replace(/\/$/, '') }); } catch (_) { /* may exist */ }
         const uploadResult = await callTool(joomla, 'ftp_upload_file', {
           domain,
           path:    remotePath,
@@ -165,7 +174,7 @@ app.post('/api/deploy', async (req, res) => {
           steps.push('[CSS SKIP] Page settings not updated because upload failed.');
           // Skip page settings update — jump to closing
         } else {
-        // 2c. Get current page head_bottom, replace/inject site-builder link
+        // 2c. Get current page head_bottom, prepend/replace site-builder link
         let headBottom = '';
         try {
           const pageList = await callTool(gantry, 'gantry_page_list', {
@@ -179,15 +188,15 @@ app.post('/api/deploy', async (req, res) => {
           steps.push('[CSS WARN] Could not read current page settings: ' + e.message);
         }
 
-        // Strip any previous site-builder block, then append fresh one
-        const linkTag = '<link rel="stylesheet" href="' + cssUrl + '?v=' + Date.now() + '">';
+        // Strip any previous site-builder block, then prepend fresh one at top
+        const linkTag = '<link rel="stylesheet" href="' + cssUrl + '">';
         const block   = marker + '\n' + linkTag + '\n' + endMarker;
         const re      = new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
                                    '[\\s\\S]*?' +
                                    endMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
         const newHeadBottom = re.test(headBottom)
           ? headBottom.replace(re, block)
-          : (headBottom ? headBottom.trimEnd() + '\n' + block : block);
+          : (headBottom ? block + '\n' + headBottom.trimStart() : block);
 
         // 2d. Save page settings
         const pageEditResult = await callTool(gantry, 'gantry_page_edit', {
@@ -260,6 +269,160 @@ app.post('/api/deploy-with-content', async (req, res) => {
     return idStr.split(',').map(id => idMap[id.trim()] || id.trim()).join(',');
   }
 
+  function slugify(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  function normTitle(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+      .replace(/\s+/g, ' ');
+  }
+
+  function isLocalHref(href) {
+    if (!href) return false;
+    const h = String(href).trim();
+    if (!h || h.startsWith('#') || /^mailto:|^tel:|^javascript:/i.test(h)) return false;
+    if (/^https?:\/\//i.test(h)) {
+      try { return new URL(h).hostname === domainOf(siteUrl); } catch { return false; }
+    }
+    return !/^[a-z][a-z0-9+.-]*:/i.test(h);
+  }
+
+  function pathKeyFromHref(href) {
+    if (!href) return '';
+    let h = String(href).trim();
+    if (/^https?:\/\//i.test(h)) {
+      try { h = new URL(h).pathname; } catch {}
+    }
+    h = h.split('#')[0].split('?')[0].replace(/^\/+|\/+$/g, '');
+    return slugify(h.split('/').filter(Boolean).pop() || h);
+  }
+
+  async function buildTargetRouteIndex(joomla, domain) {
+    const routeByTitle = {};
+    const routeBySlug = {};
+    const menusResult = await callTool(joomla, 'joomla_list_menus', {});
+    const menus = Array.isArray(menusResult?.data) ? menusResult.data : [];
+    let inspected = 0;
+
+    for (const menu of menus) {
+      const menuType = String(menu.menuType || '').trim();
+      if (!menuType) continue;
+      let itemsResult;
+      try {
+        itemsResult = await callTool(joomla, 'joomla_list_menu_items', { menuId: menuType, limit: 500 });
+      } catch (_) { continue; }
+      const items = Array.isArray(itemsResult?.data) ? itemsResult.data : [];
+      const byId = {};
+      for (const item of items) byId[String(item.id)] = item;
+
+      for (const item of items) {
+        if (String(item.state || '1') === '-2') continue;
+        let detail = null;
+        try {
+          detail = await callTool(joomla, 'joomla_get_menu_item', { id: String(item.id) });
+          inspected++;
+        } catch (_) {}
+        const data = detail?.data || {};
+        const aliases = [];
+        let cur = item;
+        while (cur && cur.id) {
+          const curDetail = cur.id === item.id ? data : null;
+          const alias = curDetail?.alias || cur.alias || slugify(cur.title);
+          if (alias && alias !== 'root') aliases.unshift(alias);
+          cur = cur.parentId ? byId[String(cur.parentId)] : null;
+        }
+        const route = '/' + aliases.filter(Boolean).join('/');
+        const keys = [
+          normTitle(item.title),
+          normTitle(data.title),
+          slugify(item.title),
+          slugify(data.alias || item.title),
+        ].filter(Boolean);
+        for (const key of keys) {
+          routeByTitle[key] ||= route;
+          routeBySlug[key] ||= route;
+        }
+      }
+    }
+    steps.push(`[ROUTES] Read ${menus.length} menu(s), inspected ${inspected} item(s) on ${domain} using read-only site data`);
+    return { routeByTitle, routeBySlug };
+  }
+
+  function resolveTargetHref(href, label, routeIndex) {
+    if (!isLocalHref(href)) return href;
+    const labelKey = normTitle(label);
+    const hrefKey = pathKeyFromHref(href);
+    return routeIndex.routeByTitle[labelKey] ||
+      routeIndex.routeBySlug[slugify(label)] ||
+      routeIndex.routeBySlug[hrefKey] ||
+      routeIndex.routeByTitle[hrefKey] ||
+      href;
+  }
+
+  function rewriteHtmlLinks(html, routeIndex) {
+    if (!html || !routeIndex) return { html, count: 0 };
+    let count = 0;
+    const out = String(html).replace(/<a\b([^>]*?)\bhref=(["'])(.*?)\2([^>]*)>([\s\S]*?)<\/a>/gi,
+      (m, before, quote, href, after, inner) => {
+        const label = inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        const next = resolveTargetHref(href, label, routeIndex);
+        if (next !== href) {
+          count++;
+          return `<a${before}href=${quote}${next}${quote}${after}>${inner}</a>`;
+        }
+        return m;
+      });
+    return { html: out, count };
+  }
+
+  function rewriteObjectLinks(value, routeIndex) {
+    let count = 0;
+    function visit(node) {
+      if (!node || typeof node !== 'object') return;
+      if (Array.isArray(node)) { node.forEach(visit); return; }
+      const label = node.button || node.linktext || node.title || node.name || node.headline || '';
+      for (const key of ['buttonlink', 'link']) {
+        if (typeof node[key] === 'string') {
+          const next = resolveTargetHref(node[key], label, routeIndex);
+          if (next !== node[key]) { node[key] = next; count++; }
+        }
+      }
+      if (typeof node.html === 'string') {
+        const r = rewriteHtmlLinks(node.html, routeIndex);
+        if (r.count) { node.html = r.html; count += r.count; }
+      }
+      for (const v of Object.values(node)) visit(v);
+    }
+    visit(value);
+    return count;
+  }
+
+  async function findMatchingCategory(titleCandidates, oldIds, catOldToNew, joomla) {
+    for (const candidate of titleCandidates.map(String).map(s => s.trim()).filter(Boolean)) {
+      const search = await callTool(joomla, 'joomla_list_categories', {
+        extension: 'com_content', search: candidate,
+      });
+      const rows = Array.isArray(search?.data) ? search.data : [];
+      const exact = rows.find(c => normTitle(c.title) === normTitle(candidate));
+      if (exact) {
+        const id = String(exact.id);
+        for (const oldId of oldIds) catOldToNew[oldId] = id;
+        steps.push(`[CATEGORY] Matched target "${exact.title}" for "${candidate}" → ID ${id}`);
+        return true;
+      }
+    }
+    return false;
+  }
+
   try {
     joomla = await mcpClient(JOOMLA_URL);
 
@@ -267,8 +430,17 @@ app.post('/api/deploy-with-content', async (req, res) => {
     const particleIndex = {};
     for (const vc of variantContent) {
       for (const [particleId, pdata] of Object.entries(vc.particles || {})) {
-        if (!particleIndex[particleId]) particleIndex[particleId] = { articles: [], categories: [] };
+        if (!particleIndex[particleId]) {
+          particleIndex[particleId] = {
+            articles: [],
+            categories: [],
+            particleTitle: pdata.particleTitle || '',
+            particleType: pdata.particleType || '',
+          };
+        }
         const ex = particleIndex[particleId];
+        if (!ex.particleTitle && pdata.particleTitle) ex.particleTitle = pdata.particleTitle;
+        if (!ex.particleType && pdata.particleType) ex.particleType = pdata.particleType;
         for (const art of (pdata.articles  || [])) { if (!ex.articles.find(a => a.id === art.id)) ex.articles.push(art); }
         for (const cat of (pdata.categories || [])) { if (!ex.categories.find(c => c.id === cat.id)) ex.categories.push(cat); }
       }
@@ -276,66 +448,182 @@ app.post('/api/deploy-with-content', async (req, res) => {
 
     // ── Collect unique categories needed ────────────────────────────────────────
     const catTitleToOldIds = {};
+    const catOldIdToTitleCandidates = {};
     const catOldToNew = {};
 
     for (const pdata of Object.values(particleIndex)) {
       for (const cat of pdata.categories) {
         (catTitleToOldIds[cat.title] ||= []).push(cat.id);
+        const candidates = (catOldIdToTitleCandidates[cat.id] ||= []);
+        if (pdata.particleTitle) candidates.push(pdata.particleTitle);
+        if (cat.title) candidates.push(cat.title);
       }
       for (const art of pdata.articles) {
-        if (art.categoryTitle && art.categoryId)
+        if (art.categoryTitle && art.categoryId) {
           (catTitleToOldIds[art.categoryTitle] ||= []).push(art.categoryId);
+          const candidates = (catOldIdToTitleCandidates[art.categoryId] ||= []);
+          if (art.categoryTitle) candidates.push(art.categoryTitle);
+        }
       }
     }
     for (const title of Object.keys(catTitleToOldIds))
       catTitleToOldIds[title] = [...new Set(catTitleToOldIds[title])];
+    for (const oldId of Object.keys(catOldIdToTitleCandidates))
+      catOldIdToTitleCandidates[oldId] = [...new Set(catOldIdToTitleCandidates[oldId].filter(Boolean))];
 
     const totalArts = Object.values(particleIndex).reduce((n, p) => n + p.articles.length, 0);
     steps.push(`[CONTENT] ${Object.keys(catTitleToOldIds).length} categories, ${totalArts} articles to create`);
 
+    if (!dryRun) {
+      // Log in to the target site before any write operations
+      const loginResult = await callTool(joomla, 'joomla_login', { site_url: siteUrl });
+      const loginOk = loginResult?.success !== false &&
+        !(String(loginResult?.message || '')).toLowerCase().includes('failed');
+      steps.push(`[LOGIN] ${siteUrl} — ${loginOk ? 'OK' : (loginResult?.message || JSON.stringify(loginResult))}`);
+      if (!loginOk) throw new Error('Login failed: ' + (loginResult?.message || JSON.stringify(loginResult)));
+    }
+
     if (dryRun) {
       for (const title of Object.keys(catTitleToOldIds))
-        steps.push(`[DRY RUN] Would create category: "${title}"`);
+        steps.push(`[DRY RUN] Would find/create category: "${title}"`);
       for (const [particleId, pdata] of Object.entries(particleIndex))
         for (const art of pdata.articles)
-          steps.push(`[DRY RUN] Would create article: "${art.title}" (cat: "${art.categoryTitle}") → particle ${particleId}`);
+          steps.push(`[DRY RUN] Would create/update article: "${art.title}" (cat: "${art.categoryTitle}") → particle ${particleId}`);
     } else {
-      // ── Create categories ────────────────────────────────────────────────────
-      for (const [title, oldIds] of Object.entries(catTitleToOldIds)) {
-        try {
-          const result = await callTool(joomla, 'joomla_create_category', {
-            site_url: siteUrl, title, extension: 'com_content',
-          });
-          const newId = String(result?.id || result?.data?.id || '');
-          if (!newId) throw new Error('No ID returned: ' + JSON.stringify(result));
-          for (const oldId of oldIds) catOldToNew[oldId] = newId;
-          steps.push(`[CATEGORY] Created "${title}" → ID ${newId}`);
-        } catch (err) {
-          steps.push(`[CATEGORY WARN] "${title}": ${err.message}`);
+      const domain = domainOf(siteUrl);
+      let routeIndex = { routeByTitle: {}, routeBySlug: {} };
+      try {
+        // Confirm the target domain/path with the read-only FTP account before
+        // trusting site-specific path rewrites.
+        const ftpInfo = await callTool(joomla, 'ftp_site_config', { domain });
+        const ftpOk = ftpInfo?.success !== false;
+        const ftpData = (ftpInfo?.data && typeof ftpInfo.data === 'object') ? ftpInfo.data : {};
+        const webRoot = ftpData.web_root || '/';
+        let readOk = false;
+        if (ftpOk) {
+          const listResult = await callTool(joomla, 'ftp_list_files', { domain, path: webRoot });
+          readOk = listResult?.success !== false;
         }
+        steps.push(`[FTP READ] ${domain} — ${ftpOk && readOk ? 'read-only OK' : (ftpInfo?.message || 'config/read unavailable')}`);
+      } catch (err) {
+        steps.push(`[FTP READ WARN] ${domain}: ${err.message}`);
+      }
+      try {
+        routeIndex = await buildTargetRouteIndex(joomla, domain);
+      } catch (err) {
+        steps.push(`[ROUTES WARN] Could not read target menu paths: ${err.message}`);
       }
 
-      // ── Create articles per particle ─────────────────────────────────────────
+      // ── Find-or-create categories ────────────────────────────────────────────────
+      // Search first — avoids duplicates and works even when post-create
+      // verification fails (forge sites, unusual admin layouts).
+      async function findOrCreateCategory(title, oldIds) {
+        const candidates = [
+          ...oldIds.flatMap(oldId => catOldIdToTitleCandidates[oldId] || []),
+          title,
+        ];
+        if (await findMatchingCategory([...new Set(candidates)], oldIds, catOldToNew, joomla)) return;
+
+        const search1 = await callTool(joomla, 'joomla_list_categories', {
+          extension: 'com_content', search: title,
+        });
+        const match1 = (search1?.data || []).find(
+          c => String(c.title || '').trim().toLowerCase() === title.trim().toLowerCase()
+        );
+        if (match1) {
+          const id = String(match1.id);
+          for (const oldId of oldIds) catOldToNew[oldId] = id;
+          steps.push(`[CATEGORY] Existing "${title}" → ID ${id}`);
+          return;
+        }
+        // Not found — create it
+        await callTool(joomla, 'joomla_create_category', { title, extension: 'com_content' });
+        // Search again to get the real ID (bypasses broken internal verification)
+        const search2 = await callTool(joomla, 'joomla_list_categories', {
+          extension: 'com_content', search: title,
+        });
+        const match2 = (search2?.data || []).find(
+          c => String(c.title || '').trim().toLowerCase() === title.trim().toLowerCase()
+        );
+        if (match2) {
+          const id = String(match2.id);
+          for (const oldId of oldIds) catOldToNew[oldId] = id;
+          steps.push(`[CATEGORY] Created "${title}" → ID ${id}`);
+        } else {
+          steps.push(`[CATEGORY WARN] "${title}": created but could not retrieve ID`);
+        }
+      }
+      for (const [title, oldIds] of Object.entries(catTitleToOldIds)) {
+        try { await findOrCreateCategory(title, oldIds); }
+        catch (err) { steps.push(`[CATEGORY WARN] "${title}": ${err.message}`); }
+      }
+
+      // ── Find-or-create articles ──────────────────────────────────────────────────
       const artOldToNew = {};
       for (const [particleId, pdata] of Object.entries(particleIndex)) {
         artOldToNew[particleId] = {};
         for (const art of pdata.articles) {
           const catId = catOldToNew[art.categoryId] || art.categoryId || '';
           try {
-            const result = await callTool(joomla, 'joomla_create_article', {
-              site_url: siteUrl,
-              title:     art.title,
-              alias:     art.alias || undefined,
-              introtext: art.introtext || '',
-              fulltext:  art.fulltext  || '',
-              catid:     catId,
-              state:     Number(art.state)  || 1,
-              access:    Number(art.access) || 1,
+            // 1. Search for existing article by exact title
+            const search1 = await callTool(joomla, 'joomla_article', {
+              action: 'list', search: art.title,
             });
-            const newId = String(result?.id || result?.data?.id || '');
-            if (!newId) throw new Error('No ID returned: ' + JSON.stringify(result));
-            artOldToNew[particleId][art.id] = newId;
-            steps.push(`[ARTICLE] "${art.title}" cat=${catId} → ID ${newId} [${particleId}]`);
+            const match1 = (search1?.data || []).find(
+              a => String(a.title || '').trim().toLowerCase() === art.title.trim().toLowerCase()
+            );
+            if (match1) {
+              const newId = String(match1.id);
+              artOldToNew[particleId][art.id] = newId;
+              // Update the existing article's content to match the section's canonical HTML
+              let articleContent = [art.introtext || '', art.fulltext || ''].filter(Boolean).join('\n');
+              const linkRewrite = rewriteHtmlLinks(articleContent, routeIndex);
+              articleContent = linkRewrite.html;
+              if (articleContent) {
+                try {
+                  await callTool(joomla, 'joomla_article', {
+                    action:  'update',
+                    id:      newId,
+                    content: articleContent,
+                  });
+                  steps.push(`[ARTICLE] Updated "${art.title}" (ID ${newId}) with section content [${particleId}]` +
+                    (linkRewrite.count ? ` (${linkRewrite.count} link(s) remapped)` : ''));
+                } catch (updateErr) {
+                  steps.push(`[ARTICLE] Found "${art.title}" → ID ${newId} (update failed: ${updateErr.message}) [${particleId}]`);
+                }
+              } else {
+                steps.push(`[ARTICLE] Existing "${art.title}" → ID ${newId} [${particleId}]`);
+              }
+              continue;
+            }
+            // 2. Create it
+            let articleContent = [art.introtext || '', art.fulltext || ''].filter(Boolean).join('\n');
+            const linkRewrite = rewriteHtmlLinks(articleContent, routeIndex);
+            articleContent = linkRewrite.html;
+            await callTool(joomla, 'joomla_article', {
+              action:     'create',
+              title:      art.title,
+              // alias omitted — Joomla auto-generates from title, avoids alias conflicts
+              categoryId: catId,
+              content:    articleContent,
+              state:      String(Number(art.state)  || 1),
+              access:     String(Number(art.access) || 1),
+            });
+            // 3. Search again for real ID
+            const search2 = await callTool(joomla, 'joomla_article', {
+              action: 'list', search: art.title,
+            });
+            const match2 = (search2?.data || []).find(
+              a => String(a.title || '').trim().toLowerCase() === art.title.trim().toLowerCase()
+            );
+            if (match2) {
+              const newId = String(match2.id);
+              artOldToNew[particleId][art.id] = newId;
+              steps.push(`[ARTICLE] Created "${art.title}" cat=${catId} → ID ${newId} [${particleId}]` +
+                (linkRewrite.count ? ` (${linkRewrite.count} link(s) remapped)` : ''));
+            } else {
+              steps.push(`[ARTICLE WARN] "${art.title}" [${particleId}]: created but could not retrieve ID`);
+            }
           } catch (err) {
             steps.push(`[ARTICLE WARN] "${art.title}" [${particleId}]: ${err.message}`);
           }
@@ -345,6 +633,7 @@ app.post('/api/deploy-with-content', async (req, res) => {
       // ── Patch layout IDs ─────────────────────────────────────────────────────
       const patchedLayout = deepClone(layoutArray);
       let patchCount = 0;
+      const linkPatchCount = rewriteObjectLinks(patchedLayout, routeIndex);
       walkParticles(patchedLayout, node => {
         const pid    = node.id || '';
         const filter = node.attributes?.article?.filter;
@@ -358,7 +647,7 @@ app.post('/api/deploy-with-content', async (req, res) => {
           if (p !== String(filter.articles)) { filter.articles = p; patchCount++; }
         }
       });
-      steps.push(`[PATCH] Remapped ${patchCount} filter(s)`);
+      steps.push(`[PATCH] Remapped ${patchCount} filter(s), ${linkPatchCount} quicklink path(s)`);
       layoutArray = patchedLayout;
     }
 
@@ -369,32 +658,44 @@ app.post('/api/deploy-with-content', async (req, res) => {
     const importResult = await callTool(gantry, 'gantry_layout_import', {
       site: siteUrl, outline: String(outlineId), layout: layoutArray, dryRun: Boolean(dryRun),
     });
-    steps.push('[LAYOUT] ' + (typeof importResult === 'string'
+    const layoutMsg = typeof importResult === 'string'
       ? importResult
-      : (importResult?.message || (importResult?.imported ? 'Imported OK' : JSON.stringify(importResult)))));
+      : (importResult?.message || (importResult?.imported ? 'Imported OK' : JSON.stringify(importResult)));
+    if (/error|failed|refused/i.test(layoutMsg) && !importResult?.imported) {
+      throw new Error('Layout import failed: ' + layoutMsg);
+    }
+    steps.push('[LAYOUT] ' + layoutMsg);
 
     // ── CSS (mirrors /api/deploy logic) ──────────────────────────────────────────
     if (cssContent) {
       const domain    = domainOf(siteUrl);
-      const cssFile   = 'site-builder-composite.css';
+      const cssFile   = '_template.css';
       const marker    = '<!-- site-builder-css -->';
       const endMarker = '<!-- /site-builder-css -->';
       if (dryRun) {
         steps.push('[CSS DRY RUN] Would upload and link ' + domain + '/images/pub/' + cssFile);
       } else {
-        joomla = await mcpClient(JOOMLA_URL);
+        // Reuse existing joomla client (already logged in), or open a new one if closed
+        if (!joomla) joomla = await mcpClient(JOOMLA_URL);
         let pubPath = '/home/' + domain.split('.')[0] + '/public_html/images/pub';
         let pubUrl  = 'https://' + domain + '/images/pub';
         try {
           const ftpConf = await callTool(joomla, 'ftp_site_config', { domain });
-          if (ftpConf && typeof ftpConf === 'object') {
-            if (ftpConf.upload_path) pubPath = ftpConf.upload_path;
-            else if (ftpConf.pub_path) pubPath = ftpConf.pub_path;
-            if (ftpConf.pub_url) pubUrl = ftpConf.pub_url.replace(/\/$/, '');
+                    // ftp_site_config returns { data: { upload_path, pub_path, pub_url } }
+          const ftpData = (ftpConf?.data && typeof ftpConf.data === 'object') ? ftpConf.data : ftpConf;
+          if (ftpData && typeof ftpData === 'object') {
+            if (ftpData.upload_path && !String(ftpData.upload_path).includes('not set'))
+              pubPath = ftpData.upload_path;
+            else if (ftpData.pub_path) pubPath = ftpData.pub_path;
+            if (ftpData.pub_url) pubUrl = ftpData.pub_url.replace(/\/$/, '');
           }
         } catch (e) { steps.push('[CSS WARN] ' + e.message); }
         const remotePath = pubPath.replace(/\/$/, '') + '/' + cssFile;
-        const cssUrl     = pubUrl + '/' + cssFile;
+        // Use a root-relative path so the link works regardless of domain
+        let pubWebPath = pubUrl;
+        try { pubWebPath = new URL(pubUrl).pathname; } catch (_) {}
+        const cssUrl     = pubWebPath.replace(/\/$/, '') + '/' + cssFile;
+        try { await callTool(joomla, 'ftp_mkdir', { domain, path: pubPath.replace(/\/$/, '') }); } catch (_) { /* may exist */ }
         const uploadResult = await callTool(joomla, 'ftp_upload_file', {
           domain, path: remotePath, content: cssContent,
         });
@@ -413,14 +714,14 @@ app.post('/api/deploy-with-content', async (req, res) => {
             });
             headBottom = (typeof pageList === 'object' ? pageList : {})['page[head][head_bottom]'] || '';
           } catch (e) { /* ignore */ }
-          const linkTag = '<link rel="stylesheet" href="' + cssUrl + '?v=' + Date.now() + '">';
+          const linkTag = '<link rel="stylesheet" href="' + cssUrl + '">';
           const block   = marker + '\n' + linkTag + '\n' + endMarker;
           const re      = new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
                                      '[\\s\\S]*?' +
                                      endMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
           const newHeadBottom = re.test(headBottom)
             ? headBottom.replace(re, block)
-            : (headBottom ? headBottom.trimEnd() + '\n' + block : block);
+            : (headBottom ? block + '\n' + headBottom.trimStart() : block);
           await callTool(gantry, 'gantry_page_edit', {
             site: siteUrl, outline: String(outlineId),
             edits: { 'page[head][head_bottom]': newHeadBottom },

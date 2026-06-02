@@ -27,6 +27,7 @@ const yaml = require('js-yaml');
 const ROOT = __dirname;
 const SRC_DIR = path.join(ROOT, 'exports', 'home-outlines');
 const CSS_DIR = path.join(ROOT, 'exports', 'override-css');
+const CSS_PATTERNS_DIR = path.join(ROOT, 'templates', 'css-patterns');
 const OUT_FILE = path.join(ROOT, 'exports', 'site-builder.html');
 const SHOTS_MANIFEST = path.join(ROOT, 'exports', 'section-shots', 'manifest.json');
 
@@ -67,26 +68,61 @@ if (fs.existsSync(SHOTS_MANIFEST)) {
 // The parish id is normalised the same way the YAML source ids are, so the two
 // line up (e.g. "stlaw-alex-1-home.override.css" -> "stlaw-alex").
 const cssRaw = {};
+
+function normalizeCssSourceId(filename, parentDir) {
+  if (filename === 'override-school.css' && parentDir) return `${parentDir}-school`;
+  if (filename === 'override.css' && parentDir) return parentDir;
+  return filename
+    .replace(/\.bak$/i, '')
+    .replace(/\.override\.css$/i, '')
+    .replace(/\.css$/i, '')
+    .replace(/-home$/i, '')
+    .replace(/-1$/i, '');
+}
+
+function loadCssFile(filePath, sourceId, { preferExisting = false } = {}) {
+  if (!sourceId || sourceId.startsWith('_')) return false;
+  if (preferExisting && cssRaw[sourceId]) return false;
+  try {
+    cssRaw[sourceId] = fs.readFileSync(filePath, 'utf8');
+    return true;
+  } catch (err) {
+    console.warn(`Could not read ${filePath}: ${err.message}`);
+    return false;
+  }
+}
+
+let templateCssCount = 0;
+if (fs.existsSync(CSS_PATTERNS_DIR)) {
+  for (const dirent of fs.readdirSync(CSS_PATTERNS_DIR, { withFileTypes: true })) {
+    if (!dirent.isDirectory()) continue;
+    const siteDir = dirent.name;
+    const fullDir = path.join(CSS_PATTERNS_DIR, siteDir);
+    for (const f of fs.readdirSync(fullDir).filter((name) => name.endsWith('.css'))) {
+      const parishId = normalizeCssSourceId(f, siteDir);
+      if (loadCssFile(path.join(fullDir, f), parishId)) templateCssCount++;
+    }
+  }
+  console.log(`Found override.css for ${templateCssCount} template site(s) in templates/css-patterns/`);
+}
+
+let exportCssCount = 0;
 if (fs.existsSync(CSS_DIR)) {
-  const cssFiles = fs.readdirSync(CSS_DIR).filter((f) => f.endsWith('.css'));
+  const cssFiles = fs.readdirSync(CSS_DIR).filter((f) =>
+    f.endsWith('.css') && !f.startsWith('_')
+  );
   for (const f of cssFiles) {
-    const parishId = f
-      .replace(/-home\.override\.css$/, '')
-      .replace(/\.override\.css$/, '')
-      .replace(/-home\.css$/, '')
-      .replace(/\.css$/, '')
-      .replace(/-1$/, '');
-    try {
-      cssRaw[parishId] = fs.readFileSync(path.join(CSS_DIR, f), 'utf8');
-    } catch (err) {
-      console.warn(`Could not read ${f}: ${err.message}`);
+    const parishId = normalizeCssSourceId(f);
+    if (loadCssFile(path.join(CSS_DIR, f), parishId, { preferExisting: true })) {
+      exportCssCount++;
     }
   }
   console.log(
-    `Found override.css for ${Object.keys(cssRaw).length} parishes in override-css/`
+    `Found ${Object.keys(cssRaw).length} total override.css source(s) (` +
+    `${templateCssCount} template, ${exportCssCount} export-only).`
   );
-} else {
-  console.log('(no exports/override-css/ — composite CSS export will be unavailable)');
+} else if (!templateCssCount) {
+  console.log('(no templates/css-patterns/ or exports/override-css/ — composite CSS export will be unavailable)');
 }
 
 // --- Content companions (article/category data per section per source) ---
@@ -183,18 +219,26 @@ if (!files.length) {
 const ZONES = [
   { container: 'container-top', sections: ['top', 'navigation', 'slideshow'] },
   { container: null, sections: ['header', 'above', 'feature', 'showcase', 'utility'] },
-  { container: 'container-main', sections: ['sidebar', 'mainbar', 'aside'] },
+  { container: null, sections: ['container-main'] },
   { container: null, sections: ['expanded', 'extension', 'bottom'] },
   { container: 'container-footer', sections: ['footer', 'copyright'] },
   { container: null, sections: ['offcanvas'] },
 ];
 const SECTION_ORDER = ZONES.flatMap((z) => z.sections);
+const CSS_SECTION_ORDER = [
+  'top','navigation','slideshow','header','above','feature','showcase','utility',
+  'container-main','sidebar','mainbar','aside','expanded','extension','bottom','footer','copyright','offcanvas',
+];
+const COMPOSITE_SECTION_PARTS = {
+  'container-main': ['sidebar', 'mainbar', 'aside'],
+};
 
 // --- Extract sections + container templates from each source ---
 
 const sectionLibrary = {};   // sectionId -> [{ sourceId, sourceName, host, type, node, summary }]
 const containerTemplates = {}; // container-top / container-main / container-footer
 const sources = [];
+let skippedEmptyVariants = 0;
 
 for (const filename of files) {
   const raw = fs.readFileSync(path.join(SRC_DIR, filename), 'utf8');
@@ -232,21 +276,44 @@ for (const filename of files) {
             inherit: {},
           };
         }
+        if (n.id === 'container-main') {
+          const contentData = buildCompositeContentData(sourceId, COMPOSITE_SECTION_PARTS[n.id]) || null;
+          const summary = summarizeSection(n, contentData);
+          if (isUsefulSectionVariant(summary, contentData)) {
+            (sectionLibrary[n.id] ||= []).push({
+              sourceId,
+              sourceName,
+              host,
+              type,
+              node: n,
+              summary,
+              shot: shotLookup[sourceId]?.[n.id] || null,
+              contentData,
+            });
+          } else {
+            skippedEmptyVariants++;
+          }
+        }
         walkExtract(n.children, n.id);
       } else if (type === 'grid' || type === 'block') {
         walkExtract(n.children, insideContainer);
       } else if (type === 'section' || type === 'offcanvas') {
-        const summary = summarizeSection(n);
-        (sectionLibrary[n.id] ||= []).push({
-          sourceId,
-          sourceName,
-          host,
-          type,
-          node: n,
-          summary,
-          shot: shotLookup[sourceId]?.[n.id] || null,
-          contentData: buildVariantContentData(sourceId, n.id) || null,
-        });
+        const contentData = buildVariantContentData(sourceId, n.id) || null;
+        const summary = summarizeSection(n, contentData);
+        if (isUsefulSectionVariant(summary, contentData)) {
+          (sectionLibrary[n.id] ||= []).push({
+            sourceId,
+            sourceName,
+            host,
+            type,
+            node: n,
+            summary,
+            shot: shotLookup[sourceId]?.[n.id] || null,
+            contentData,
+          });
+        } else {
+          skippedEmptyVariants++;
+        }
         // sections don't nest sections, but be safe
         // (we intentionally don't recurse into the section's own grids here)
       }
@@ -254,34 +321,61 @@ for (const filename of files) {
   }
 }
 
-function summarizeSection(node) {
+function buildCompositeContentData(sourceId, sectionIds) {
+  const merged = {};
+  for (const sid of sectionIds || []) {
+    const data = buildVariantContentData(sourceId, sid);
+    if (data) Object.assign(merged, data);
+  }
+  return Object.keys(merged).length ? merged : null;
+}
+
+function isUsefulSectionVariant(summary, contentData) {
+  if (!summary) return false;
+  if (summary.particleCount > 0) return true;
+  if (summary.rows.length > 0) return true;
+  if (contentData && Object.keys(contentData).length > 0) return true;
+  return false;
+}
+
+function summarizeSection(node, contentData) {
   // Collect particle rows: each grid -> [{subtype, title, size, enabled}]
   const rows = [];
   let particleCount = 0;
   const subtypes = {};
-  for (const grid of node.children || []) {
-    if (grid.type !== 'grid') continue;
-    const row = [];
-    for (const block of grid.children || []) {
-      if (block.type !== 'block') continue;
-      const size = Number(block.attributes?.size) || 0;
-      for (const p of block.children || []) {
-        if (['grid', 'block'].includes(p.type)) continue;
-        const enabled = p.attributes?.enabled !== 0 && p.attributes?.enabled !== '0';
-        row.push({
-          type: p.type,
-          subtype: p.subtype || '',
-          title: p.title || `${p.type}/${p.subtype}`,
-          size,
-          enabled,
-        });
-        particleCount++;
-        const key = `${p.type}/${p.subtype || '?'}`;
-        subtypes[key] = (subtypes[key] || 0) + 1;
+  function walkGrids(nodes) {
+    for (const grid of nodes || []) {
+      if (grid.type !== 'grid') {
+        if (Array.isArray(grid.children)) walkGrids(grid.children);
+        continue;
       }
+      const row = [];
+      for (const block of grid.children || []) {
+        if (block.type !== 'block') continue;
+        const size = Number(block.attributes?.size) || 0;
+        for (const p of block.children || []) {
+          if (p.type === 'section' || p.type === 'offcanvas') {
+            walkGrids(p.children || []);
+            continue;
+          }
+          if (['grid', 'block'].includes(p.type)) continue;
+          const enabled = p.attributes?.enabled !== 0 && p.attributes?.enabled !== '0';
+          row.push({
+            type: p.type,
+            subtype: p.subtype || '',
+            title: p.title || `${p.type}/${p.subtype}`,
+            size,
+            enabled,
+          });
+          particleCount++;
+          const key = `${p.type}/${p.subtype || '?'}`;
+          subtypes[key] = (subtypes[key] || 0) + 1;
+        }
+      }
+      if (row.length) rows.push(row);
     }
-    if (row.length) rows.push(row);
   }
+  walkGrids(node.children || []);
   const inherited = !!(node.inherit && Object.keys(node.inherit).length);
   return {
     rows,
@@ -289,13 +383,147 @@ function summarizeSection(node) {
     subtypes,
     inherited,
     attributes: node.attributes || {},
+    cssClasses: collectCssClasses(node, contentData),
   };
 }
 
+function addClassTokens(target, value) {
+  if (value === null || value === undefined) return;
+  String(value)
+    .split(/\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .forEach((s) => target.add(s));
+}
+
+function collectCssClasses(node, contentData) {
+  const classes = new Set();
+  function walk(value, key = '') {
+    if (value === null || value === undefined) return;
+    if (typeof value === 'string') {
+      if (/^(class|classname|blockclass|linkclass|buttonclass)$/i.test(key)) {
+        addClassTokens(classes, value);
+      }
+      if (/html$/i.test(key)) {
+        for (const m of value.matchAll(/\bclass\s*=\s*["']([^"']+)["']/gi)) {
+          addClassTokens(classes, m[1]);
+        }
+      }
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((v) => walk(v, key));
+      return;
+    }
+    if (typeof value === 'object') {
+      for (const [k, v] of Object.entries(value)) walk(v, k);
+    }
+  }
+  walk(node);
+  addGeneratedContentClasses(classes, contentData);
+  return Array.from(classes).sort();
+}
+
+function addGeneratedContentClasses(classes, contentData) {
+  if (!contentData) return;
+  let html = '';
+  for (const particle of Object.values(contentData)) {
+    for (const article of particle.articles || []) {
+      html += '\n' + (article.introtext || '') + '\n' + (article.fulltext || '');
+    }
+  }
+
+  if (/calendarfeed\.solutiocloud\.us\/embed\//i.test(html)) {
+    [
+      'gcaltohtml',
+      'cc-block',
+      'cc-dateblockformat',
+      'cc-monthformat',
+      'cc-dayformat',
+      'cc-eventblock',
+      'cc-innereventblock',
+      'event',
+      'cc-timeofday',
+      'cc-title',
+    ].forEach((c) => classes.add(c));
+  }
+}
+
+function normalizeGeneratedId(value) {
+  return String(value).replace(/\b([a-z][a-z0-9-]*?)-\d{3,}\b/gi, '$1-*');
+}
+
+function normalizeForDedupe(value, key = '') {
+  if (value === null || value === undefined) return value;
+  if (typeof value === 'string') {
+    return key === 'id' ? normalizeGeneratedId(value) : value.trim();
+  }
+  if (Array.isArray(value)) return value.map((v) => normalizeForDedupe(v, key));
+  if (typeof value !== 'object') return value;
+  const out = {};
+  for (const k of Object.keys(value).sort()) {
+    out[k] = normalizeForDedupe(value[k], k);
+  }
+  return out;
+}
+
+function normalizeContentDataForDedupe(contentData) {
+  if (!contentData) return null;
+  const out = {};
+  for (const [key, value] of Object.entries(contentData).sort()) {
+    out[normalizeGeneratedId(key)] = normalizeForDedupe(value);
+  }
+  return out;
+}
+
+function dedupeVariantKey(sectionId, variant) {
+  return JSON.stringify({
+    sectionId,
+    node: normalizeForDedupe(variant.node),
+    contentData: normalizeContentDataForDedupe(variant.contentData),
+  });
+}
+
+function variantQualityScore(variant) {
+  let score = 0;
+  if (cssRaw[variant.sourceId]) score += 100;
+  if (variant.shot) score += 20;
+  if (variant.contentData && Object.keys(variant.contentData).length) score += 10;
+  if (!/-school-school$/.test(variant.sourceId)) score += 5;
+  if (!/-school$/.test(variant.sourceId)) score += 2;
+  return score;
+}
+
+function dedupeSectionLibrary(library) {
+  let removed = 0;
+  for (const [sectionId, variants] of Object.entries(library)) {
+    const byKey = new Map();
+    for (const variant of variants) {
+      const key = dedupeVariantKey(sectionId, variant);
+      const current = byKey.get(key);
+      if (!current || variantQualityScore(variant) > variantQualityScore(current)) {
+        if (current) removed++;
+        byKey.set(key, variant);
+      } else {
+        removed++;
+      }
+    }
+    library[sectionId] = Array.from(byKey.values());
+  }
+  return removed;
+}
+
+const skippedDuplicateVariants = dedupeSectionLibrary(sectionLibrary);
 const libCount = Object.values(sectionLibrary).reduce((a, b) => a + b.length, 0);
 console.log(
   `Loaded ${sources.length} sources, ${Object.keys(sectionLibrary).length} section ids, ${libCount} section variants.`
 );
+if (skippedEmptyVariants) {
+  console.log(`Skipped ${skippedEmptyVariants} empty section variant(s).`);
+}
+if (skippedDuplicateVariants) {
+  console.log(`Skipped ${skippedDuplicateVariants} duplicate section variant(s).`);
+}
 
 // --- Emit HTML ---
 
@@ -319,13 +547,15 @@ const CONTAINER_TEMPLATES = ${safeJson(containerTemplates)};
 const SOURCES = ${safeJson(sources)};
 const ZONES = ${JSON.stringify(ZONES)};
 const SECTION_ORDER = ${JSON.stringify(SECTION_ORDER)};
+const CSS_SECTION_ORDER = ${JSON.stringify(CSS_SECTION_ORDER)};
+const COMPOSITE_SECTION_PARTS = ${JSON.stringify(COMPOSITE_SECTION_PARTS)};
 const CSS_RAW = ${safeJson(cssRaw)};
 const CSS_TEMPLATE_HEAD_JS = ${safeJson(CSS_TEMPLATE_HEAD)};
 const CSS_TEMPLATE_TAIL_JS = ${safeJson(CSS_TEMPLATE_TAIL)};
 const BASE_HOME_LAYOUT_JS  = ${safeJson(BASE_HOME_LAYOUT)};
 const BASE_HOME_FIXED_JS   = ${safeJson(BASE_HOME_FIXED)};
 const BASE_HOME_TOP_JS     = ${safeJson(BASE_HOME_TOP)};
-const SECTION_LABEL = {top:'TOP',navigation:'NAVIGATION',slideshow:'SLIDESHOW',header:'HEADER',above:'ABOVE',feature:'FEATURE',showcase:'SHOWCASE',utility:'UTILITY',sidebar:'SIDEBAR',mainbar:'MAIN',aside:'ASIDE',expanded:'EXPANDED',extension:'EXTENSION',footer:'FOOTER',copyright:'COPYRIGHT'};
+const SECTION_LABEL = {top:'TOP',navigation:'NAVIGATION',slideshow:'SLIDESHOW',header:'HEADER',above:'ABOVE',feature:'FEATURE',showcase:'SHOWCASE',utility:'UTILITY','container-main':'MAIN CONTAINER',sidebar:'SIDEBAR',mainbar:'MAIN',aside:'ASIDE',expanded:'EXPANDED',extension:'EXTENSION',footer:'FOOTER',copyright:'COPYRIGHT'};
 // Compute block widths for container-main from base template
 const CONTAINER_SECTION_WIDTHS = (function() {
   const w = {};
@@ -671,7 +901,7 @@ const CONTAINER_SECTION_WIDTHS = (function() {
 
       <div class="tab-pane" data-pane="css" hidden>
         <div class="css-controls">
-          <label for="css-base">Shell / global CSS base:</label>
+          <label for="css-base">Override CSS template:</label>
           <select id="css-base"></select>
           <span>— section CSS always travels with each section.</span>
         </div>
@@ -698,14 +928,7 @@ const CONTAINER_SECTION_WIDTHS = (function() {
             </select>
           </div>
           <div class="deploy-field">
-            <label>CSS base site <span style="opacity:.6;font-weight:400">(global styles shell)</span></label>
-            <select id="deploy-css-base">
-              <option value="">— no CSS —</option>
-            </select>
-            <div style="font-size:.78rem;color:var(--soft);margin-top:.3rem">Section CSS is always pulled from whichever site contributed that section. This sets the global shell.</div>
-          </div>
-          <div class="deploy-field">
-            <label><input type="checkbox" id="deploy-upload-css" checked /> Upload composite CSS via FTP and link in page settings</label>
+            <label><input type="checkbox" id="deploy-upload-css" checked /> Upload _template.css via FTP and link in page settings</label>
           </div>
           <div class="deploy-field">
             <label><input type="checkbox" id="deploy-create-content" /> Create articles &amp; categories on target site (uses section content data)</label>
@@ -790,7 +1013,9 @@ function renderZones() {
   host.innerHTML = ZONES.map(zone => {
     const zlabel = zone.container
       ? zone.container.replace('container-', '') + ' container'
-      : 'root sections';
+      : (zone.sections.length === 1 && zone.sections[0].startsWith('container-')
+        ? zone.sections[0].replace('container-', '') + ' container'
+        : 'root sections');
     // Check if this zone has side-by-side sections (e.g. container-main)
     const widths = zone.sections.map(s => CONTAINER_SECTION_WIDTHS[s] || 0);
     const isRow  = widths.filter(w => w > 0).length > 1;
@@ -820,7 +1045,7 @@ function renderZones() {
       const targetSlot = slot.dataset.section;
       const variant = (SECTION_LIBRARY[origSectionId]||[]).find(v => v.sourceId === sourceId);
       if (!variant) return;
-      // Any variant into any slot — the section is re-homed on export.
+      // Any variant into any compatible slot — the node is re-homed on export.
       filled[targetSlot] = variant;
       renderZones();
       if (variant.node.id !== targetSlot) {
@@ -870,7 +1095,7 @@ function renderGroups(filter) {
   // Order groups by canonical section order
   const ids = Object.keys(SECTION_LIBRARY).sort(
     (a,b) => SECTION_ORDER.indexOf(a) - SECTION_ORDER.indexOf(b)
-  );
+  ).filter(id => SECTION_ORDER.includes(id));
   host.innerHTML = ids.map(sid => {
     let variants = SECTION_LIBRARY[sid];
     if (q) {
@@ -950,10 +1175,18 @@ function wrapSection(node) {
   };
 }
 
-// Re-home a variant's section node into a target slot: deep-clone, then rewrite
-// id / type / title so the section is valid wherever it was dropped.
+// Re-home a variant's node into a target slot: deep-clone, then rewrite
+// id / type / title so the node is valid wherever it was dropped.
 function rehomeNode(variant, slotId) {
   const node = JSON.parse(JSON.stringify(variant.node));
+  if (slotId === 'container-main') {
+    node.id = 'container-main';
+    node.type = 'container';
+    node.subtype = node.subtype ?? false;
+    node.title = 'Container-main';
+    node.inherit = {};
+    return node;
+  }
   node.id = slotId;
   node.type = slotId === 'offcanvas' ? 'offcanvas' : 'section';
   node.subtype = node.type === 'offcanvas' ? 'offcanvas' : 'section';
@@ -968,6 +1201,18 @@ const ALWAYS_FIXED_SECTIONS   = new Set(['top']);
 function patchBaseNode(node) {
   if (!node || typeof node !== 'object') return;
   const sid      = node.id;
+  if (node.type === 'container' && sid === 'container-main') {
+    const v = filled['container-main'];
+    if (v) {
+      const src = rehomeNode(v, 'container-main');
+      node.children = src.children || [];
+      node.attributes = Object.assign({}, node.attributes || {}, src.attributes || {});
+      node.subtype = src.subtype ?? node.subtype ?? false;
+      node.title = src.title || node.title || 'Container-main';
+      node.inherit = {};
+    }
+    return;
+  }
   const isSection = node.type === 'section' || node.type === 'offcanvas';
   if (isSection && sid) {
     if (ALWAYS_INHERIT_SECTIONS.has(sid) || ALWAYS_FIXED_SECTIONS.has(sid)) return;
@@ -1151,28 +1396,66 @@ function tokenizeCss(css) {
 // Which canonical sections does this selector reference (via #g-<id>)?
 function sectionsInSelector(selector) {
   const found = [];
-  for (const sid of SECTION_ORDER) {
+  for (const sid of CSS_SECTION_ORDER) {
     if (new RegExp('#g-' + sid + '(?![\\\\w-])').test(selector)) found.push(sid);
+  }
+  return found;
+}
+
+function classesInSelector(selector) {
+  const found = new Set();
+  const stripped = String(selector)
+    .replace(/["'][^"']*["']/g, '')
+    .replace(/\\/\\*[^]*?\\*\\//g, '');
+  const re = /\\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g;
+  let m;
+  while ((m = re.exec(stripped))) found.add(m[1].replace(/\\\\([\\s\\S])/g, '$1'));
+  return Array.from(found);
+}
+
+const CSS_SECTION_CLASS_INDEX = {};
+for (const variants of Object.values(SECTION_LIBRARY || {})) {
+  for (const v of variants) {
+    const sourceId = v.sourceId;
+    const sectionId = v.node && v.node.id;
+    const classes = v.summary && v.summary.cssClasses;
+    if (!sourceId || !sectionId || !classes || !classes.length) continue;
+    const bySection = (CSS_SECTION_CLASS_INDEX[sourceId] ||= {});
+    const set = (bySection[sectionId] ||= new Set());
+    classes.forEach((c) => set.add(c));
+  }
+}
+
+function sectionsForSelectorClasses(selector, sourceId) {
+  const bySection = CSS_SECTION_CLASS_INDEX[sourceId];
+  if (!bySection) return [];
+  const selectorClasses = classesInSelector(selector);
+  if (!selectorClasses.length) return [];
+  const found = [];
+  for (const [sid, classSet] of Object.entries(bySection)) {
+    if (selectorClasses.some((c) => classSet.has(c))) found.push(sid);
   }
   return found;
 }
 
 // Split a list of tokenised items into { bySection, global }, recursing into
 // @media / @supports blocks so each section gets its own scoped wrapper.
-function splitCssItems(items) {
+function splitCssItems(items, sourceId) {
   const bySection = {};
   const global = [];
   for (const item of items) {
     if (item.type === 'rule') {
       const secs = sectionsInSelector(item.selector);
-      if (secs.length) {
-        for (const s of secs) (bySection[s] ||= []).push(item.raw);
+      const classSecs = secs.length ? [] : sectionsForSelectorClasses(item.selector, sourceId);
+      const targets = secs.length ? secs : classSecs;
+      if (targets.length) {
+        for (const s of targets) (bySection[s] ||= []).push(item.raw);
       } else {
         global.push(item.raw);
       }
     } else if (item.type === 'atrule') {
       if (item.name === 'media' || item.name === 'supports') {
-        const sub = splitCssItems(tokenizeCss(item.inner));
+        const sub = splitCssItems(tokenizeCss(item.inner), sourceId);
         for (const [s, chunks] of Object.entries(sub.bySection)) {
           (bySection[s] ||= []).push(
             '@' + item.name + ' ' + item.prelude + ' {\\n' + chunks.join('\\n') + '\\n}'
@@ -1194,7 +1477,7 @@ function splitCssItems(items) {
 const CSS_LIBRARY = {};
 for (const [pid, raw] of Object.entries(CSS_RAW || {})) {
   try {
-    CSS_LIBRARY[pid] = splitCssItems(tokenizeCss(raw));
+    CSS_LIBRARY[pid] = splitCssItems(tokenizeCss(raw), pid);
   } catch (e) {
     CSS_LIBRARY[pid] = { bySection: {}, global: [], error: e.message };
   }
@@ -1209,6 +1492,14 @@ function rehomeCss(chunk, origId, slotId) {
     .replace(new RegExp('--section-' + origId + '-', 'g'), '--section-' + slotId + '-');
 }
 
+function cssSectionHeader(label) {
+  return [
+    '/*',
+    ' * ' + String(label || '').toUpperCase(),
+    ' */',
+  ].join('\\n');
+}
+
 // Assemble the composite override.css using the standard template format.
 function assembleCss(baseParish) {
   const baseSrc  = SOURCES.find(s => s.id === baseParish);
@@ -1219,25 +1510,47 @@ function assembleCss(baseParish) {
   const sectionBlocks = [], manifest = [];
   let sectionChunkCount = 0, missingCss = 0;
 
-  for (const sid of SECTION_ORDER) {
+  function cssSelections() {
+    const out = [];
+    for (const sid of SECTION_ORDER) {
+      const v = filled[sid];
+      if (!v) continue;
+      const parts = COMPOSITE_SECTION_PARTS[sid] || [sid];
+      if (COMPOSITE_SECTION_PARTS[sid]) {
+        out.push({ sid, cssId: sid, origCssId: sid, variant: v, label: SECTION_LABEL[sid] || sid.toUpperCase() });
+      }
+      for (const part of parts) {
+        out.push({
+          sid,
+          cssId: part,
+          origCssId: COMPOSITE_SECTION_PARTS[sid] ? part : (v.node.id || part),
+          variant: v,
+          label: SECTION_LABEL[part] || part.toUpperCase(),
+        });
+      }
+    }
+    return out;
+  }
+
+  for (const sel of cssSelections()) {
+    const sid = sel.sid, cssId = sel.cssId;
     if (sid === 'bottom') continue;
-    const v = filled[sid];
-    if (!v) continue;
-    const lib = CSS_LIBRARY[v.sourceId], origId = v.node.id, rehomed = origId !== sid;
-    const label = SECTION_LABEL[sid] || sid.toUpperCase();
+    const v = sel.variant;
+    const lib = CSS_LIBRARY[v.sourceId], origId = sel.origCssId || cssId, rehomed = origId !== cssId;
+    const label = sel.label;
     if (!lib) {
       missingCss++;
-      manifest.push('#g-' + sid + ' (no css)');
-      sectionBlocks.push('/*' + label + '*/' + '\\\n' + '/* no override.css for ' + v.sourceName + ' */');
+      manifest.push('#g-' + cssId + ' (no css)');
+      sectionBlocks.push(cssSectionHeader(label) + '\\n\\n' + '/* no override.css for ' + v.sourceName + ' */');
       continue;
     }
     let chunks = (lib.bySection[origId] || []).slice();
-    if (rehomed) chunks = chunks.map(c => rehomeCss(c, origId, sid));
+    if (rehomed) chunks = chunks.map(c => rehomeCss(c, origId, cssId));
     const kept = [];
     for (const c of chunks) { const k=norm(c); if(!seen.has(k)){seen.add(k);kept.push(c);} }
-    manifest.push('#g-'+sid+' <- '+v.sourceId+(rehomed?' (re-homed)':'')+(kept.length?'':' (no css)'));
+    manifest.push('#g-'+cssId+' <- '+v.sourceId+(sid !== cssId ? ' (' + sid + ' part)' : '')+(kept.length?'':' (no css)'));
     if (kept.length) {
-      sectionBlocks.push('/*' + label + '*/' + '\\\n' + kept.join('\\\n\\\n'));
+      sectionBlocks.push(cssSectionHeader(label) + '\\n\\n' + kept.join('\\n\\n'));
       sectionChunkCount += kept.length;
     }
   }
@@ -1251,15 +1564,15 @@ function assembleCss(baseParish) {
       gk.forEach(c => seen.add(norm(c)));
       if (gk.length) { out.push('\\\n/* site-specific globals (' + baseName + ') */'); out.push(gk.join('\\\n\\\n')); }
     }
-    out.push('\\\n');
-    out.push(sectionBlocks.join('\\\n\\\n'));
-    out.push('\\\n');
+    out.push('\\n\\n');
+    out.push(sectionBlocks.join('\\n\\n'));
+    out.push('\\n\\n');
     out.push(CSS_TEMPLATE_TAIL_JS);
   } else {
     out.push('/* Composite override.css - Solutio Site Builder */');
     const gk = baseLib.global.filter(c => !seen.has(norm(c)));
     gk.forEach(c => seen.add(norm(c)));
-    out.push(gk.join('\\\n\\\n')); out.push(''); out.push(sectionBlocks.join('\\\n\\\n'));
+    out.push(gk.join('\\n\\n')); out.push(''); out.push(sectionBlocks.join('\\n\\n'));
   }
 
   const stats = Object.keys(filled).length+' section(s) · '+sectionChunkCount+
@@ -1283,30 +1596,17 @@ function renderCssTab() {
   const pre = document.getElementById('export-css');
   const sel = document.getElementById('css-base');
   const cssParishes = Object.keys(CSS_LIBRARY);
-  if (!cssParishes.length) {
-    pre.textContent = '/* No override.css files found in exports/override-css/.\\n   Run the CSS export step to populate them, then re-run build-site-builder.js. */';
+  if (!cssParishes.length && !(CSS_TEMPLATE_HEAD_JS || CSS_TEMPLATE_TAIL_JS)) {
+    pre.textContent = '/* No CSS template or section CSS sources found.\\n   Add templates/css-patterns or exports/override-css data, then re-run build-site-builder.js. */';
     document.getElementById('css-summary').textContent = '';
     return;
   }
   if (!sel.dataset.ready) {
-    sel.innerHTML = cssParishes.map(p => {
-      const src = SOURCES.find(s => s.id === p);
-      return '<option value="' + escHtml(p) + '">' + escHtml(src ? src.name : p) + '</option>';
-    }).join('');
+    sel.innerHTML = '<option value="">_template.css (fresh override.css)</option>';
     sel.dataset.ready = '1';
-    sel.addEventListener('change', () => { sel.dataset.touched = '1'; renderCssTab(); });
   }
-  // Default the base to whichever filled parish (with CSS) appears most often.
-  if (!sel.dataset.touched) {
-    const counts = {};
-    for (const v of Object.values(filled)) {
-      if (CSS_LIBRARY[v.sourceId]) counts[v.sourceId] = (counts[v.sourceId] || 0) + 1;
-    }
-    let best = cssParishes[0], bestN = -1;
-    for (const [p, c] of Object.entries(counts)) if (c > bestN) { bestN = c; best = p; }
-    sel.value = best;
-  }
-  const { css, stats } = assembleCss(sel.value);
+  sel.value = '';
+  const { css, stats } = assembleCss('');
   pre.textContent = css;
   document.getElementById('css-summary').textContent = stats;
   document.getElementById('dl-css').onclick = () => {
@@ -1325,9 +1625,9 @@ function openExport() {
   document.getElementById('export-yaml').textContent = yamlText;
   document.getElementById('export-summary').textContent =
     filledCount + ' section(s) composed: ' + Object.keys(filled).join(', ');
-  // recompute the default CSS base for this composition unless user picked one
+  // Keep the CSS export on the fresh template shell.
   const cssBase = document.getElementById('css-base');
-  delete cssBase.dataset.touched;
+  cssBase.value = '';
   switchTab('yaml');
   document.getElementById('export-modal').classList.add('open');
   // wire buttons (re-wire each open)
@@ -1380,7 +1680,8 @@ function prefillFrom() {
   const src = SOURCES.find(s => s.id === pick.trim());
   if (!src) { toast('No parish "' + pick + '"'); return; }
   let n = 0;
-  for (const [sid, variants] of Object.entries(SECTION_LIBRARY)) {
+  for (const sid of SECTION_ORDER) {
+    const variants = SECTION_LIBRARY[sid] || [];
     const v = variants.find(x => x.sourceId === src.id);
     if (v) { filled[sid] = v; n++; }
   }
@@ -1456,23 +1757,6 @@ function initDeployTab() {
         '<option value="33">Parish Home (33)</option>' +
         '<option value="72">School Home (72)</option>';
     });
-
-  // Populate CSS base selector from CSS_LIBRARY
-  const cssBaseEl = document.getElementById('deploy-css-base');
-  const cssParishes = Object.keys(CSS_LIBRARY);
-  if (cssParishes.length) {
-    // Pick best default: most sections used in current composition
-    const counts = {};
-    for (const v of Object.values(filled)) {
-      if (CSS_LIBRARY[v.sourceId]) counts[v.sourceId] = (counts[v.sourceId] || 0) + 1;
-    }
-    let best = cssParishes[0], bestN = -1;
-    for (const [pid, n] of Object.entries(counts)) { if (n > bestN) { best = pid; bestN = n; } }
-    cssBaseEl.innerHTML = '<option value="">\u2014 no CSS \u2014</option>' +
-      cssParishes.map(p => '<option value="' + escHtml(p) + '"' + (p === best ? ' selected' : '') + '>' + escHtml(p) + '</option>').join('');
-  } else {
-    cssBaseEl.innerHTML = '<option value="">\u2014 no CSS files available \u2014</option>';
-  }
 
   // Site search input
   const searchEl   = document.getElementById('deploy-site-search');
@@ -1550,7 +1834,9 @@ document.getElementById('btn-save-preset').addEventListener('click', async () =>
 
   // Slots: { sectionId → sourceId } — small, stable reference
   const slots = {};
-  for (const [sid, v] of Object.entries(filled)) slots[sid] = v.sourceId;
+  for (const [sid, v] of Object.entries(filled)) {
+    if (SECTION_ORDER.includes(sid)) slots[sid] = v.sourceId;
+  }
 
   try {
     const resp = await fetch('/api/presets', {
@@ -1605,6 +1891,7 @@ async function renderPresetDropdown() {
         for (const k of Object.keys(filled)) delete filled[k];
         let loaded = 0, missing = 0;
         for (const [sid, srcId] of Object.entries(preset.slots || {})) {
+          if (!SECTION_ORDER.includes(sid)) { missing++; continue; }
           const variants = SECTION_LIBRARY[sid] || [];
           const v = variants.find(x => x.sourceId === srcId);
           if (v) { filled[sid] = v; loaded++; }
@@ -1664,13 +1951,12 @@ document.getElementById('btn-deploy-live').addEventListener('click', async () =>
   const doc = buildExportDoc();
   _deployYaml = jsyaml.dump(doc, { lineWidth: -1, noRefs: true });
 
-  // Assemble composite CSS if a base parish is selected and upload is enabled
-  const cssBase   = document.getElementById('deploy-css-base').value;
+  // Upload the same assembled CSS shown in the override.css export tab.
   const uploadCss = document.getElementById('deploy-upload-css').checked;
   let cssContent = null;
-  if (cssBase && uploadCss) {
-    const { css } = assembleCss(cssBase);
-    cssContent = css;
+  let cssBase = '';
+  if (uploadCss) {
+    cssContent = assembleCss('').css;
   }
 
   // Collect per-section contentData from filled slots (for deploy-with-content)
@@ -1704,7 +1990,8 @@ document.getElementById('btn-deploy-live').addEventListener('click', async () =>
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         yaml: _deployYaml, siteUrl, outlineId, dryRun,
-        css: cssContent, cssBase,
+        css: cssContent,
+        cssBase,
         variantContent,
       }),
     });

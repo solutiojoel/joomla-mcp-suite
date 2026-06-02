@@ -1,0 +1,61 @@
+{
+  "slug": "stgertrude-bay",
+  "site_url": "https://stgertrude-bay.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles",
+  "category_id": "24",
+  "article_count": 5,
+  "generated_at": "2026-06-02T17:00:30Z",
+  "articles": [
+    {
+      "id": "77",
+      "title": "Instagram",
+      "alias": "instagram",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "77-instagram.html",
+      "relative_path": "stgertrude-bay/77-instagram.html"
+    },
+    {
+      "id": "76",
+      "title": "Facebook",
+      "alias": "facebook",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "76-facebook.html",
+      "relative_path": "stgertrude-bay/76-facebook.html"
+    },
+    {
+      "id": "74",
+      "title": "Bulletins",
+      "alias": "calendar",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "74-calendar.html",
+      "relative_path": "stgertrude-bay/74-calendar.html"
+    },
+    {
+      "id": "55",
+      "title": "Mass Schedule",
+      "alias": "mass-times",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "55-mass-times.html",
+      "relative_path": "stgertrude-bay/55-mass-times.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "stgertrude-bay/36-footer.html"
+    }
+  ]
+}

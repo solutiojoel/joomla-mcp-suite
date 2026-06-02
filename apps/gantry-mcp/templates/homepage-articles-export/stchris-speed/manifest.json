@@ -1,0 +1,121 @@
+{
+  "slug": "stchris-speed",
+  "site_url": "https://stchris-speed.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles",
+  "category_id": "24",
+  "article_count": 11,
+  "generated_at": "2026-06-02T16:59:08Z",
+  "articles": [
+    {
+      "id": "81",
+      "title": "Mass Times - Dual Boxes",
+      "alias": "mass-times-dual-boxes",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "81-mass-times-dual-boxes.html",
+      "relative_path": "stchris-speed/81-mass-times-dual-boxes.html"
+    },
+    {
+      "id": "80",
+      "title": "Mass Times Boxes",
+      "alias": "mass-times-boxes",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "80-mass-times-boxes.html",
+      "relative_path": "stchris-speed/80-mass-times-boxes.html"
+    },
+    {
+      "id": "79",
+      "title": "Daily Readings",
+      "alias": "daily-readings",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "79-daily-readings.html",
+      "relative_path": "stchris-speed/79-daily-readings.html"
+    },
+    {
+      "id": "78",
+      "title": "Flocknote",
+      "alias": "flocknote",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "78-flocknote.html",
+      "relative_path": "stchris-speed/78-flocknote.html"
+    },
+    {
+      "id": "77",
+      "title": "Instagram",
+      "alias": "instagram",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "77-instagram.html",
+      "relative_path": "stchris-speed/77-instagram.html"
+    },
+    {
+      "id": "76",
+      "title": "Facebook",
+      "alias": "facebook",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "76-facebook.html",
+      "relative_path": "stchris-speed/76-facebook.html"
+    },
+    {
+      "id": "75",
+      "title": "Formed",
+      "alias": "formed",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "75-formed.html",
+      "relative_path": "stchris-speed/75-formed.html"
+    },
+    {
+      "id": "74",
+      "title": "",
+      "alias": "article",
+      "category_id": "",
+      "category_name": "",
+      "state": "",
+      "file_name": "74-article.html",
+      "relative_path": "stchris-speed/74-article.html"
+    },
+    {
+      "id": "56",
+      "title": "Parish Mission",
+      "alias": "mission-statement",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "56-mission-statement.html",
+      "relative_path": "stchris-speed/56-mission-statement.html"
+    },
+    {
+      "id": "55",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "55-mass-times.html",
+      "relative_path": "stchris-speed/55-mass-times.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "stchris-speed/36-footer.html"
+    }
+  ]
+}
