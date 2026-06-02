@@ -272,7 +272,8 @@ for (const filename of files) {
       } else if (type === 'grid' || type === 'block') {
         walkExtract(n.children, insideContainer);
       } else if (type === 'section' || type === 'offcanvas') {
-        const summary = summarizeSection(n);
+        const contentData = buildVariantContentData(sourceId, n.id) || null;
+        const summary = summarizeSection(n, contentData);
         (sectionLibrary[n.id] ||= []).push({
           sourceId,
           sourceName,
@@ -281,7 +282,7 @@ for (const filename of files) {
           node: n,
           summary,
           shot: shotLookup[sourceId]?.[n.id] || null,
-          contentData: buildVariantContentData(sourceId, n.id) || null,
+          contentData,
         });
         // sections don't nest sections, but be safe
         // (we intentionally don't recurse into the section's own grids here)
@@ -290,7 +291,7 @@ for (const filename of files) {
   }
 }
 
-function summarizeSection(node) {
+function summarizeSection(node, contentData) {
   // Collect particle rows: each grid -> [{subtype, title, size, enabled}]
   const rows = [];
   let particleCount = 0;
@@ -325,7 +326,7 @@ function summarizeSection(node) {
     subtypes,
     inherited,
     attributes: node.attributes || {},
-    cssClasses: collectCssClasses(node),
+    cssClasses: collectCssClasses(node, contentData),
   };
 }
 
@@ -338,7 +339,7 @@ function addClassTokens(target, value) {
     .forEach((s) => target.add(s));
 }
 
-function collectCssClasses(node) {
+function collectCssClasses(node, contentData) {
   const classes = new Set();
   function walk(value, key = '') {
     if (value === null || value === undefined) return;
@@ -362,7 +363,33 @@ function collectCssClasses(node) {
     }
   }
   walk(node);
+  addGeneratedContentClasses(classes, contentData);
   return Array.from(classes).sort();
+}
+
+function addGeneratedContentClasses(classes, contentData) {
+  if (!contentData) return;
+  let html = '';
+  for (const particle of Object.values(contentData)) {
+    for (const article of particle.articles || []) {
+      html += '\n' + (article.introtext || '') + '\n' + (article.fulltext || '');
+    }
+  }
+
+  if (/calendarfeed\.solutiocloud\.us\/embed\//i.test(html)) {
+    [
+      'gcaltohtml',
+      'cc-block',
+      'cc-dateblockformat',
+      'cc-monthformat',
+      'cc-dayformat',
+      'cc-eventblock',
+      'cc-innereventblock',
+      'event',
+      'cc-timeofday',
+      'cc-title',
+    ].forEach((c) => classes.add(c));
+  }
 }
 
 const libCount = Object.values(sectionLibrary).reduce((a, b) => a + b.length, 0);
