@@ -698,14 +698,7 @@ const CONTAINER_SECTION_WIDTHS = (function() {
             </select>
           </div>
           <div class="deploy-field">
-            <label>CSS base site <span style="opacity:.6;font-weight:400">(global styles shell)</span></label>
-            <select id="deploy-css-base">
-              <option value="">— no CSS —</option>
-            </select>
-            <div style="font-size:.78rem;color:var(--soft);margin-top:.3rem">Section CSS is always pulled from whichever site contributed that section. This sets the global shell.</div>
-          </div>
-          <div class="deploy-field">
-            <label><input type="checkbox" id="deploy-upload-css" checked /> Upload composite CSS via FTP and link in page settings</label>
+            <label><input type="checkbox" id="deploy-upload-css" checked /> Upload _template.css via FTP and link in page settings</label>
           </div>
           <div class="deploy-field">
             <label><input type="checkbox" id="deploy-create-content" /> Create articles &amp; categories on target site (uses section content data)</label>
@@ -1664,13 +1657,11 @@ document.getElementById('btn-deploy-live').addEventListener('click', async () =>
   const doc = buildExportDoc();
   _deployYaml = jsyaml.dump(doc, { lineWidth: -1, noRefs: true });
 
-  // Assemble composite CSS if a base parish is selected and upload is enabled
-  const cssBase   = document.getElementById('deploy-css-base').value;
+  // Use _template.css directly if upload is enabled
   const uploadCss = document.getElementById('deploy-upload-css').checked;
   let cssContent = null;
-  if (cssBase && uploadCss) {
-    const { css } = assembleCss(cssBase);
-    cssContent = css;
+  if (uploadCss && (CSS_TEMPLATE_HEAD_JS || CSS_TEMPLATE_TAIL_JS)) {
+    cssContent = CSS_TEMPLATE_HEAD_JS + '\\n' + CSS_TEMPLATE_TAIL_JS;
   }
 
   // Collect per-section contentData from filled slots (for deploy-with-content)
@@ -1704,7 +1695,7 @@ document.getElementById('btn-deploy-live').addEventListener('click', async () =>
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         yaml: _deployYaml, siteUrl, outlineId, dryRun,
-        css: cssContent, cssBase,
+        css: cssContent,
         variantContent,
       }),
     });

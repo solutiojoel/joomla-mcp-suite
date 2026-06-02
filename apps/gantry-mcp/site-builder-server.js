@@ -122,7 +122,7 @@ app.post('/api/deploy', async (req, res) => {
     // ── Step 2: CSS upload + page settings ────────────────────────────────────
     if (cssContent) {
       const domain    = domainOf(siteUrl);
-      const cssFile   = 'site-builder-composite.css';
+      const cssFile   = '_template.css';
       const marker    = '<!-- site-builder-css -->';
       const endMarker = '<!-- /site-builder-css -->';
 
@@ -460,7 +460,7 @@ app.post('/api/deploy-with-content', async (req, res) => {
     // ── CSS (mirrors /api/deploy logic) ──────────────────────────────────────────
     if (cssContent) {
       const domain    = domainOf(siteUrl);
-      const cssFile   = 'site-builder-composite.css';
+      const cssFile   = '_template.css';
       const marker    = '<!-- site-builder-css -->';
       const endMarker = '<!-- /site-builder-css -->';
       if (dryRun) {
