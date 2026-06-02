@@ -149,9 +149,13 @@ app.post('/api/deploy', async (req, res) => {
         }
 
         const remotePath = pubPath.replace(/\/$/, '') + '/' + cssFile;
-        const cssUrl     = pubUrl + '/' + cssFile;
+        // Use a root-relative path so the link works regardless of domain
+        let pubWebPath = pubUrl;
+        try { pubWebPath = new URL(pubUrl).pathname; } catch (_) {}
+        const cssUrl     = pubWebPath.replace(/\/$/, '') + '/' + cssFile;
 
         // 2b. Upload CSS via FTP (write user)
+        try { await callTool(joomla, 'ftp_mkdir', { domain, path: pubPath.replace(/\/$/, '') }); } catch (_) { /* may exist */ }
         const uploadResult = await callTool(joomla, 'ftp_upload_file', {
           domain,
           path:    remotePath,
@@ -170,7 +174,7 @@ app.post('/api/deploy', async (req, res) => {
           steps.push('[CSS SKIP] Page settings not updated because upload failed.');
           // Skip page settings update — jump to closing
         } else {
-        // 2c. Get current page head_bottom, replace/inject site-builder link
+        // 2c. Get current page head_bottom, prepend/replace site-builder link
         let headBottom = '';
         try {
           const pageList = await callTool(gantry, 'gantry_page_list', {
@@ -184,15 +188,15 @@ app.post('/api/deploy', async (req, res) => {
           steps.push('[CSS WARN] Could not read current page settings: ' + e.message);
         }
 
-        // Strip any previous site-builder block, then append fresh one
-        const linkTag = '<link rel="stylesheet" href="' + cssUrl + '?v=' + Date.now() + '">';
+        // Strip any previous site-builder block, then prepend fresh one at top
+        const linkTag = '<link rel="stylesheet" href="' + cssUrl + '">';
         const block   = marker + '\n' + linkTag + '\n' + endMarker;
         const re      = new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
                                    '[\\s\\S]*?' +
                                    endMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
         const newHeadBottom = re.test(headBottom)
           ? headBottom.replace(re, block)
-          : (headBottom ? headBottom.trimEnd() + '\n' + block : block);
+          : (headBottom ? block + '\n' + headBottom.trimStart() : block);
 
         // 2d. Save page settings
         const pageEditResult = await callTool(gantry, 'gantry_page_edit', {
@@ -478,7 +482,11 @@ app.post('/api/deploy-with-content', async (req, res) => {
           }
         } catch (e) { steps.push('[CSS WARN] ' + e.message); }
         const remotePath = pubPath.replace(/\/$/, '') + '/' + cssFile;
-        const cssUrl     = pubUrl + '/' + cssFile;
+        // Use a root-relative path so the link works regardless of domain
+        let pubWebPath = pubUrl;
+        try { pubWebPath = new URL(pubUrl).pathname; } catch (_) {}
+        const cssUrl     = pubWebPath.replace(/\/$/, '') + '/' + cssFile;
+        try { await callTool(joomla, 'ftp_mkdir', { domain, path: pubPath.replace(/\/$/, '') }); } catch (_) { /* may exist */ }
         const uploadResult = await callTool(joomla, 'ftp_upload_file', {
           domain, path: remotePath, content: cssContent,
         });
@@ -497,14 +505,14 @@ app.post('/api/deploy-with-content', async (req, res) => {
             });
             headBottom = (typeof pageList === 'object' ? pageList : {})['page[head][head_bottom]'] || '';
           } catch (e) { /* ignore */ }
-          const linkTag = '<link rel="stylesheet" href="' + cssUrl + '?v=' + Date.now() + '">';
+          const linkTag = '<link rel="stylesheet" href="' + cssUrl + '">';
           const block   = marker + '\n' + linkTag + '\n' + endMarker;
           const re      = new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
                                      '[\\s\\S]*?' +
                                      endMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
           const newHeadBottom = re.test(headBottom)
             ? headBottom.replace(re, block)
-            : (headBottom ? headBottom.trimEnd() + '\n' + block : block);
+            : (headBottom ? block + '\n' + headBottom.trimStart() : block);
           await callTool(gantry, 'gantry_page_edit', {
             site: siteUrl, outline: String(outlineId),
             edits: { 'page[head][head_bottom]': newHeadBottom },

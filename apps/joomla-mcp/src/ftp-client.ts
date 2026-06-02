@@ -229,8 +229,21 @@ export class FtpClient {
       const buffer = Buffer.from(content, "utf8");
       const readable = Readable.from(buffer);
       const remoteDir = remotePath.substring(0, remotePath.lastIndexOf("/"));
-      if (remoteDir) await client.ensureDir(remoteDir);
-      await client.uploadFrom(readable, remotePath);
+      const filename = remotePath.substring(remotePath.lastIndexOf("/") + 1);
+      if (remoteDir) {
+        try {
+          // Try a single CWD command first — handles symlinked directories that
+          // ensureDir's step-by-step navigation cannot traverse.
+          await client.cd(remoteDir);
+          await client.uploadFrom(readable, filename);
+        } catch {
+          // Directory may not exist yet — fall back to ensureDir + absolute upload.
+          await client.ensureDir(remoteDir);
+          await client.uploadFrom(readable, remotePath);
+        }
+      } else {
+        await client.uploadFrom(readable, remotePath);
+      }
 
       return {
         success: true,
@@ -318,8 +331,18 @@ export class FtpClient {
     try {
       const stats = fs.statSync(localPath);
       const remoteDir = remotePath.substring(0, remotePath.lastIndexOf("/"));
-      if (remoteDir) await client.ensureDir(remoteDir);
-      await client.uploadFrom(localPath, remotePath);
+      const filename = remotePath.substring(remotePath.lastIndexOf("/") + 1);
+      if (remoteDir) {
+        try {
+          await client.cd(remoteDir);
+          await client.uploadFrom(localPath, filename);
+        } catch {
+          await client.ensureDir(remoteDir);
+          await client.uploadFrom(localPath, remotePath);
+        }
+      } else {
+        await client.uploadFrom(localPath, remotePath);
+      }
       return {
         success: true,
         message: `Uploaded ${stats.size} bytes from ${localPath} to ${remotePath} on ${domain}`,

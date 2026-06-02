@@ -3051,6 +3051,7 @@
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/agent6",
-    "upload_path": "/forge/agent6/images/pub"
+    "upload_path": "/forge/agent6/pub",
+    "pub_url": "https://agent6.forge.solutiosoftware.com/images/pub"
   }
-}
+}       
