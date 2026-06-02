@@ -23,7 +23,8 @@
       "introtext": "\t<div class=\"calendar-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Calendar</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<h3 class=\"g-title\">Calendar</h3>\n<script src=\"https://calendarfeed.solutiocloud.us/embed/StCats-Wichita School.js\"></script>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"parents-students/calendars\">View Full Calendar</a></div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "409": {
       "id": "409",
@@ -34,7 +35,8 @@
       "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-logo\"><a href=\"school\"><img src=\"images/template/logo-text-school.svg\" alt=\"Footer Logo\" /></a></div>\n<div class=\"footer-content\">\n<div class=\"footer-inner-content\">\n<p><a href=\"our-parish/contact-us\">3660 N. Ridge Rd.<br />Wichita, Kansas 67205</a><br />Phone: <a href=\"tel:3167192917\" target=\"_blank\" rel=\"noopener noreferrer\">(316) 719-2917</a><br />Fax: <a href=\"tel:3167192930\" target=\"_blank\" rel=\"noopener noreferrer\">(316) 719-2930</a></p>\n</div>\n<div class=\"footer-social-icons\">{loadmoduleid 194}</div>\n</div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "410": {
       "id": "410",
@@ -45,7 +47,8 @@
       "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"#\">Follow Us on Facebook!</a></div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     }
   },
   "sectionContent": {

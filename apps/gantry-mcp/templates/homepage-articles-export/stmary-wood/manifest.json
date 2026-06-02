@@ -1,0 +1,61 @@
+{
+  "slug": "stmary-wood",
+  "site_url": "https://stmary-wood.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Church Homepage Articles",
+  "category_id": "278",
+  "article_count": 5,
+  "generated_at": "2026-06-02T16:59:19Z",
+  "articles": [
+    {
+      "id": "1306",
+      "title": "Contact Form",
+      "alias": "contact-form",
+      "category_id": "278",
+      "category_name": "- Church Homepage Articles",
+      "state": "1",
+      "file_name": "1306-contact-form.html",
+      "relative_path": "stmary-wood/1306-contact-form.html"
+    },
+    {
+      "id": "1305",
+      "title": "Mary Overlay Quote",
+      "alias": "mary-overlay-quote",
+      "category_id": "278",
+      "category_name": "- Church Homepage Articles",
+      "state": "1",
+      "file_name": "1305-mary-overlay-quote.html",
+      "relative_path": "stmary-wood/1305-mary-overlay-quote.html"
+    },
+    {
+      "id": "1304",
+      "title": "Looking to Give?",
+      "alias": "looking-to-give",
+      "category_id": "278",
+      "category_name": "- Church Homepage Articles",
+      "state": "1",
+      "file_name": "1304-looking-to-give.html",
+      "relative_path": "stmary-wood/1304-looking-to-give.html"
+    },
+    {
+      "id": "1303",
+      "title": "Welcome From Fr. Sean",
+      "alias": "welcome-from-fr-sean",
+      "category_id": "278",
+      "category_name": "- Church Homepage Articles",
+      "state": "1",
+      "file_name": "1303-welcome-from-fr-sean.html",
+      "relative_path": "stmary-wood/1303-welcome-from-fr-sean.html"
+    },
+    {
+      "id": "1302",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "278",
+      "category_name": "- Church Homepage Articles",
+      "state": "1",
+      "file_name": "1302-footer.html",
+      "relative_path": "stmary-wood/1302-footer.html"
+    }
+  ]
+}

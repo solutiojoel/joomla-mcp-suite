@@ -1,0 +1,61 @@
+{
+  "slug": "sh-emporia",
+  "site_url": "https://sh-emporia.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles - Edit Only",
+  "category_id": "24",
+  "article_count": 5,
+  "generated_at": "2026-06-02T17:02:15Z",
+  "articles": [
+    {
+      "id": "195",
+      "title": "Weekend Mass",
+      "alias": "weekend-mass",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "195-weekend-mass.html",
+      "relative_path": "sh-emporia/195-weekend-mass.html"
+    },
+    {
+      "id": "196",
+      "title": "Weekday Mass",
+      "alias": "weekday-mass",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "196-weekday-mass.html",
+      "relative_path": "sh-emporia/196-weekday-mass.html"
+    },
+    {
+      "id": "197",
+      "title": "Confessions",
+      "alias": "confessions",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "197-confessions.html",
+      "relative_path": "sh-emporia/197-confessions.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "sh-emporia/36-footer.html"
+    },
+    {
+      "id": "74",
+      "title": "Calendar",
+      "alias": "calendar",
+      "category_id": "24",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "74-calendar.html",
+      "relative_path": "sh-emporia/74-calendar.html"
+    }
+  ]
+}

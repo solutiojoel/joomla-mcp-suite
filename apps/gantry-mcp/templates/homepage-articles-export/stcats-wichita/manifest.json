@@ -1,0 +1,81 @@
+{
+  "slug": "stcats-wichita",
+  "site_url": "https://stcats-wichita.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles",
+  "category_id": "24",
+  "article_count": 7,
+  "generated_at": "2026-06-02T17:00:53Z",
+  "articles": [
+    {
+      "id": "407",
+      "title": "Vocations from our Parish",
+      "alias": "vocations-from-our-parish",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "407-vocations-from-our-parish.html",
+      "relative_path": "stcats-wichita/407-vocations-from-our-parish.html"
+    },
+    {
+      "id": "350",
+      "title": "YouTube Widget Feed",
+      "alias": "youtube-widget-feed",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "350-youtube-widget-feed.html",
+      "relative_path": "stcats-wichita/350-youtube-widget-feed.html"
+    },
+    {
+      "id": "79",
+      "title": "Hallow",
+      "alias": "daily-readings",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "79-daily-readings.html",
+      "relative_path": "stcats-wichita/79-daily-readings.html"
+    },
+    {
+      "id": "75",
+      "title": "Formed",
+      "alias": "formed",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "75-formed.html",
+      "relative_path": "stcats-wichita/75-formed.html"
+    },
+    {
+      "id": "74",
+      "title": "Calendar",
+      "alias": "calendar",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "74-calendar.html",
+      "relative_path": "stcats-wichita/74-calendar.html"
+    },
+    {
+      "id": "55",
+      "title": "Mass Schedule & Parish Information",
+      "alias": "mass-times",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "55-mass-times.html",
+      "relative_path": "stcats-wichita/55-mass-times.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "stcats-wichita/36-footer.html"
+    }
+  ]
+}

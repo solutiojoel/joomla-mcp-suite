@@ -1,0 +1,91 @@
+{
+  "slug": "stwen-dick",
+  "site_url": "https://stwen-dick.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles - Edit Only",
+  "category_id": "57",
+  "article_count": 8,
+  "generated_at": "2026-06-02T17:01:45Z",
+  "articles": [
+    {
+      "id": "222752",
+      "title": "Welcome",
+      "alias": "welcome",
+      "category_id": "57",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "222752-welcome.html",
+      "relative_path": "stwen-dick/222752-welcome.html"
+    },
+    {
+      "id": "222751",
+      "title": "Latest Homilies",
+      "alias": "latest-homilies",
+      "category_id": "57",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "222751-latest-homilies.html",
+      "relative_path": "stwen-dick/222751-latest-homilies.html"
+    },
+    {
+      "id": "218232",
+      "title": "Facebook",
+      "alias": "facebook",
+      "category_id": "57",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "218232-facebook.html",
+      "relative_path": "stwen-dick/218232-facebook.html"
+    },
+    {
+      "id": "218231",
+      "title": "Formed",
+      "alias": "formed",
+      "category_id": "57",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "218231-formed.html",
+      "relative_path": "stwen-dick/218231-formed.html"
+    },
+    {
+      "id": "218230",
+      "title": "Calendar",
+      "alias": "calendar",
+      "category_id": "57",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "218230-calendar.html",
+      "relative_path": "stwen-dick/218230-calendar.html"
+    },
+    {
+      "id": "218229",
+      "title": "Mission Statement",
+      "alias": "mission-statement",
+      "category_id": "57",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "218229-mission-statement.html",
+      "relative_path": "stwen-dick/218229-mission-statement.html"
+    },
+    {
+      "id": "218228",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "category_id": "57",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "218228-mass-times.html",
+      "relative_path": "stwen-dick/218228-mass-times.html"
+    },
+    {
+      "id": "218227",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "57",
+      "category_name": "Homepage Articles - Edit Only",
+      "state": "1",
+      "file_name": "218227-footer.html",
+      "relative_path": "stwen-dick/218227-footer.html"
+    }
+  ]
+}

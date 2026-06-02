@@ -1,0 +1,51 @@
+{
+  "slug": "stagnes-concord",
+  "site_url": "https://stagnes-concord.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles",
+  "category_id": "24",
+  "article_count": 4,
+  "generated_at": "2026-06-02T17:00:39Z",
+  "articles": [
+    {
+      "id": "243",
+      "title": "Photo Albums",
+      "alias": "photo-albums",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "243-photo-albums.html",
+      "relative_path": "stagnes-concord/243-photo-albums.html"
+    },
+    {
+      "id": "74",
+      "title": "Calendar",
+      "alias": "calendar",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "74-calendar.html",
+      "relative_path": "stagnes-concord/74-calendar.html"
+    },
+    {
+      "id": "55",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "55-mass-times.html",
+      "relative_path": "stagnes-concord/55-mass-times.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "stagnes-concord/36-footer.html"
+    }
+  ]
+}

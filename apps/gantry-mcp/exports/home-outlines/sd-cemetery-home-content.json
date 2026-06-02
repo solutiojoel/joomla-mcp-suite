@@ -31,7 +31,8 @@
       "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/logo/logo-main-white.svg\" alt=\"\" /></a></div>\n<div class=\"footer-content\">\n<div class=\"footer-content-column\">\n<p><strong>Holy Cross</strong><br /><strong>4470 Hilltop Drive,<br />San Diego, CA 92102</strong><br /><a href=\"tel:(619) 264-3127\">(619) 264-3127</a></p>\n</div>\n<div class=\"footer-content-column\">\n<p><strong>Good Shepherd</strong><br /><strong>8301 Talbert Ave,<br />Huntington Beach, CA 92646</strong><br /><a href=\"tel:(714) 847-8546\">(714) 847-8546</a></p>\n</div>\n<div class=\"footer-content-column\">\n<p><strong>*TBD*</strong><br /><strong>2450 Mission Ridge Parkway<br />Vista, CA 92084</strong><br /><a href=\"tel:(123) 444-5678\">(123) 444-5678</a></p>\n</div>\n</div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "244": {
       "id": "244",
@@ -42,7 +43,8 @@
       "introtext": "\t<div class=\"translate-topbar\">\n<div class=\"translate-button\"><a class=\"button\" href=\"https://solutiosoftware.com/translate\" data-overlay-box=\"\">Translate</a></div>\n<div class=\"phone-icon\">{loadmoduleid 149}</div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "245": {
       "id": "245",
@@ -53,7 +55,8 @@
       "introtext": "\t<div class=\"welcome-wrapper\">\n<div class=\"welcome-title\">\n<h3 class=\"g-title\">Welcome to the Catholic Cemeteries of the Diocese of San Diego</h3>\n</div>\n<div class=\"welcome-content\">\n<p>Holy Cross is sacred ground where we honor the dignity of every life in faith, hope, and love. As the only Catholic diocesan cemetery in San Diego County, we provide compassionate care, prayerful support, and respectful burial services rooted in the teachings of the Church and the promise of eternal life in Christ. Our serene grounds offer a place for quiet reflection, remembrance, and trust in the Resurrection.</p>\n</div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "249": {
       "id": "249",
@@ -64,7 +67,8 @@
       "introtext": "\t<div class=\"choose-wrapper\">\n<div class=\"choose-header\">\n<h1>Why Choose Us?</h1>\n<p>Holy Cross offers sacred Catholic burial in consecrated ground, rooted in Church tradition and the hope of the Resurrection.</p>\n</div>\n<div class=\"choose-icons\">{loadmoduleid 150}</div>\n<div class=\"choose-button\"><a class=\"button\" href=\"plan-ahead/why-choose-a-catholic-cemetery\">Learn More</a></div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "250": {
       "id": "250",
@@ -75,7 +79,8 @@
       "introtext": "\t<div class=\"association-wrapper\">\n<div class=\"association-title\">\n<h2>Member of the Following Associations</h2>\n</div>\n<div class=\"association-feed\">{loadmoduleid 151}</div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "251": {
       "id": "251",
@@ -86,7 +91,8 @@
       "introtext": "\t<h2>Stay Connected to Holy Cross Catholic Cemetery</h2>\n<div class=\"connected-form\">EMBED FORM HERE</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     }
   },
   "sectionContent": {

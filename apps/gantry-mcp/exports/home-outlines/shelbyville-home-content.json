@@ -23,77 +23,84 @@
       "title": "Footer",
       "alias": "footer",
       "categoryId": "146",
-      "categoryTitle": "- - Homepage Articles (Church)",
-      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"holy-art-box\">\n<p><a href=\"https://www.holyart.com/\" target=\"_blank\" rel=\"noopener noreferrer\">HolyArt.com</a> is a proud sponsor of this parish website.</p>\n</div>\n<div class=\"footer-content-row\">\n<div class=\"footer-content-column\">\n<div class=\"footer-content-box\">\n<h2>St. Joseph Church</h2>\n<p><a href=\"about-us/contact-us\">125 E Broadway St</a><br /><a href=\"about-us/contact-us\">Shelbyville, IN 46176</a><br /><a href=\"tel:317-398-8227\">317-398-8227</a></p>\n</div>\n<div class=\"footer-content-box\">\n<h2>St. Vincent de Paul Church</h2>\n<p><a href=\"about-us/contact-us\">4218 E Michigan Rd</a><br /><a href=\"about-us/contact-us\">Shelbyville, IN 46176</a><br /><a href=\"tel:317-398-8227\">317-398-8227</a></p>\n</div>\n<div class=\"footer-content-box\">\n<h2>Joint Parish Office</h2>\n<p><a href=\"about-us/contact-us\">228 E. Hendricks St</a><br /><a href=\"about-us/contact-us\">Shelbyville, IN 46176</a><br /><a href=\"tel:317-398-8227\">317-398-8227</a></p>\n</div>\n</div>\n<div class=\"footer-social-icons\">{loadmoduleid 185}</div>\n</div>\n</div>",
+      "categoryTitle": "- Homepage Articles (Church)",
+      "introtext": "<div class=\"footer-wrapper\">\r\n<div class=\"holy-art-box\">\r\n<p><a href=\"https://www.holyart.com/\" target=\"_blank\" rel=\"noopener noreferrer\">HolyArt.com</a> is a proud sponsor of this parish website.</p>\r\n</div>\r\n<div class=\"footer-content-row\">\r\n<div class=\"footer-content-column\">\r\n<div class=\"footer-content-box\">\r\n<h2>St. Joseph Church</h2>\r\n<p><a href=\"about-us/contact-us\">125 E Broadway St</a><br /><a href=\"about-us/contact-us\">Shelbyville, IN 46176</a><br /><a href=\"tel:317-398-8227\">317-398-8227</a></p>\r\n</div>\r\n<div class=\"footer-content-box\">\r\n<h2>St. Vincent de Paul Church</h2>\r\n<p><a href=\"about-us/contact-us\">4218 E Michigan Rd</a><br /><a href=\"about-us/contact-us\">Shelbyville, IN 46176</a><br /><a href=\"tel:317-398-8227\">317-398-8227</a></p>\r\n</div>\r\n<div class=\"footer-content-box\">\r\n<h2>Joint Parish Office</h2>\r\n<p><a href=\"about-us/contact-us\">228 E. Hendricks St</a><br /><a href=\"about-us/contact-us\">Shelbyville, IN 46176</a><br /><a href=\"tel:317-398-8227\">317-398-8227</a></p>\r\n</div>\r\n</div>\r\n<div class=\"footer-social-icons\" style=\"text-align: center;\">{loadmoduleid 185}</div>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "143394": {
       "id": "143394",
       "title": "Mass Times",
       "alias": "mass-times",
       "categoryId": "146",
-      "categoryTitle": "- - Homepage Articles (Church)",
-      "introtext": "\t<h1 class=\"mt-big-title\">Mass Times</h1>\n<h2>Weekend Mass</h2>\n<p>Saturday 5:00pm (SJ)<br />Sunday 8:30am (SV)<br />Sunday 10:00am (SJ)<br />Sunday 12:15pm <strong>Espanol</strong> (SJ)</p>\n<h2>Daily Mass</h2>\n<p>Monday 5:00pm (SV)<br />Tuesday 8:15am <strong>School</strong> (SJ)<br />Wednesday 8:00am (SV)<br />Thursday <strong>No Mass</strong><br />Friday 8:15am <strong>School</strong> (SJ)</p>\n<p><a class=\"button\" href=\"worship/mass-confession-times\">View Full Schedule</a></p>",
+      "categoryTitle": "- Homepage Articles (Church)",
+      "introtext": "<h1 class=\"mt-big-title\">Mass Times</h1>\r\n<h2>Weekend Mass</h2>\r\n<p>Saturday 5:00pm (SJ)<br />Sunday 8:30am (SV)<br />Sunday 10:00am (SJ)<br />Sunday 12:15pm <strong>Espanol</strong> (SJ)</p>\r\n<h2>Daily Mass</h2>\r\n<p>Monday 5:00pm (SV)<br />Tuesday 8:15am <strong>School</strong> (SJ)<br />Wednesday 8:00am (SV)<br />Thursday <strong>No Mass</strong><br />Friday 8:15am <strong>School</strong> (SJ)</p>\r\n<p><a class=\"button\" href=\"worship/mass-confession-times\">View Full Schedule</a></p>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "143395": {
       "id": "143395",
       "title": "Info Boxes",
       "alias": "info-boxes",
       "categoryId": "146",
-      "categoryTitle": "- - Homepage Articles (Church)",
-      "introtext": "\t<div class=\"info-box-wrapper\">\n<div class=\"inner-box\">\n<div class=\"info-box\">\n<p>St. Joseph Catholic Church exists to foster sanctifying encounters with Jesus Christ through:</p>\n<ul>\n<li>prayer and sacrament</li>\n<li>service and outreach</li>\n<li>education and formation</li>\n</ul>\n</div>\n</div>\n<div class=\"inner-box\">\n<div class=\"info-box\">\n<p>We joyfully share our gifts to<br />nourish the community.</p>\n<h6>~St. Vincent de Paul</h6>\n</div>\n</div>\n</div>",
+      "categoryTitle": "- Homepage Articles (Church)",
+      "introtext": "<div class=\"info-box-wrapper\">\r\n<div class=\"inner-box\">\r\n<div class=\"info-box\">\r\n<p>St. Joseph Catholic Church exists to foster sanctifying encounters with Jesus Christ through:</p>\r\n<ul>\r\n<li>prayer and sacrament</li>\r\n<li>service and outreach</li>\r\n<li>education and formation</li>\r\n</ul>\r\n</div>\r\n</div>\r\n<div class=\"inner-box\">\r\n<div class=\"info-box\">\r\n<p>We joyfully share our gifts to<br />nourish the community.</p>\r\n<h6>~St. Vincent de Paul</h6>\r\n</div>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "143396": {
       "id": "143396",
       "title": "Facebook",
       "alias": "facebook",
       "categoryId": "146",
-      "categoryTitle": "- - Homepage Articles (Church)",
-      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/stjoeshelby/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
+      "categoryTitle": "- Homepage Articles (Church)",
+      "introtext": "<div class=\"facebook-widget-wrapper widget-wrapper\">\r\n<div class=\"widget-title\">\r\n<h3 class=\"g-title\">Facebook</h3>\r\n</div>\r\n<div class=\"widget-feed\">\r\n<div class=\"widget-feed-inner-box\">\r\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\r\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\r\n</div>\r\n</div>\r\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/stjoeshelby/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "143397": {
       "id": "143397",
       "title": "Calendar",
       "alias": "calendar",
       "categoryId": "146",
-      "categoryTitle": "- - Homepage Articles (Church)",
-      "introtext": "\t<div class=\"calendar-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Calendar</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><iframe width=\"800\" height=\"400\" style=\"border-width: 0;\" src=\"https://calendar.google.com/calendar/embed?showTitle=0&amp;showNav=0&amp;showDate=0&amp;showPrint=0&amp;showTabs=0&amp;showCalendars=0&amp;showTz=0&amp;mode=AGENDA&amp;height=400&amp;wkst=1&amp;bgcolor=%23FFFFFF&amp;src=solutiosoftware.net_8msm9288ui8epu6ugdn14f27ts%40group.calendar.google.com&amp;color=%232952A3&amp;ctz=America%2FChicago\" frameborder=\"0\" scrolling=\"no\"></iframe></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news-cl/calendar\">View Full Calendar</a></div>\n</div>",
+      "categoryTitle": "- Homepage Articles (Church)",
+      "introtext": "<div class=\"calendar-widget-wrapper widget-wrapper\">\r\n<div class=\"widget-title\">\r\n<h3 class=\"g-title\">Calendar</h3>\r\n</div>\r\n<div class=\"widget-feed\">\r\n<div class=\"widget-feed-inner-box\"><iframe width=\"800\" height=\"400\" style=\"border-width: 0;\" src=\"https://calendar.google.com/calendar/embed?showTitle=0&amp;showNav=0&amp;showDate=0&amp;showPrint=0&amp;showTabs=0&amp;showCalendars=0&amp;showTz=0&amp;mode=AGENDA&amp;height=400&amp;wkst=1&amp;bgcolor=%23FFFFFF&amp;src=solutiosoftware.net_8msm9288ui8epu6ugdn14f27ts%40group.calendar.google.com&amp;color=%232952A3&amp;ctz=America%2FChicago\" frameborder=\"0\" scrolling=\"no\"></iframe></div>\r\n</div>\r\n<div class=\"widget-button\"><a class=\"button\" href=\"news/calendar\">View Full Calendar</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "143398": {
       "id": "143398",
       "title": "Formed",
       "alias": "formed",
       "categoryId": "146",
-      "categoryTitle": "- - Homepage Articles (Church)",
-      "introtext": "\t<div class=\"formed-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Formed</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed.png\" alt=\"\" /></a></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Watch Now</a></div>\n</div>",
+      "categoryTitle": "- Homepage Articles (Church)",
+      "introtext": "<div class=\"formed-widget-wrapper widget-wrapper\">\r\n<div class=\"widget-title\">\r\n<h3 class=\"g-title\">Formed</h3>\r\n</div>\r\n<div class=\"widget-feed\">\r\n<div class=\"widget-feed-inner-box\"><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed.png\" alt=\"\" /></a></div>\r\n</div>\r\n<div class=\"widget-button\"><a class=\"button\" href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Watch Now</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "143399": {
       "id": "143399",
       "title": "Flocknotes",
       "alias": "flocknotes",
       "categoryId": "146",
-      "categoryTitle": "- - Homepage Articles (Church)",
-      "introtext": "\t<div class=\"flocknotes-wrapper\">\n<div class=\"flocknotes-logo\"><img src=\"images/template/flocknote.svg\" alt=\"\" /></div>\n<div class=\"flocknotes-form\">\n<h3 class=\"g-title\">Email Update Signup</h3>\n<form action=\"https://app.flocknote.com/group/117576/addToGroupFromOutside\" method=\"post\" target=\"_blank\"><input name=\"fname\" type=\"text\" placeholder=\"First Name\" /> <input name=\"lname\" type=\"text\" placeholder=\"Last Name\" /> <input name=\"email\" type=\"email\" placeholder=\"Email Address\" /> <input name=\"mobile_phone\" type=\"tel\" placeholder=\"Mobile Phone\" /> <button class=\"button\" type=\"submit\" value=\"submit\">Sign Me Up</button></form>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n</div>\n<div class=\"flocknotes-feed\">\n<h3 class=\"g-title\">Latest Flocknotes</h3>\n{loadmoduleid 184}</div>\n</div>",
+      "categoryTitle": "- Homepage Articles (Church)",
+      "introtext": "<div class=\"flocknotes-wrapper\">\r\n<div class=\"flocknotes-logo\"><img src=\"images/template/flocknote.svg\" alt=\"\" /></div>\r\n<div class=\"flocknotes-form\">\r\n<h3 class=\"g-title\">Email Update Signup</h3>\r\n<form action=\"https://app.flocknote.com/group/117576/addToGroupFromOutside\" method=\"post\" target=\"_blank\"><input name=\"fname\" type=\"text\" placeholder=\"First Name\" /> <input name=\"lname\" type=\"text\" placeholder=\"Last Name\" /> <input name=\"email\" type=\"email\" placeholder=\"Email Address\" /> <input name=\"mobile_phone\" type=\"tel\" placeholder=\"Mobile Phone\" /> <button class=\"button\" type=\"submit\" value=\"submit\">Sign Me Up</button></form>\r\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\r\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\r\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\r\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\r\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\r\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\r\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\r\n</div>\r\n<div class=\"flocknotes-feed\">\r\n<h3 class=\"g-title\">Latest Flocknotes</h3>\r\n{loadmoduleid 184}</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     }
   },
   "sectionContent": {

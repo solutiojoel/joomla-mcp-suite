@@ -1,0 +1,81 @@
+{
+  "slug": "assumption-center",
+  "site_url": "https://assumption-center.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles",
+  "category_id": "24",
+  "article_count": 7,
+  "generated_at": "2026-06-02T17:01:17Z",
+  "articles": [
+    {
+      "id": "222",
+      "title": "Navigation",
+      "alias": "navigation",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "222-navigation.html",
+      "relative_path": "assumption-center/222-navigation.html"
+    },
+    {
+      "id": "56",
+      "title": "Our Mission",
+      "alias": "mission-statement",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "56-mission-statement.html",
+      "relative_path": "assumption-center/56-mission-statement.html"
+    },
+    {
+      "id": "55",
+      "title": "Mass Schedule",
+      "alias": "mass-times",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "55-mass-times.html",
+      "relative_path": "assumption-center/55-mass-times.html"
+    },
+    {
+      "id": "221",
+      "title": "Join Us Online",
+      "alias": "join-us-online",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "221-join-us-online.html",
+      "relative_path": "assumption-center/221-join-us-online.html"
+    },
+    {
+      "id": "77",
+      "title": "Youtube",
+      "alias": "instagram",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "77-instagram.html",
+      "relative_path": "assumption-center/77-instagram.html"
+    },
+    {
+      "id": "74",
+      "title": "Calendar",
+      "alias": "calendar",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "74-calendar.html",
+      "relative_path": "assumption-center/74-calendar.html"
+    },
+    {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "24",
+      "category_name": "Homepage Articles",
+      "state": "1",
+      "file_name": "36-footer.html",
+      "relative_path": "assumption-center/36-footer.html"
+    }
+  ]
+}

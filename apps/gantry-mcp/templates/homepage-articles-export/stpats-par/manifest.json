@@ -1,0 +1,101 @@
+{
+  "slug": "stpats-par",
+  "site_url": "https://stpats-par.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Homepage Articles",
+  "category_id": "2042",
+  "article_count": 9,
+  "generated_at": "2026-06-02T17:00:21Z",
+  "articles": [
+    {
+      "id": "36188",
+      "title": "Events & News",
+      "alias": "events-news",
+      "category_id": "2042",
+      "category_name": "- Homepage Articles",
+      "state": "1",
+      "file_name": "36188-events-news.html",
+      "relative_path": "stpats-par/36188-events-news.html"
+    },
+    {
+      "id": "36187",
+      "title": "Flocknote",
+      "alias": "flocknote",
+      "category_id": "2042",
+      "category_name": "- Homepage Articles",
+      "state": "1",
+      "file_name": "36187-flocknote.html",
+      "relative_path": "stpats-par/36187-flocknote.html"
+    },
+    {
+      "id": "36186",
+      "title": "Calendar",
+      "alias": "calendar",
+      "category_id": "2042",
+      "category_name": "- Homepage Articles",
+      "state": "1",
+      "file_name": "36186-calendar.html",
+      "relative_path": "stpats-par/36186-calendar.html"
+    },
+    {
+      "id": "36185",
+      "title": "Bulletins",
+      "alias": "bulletins",
+      "category_id": "2042",
+      "category_name": "- Homepage Articles",
+      "state": "1",
+      "file_name": "36185-bulletins.html",
+      "relative_path": "stpats-par/36185-bulletins.html"
+    },
+    {
+      "id": "36184",
+      "title": "Facebook",
+      "alias": "facebook",
+      "category_id": "2042",
+      "category_name": "- Homepage Articles",
+      "state": "1",
+      "file_name": "36184-facebook.html",
+      "relative_path": "stpats-par/36184-facebook.html"
+    },
+    {
+      "id": "36182",
+      "title": "Navigation",
+      "alias": "navigation",
+      "category_id": "2042",
+      "category_name": "- Homepage Articles",
+      "state": "1",
+      "file_name": "36182-navigation.html",
+      "relative_path": "stpats-par/36182-navigation.html"
+    },
+    {
+      "id": "36181",
+      "title": "Mass Schedule",
+      "alias": "mass-schedule",
+      "category_id": "2042",
+      "category_name": "- Homepage Articles",
+      "state": "1",
+      "file_name": "36181-mass-schedule.html",
+      "relative_path": "stpats-par/36181-mass-schedule.html"
+    },
+    {
+      "id": "36180",
+      "title": "Mission Statement",
+      "alias": "mission-statement",
+      "category_id": "2042",
+      "category_name": "- Homepage Articles",
+      "state": "1",
+      "file_name": "36180-mission-statement.html",
+      "relative_path": "stpats-par/36180-mission-statement.html"
+    },
+    {
+      "id": "36179",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "2042",
+      "category_name": "- Homepage Articles",
+      "state": "1",
+      "file_name": "36179-footer.html",
+      "relative_path": "stpats-par/36179-footer.html"
+    }
+  ]
+}

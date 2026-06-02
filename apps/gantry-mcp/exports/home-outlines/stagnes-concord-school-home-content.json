@@ -24,10 +24,11 @@
       "alias": "footer",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-top-row\">\n<div class=\"footer-content-side\">\n<div class=\"footer-content-column\">\n<h6><a href=\"about/contact\">3966 Chestnut Ave.<br />Concord, CA 94519</a></h6>\n<p>Tel: <a class=\"color-link\" href=\"tel:9256890838\" target=\"_blank\" rel=\"noopener noreferrer\">925-689-0838</a><br />Fax: 925-689-7899<br /><a class=\"link-line color-link\" href=\"mailto:stagnesoffice@comcast.net\" target=\"_blank\" rel=\"noopener noreferrer\">stagnesoffice@comcast.net</a></p>\n</div>\n<div class=\"footer-content-column\">\n<h6>Office Hours</h6>\n<p>Monday-Thursday:<br />9:00 a.m. to 4:00 p.m.<br />Friday: Closed</p>\n</div>\n</div>\n<div class=\"footer-links-logo\">\n<div class=\"footer-links\">\n<h6>Quick Links</h6>\n<div class=\"footer-inner-links\"><a href=\"news/bulletin\">Bulletin</a><a href=\"about/parish-registration\">Parish Registration</a><a href=\"news/calendar\">Calendar</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a></div>\n</div>\n<div class=\"footer-logo-icon\"><a href=\"home\"><img src=\"images/template/emblem.svg\" alt=\"Footer Icon\" /></a></div>\n</div>\n</div>\n<div class=\"footer-bottom-row\">\n<div class=\"footer-social-icons\">{loadmoduleid 154}</div>\n<div class=\"footer-copyright\">\n<p>2026 St. Agnes Catholic Church. All rights reserved.</p>\n</div>\n</div>\n</div>",
+      "introtext": "<div class=\"footer-wrapper\">\r\n<div class=\"footer-top-row\">\r\n<div class=\"footer-content-side\">\r\n<div class=\"footer-content-column\">\r\n<h6><a href=\"about/contact\">3966 Chestnut Ave.<br />Concord, CA 94519</a></h6>\r\n<p>Tel: <a class=\"color-link\" href=\"tel:9256890838\" target=\"_blank\" rel=\"noopener noreferrer\">925-689-0838</a><br />Fax: 925-689-7899<br /><a class=\"link-line color-link\" href=\"mailto:stagnesoffice@comcast.net\" target=\"_blank\" rel=\"noopener noreferrer\">stagnesoffice@comcast.net</a></p>\r\n</div>\r\n<div class=\"footer-content-column\">\r\n<h6>Office Hours</h6>\r\n<p>Monday-Thursday:<br />9:00 a.m. to 4:00 p.m.<br />Friday: Closed</p>\r\n</div>\r\n</div>\r\n<div class=\"footer-links-logo\">\r\n<div class=\"footer-links\">\r\n<h6>Quick Links</h6>\r\n<div class=\"footer-inner-links\"><a href=\"news/bulletin\">Bulletin</a><a href=\"about/parish-registration\">Parish Registration</a><a href=\"news/calendar\">Calendar</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a></div>\r\n</div>\r\n<div class=\"footer-logo-icon\"><a href=\"home\"><img src=\"images/template/emblem.svg\" alt=\"Footer Icon\" /></a></div>\r\n</div>\r\n</div>\r\n<div class=\"footer-bottom-row\">\r\n<div class=\"footer-social-icons\">{loadmoduleid 154}</div>\r\n<div class=\"footer-copyright\">\r\n<p>2026 St. Agnes Catholic Church. All rights reserved.</p>\r\n</div>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "75": {
       "id": "75",
@@ -38,7 +39,8 @@
       "introtext": "\t<div class=\"formed-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Formed</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed.png\" alt=\"\" /></a></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Learn More</a></div>\n</div>",
       "fulltext": "",
       "state": "-2",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "76": {
       "id": "76",
@@ -49,7 +51,8 @@
       "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"#\">Read More</a></div>\n</div>",
       "fulltext": "",
       "state": "-2",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "79": {
       "id": "79",
@@ -60,7 +63,8 @@
       "introtext": "\t<div class=\"daily-readings-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Daily Readings</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<div class=\"dr-feed-image\"><img src=\"images/template/dr-feed.jpg\" alt=\"\" /></div>\n<div class=\"dr-feed-box\">{loadmoduleid 141}</div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Read More</a></div>\n</div>",
       "fulltext": "",
       "state": "-2",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     }
   },
   "sectionContent": {

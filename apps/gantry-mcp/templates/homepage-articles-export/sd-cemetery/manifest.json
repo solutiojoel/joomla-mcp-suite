@@ -1,0 +1,61 @@
+{
+  "slug": "sd-cemetery",
+  "site_url": "https://sd-cemetery.backup.solutiosoftware.com/",
+  "status": "ok",
+  "category_title": "Good Shepherd Homepage Articles",
+  "category_id": "61",
+  "article_count": 5,
+  "generated_at": "2026-06-02T16:59:29Z",
+  "articles": [
+    {
+      "id": "259",
+      "title": "Stay Connected",
+      "alias": "stay-connected",
+      "category_id": "61",
+      "category_name": "- Good Shepherd Homepage Articles",
+      "state": "1",
+      "file_name": "259-stay-connected.html",
+      "relative_path": "sd-cemetery/259-stay-connected.html"
+    },
+    {
+      "id": "260",
+      "title": "Tradition, Faith, & Commitment ",
+      "alias": "tradition-faith-commitment",
+      "category_id": "61",
+      "category_name": "- Good Shepherd Homepage Articles",
+      "state": "1",
+      "file_name": "260-tradition-faith-commitment.html",
+      "relative_path": "sd-cemetery/260-tradition-faith-commitment.html"
+    },
+    {
+      "id": "258",
+      "title": "Welcome",
+      "alias": "welcome",
+      "category_id": "61",
+      "category_name": "- Good Shepherd Homepage Articles",
+      "state": "1",
+      "file_name": "258-welcome.html",
+      "relative_path": "sd-cemetery/258-welcome.html"
+    },
+    {
+      "id": "257",
+      "title": "Top Translate Button - Phone Icon",
+      "alias": "top-translate-button-phone-icon",
+      "category_id": "61",
+      "category_name": "- Good Shepherd Homepage Articles",
+      "state": "1",
+      "file_name": "257-top-translate-button-phone-icon.html",
+      "relative_path": "sd-cemetery/257-top-translate-button-phone-icon.html"
+    },
+    {
+      "id": "256",
+      "title": "Footer",
+      "alias": "footer",
+      "category_id": "61",
+      "category_name": "- Good Shepherd Homepage Articles",
+      "state": "1",
+      "file_name": "256-footer.html",
+      "relative_path": "sd-cemetery/256-footer.html"
+    }
+  ]
+}

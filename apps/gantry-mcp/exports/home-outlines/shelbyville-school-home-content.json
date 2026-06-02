@@ -19,11 +19,12 @@
       "title": "Facebook",
       "alias": "facebook",
       "categoryId": "146",
-      "categoryTitle": "- - Homepage Articles (Church)",
-      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/stjoeshelby/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
+      "categoryTitle": "- Homepage Articles (Church)",
+      "introtext": "<div class=\"facebook-widget-wrapper widget-wrapper\">\r\n<div class=\"widget-title\">\r\n<h3 class=\"g-title\">Facebook</h3>\r\n</div>\r\n<div class=\"widget-feed\">\r\n<div class=\"widget-feed-inner-box\">\r\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\r\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\r\n</div>\r\n</div>\r\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/stjoeshelby/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "143871": {
       "id": "143871",
@@ -34,7 +35,8 @@
       "introtext": "\t<div class=\"mission-hours\">\n<div class=\"mission-box\">\n<h2>Our Mission</h2>\n<p>Because we love Jesus, St. Joseph Catholic School serves all students and provides a Christ-centered educational environment where love of God inspires everything we do, think, say, feel, and become.</p>\n</div>\n<div class=\"hours-box\">\n<h2>Office Hours</h2>\n<p>Monday-Friday<br />7:30 a.m. - 3:30 p.m.</p>\n</div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "143872": {
       "id": "143872",
@@ -45,7 +47,8 @@
       "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"holy-art-box\">\n<p><a href=\"https://www.holyart.com/\" target=\"_blank\" rel=\"noopener noreferrer\">HolyArt.com</a> is a proud sponsor of this parish website.</p>\n</div>\n<div class=\"footer-content-row\">\n<div class=\"footer-content-column\">\n<div class=\"footer-logo\"><a href=\"school\"><img src=\"images/template/school26/logo.png\" alt=\"School Logo\" /></a></div>\n<div class=\"footer-text\">\n<h1><a href=\"school\">St. Joseph Catholic School</a></h1>\n<p><a href=\"about-sjcs-cl/contact\">127 E. Broadway St. Shelbyville, IN 46176</a><br />Phone: <a href=\"tel:3173984202\" target=\"_blank\" rel=\"noopener noreferrer\">317-398-4202</a> | <a href=\"mailto:office@sjsshelbyville.org\" target=\"_blank\" rel=\"noopener noreferrer\">office@sjsshelbyville.org</a></p>\n</div>\n</div>\n<div class=\"footer-social-icons\">{loadmoduleid 200}</div>\n</div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "143873": {
       "id": "143873",
@@ -56,7 +59,8 @@
       "introtext": "\t<div class=\"wel-wrapper\">\n<div class=\"wel-title\">\n<h3 class=\"g-title\">Welcome from the Principal</h3>\n</div>\n<div class=\"wel-content\">\n<p>Welcome to St. Joseph Catholic School!</p>\n<p>At St. Joseph, we are dedicated to providing an environment where academic excellence and faith formation go hand in hand. As a community, we strive to nurture the unique gifts of every student, helping them grow intellectually, spiritually, and socially.</p>\n<p>Our committed faculty and staff work tirelessly to create a safe, supportive, and challenging atmosphere where students are encouraged to seek the truth, serve others, and lead with character. Whether in the classroom, at prayer, or on the playing field, our students are taught to see the presence of God in all things.</p>\n<p>I invite you to explore our website and learn more about the vibrant life of our school. We are proud of our rich traditions and excited about the future of our students. Thank you for your interest in St. Joseph Catholic School—we look forward to partnering with you in the education and faith journey of your child.</p>\n<p>Blessings,</p>\n<p>Mr. Hoffman<br />Principal</p>\n</div>\n<div class=\"wel-button\"><a class=\"button\" href=\"#\">Read Full Letter</a></div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "143874": {
       "id": "143874",
@@ -67,7 +71,8 @@
       "introtext": "\t<div class=\"enroll-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Enrolling New Families</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<div class=\"widget-feed-image\"><img src=\"images/template/school26/enrolling.jpg\" alt=\"\" /></div>\n<div class=\"widget-feed-text\">\n<p class=\"ital-text\">Shelby Catholic School welcomes families seeking a faith-centered, academically strong education rooted in Catholic tradition.</p>\n<p>Click below to begin the enrollment process for the upcoming school year.</p>\n</div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"new-families-cl/registration\">Enroll Now</a></div>\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     }
   },
   "sectionContent": {

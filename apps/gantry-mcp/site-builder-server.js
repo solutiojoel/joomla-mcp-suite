@@ -111,9 +111,13 @@ app.post('/api/deploy', async (req, res) => {
       layout:  layoutArray,
       dryRun:  Boolean(dryRun),
     });
-    steps.push('[LAYOUT] ' + (typeof importResult === 'string'
+    const layoutMsg = typeof importResult === 'string'
       ? importResult
-      : (importResult?.message || (importResult?.imported ? 'Imported OK' : JSON.stringify(importResult)))));
+      : (importResult?.message || (importResult?.imported ? 'Imported OK' : JSON.stringify(importResult)));
+    if (/error|failed|refused/i.test(layoutMsg) && !importResult?.imported) {
+      throw new Error('Layout import failed: ' + layoutMsg);
+    }
+    steps.push('[LAYOUT] ' + layoutMsg);
 
     // ── Step 2: CSS upload + page settings ────────────────────────────────────
     if (cssContent) {
@@ -293,6 +297,15 @@ app.post('/api/deploy-with-content', async (req, res) => {
     const totalArts = Object.values(particleIndex).reduce((n, p) => n + p.articles.length, 0);
     steps.push(`[CONTENT] ${Object.keys(catTitleToOldIds).length} categories, ${totalArts} articles to create`);
 
+    if (!dryRun) {
+      // Log in to the target site before any write operations
+      const loginResult = await callTool(joomla, 'joomla_login', { site_url: siteUrl });
+      const loginOk = loginResult?.success !== false &&
+        !(String(loginResult?.message || '')).toLowerCase().includes('failed');
+      steps.push(`[LOGIN] ${siteUrl} — ${loginOk ? 'OK' : (loginResult?.message || JSON.stringify(loginResult))}`);
+      if (!loginOk) throw new Error('Login failed: ' + (loginResult?.message || JSON.stringify(loginResult)));
+    }
+
     if (dryRun) {
       for (const title of Object.keys(catTitleToOldIds))
         steps.push(`[DRY RUN] Would create category: "${title}"`);
@@ -300,42 +313,89 @@ app.post('/api/deploy-with-content', async (req, res) => {
         for (const art of pdata.articles)
           steps.push(`[DRY RUN] Would create article: "${art.title}" (cat: "${art.categoryTitle}") → particle ${particleId}`);
     } else {
-      // ── Create categories ────────────────────────────────────────────────────
-      for (const [title, oldIds] of Object.entries(catTitleToOldIds)) {
-        try {
-          const result = await callTool(joomla, 'joomla_create_category', {
-            site_url: siteUrl, title, extension: 'com_content',
-          });
-          const newId = String(result?.id || result?.data?.id || '');
-          if (!newId) throw new Error('No ID returned: ' + JSON.stringify(result));
-          for (const oldId of oldIds) catOldToNew[oldId] = newId;
-          steps.push(`[CATEGORY] Created "${title}" → ID ${newId}`);
-        } catch (err) {
-          steps.push(`[CATEGORY WARN] "${title}": ${err.message}`);
+      // ── Find-or-create categories ────────────────────────────────────────────────
+      // Search first — avoids duplicates and works even when post-create
+      // verification fails (forge sites, unusual admin layouts).
+      async function findOrCreateCategory(title, oldIds) {
+        const search1 = await callTool(joomla, 'joomla_list_categories', {
+          extension: 'com_content', search: title,
+        });
+        const match1 = (search1?.data || []).find(
+          c => String(c.title || '').trim().toLowerCase() === title.trim().toLowerCase()
+        );
+        if (match1) {
+          const id = String(match1.id);
+          for (const oldId of oldIds) catOldToNew[oldId] = id;
+          steps.push(`[CATEGORY] Existing "${title}" → ID ${id}`);
+          return;
+        }
+        // Not found — create it
+        await callTool(joomla, 'joomla_create_category', { title, extension: 'com_content' });
+        // Search again to get the real ID (bypasses broken internal verification)
+        const search2 = await callTool(joomla, 'joomla_list_categories', {
+          extension: 'com_content', search: title,
+        });
+        const match2 = (search2?.data || []).find(
+          c => String(c.title || '').trim().toLowerCase() === title.trim().toLowerCase()
+        );
+        if (match2) {
+          const id = String(match2.id);
+          for (const oldId of oldIds) catOldToNew[oldId] = id;
+          steps.push(`[CATEGORY] Created "${title}" → ID ${id}`);
+        } else {
+          steps.push(`[CATEGORY WARN] "${title}": created but could not retrieve ID`);
         }
       }
+      for (const [title, oldIds] of Object.entries(catTitleToOldIds)) {
+        try { await findOrCreateCategory(title, oldIds); }
+        catch (err) { steps.push(`[CATEGORY WARN] "${title}": ${err.message}`); }
+      }
 
-      // ── Create articles per particle ─────────────────────────────────────────
+      // ── Find-or-create articles ──────────────────────────────────────────────────
       const artOldToNew = {};
       for (const [particleId, pdata] of Object.entries(particleIndex)) {
         artOldToNew[particleId] = {};
         for (const art of pdata.articles) {
           const catId = catOldToNew[art.categoryId] || art.categoryId || '';
           try {
-            const result = await callTool(joomla, 'joomla_create_article', {
-              site_url: siteUrl,
-              title:     art.title,
-              alias:     art.alias || undefined,
-              introtext: art.introtext || '',
-              fulltext:  art.fulltext  || '',
-              catid:     catId,
-              state:     Number(art.state)  || 1,
-              access:    Number(art.access) || 1,
+            // 1. Search for existing article by exact title
+            const search1 = await callTool(joomla, 'joomla_article', {
+              action: 'list', search: art.title,
             });
-            const newId = String(result?.id || result?.data?.id || '');
-            if (!newId) throw new Error('No ID returned: ' + JSON.stringify(result));
-            artOldToNew[particleId][art.id] = newId;
-            steps.push(`[ARTICLE] "${art.title}" cat=${catId} → ID ${newId} [${particleId}]`);
+            const match1 = (search1?.data || []).find(
+              a => String(a.title || '').trim().toLowerCase() === art.title.trim().toLowerCase()
+            );
+            if (match1) {
+              const newId = String(match1.id);
+              artOldToNew[particleId][art.id] = newId;
+              steps.push(`[ARTICLE] Existing "${art.title}" → ID ${newId} [${particleId}]`);
+              continue;
+            }
+            // 2. Create it
+            const articleContent = [art.introtext || '', art.fulltext || ''].filter(Boolean).join('\n');
+            await callTool(joomla, 'joomla_article', {
+              action:     'create',
+              title:      art.title,
+              alias:      art.alias || undefined,
+              categoryId: catId,
+              content:    articleContent,
+              state:      String(Number(art.state)  || 1),
+              access:     String(Number(art.access) || 1),
+            });
+            // 3. Search again for real ID
+            const search2 = await callTool(joomla, 'joomla_article', {
+              action: 'list', search: art.title,
+            });
+            const match2 = (search2?.data || []).find(
+              a => String(a.title || '').trim().toLowerCase() === art.title.trim().toLowerCase()
+            );
+            if (match2) {
+              const newId = String(match2.id);
+              artOldToNew[particleId][art.id] = newId;
+              steps.push(`[ARTICLE] Created "${art.title}" cat=${catId} → ID ${newId} [${particleId}]`);
+            } else {
+              steps.push(`[ARTICLE WARN] "${art.title}" [${particleId}]: created but could not retrieve ID`);
+            }
           } catch (err) {
             steps.push(`[ARTICLE WARN] "${art.title}" [${particleId}]: ${err.message}`);
           }
@@ -369,9 +429,13 @@ app.post('/api/deploy-with-content', async (req, res) => {
     const importResult = await callTool(gantry, 'gantry_layout_import', {
       site: siteUrl, outline: String(outlineId), layout: layoutArray, dryRun: Boolean(dryRun),
     });
-    steps.push('[LAYOUT] ' + (typeof importResult === 'string'
+    const layoutMsg = typeof importResult === 'string'
       ? importResult
-      : (importResult?.message || (importResult?.imported ? 'Imported OK' : JSON.stringify(importResult)))));
+      : (importResult?.message || (importResult?.imported ? 'Imported OK' : JSON.stringify(importResult)));
+    if (/error|failed|refused/i.test(layoutMsg) && !importResult?.imported) {
+      throw new Error('Layout import failed: ' + layoutMsg);
+    }
+    steps.push('[LAYOUT] ' + layoutMsg);
 
     // ── CSS (mirrors /api/deploy logic) ──────────────────────────────────────────
     if (cssContent) {
@@ -382,7 +446,8 @@ app.post('/api/deploy-with-content', async (req, res) => {
       if (dryRun) {
         steps.push('[CSS DRY RUN] Would upload and link ' + domain + '/images/pub/' + cssFile);
       } else {
-        joomla = await mcpClient(JOOMLA_URL);
+        // Reuse existing joomla client (already logged in), or open a new one if closed
+        if (!joomla) joomla = await mcpClient(JOOMLA_URL);
         let pubPath = '/home/' + domain.split('.')[0] + '/public_html/images/pub';
         let pubUrl  = 'https://' + domain + '/images/pub';
         try {

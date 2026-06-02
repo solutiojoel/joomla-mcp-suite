@@ -24,10 +24,11 @@
       "alias": "footer",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-content-column\">\n<div class=\"footer-social-icons\">{loadmoduleid 157}</div>\n<div class=\"footer-content-row\">\n<div class=\"footer-content-c\">\n<h2><a href=\"about-us/contact-us\">2713 S. Grove Avenue<br />Ontario, CA. 91761</a></h2>\n<p>Phone: <a href=\"tel:9099472956\" target=\"_blank\" rel=\"noopener noreferrer\">(909) 947-2956</a><br />Fax: <a href=\"tel:9098530491\" target=\"_blank\" rel=\"noopener noreferrer\">(909) 853-0491</a></p>\n</div>\n<div class=\"footer-content-c\">\n<h2>Office Hours</h2>\n<p>Monday: 1:00 pm - 5:30 pm<br />Tuesday - Thursday: 9:00 am to 5:30 pm<br />Friday: 9:00 am till Noon</p>\n</div>\n</div>\n</div>\n<div class=\"footer-logo-icons\">\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/picmark.svg\" alt=\"Footer Logo Icon\" /></a></div>\n<div class=\"footer-protect\"><a href=\"https://www.docyp.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/safe-environment.png\" alt=\"Promise to Protect\" /></a></div>\n</div>\n</div>",
+      "introtext": "<div class=\"footer-wrapper\">\r\n<div class=\"footer-content-column\">\r\n<div class=\"footer-social-icons\">{loadmoduleid 157}</div>\r\n<div class=\"footer-content-row\">\r\n<div class=\"footer-content-c\">\r\n<h2><a href=\"about-us/contact-us\">2713 S. Grove Avenue<br />Ontario, CA. 91761</a></h2>\r\n<p>Phone: <a href=\"tel:9099472956\" target=\"_blank\" rel=\"noopener noreferrer\">(909) 947-2956</a><br />Fax: <a href=\"tel:9098530491\" target=\"_blank\" rel=\"noopener noreferrer\">(909) 853-0491</a></p>\r\n</div>\r\n<div class=\"footer-content-c\">\r\n<h2>Office Hours</h2>\r\n<p>Monday: 1:00 pm - 5:30 pm<br />Tuesday - Thursday: 9:00 am to 5:30 pm<br />Friday: 9:00 am till Noon</p>\r\n</div>\r\n</div>\r\n</div>\r\n<div class=\"footer-logo-icons\">\r\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/picmark.svg\" alt=\"Footer Logo Icon\" /></a></div>\r\n<div class=\"footer-protect\"><a href=\"https://www.docyp.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/safe-environment.png\" alt=\"Promise to Protect\" /></a></div>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "75": {
       "id": "75",
@@ -38,7 +39,8 @@
       "introtext": "\t<div class=\"formed-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Formed</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed.png\" alt=\"\" /></a></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Learn More</a></div>\n</div>",
       "fulltext": "",
       "state": "-2",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     },
     "76": {
       "id": "76",
@@ -46,10 +48,11 @@
       "alias": "facebook",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"wel-wrapper\">\n<div class=\"wel-title\">\n<h2>Welcome</h2>\n</div>\n<div class=\"wel-content\">\n<p>We're truly glad you're here! Inspired by the life of St. Elizabeth Ann Seton, we strive to live with a deep trust in God, a spirit of humility, and a generous love for others, especially through service and a commitment to Catholic education and family life. Whether you are visiting, searching for a parish home, or simply reaching out, know that you are warmly welcomed into a community that seeks to follow Christ with the same faith, perseverance, and charity that marked her life. We look forward to connecting with you and walking alongside you.</p>\n</div>\n<div class=\"wel-button\"><a class=\"button\" href=\"about-us/welcome-to-seas\">Learn More</a></div>\n</div>",
+      "introtext": "<div class=\"wel-wrapper\">\r\n<div class=\"wel-title\">\r\n<h2>Welcome</h2>\r\n</div>\r\n<div class=\"wel-content\">\r\n<p>We're truly glad you're here! Inspired by the life of St. Elizabeth Ann Seton, we strive to live with a deep trust in God, a spirit of humility, and a generous love for others, especially through service and a commitment to Catholic education and family life. Whether you are visiting, searching for a parish home, or simply reaching out, know that you are warmly welcomed into a community that seeks to follow Christ with the same faith, perseverance, and charity that marked her life. We look forward to connecting with you and walking alongside you.</p>\r\n</div>\r\n<div class=\"wel-button\"><a class=\"button\" href=\"about-us/welcome-to-seas\">Learn More</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "79": {
       "id": "79",
@@ -60,7 +63,8 @@
       "introtext": "\t<div class=\"daily-readings-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Daily Readings</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<div class=\"dr-feed-image\"><img src=\"images/template/dr-feed.jpg\" alt=\"\" /></div>\n<div class=\"dr-feed-box\">{loadmoduleid 141}</div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Read More</a></div>\n</div>",
       "fulltext": "",
       "state": "-2",
-      "access": "1"
+      "access": "1",
+      "htmlExport": false
     }
   },
   "sectionContent": {

@@ -24,10 +24,11 @@
       "alias": "footer",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-content-row\">\n<div class=\"footer-content-left\">\n<div class=\"footer-logo-icon\"><a href=\"home\"><img src=\"images/template/logomark.png\" alt=\"Footer Logo Icon\" /></a></div>\n<div class=\"footer-content-main\">\n<div class=\"footer-address\">\n<h6><a href=\"about/contact-us\">2700 Dover Ave,<br />Fairfield, CA 94533, USA</a></h6>\n<p>Phone: <a href=\"tel:7074227767\" target=\"_blank\" rel=\"noopener noreferrer\">(707) 422-7767</a> or<br /><a href=\"tel:7074227768\" target=\"_blank\" rel=\"noopener noreferrer\">(707) 422-7768</a><br />Email: <a href=\"mailto:office@olmcfairfield.org\" target=\"_blank\" rel=\"noopener noreferrer\">office@olmcfairfield.org</a></p>\n</div>\n<div class=\"footer-hours\">\n<h6>Office Hours</h6>\n<p>Monday - Friday:<br />9AM - 12PM, 1PM - 4PM<br />(or by appointment)</p>\n</div>\n</div>\n</div>\n<div class=\"footer-help-links\">\n<h6>Helpful Links</h6>\n<div class=\"footer-links-inner\"><a href=\"news/bulletin\">Bulletin</a><a href=\"about/registration\">Parish Registration</a><a href=\"news/calendar\">Calendar</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a></div>\n</div>\n</div>\n<div class=\"footer-bottom-row\">\n<div class=\"footer-social-icons\">{loadmoduleid 160}</div>\n<div class=\"footer-copyright\">\n<p>2026 OLMC Catholic Church. All rights reserved.</p>\n</div>\n</div>\n</div>",
+      "introtext": "<div class=\"footer-wrapper\">\r\n<div class=\"footer-content-row\">\r\n<div class=\"footer-content-left\">\r\n<div class=\"footer-logo-icon\"><a href=\"home\"><img src=\"images/template/logomark.png\" alt=\"Footer Logo Icon\" /></a></div>\r\n<div class=\"footer-content-main\">\r\n<div class=\"footer-address\">\r\n<h6><a href=\"about/contact-us\">2700 Dover Ave,<br />Fairfield, CA 94533, USA</a></h6>\r\n<p>Phone: <a href=\"tel:7074227767\" target=\"_blank\" rel=\"noopener noreferrer\">(707) 422-7767</a> or<br /><a href=\"tel:7074227768\" target=\"_blank\" rel=\"noopener noreferrer\">(707) 422-7768</a><br />Email: <a href=\"mailto:office@olmcfairfield.org\" target=\"_blank\" rel=\"noopener noreferrer\">office@olmcfairfield.org</a></p>\r\n</div>\r\n<div class=\"footer-hours\">\r\n<h6>Office Hours</h6>\r\n<p>Monday - Friday:<br />9AM - 12PM, 1PM - 4PM<br />(or by appointment)</p>\r\n</div>\r\n</div>\r\n</div>\r\n<div class=\"footer-help-links\">\r\n<h6>Helpful Links</h6>\r\n<div class=\"footer-links-inner\"><a href=\"news/bulletin\">Bulletin</a><a href=\"about/registration\">Parish Registration</a><a href=\"news/calendar\">Calendar</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a></div>\r\n</div>\r\n</div>\r\n<div class=\"footer-bottom-row\">\r\n<div class=\"footer-social-icons\">{loadmoduleid 160}</div>\r\n<div class=\"footer-copyright\">\r\n<p>2026 OLMC Catholic Church. All rights reserved.</p>\r\n</div>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "55": {
       "id": "55",
@@ -35,10 +36,11 @@
       "alias": "mass-times",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"mt-wrapper\">\n<div class=\"mt-content\">\n<h2 class=\"mt-big-title\">Mass Schedule</h2>\n<h3>Weekend</h3>\n<p>Saturday: 5:00 PM (Vigil)<br />Sunday: 8:00 AM, 10:00 AM, 12:00 PM, 6:00 PM</p>\n<h3>Daily Mass</h3>\n<p>Monday - Saturday: 9:00 AM</p>\n<h3>Holy Days</h3>\n<p>9:00 AM, 12:00 PM, 7:00 PM</p>\n<h3>Sacrament of Reconciliation</h3>\n<p>Saturdays: 3:00 - 4:30 PM<br />First Saturday of the Month:<br />Immediately following the 9:00 AM Mass</p>\n</div>\n<div class=\"mt-button\"><a class=\"button\" href=\"mailto:youtube.com/@ourladyofmountcarmel6322/streams?themeRefresh=1\" target=\"_blank\" rel=\"noopener noreferrer\">Watch Mass Live</a></div>\n</div>",
+      "introtext": "<div class=\"mt-wrapper\">\r\n<div class=\"mt-content\">\r\n<h2 class=\"mt-big-title\">Mass Schedule</h2>\r\n<h3>Weekend</h3>\r\n<p>Saturday: 5:00 PM (Vigil)<br />Sunday: 8:00 AM, 10:00 AM, 12:00 PM, <br />2:00PM (Spanish), 6:00 PM</p>\r\n<h3>Daily Mass</h3>\r\n<p>Monday - Saturday: 9:00 AM</p>\r\n<h3>Holy Days</h3>\r\n<p>9:00 AM, 12:00 PM, 7:00 PM</p>\r\n<h3>Sacrament of Reconciliation</h3>\r\n<p>Saturdays: 3:00 - 4:30 PM<br />First Saturday of the Month:<br />Immediately following the 9:00 AM Mass</p>\r\n</div>\r\n<div class=\"mt-button\"><a class=\"button\" href=\"https://www.youtube.com/@ourladyofmountcarmel6322/streams\" target=\"_blank\" rel=\"noopener noreferrer\">Watch Mass Live</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "56": {
       "id": "56",
@@ -46,10 +48,11 @@
       "alias": "welcome",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"welcome-wrapper\">\n<div class=\"welcome-title\">\n<h3 class=\"g-title\">Welcome</h3>\n</div>\n<div class=\"welcome-content\">\n<p>Welcome to Our Lady of Mount Carmel Church. As a Carmelite parish, we are blessed to be a faith community centered on the Eucharist, devoted to prayer, and inspired by the Carmelite spirit of drawing closer to God in everyday life. United in worship and committed to sharing God's love with our community, we welcome all with open hearts and joyful hospitality. Whether you are joining us for Mass, exploring the Catholic faith, or looking for a parish to call home, we are glad you are here.</p>\n</div>\n</div>",
+      "introtext": "<div class=\"welcome-wrapper\">\r\n<div class=\"welcome-title\">\r\n<h3 class=\"g-title\">Welcome</h3>\r\n</div>\r\n<div class=\"welcome-content\">\r\n<p>Welcome to Our Lady of Mount Carmel Church. As a Carmelite parish, we are blessed to be a faith community centered on the Eucharist, devoted to prayer, and inspired by the Carmelite spirit of drawing closer to God in everyday life. United in worship and committed to sharing God's love with our community, we welcome all with open hearts and joyful hospitality. Whether you are joining us for Mass, exploring the Catholic faith, or looking for a parish to call home, we are glad you are here.</p>\r\n</div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "74": {
       "id": "74",
@@ -57,10 +60,11 @@
       "alias": "calendar",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<div class=\"calendar-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Upcoming Events</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><iframe width=\"800\" height=\"400\" style=\"border-width: 0;\" src=\"https://calendar.google.com/calendar/embed?showTitle=0&amp;showNav=0&amp;showDate=0&amp;showPrint=0&amp;showTabs=0&amp;showCalendars=0&amp;showTz=0&amp;mode=AGENDA&amp;height=400&amp;wkst=1&amp;bgcolor=%23FFFFFF&amp;src=solutiosoftware.net_8msm9288ui8epu6ugdn14f27ts%40group.calendar.google.com&amp;color=%232952A3&amp;ctz=America%2FChicago\" frameborder=\"0\" scrolling=\"no\"></iframe></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news/calendar\">View Full Calendar</a></div>\n</div>",
+      "introtext": "<div class=\"calendar-widget-wrapper widget-wrapper\">\r\n<div class=\"widget-title\">\r\n<h3 class=\"g-title\">Upcoming Events</h3>\r\n</div>\r\n<div class=\"widget-feed\">\r\n<div class=\"widget-feed-inner-box\"><iframe src=\"https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FChicago&showPrint=0&showTitle=0&mode=AGENDA&src=MzhhN2U1MzBmYWUzNmMyYTJiZTE2M2Y4ZTI4M2QyODcxMWVkNjUwZWUwZmI4MzRlNTM3ODVlY2M2MTdiYzQzMkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&color=%23795548\" style=\"border-width:0\" width=\"800\" height=\"400\" frameborder=\"0\" scrolling=\"no\"></iframe></div>\r\n</div>\r\n<div class=\"widget-button\"><a class=\"button\" href=\"news/calendar\">View Full Calendar</a></div>\r\n</div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     },
     "77": {
       "id": "77",
@@ -68,10 +72,11 @@
       "alias": "instagram",
       "categoryId": "24",
       "categoryTitle": "Homepage Articles",
-      "introtext": "\t<h3 class=\"g-title\">OLMC Fairfield</h3>\n<!-- Elfsight Instagram Feed | OLMC-Fairfield -->\n<script src=\"https://elfsightcdn.com/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-8780ea1b-b782-4212-96b7-f7900d16fc87\" data-elfsight-app-lazy=\"\"> </div>",
+      "introtext": "<h3 class=\"g-title\">OLMC Fairfield</h3>\r\n<!-- Elfsight Instagram Feed | OLMC-Fairfield -->\r\n<script src=\"https://elfsightcdn.com/platform.js\" async=\"\"></script>\r\n<div class=\"elfsight-app-8780ea1b-b782-4212-96b7-f7900d16fc87\" data-elfsight-app-lazy=\"\"> </div>",
       "fulltext": "",
       "state": "1",
-      "access": "1"
+      "access": "1",
+      "htmlExport": true
     }
   },
   "sectionContent": {
