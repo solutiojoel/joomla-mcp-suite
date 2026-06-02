@@ -181,7 +181,13 @@ const REAL_UA =
   await browser.close();
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  fs.writeFileSync(path.join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));
+  // Merge with existing manifest so --only-missing runs don't discard previous captures.
+  const manifestPath = path.join(OUT_DIR, 'manifest.json');
+  let existing = [];
+  try { existing = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); } catch {}
+  const byId = Object.fromEntries(existing.map(r => [r.site, r]));
+  for (const r of manifest) byId[r.site] = r;
+  fs.writeFileSync(manifestPath, JSON.stringify(Object.values(byId), null, 2));
 
   const totalShots = manifest.reduce(
     (a, b) => a + Object.values(b.sections).filter(Boolean).length,
