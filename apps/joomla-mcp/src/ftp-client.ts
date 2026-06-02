@@ -12,6 +12,7 @@ interface FtpSiteConfig {
   upload_path: string | null;
   port?: number;
   secure?: "implicit" | "explicit";
+  credential_set?: string;
 }
 
 export class FtpClient {
@@ -59,9 +60,20 @@ export class FtpClient {
       };
     }
 
-    const user = mode === "read" ? this.readonlyUser : this.writeUser;
-    const password = mode === "read" ? this.readonlyPass : this.writePass;
-    const varPrefix = mode === "read" ? "FTP_READONLY" : "FTP_WRITE";
+    let user: string;
+    let password: string;
+    let varPrefix: string;
+
+    if (config.credential_set) {
+      const prefix = `FTP_${config.credential_set.toUpperCase()}`;
+      varPrefix = mode === "read" ? `${prefix}_READONLY` : `${prefix}_WRITE`;
+      user = process.env[`${varPrefix}_USER`] || process.env[`${prefix}_USER`] || "";
+      password = process.env[`${varPrefix}_PASS`] || process.env[`${prefix}_PASS`] || "";
+    } else {
+      varPrefix = mode === "read" ? "FTP_READONLY" : "FTP_WRITE";
+      user = mode === "read" ? this.readonlyUser : this.writeUser;
+      password = mode === "read" ? this.readonlyPass : this.writePass;
+    }
 
     if (!user || !password) {
       return { error: `FTP credentials not configured. Set ${varPrefix}_USER and ${varPrefix}_PASS in .env.` };
