@@ -1,0 +1,213 @@
+{
+  "source": "",
+  "outline": "20",
+  "theme": "rt_studius",
+  "exportedAt": "2026-05-21T20:00:58.813Z",
+  "categoryMap": {
+    "9": {
+      "id": "9",
+      "title": "Parish Alert"
+    },
+    "130": {
+      "id": "130",
+      "title": "Rotator (Church)"
+    },
+    "148": {
+      "id": "148",
+      "title": "News & Events - 2026"
+    }
+  },
+  "articleMap": {
+    "143393": {
+      "id": "143393",
+      "title": "Footer",
+      "alias": "footer",
+      "categoryId": "146",
+      "categoryTitle": "- - Homepage Articles (Church)",
+      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"holy-art-box\">\n<p><a href=\"https://www.holyart.com/\" target=\"_blank\" rel=\"noopener noreferrer\">HolyArt.com</a> is a proud sponsor of this parish website.</p>\n</div>\n<div class=\"footer-content-row\">\n<div class=\"footer-content-column\">\n<div class=\"footer-content-box\">\n<h2>St. Joseph Church</h2>\n<p><a href=\"about-us/contact-us\">125 E Broadway St</a><br /><a href=\"about-us/contact-us\">Shelbyville, IN 46176</a><br /><a href=\"tel:317-398-8227\">317-398-8227</a></p>\n</div>\n<div class=\"footer-content-box\">\n<h2>St. Vincent de Paul Church</h2>\n<p><a href=\"about-us/contact-us\">4218 E Michigan Rd</a><br /><a href=\"about-us/contact-us\">Shelbyville, IN 46176</a><br /><a href=\"tel:317-398-8227\">317-398-8227</a></p>\n</div>\n<div class=\"footer-content-box\">\n<h2>Joint Parish Office</h2>\n<p><a href=\"about-us/contact-us\">228 E. Hendricks St</a><br /><a href=\"about-us/contact-us\">Shelbyville, IN 46176</a><br /><a href=\"tel:317-398-8227\">317-398-8227</a></p>\n</div>\n</div>\n<div class=\"footer-social-icons\">{loadmoduleid 185}</div>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "143394": {
+      "id": "143394",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "categoryId": "146",
+      "categoryTitle": "- - Homepage Articles (Church)",
+      "introtext": "\t<h1 class=\"mt-big-title\">Mass Times</h1>\n<h2>Weekend Mass</h2>\n<p>Saturday 5:00pm (SJ)<br />Sunday 8:30am (SV)<br />Sunday 10:00am (SJ)<br />Sunday 12:15pm <strong>Espanol</strong> (SJ)</p>\n<h2>Daily Mass</h2>\n<p>Monday 5:00pm (SV)<br />Tuesday 8:15am <strong>School</strong> (SJ)<br />Wednesday 8:00am (SV)<br />Thursday <strong>No Mass</strong><br />Friday 8:15am <strong>School</strong> (SJ)</p>\n<p><a class=\"button\" href=\"worship/mass-confession-times\">View Full Schedule</a></p>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "143395": {
+      "id": "143395",
+      "title": "Info Boxes",
+      "alias": "info-boxes",
+      "categoryId": "146",
+      "categoryTitle": "- - Homepage Articles (Church)",
+      "introtext": "\t<div class=\"info-box-wrapper\">\n<div class=\"inner-box\">\n<div class=\"info-box\">\n<p>St. Joseph Catholic Church exists to foster sanctifying encounters with Jesus Christ through:</p>\n<ul>\n<li>prayer and sacrament</li>\n<li>service and outreach</li>\n<li>education and formation</li>\n</ul>\n</div>\n</div>\n<div class=\"inner-box\">\n<div class=\"info-box\">\n<p>We joyfully share our gifts to<br />nourish the community.</p>\n<h6>~St. Vincent de Paul</h6>\n</div>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "143396": {
+      "id": "143396",
+      "title": "Facebook",
+      "alias": "facebook",
+      "categoryId": "146",
+      "categoryTitle": "- - Homepage Articles (Church)",
+      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/stjoeshelby/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "143397": {
+      "id": "143397",
+      "title": "Calendar",
+      "alias": "calendar",
+      "categoryId": "146",
+      "categoryTitle": "- - Homepage Articles (Church)",
+      "introtext": "\t<div class=\"calendar-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Calendar</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><iframe width=\"800\" height=\"400\" style=\"border-width: 0;\" src=\"https://calendar.google.com/calendar/embed?showTitle=0&amp;showNav=0&amp;showDate=0&amp;showPrint=0&amp;showTabs=0&amp;showCalendars=0&amp;showTz=0&amp;mode=AGENDA&amp;height=400&amp;wkst=1&amp;bgcolor=%23FFFFFF&amp;src=solutiosoftware.net_8msm9288ui8epu6ugdn14f27ts%40group.calendar.google.com&amp;color=%232952A3&amp;ctz=America%2FChicago\" frameborder=\"0\" scrolling=\"no\"></iframe></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news-cl/calendar\">View Full Calendar</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "143398": {
+      "id": "143398",
+      "title": "Formed",
+      "alias": "formed",
+      "categoryId": "146",
+      "categoryTitle": "- - Homepage Articles (Church)",
+      "introtext": "\t<div class=\"formed-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Formed</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed.png\" alt=\"\" /></a></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Watch Now</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "143399": {
+      "id": "143399",
+      "title": "Flocknotes",
+      "alias": "flocknotes",
+      "categoryId": "146",
+      "categoryTitle": "- - Homepage Articles (Church)",
+      "introtext": "\t<div class=\"flocknotes-wrapper\">\n<div class=\"flocknotes-logo\"><img src=\"images/template/flocknote.svg\" alt=\"\" /></div>\n<div class=\"flocknotes-form\">\n<h3 class=\"g-title\">Email Update Signup</h3>\n<form action=\"https://app.flocknote.com/group/117576/addToGroupFromOutside\" method=\"post\" target=\"_blank\"><input name=\"fname\" type=\"text\" placeholder=\"First Name\" /> <input name=\"lname\" type=\"text\" placeholder=\"Last Name\" /> <input name=\"email\" type=\"email\" placeholder=\"Email Address\" /> <input name=\"mobile_phone\" type=\"tel\" placeholder=\"Mobile Phone\" /> <button class=\"button\" type=\"submit\" value=\"submit\">Sign Me Up</button></form>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n<div style=\"position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;\" data-lastpass-icon-root=\"\"> </div>\n</div>\n<div class=\"flocknotes-feed\">\n<h3 class=\"g-title\">Latest Flocknotes</h3>\n{loadmoduleid 184}</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    }
+  },
+  "sectionContent": {
+    "top": [
+      {
+        "particleId": "contentarray-4541",
+        "particleTitle": "Alert",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-1306 > block-8420 > top > grid-7203 > block-8970 > contentarray-4541.attributes.article.filter",
+        "categories": [
+          "9"
+        ],
+        "articles": []
+      }
+    ],
+    "slideshow": [
+      {
+        "particleId": "swiper-9733",
+        "particleTitle": "Swiper",
+        "particleType": "swiper",
+        "filterPath": "container-top > grid-1832 > block-2550 > slideshow > grid-1870 > block-5750 > swiper-9733.attributes.article.filter",
+        "categories": [
+          "130"
+        ],
+        "articles": []
+      },
+      {
+        "particleId": "contentarray-7235",
+        "particleTitle": "Mass Times",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-1832 > block-2550 > slideshow > grid-1870 > block-5963 > contentarray-7235.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "143394"
+        ]
+      }
+    ],
+    "header": [
+      {
+        "particleId": "contentarray-8043",
+        "particleTitle": "Info Boxes",
+        "particleType": "contentarray",
+        "filterPath": "header > grid-4812 > block-6492 > contentarray-8043.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "143395"
+        ]
+      }
+    ],
+    "mainbar": [
+      {
+        "particleId": "contentarray-6756",
+        "particleTitle": "News & Events",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-3468 > block-7806 > mainbar > grid-9708 > block-9334 > contentarray-6756.attributes.article.filter",
+        "categories": [
+          "148"
+        ],
+        "articles": []
+      }
+    ],
+    "expanded": [
+      {
+        "particleId": "contentarray-3150",
+        "particleTitle": "Calendar",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-1708 > block-2267 > contentarray-3150.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "143397"
+        ]
+      },
+      {
+        "particleId": "contentarray-6583",
+        "particleTitle": "Facebook",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-1708 > block-9594 > contentarray-6583.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "143396"
+        ]
+      },
+      {
+        "particleId": "contentarray-7651",
+        "particleTitle": "Formed",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-1708 > block-2677 > contentarray-7651.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "143398"
+        ]
+      },
+      {
+        "particleId": "contentarray-2308",
+        "particleTitle": "Flocknotes",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-7885 > block-5623 > contentarray-2308.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "143399"
+        ]
+      }
+    ],
+    "footer": [
+      {
+        "particleId": "contentarray-9023",
+        "particleTitle": "Footer",
+        "particleType": "contentarray",
+        "filterPath": "container-footer > grid-7890 > block-4196 > footer > grid-9415 > block-8144 > contentarray-9023.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "143393"
+        ]
+      }
+    ]
+  }
+}

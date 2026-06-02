@@ -1,0 +1,16 @@
+[
+  {
+    "name": "test-site",
+    "parishName": "Stagnes Concord",
+    "slots": {
+      "slideshow": "stliz-melville",
+      "above": "stmary-wood",
+      "sidebar": "stagnes-concord",
+      "mainbar": "stagnes-concord",
+      "aside": "stagnes-concord",
+      "expanded": "seas-ontario",
+      "extension": "stcats-wichita"
+    },
+    "savedAt": "2026-06-02T16:31:15.249Z"
+  }
+]

@@ -1,0 +1,176 @@
+{
+  "source": "",
+  "outline": "33",
+  "theme": "rt_studius",
+  "exportedAt": "2026-05-21T20:10:18.246Z",
+  "categoryMap": {
+    "8": {
+      "id": "8",
+      "title": "Recent Parish News"
+    },
+    "9": {
+      "id": "9",
+      "title": "Alert"
+    },
+    "10": {
+      "id": "10",
+      "title": "Rotator"
+    }
+  },
+  "articleMap": {
+    "36": {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-logo-links\">\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/logo.png\" alt=\"Footer Logo\" /></a></div>\n<div class=\"footer-social-icons\">{loadmoduleid 155}</div>\n</div>\n<div class=\"footer-content\">\n<p><a href=\"get-connected/193-contact-us-directions\">20 Chestnut Street Centereach, NY 11720</a><br />Phone: <a href=\"tel:6315858760\" target=\"_blank\" rel=\"noopener noreferrer\">631-585-8760</a><br /><a href=\"mailto:rectory@abvmcentereach.com\" target=\"_blank\" rel=\"noopener noreferrer\">rectory@abvmcentereach.com</a></p>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "55": {
+      "id": "55",
+      "title": "Mass Schedule",
+      "alias": "mass-times",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<h2>Mass Schedule</h2>\n<p><strong>Saturday Vigil:</strong> 5:30pm<br /><strong>Sunday:</strong> 9:30am &amp; 11:30am<br /><strong>Monday - Thursday:</strong> 9:00am</p>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "56": {
+      "id": "56",
+      "title": "Our Mission",
+      "alias": "mission-statement",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<h2>Our Mission</h2>\n<p>Love God. Serve Others. Grow Disciples<br />You Matter + You Belong</p>\n<p><a class=\"button\" href=\"about-us/who-we-are\">Who We Are</a></p>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "77": {
+      "id": "77",
+      "title": "Youtube",
+      "alias": "instagram",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<!-- Elfsight YouTube Gallery | Assumption-Center -->\n<script src=\"https://elfsightcdn.com/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-deb77ccf-b145-4df2-b8f8-f64c80779dca\" data-elfsight-app-lazy=\"\"> </div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "221": {
+      "id": "221",
+      "title": "Join Us Online",
+      "alias": "join-us-online",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<h2>Join Us Online</h2>\n<p>If you cannot join us in person, unite with our parish through the live broadcast</p>\n<p><a class=\"button\" href=\"https://www.youtube.com/channel/UC4o_wSrH-47z9LfYQIf6XqA\" target=\"_blank\" rel=\"noopener noreferrer\">View Livestream</a></p>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "222": {
+      "id": "222",
+      "title": "Navigation",
+      "alias": "navigation",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"nav-wrapper\">\n<div class=\"nav-menu-bar\">\n<div class=\"nav-logo\">{loadmoduleid 158}</div>\n<div class=\"nav-links-menu\">\n<div class=\"nav-links ql-toplinks-studius\">{loadmoduleid 159}</div>\n<div class=\"nav-menu-button\">{loadmoduleid 160}</div>\n</div>\n</div>\n<div id=\"menuHold\" class=\"nav-menu-hold\">{loadmoduleid 161}</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    }
+  },
+  "sectionContent": {
+    "top": [
+      {
+        "particleId": "contentarray-4541",
+        "particleTitle": "Alert",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-9362 > block-4848 > top > grid-5140 > block-7423 > contentarray-4541.attributes.article.filter",
+        "categories": [
+          "9"
+        ],
+        "articles": []
+      }
+    ],
+    "navigation": [
+      {
+        "particleId": "contentarray-9533",
+        "particleTitle": "Navigation",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-2550 > block-5586 > navigation > grid-8692 > block-5427 > contentarray-9533.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "222"
+        ]
+      }
+    ],
+    "slideshow": [
+      {
+        "particleId": "swiper-9733",
+        "particleTitle": "Swiper",
+        "particleType": "swiper",
+        "filterPath": "container-top > grid-5067 > block-3862 > slideshow > grid-4252 > block-9469 > swiper-9733.attributes.article.filter",
+        "categories": [
+          "10"
+        ],
+        "articles": []
+      }
+    ],
+    "header": [
+      {
+        "particleId": "contentarray-3536",
+        "particleTitle": "Our Mission - Mass Schedule - Join Us Online",
+        "particleType": "contentarray",
+        "filterPath": "header > grid-2576 > block-1895 > contentarray-3536.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "55",
+          "56",
+          "221"
+        ]
+      }
+    ],
+    "mainbar": [
+      {
+        "particleId": "contentarray-6756",
+        "particleTitle": "News & Events",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-9400 > block-8716 > mainbar > grid-3189 > block-5119 > contentarray-6756.attributes.article.filter",
+        "categories": [
+          "8"
+        ],
+        "articles": []
+      }
+    ],
+    "extension": [
+      {
+        "particleId": "contentarray-8112",
+        "particleTitle": "Joomla Articles",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-4821 > block-1874 > contentarray-8112.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "77"
+        ]
+      }
+    ],
+    "footer": [
+      {
+        "particleId": "contentarray-7255",
+        "particleTitle": "Footer",
+        "particleType": "contentarray",
+        "filterPath": "container-footer > grid-5255 > block-4004 > footer > grid-1685 > block-2409 > contentarray-7255.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "36"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "source": "",
+  "outline": "33",
+  "theme": "rt_studius",
+  "exportedAt": "2026-05-21T19:56:05.061Z",
+  "categoryMap": {
+    "8": {
+      "id": "8",
+      "title": "Parish News & Events"
+    },
+    "9": {
+      "id": "9",
+      "title": "Alert"
+    },
+    "10": {
+      "id": "10",
+      "title": "Rotator"
+    }
+  },
+  "articleMap": {
+    "36": {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-icon-content\">\n<div class=\"footer-icon\"><a href=\"home\"><img src=\"images/template/footer.png\" alt=\"\" /></a></div>\n<div class=\"footer-content\">\n<h1><a href=\"home\">St. Christopher Parish</a></h1>\n<p><a href=\"about-us/contact-us\">5301 W. 16th St., Indianapolis, IN 46224</a><br />Phone: <a href=\"tel:3172416314\" target=\"_blank\" rel=\"noopener noreferrer\">(317) 241-6314</a><br />Sacramental Emergency Phone: <a href=\"tel:3174871164\" target=\"_blank\" rel=\"noopener noreferrer\">(317) 487-1164</a><br />Parish Office Hours M-F 8:30 am - 4 pm</p>\n</div>\n</div>\n<div class=\"footer-links\">\n<div class=\"footer-inner-links\"><a href=\"about-us/parish-registration\">Parish Registration</a><a href=\"https://www.wesharegiving.org/app/giving/WeShare-20001107?tab=home\" target=\"_blank\" rel=\"noopener noreferrer\">Online Giving</a><a href=\"https://www.archindy.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Archdiocese Website</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.franciscanmedia.org/saint-of-the-day/\" target=\"_blank\" rel=\"noopener noreferrer\">Saint of the Day</a></div>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "55": {
+      "id": "55",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<h1>Sunday Liturgies</h1>\n<p>Saturday: 5:30pm<br />Sunday: 8am, 10:30am, &amp; 12:30pm</p>\n<h1>Weekday Masses</h1>\n<p>Tuesday, Thursday, &amp; Friday: 9am<br />Wednesday: 5:30pm</p>\n<h1>Weekday Communion Services</h1>\n<p>Monday &amp; Wednesday: 9am</p>\n<h1>Reconciliation</h1>\n<p>Saturday: 4:30-5pm<br />Also by appointment, please call Fr. Joe</p>\n<p><a class=\"button\" href=\"livestream\">Watch Mass Live</a></p>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "56": {
+      "id": "56",
+      "title": "Parish Mission",
+      "alias": "mission-statement",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"mission-wrapper\">\n<div class=\"mission-title\">\n<h1>Parish Mission</h1>\n</div>\n<div class=\"mission-content\">\n<p><strong>The mission of Saint Christopher Parish is to participate in Christ's mission of evangelization by witnessing and sharing in the mission of Jesus who calls us to love God with our whole hearts and to love neighbors, even as God loves us. We attempt to carry out our mission through our worship, service, faith formation, community life and stewardship.</strong></p>\n<p class=\"nomargin\"><strong>Saint Christopher's participation in this mission is expressed:</strong></p>\n<ul>\n<li>through our communal celebration of the sacraments and formation by the Word of God;</li>\n<li>through many ministries, especially through the authenticity of our daily living;</li>\n<li>through seeking the challenge of new ministries whenever and wherever greater needs emerge;</li>\n<li>through inviting all to share their gifts in reaching out and working lovingly among people;</li>\n<li>through witnessing the truth that God is with us as we serve at the parish, deanery and Archdiocesan level.</li>\n</ul>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "76": {
+      "id": "76",
+      "title": "Facebook",
+      "alias": "facebook",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-818585d5-ce23-4ba8-8e07-28da02593ae1\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/stchrisindy.org\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    }
+  },
+  "sectionContent": {
+    "top": [
+      {
+        "particleId": "contentarray-4541",
+        "particleTitle": "Alert",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-4763 > block-1122 > top > grid-7990 > block-7310 > contentarray-4541.attributes.article.filter",
+        "categories": [
+          "9"
+        ],
+        "articles": []
+      }
+    ],
+    "slideshow": [
+      {
+        "particleId": "swiper-9733",
+        "particleTitle": "Swiper",
+        "particleType": "swiper",
+        "filterPath": "container-top > grid-4888 > block-6006 > slideshow > grid-8376 > block-6526 > swiper-9733.attributes.article.filter",
+        "categories": [
+          "10"
+        ],
+        "articles": []
+      },
+      {
+        "particleId": "contentarray-7123",
+        "particleTitle": "Mass Times",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-4888 > block-6006 > slideshow > grid-1765 > block-6401 > contentarray-7123.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "55"
+        ]
+      }
+    ],
+    "utility": [
+      {
+        "particleId": "contentarray-9079",
+        "particleTitle": "Parish Mission",
+        "particleType": "contentarray",
+        "filterPath": "utility > grid-4722 > block-1540 > contentarray-9079.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "56"
+        ]
+      }
+    ],
+    "sidebar": [
+      {
+        "particleId": "contentarray-6756",
+        "particleTitle": "Parish News & Events",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-2236 > block-6370 > sidebar > grid-2064 > block-8138 > contentarray-6756.attributes.article.filter",
+        "categories": [
+          "8"
+        ],
+        "articles": []
+      }
+    ],
+    "mainbar": [
+      {
+        "particleId": "contentarray-6583",
+        "particleTitle": "Facebook",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-2236 > block-3995 > mainbar > grid-6229 > block-7518 > contentarray-6583.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "76"
+        ]
+      }
+    ],
+    "footer": [
+      {
+        "particleId": "contentarray-3146",
+        "particleTitle": "Footer",
+        "particleType": "contentarray",
+        "filterPath": "container-footer > grid-4870 > block-1195 > footer > grid-6424 > block-4913 > contentarray-3146.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "36"
+        ]
+      }
+    ]
+  }
+}

@@ -228,6 +228,8 @@ export class FtpClient {
     try {
       const buffer = Buffer.from(content, "utf8");
       const readable = Readable.from(buffer);
+      const remoteDir = remotePath.substring(0, remotePath.lastIndexOf("/"));
+      if (remoteDir) await client.ensureDir(remoteDir);
       await client.uploadFrom(readable, remotePath);
 
       return {
@@ -315,6 +317,8 @@ export class FtpClient {
 
     try {
       const stats = fs.statSync(localPath);
+      const remoteDir = remotePath.substring(0, remotePath.lastIndexOf("/"));
+      if (remoteDir) await client.ensureDir(remoteDir);
       await client.uploadFrom(localPath, remotePath);
       return {
         success: true,

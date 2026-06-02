@@ -1,0 +1,215 @@
+{
+  "source": "",
+  "outline": "33",
+  "theme": "rt_studius",
+  "exportedAt": "2026-05-21T20:06:16.679Z",
+  "categoryMap": {
+    "8": {
+      "id": "8",
+      "title": "What's Happening"
+    },
+    "9": {
+      "id": "9",
+      "title": "Alert"
+    },
+    "10": {
+      "id": "10",
+      "title": "Rotator"
+    }
+  },
+  "articleMap": {
+    "36": {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/logo-text-church.svg\" alt=\"Footer Logo\" /></a></div>\n<div class=\"footer-content\">\n<div class=\"footer-inner-content\">\n<p><a href=\"our-parish/contact-us\">3642 North Ridge Road<br />Wichita, Kansas 67205</a><br />Parish Office: <a href=\"tel:3164250595\" target=\"_blank\" rel=\"noopener noreferrer\">(316) 425-0595</a><br />Fax: <a href=\"tel:3164250685\" target=\"_blank\" rel=\"noopener noreferrer\">(316) 425-0685</a></p>\n</div>\n<div class=\"footer-social-icons\">{loadmoduleid 193}</div>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "55": {
+      "id": "55",
+      "title": "Mass Schedule & Parish Information",
+      "alias": "mass-times",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"mt-wrapper\">\n<div class=\"mt-title\">\n<h3 class=\"g-title\">Mass Schedule &amp; Parish Information</h3>\n</div>\n<div class=\"mt-content\">\n<div class=\"mt-column\">\n<h2>Weekend Mass</h2>\n<p>Saturday: 5:30 PM (Vigil Mass)<br />Sunday: 7:30 AM, 9:00 AM, 11:00 AM</p>\n<h2>Weekday Mass</h2>\n<p>Monday: 7:30 AM, 5:30 PM<br />Tuesday: 7:30 AM<br />Wednesday: 7:30 AM<br />Thursday: 7:30 AM<br />Friday: 7:30 AM, 5:30 PM<br />Saturday: 7:30 AM</p>\n</div>\n<div class=\"mt-column\">\n<h2>Confession Times</h2>\n<p>Monday - Saturday: 7:00 AM to 7:25 AM<br />Monday - Friday: 5:00 PM to 5:25 PM<br />Saturday: 4:00 PM to 5:00 PM<br />Confessions are also heard during weekend Masses</p>\n<h2>Perpetual Adoration Times</h2>\n<p>The Blessed Sacrament is exposed 24 hours a day, 7 days a week. Those wishing to occasionally adore may enter through the church during normal operating hours. Those whishing to have a regularly scheduled hour can contact the parish office.</p>\n</div>\n<div class=\"mt-column\">\n<h2>Office Hours</h2>\n<p>Monday - Friday: 8am - 4pm<br />Phone: 316-425-0595<br />Fax: 316-425-0685</p>\n<h2>Prayer Requests</h2>\n<p>Email: sienaprayerchain@gmail.com</p>\n<h2>All Parishioners</h2>\n<p>Please keep us informed of changes in names, addresses, phone numbers, etc. to update our files.</p>\n</div>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "74": {
+      "id": "74",
+      "title": "Calendar",
+      "alias": "calendar",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"calendar-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Calendar</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<h3 class=\"g-title\">Calendar</h3>\n<script src=\"https://calendarfeed.solutiocloud.us/embed/StCats-Wichita-days.js\"></script>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"our-parish/calendar\">View Full Calendar</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "75": {
+      "id": "75",
+      "title": "Formed",
+      "alias": "formed",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"formed-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Formed</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed-widget.png\" alt=\"\" /></a></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Watch Now</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "79": {
+      "id": "79",
+      "title": "Hallow",
+      "alias": "daily-readings",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"hallow-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Hallow</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><a href=\"https://hallow.com/communities/5826/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/hallow-widget.png\" alt=\"Hallow App\" /></a></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://hallow.com/communities/5826/\" target=\"_blank\" rel=\"noopener noreferrer\">Join the Community</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "350": {
+      "id": "350",
+      "title": "YouTube Widget Feed",
+      "alias": "youtube-widget-feed",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<p> </p>\n<!-- Elfsight YouTube Gallery | StCats-Wichita -->\n<script src=\"https://elfsightcdn.com/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-2b64cc49-a60d-4b73-8ac8-aa9b8dd442b5\" data-elfsight-app-lazy=\"\"> </div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "407": {
+      "id": "407",
+      "title": "Vocations from our Parish",
+      "alias": "vocations-from-our-parish",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"vocation-wrapper\">\n<div class=\"vocation-row\">\n<div class=\"vocation-grid\">\n<h3 class=\"g-title\">Vocations from our Parish</h3>\n{loadmoduleid 191}</div>\n<div class=\"vocation-text\">\n<p>Heavenly Father, bless our diocese with the grace of many vocations to the priesthood and religious life. Through the intercession of the Blessed Mother, grant to those You have called the willingness and generosity of spirit to give themselves in devoting their lives and their talents to the service of our Lord and to His Church. Increase the faith of all within our diocese and particularly the faith of those You have called to continue the call. We ask this through Christ, Your Son. Amen</p>\n</div>\n<div class=\"vocation-grid\">\n<h3 class=\"g-title\">Pray for Our Seminarians</h3>\n{loadmoduleid 192}</div>\n</div>\n<div class=\"vocation-row\"><a class=\"button\" href=\"https://catholicdioceseofwichita.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Visit Catholic Diocese of Wichita Website</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    }
+  },
+  "sectionContent": {
+    "top": [
+      {
+        "particleId": "contentarray-4541",
+        "particleTitle": "Alert",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-9838 > block-3343 > top > grid-5538 > block-4357 > contentarray-4541.attributes.article.filter",
+        "categories": [
+          "9"
+        ],
+        "articles": []
+      }
+    ],
+    "slideshow": [
+      {
+        "particleId": "swiper-9733",
+        "particleTitle": "Swiper",
+        "particleType": "swiper",
+        "filterPath": "container-top > grid-6247 > block-5697 > slideshow > grid-4507 > block-9106 > swiper-9733.attributes.article.filter",
+        "categories": [
+          "10"
+        ],
+        "articles": []
+      }
+    ],
+    "mainbar": [
+      {
+        "particleId": "contentarray-6756",
+        "particleTitle": "News & Events",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-7582 > block-4031 > mainbar > grid-7499 > block-8071 > contentarray-6756.attributes.article.filter",
+        "categories": [
+          "8"
+        ],
+        "articles": []
+      }
+    ],
+    "expanded": [
+      {
+        "particleId": "contentarray-4054",
+        "particleTitle": "Mass Schedule & Parish Information",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-5166 > block-4564 > contentarray-4054.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "55"
+        ]
+      }
+    ],
+    "extension": [
+      {
+        "particleId": "contentarray-6583",
+        "particleTitle": "Calendar",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-2302 > block-5049 > contentarray-6583.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "74"
+        ]
+      },
+      {
+        "particleId": "contentarray-7651",
+        "particleTitle": "Formed",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-2302 > block-3220 > contentarray-7651.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "75"
+        ]
+      },
+      {
+        "particleId": "contentarray-3150",
+        "particleTitle": "Hallow",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-2302 > block-3112 > contentarray-3150.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "79"
+        ]
+      },
+      {
+        "particleId": "contentarray-7414",
+        "particleTitle": "YouTube Widget Feed",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-7789 > block-4896 > contentarray-7414.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "350"
+        ]
+      }
+    ],
+    "bottom": [
+      {
+        "particleId": "contentarray-7874",
+        "particleTitle": "Vocations from our Parish",
+        "particleType": "contentarray",
+        "filterPath": "bottom > grid-5767 > block-5367 > contentarray-7874.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "407"
+        ]
+      }
+    ],
+    "footer": [
+      {
+        "particleId": "contentarray-7255",
+        "particleTitle": "Footer",
+        "particleType": "contentarray",
+        "filterPath": "container-footer > grid-4301 > block-7675 > footer > grid-2357 > block-3962 > contentarray-7255.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "36"
+        ]
+      }
+    ]
+  }
+}

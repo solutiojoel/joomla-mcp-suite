@@ -212,6 +212,235 @@ app.post('/api/deploy', async (req, res) => {
   }
 });
 
+
+// ── API: deploy-with-content ──────────────────────────────────────────────────
+//
+// Like /api/deploy but first creates categories + articles on the target site,
+// remaps old IDs in the YAML to the new IDs, then imports the layout.
+//
+// Body: { yaml, siteUrl, outlineId, dryRun?, css?, cssBase?, variantContent }
+// variantContent: [
+//   { sectionId, sourceId,
+//     particles: { [particleId]: { articles:[...], categories:[...] } } }
+// ]
+
+app.post('/api/deploy-with-content', async (req, res) => {
+  const { yaml: yamlContent, siteUrl, outlineId, dryRun = false,
+          css: cssContent, cssBase, variantContent = [] } = req.body;
+
+  if (!yamlContent) return res.status(400).json({ error: 'yaml is required' });
+  if (!siteUrl)     return res.status(400).json({ error: 'siteUrl is required' });
+  if (!outlineId)   return res.status(400).json({ error: 'outlineId is required' });
+
+  let layoutArray;
+  try {
+    const doc = jsyaml.load(yamlContent);
+    if (!doc || !Array.isArray(doc.layout))
+      throw new Error('No top-level layout array in YAML');
+    layoutArray = doc.layout;
+  } catch (parseErr) {
+    return res.status(400).json({ error: 'YAML parse error: ' + parseErr.message });
+  }
+
+  const steps = [];
+  let gantry, joomla;
+
+  function deepClone(v) { return JSON.parse(JSON.stringify(v)); }
+
+  function walkParticles(nodes, visitor) {
+    if (!Array.isArray(nodes)) return;
+    for (const n of nodes) {
+      if (n.type === 'particle') visitor(n);
+      if (Array.isArray(n.children)) walkParticles(n.children, visitor);
+    }
+  }
+
+  function remapIds(idStr, idMap) {
+    if (!idStr) return idStr;
+    return idStr.split(',').map(id => idMap[id.trim()] || id.trim()).join(',');
+  }
+
+  try {
+    joomla = await mcpClient(JOOMLA_URL);
+
+    // ── Build particle content index ────────────────────────────────────────────
+    const particleIndex = {};
+    for (const vc of variantContent) {
+      for (const [particleId, pdata] of Object.entries(vc.particles || {})) {
+        if (!particleIndex[particleId]) particleIndex[particleId] = { articles: [], categories: [] };
+        const ex = particleIndex[particleId];
+        for (const art of (pdata.articles  || [])) { if (!ex.articles.find(a => a.id === art.id)) ex.articles.push(art); }
+        for (const cat of (pdata.categories || [])) { if (!ex.categories.find(c => c.id === cat.id)) ex.categories.push(cat); }
+      }
+    }
+
+    // ── Collect unique categories needed ────────────────────────────────────────
+    const catTitleToOldIds = {};
+    const catOldToNew = {};
+
+    for (const pdata of Object.values(particleIndex)) {
+      for (const cat of pdata.categories) {
+        (catTitleToOldIds[cat.title] ||= []).push(cat.id);
+      }
+      for (const art of pdata.articles) {
+        if (art.categoryTitle && art.categoryId)
+          (catTitleToOldIds[art.categoryTitle] ||= []).push(art.categoryId);
+      }
+    }
+    for (const title of Object.keys(catTitleToOldIds))
+      catTitleToOldIds[title] = [...new Set(catTitleToOldIds[title])];
+
+    const totalArts = Object.values(particleIndex).reduce((n, p) => n + p.articles.length, 0);
+    steps.push(`[CONTENT] ${Object.keys(catTitleToOldIds).length} categories, ${totalArts} articles to create`);
+
+    if (dryRun) {
+      for (const title of Object.keys(catTitleToOldIds))
+        steps.push(`[DRY RUN] Would create category: "${title}"`);
+      for (const [particleId, pdata] of Object.entries(particleIndex))
+        for (const art of pdata.articles)
+          steps.push(`[DRY RUN] Would create article: "${art.title}" (cat: "${art.categoryTitle}") → particle ${particleId}`);
+    } else {
+      // ── Create categories ────────────────────────────────────────────────────
+      for (const [title, oldIds] of Object.entries(catTitleToOldIds)) {
+        try {
+          const result = await callTool(joomla, 'joomla_create_category', {
+            site_url: siteUrl, title, extension: 'com_content',
+          });
+          const newId = String(result?.id || result?.data?.id || '');
+          if (!newId) throw new Error('No ID returned: ' + JSON.stringify(result));
+          for (const oldId of oldIds) catOldToNew[oldId] = newId;
+          steps.push(`[CATEGORY] Created "${title}" → ID ${newId}`);
+        } catch (err) {
+          steps.push(`[CATEGORY WARN] "${title}": ${err.message}`);
+        }
+      }
+
+      // ── Create articles per particle ─────────────────────────────────────────
+      const artOldToNew = {};
+      for (const [particleId, pdata] of Object.entries(particleIndex)) {
+        artOldToNew[particleId] = {};
+        for (const art of pdata.articles) {
+          const catId = catOldToNew[art.categoryId] || art.categoryId || '';
+          try {
+            const result = await callTool(joomla, 'joomla_create_article', {
+              site_url: siteUrl,
+              title:     art.title,
+              alias:     art.alias || undefined,
+              introtext: art.introtext || '',
+              fulltext:  art.fulltext  || '',
+              catid:     catId,
+              state:     Number(art.state)  || 1,
+              access:    Number(art.access) || 1,
+            });
+            const newId = String(result?.id || result?.data?.id || '');
+            if (!newId) throw new Error('No ID returned: ' + JSON.stringify(result));
+            artOldToNew[particleId][art.id] = newId;
+            steps.push(`[ARTICLE] "${art.title}" cat=${catId} → ID ${newId} [${particleId}]`);
+          } catch (err) {
+            steps.push(`[ARTICLE WARN] "${art.title}" [${particleId}]: ${err.message}`);
+          }
+        }
+      }
+
+      // ── Patch layout IDs ─────────────────────────────────────────────────────
+      const patchedLayout = deepClone(layoutArray);
+      let patchCount = 0;
+      walkParticles(patchedLayout, node => {
+        const pid    = node.id || '';
+        const filter = node.attributes?.article?.filter;
+        if (!filter) return;
+        if (filter.categories) {
+          const p = remapIds(String(filter.categories), catOldToNew);
+          if (p !== String(filter.categories)) { filter.categories = p; patchCount++; }
+        }
+        if (filter.articles && artOldToNew[pid]) {
+          const p = remapIds(String(filter.articles), artOldToNew[pid]);
+          if (p !== String(filter.articles)) { filter.articles = p; patchCount++; }
+        }
+      });
+      steps.push(`[PATCH] Remapped ${patchCount} filter(s)`);
+      layoutArray = patchedLayout;
+    }
+
+    if (joomla) { joomla.close().catch(() => {}); joomla = null; }
+
+    // ── Import patched layout ────────────────────────────────────────────────────
+    gantry = await mcpClient(GANTRY_URL);
+    const importResult = await callTool(gantry, 'gantry_layout_import', {
+      site: siteUrl, outline: String(outlineId), layout: layoutArray, dryRun: Boolean(dryRun),
+    });
+    steps.push('[LAYOUT] ' + (typeof importResult === 'string'
+      ? importResult
+      : (importResult?.message || (importResult?.imported ? 'Imported OK' : JSON.stringify(importResult)))));
+
+    // ── CSS (mirrors /api/deploy logic) ──────────────────────────────────────────
+    if (cssContent) {
+      const domain    = domainOf(siteUrl);
+      const cssFile   = 'site-builder-composite.css';
+      const marker    = '<!-- site-builder-css -->';
+      const endMarker = '<!-- /site-builder-css -->';
+      if (dryRun) {
+        steps.push('[CSS DRY RUN] Would upload and link ' + domain + '/images/pub/' + cssFile);
+      } else {
+        joomla = await mcpClient(JOOMLA_URL);
+        let pubPath = '/home/' + domain.split('.')[0] + '/public_html/images/pub';
+        let pubUrl  = 'https://' + domain + '/images/pub';
+        try {
+          const ftpConf = await callTool(joomla, 'ftp_site_config', { domain });
+          if (ftpConf && typeof ftpConf === 'object') {
+            if (ftpConf.upload_path) pubPath = ftpConf.upload_path;
+            else if (ftpConf.pub_path) pubPath = ftpConf.pub_path;
+            if (ftpConf.pub_url) pubUrl = ftpConf.pub_url.replace(/\/$/, '');
+          }
+        } catch (e) { steps.push('[CSS WARN] ' + e.message); }
+        const remotePath = pubPath.replace(/\/$/, '') + '/' + cssFile;
+        const cssUrl     = pubUrl + '/' + cssFile;
+        const uploadResult = await callTool(joomla, 'ftp_upload_file', {
+          domain, path: remotePath, content: cssContent,
+        });
+        const uploadMsg = typeof uploadResult === 'string'
+          ? uploadResult : (uploadResult?.message || JSON.stringify(uploadResult));
+        const uploadOk = uploadResult?.success !== false &&
+          !uploadMsg.toLowerCase().includes('refused') &&
+          !uploadMsg.toLowerCase().includes('failed') &&
+          !uploadMsg.toLowerCase().includes('error');
+        steps.push('[CSS UPLOAD] ' + remotePath + (uploadOk ? ' — OK' : ' — FAILED: ' + uploadMsg));
+        if (uploadOk) {
+          let headBottom = '';
+          try {
+            const pageList = await callTool(gantry, 'gantry_page_list', {
+              site: siteUrl, outline: String(outlineId),
+            });
+            headBottom = (typeof pageList === 'object' ? pageList : {})['page[head][head_bottom]'] || '';
+          } catch (e) { /* ignore */ }
+          const linkTag = '<link rel="stylesheet" href="' + cssUrl + '?v=' + Date.now() + '">';
+          const block   = marker + '\n' + linkTag + '\n' + endMarker;
+          const re      = new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
+                                     '[\\s\\S]*?' +
+                                     endMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+          const newHeadBottom = re.test(headBottom)
+            ? headBottom.replace(re, block)
+            : (headBottom ? headBottom.trimEnd() + '\n' + block : block);
+          await callTool(gantry, 'gantry_page_edit', {
+            site: siteUrl, outline: String(outlineId),
+            edits: { 'page[head][head_bottom]': newHeadBottom },
+          });
+          steps.push('[CSS LINKED] ' + cssUrl);
+        }
+      }
+    }
+
+    if (gantry) gantry.close().catch(() => {});
+    if (joomla)  joomla.close().catch(() => {});
+    res.json({ success: true, message: steps.join('\n') });
+
+  } catch (err) {
+    if (gantry) gantry.close().catch(() => {});
+    if (joomla)  joomla.close().catch(() => {});
+    res.status(500).json({ success: false, error: err.message, steps });
+  }
+});
+
 // ── API: rebuild ──────────────────────────────────────────────────────────────
 
 // -- API: presets --

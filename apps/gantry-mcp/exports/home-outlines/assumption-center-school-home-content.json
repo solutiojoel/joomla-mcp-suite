@@ -1,0 +1,148 @@
+{
+  "source": "",
+  "outline": "72",
+  "theme": "rt_studius",
+  "exportedAt": "2026-05-21T20:10:30.034Z",
+  "categoryMap": {
+    "8": {
+      "id": "8",
+      "title": "Recent Parish News"
+    },
+    "9": {
+      "id": "9",
+      "title": "Alert"
+    },
+    "10": {
+      "id": "10",
+      "title": "Rotator"
+    }
+  },
+  "articleMap": {
+    "36": {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-logo-links\">\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/logo.png\" alt=\"Footer Logo\" /></a></div>\n<div class=\"footer-social-icons\">{loadmoduleid 155}</div>\n</div>\n<div class=\"footer-content\">\n<p><a href=\"get-connected/193-contact-us-directions\">20 Chestnut Street Centereach, NY 11720</a><br />Phone: <a href=\"tel:6315858760\" target=\"_blank\" rel=\"noopener noreferrer\">631-585-8760</a><br /><a href=\"mailto:rectory@abvmcentereach.com\" target=\"_blank\" rel=\"noopener noreferrer\">rectory@abvmcentereach.com</a></p>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "75": {
+      "id": "75",
+      "title": "Formed",
+      "alias": "formed",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"formed-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Formed</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed.png\" alt=\"\" /></a></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Learn More</a></div>\n</div>",
+      "fulltext": "",
+      "state": "-2",
+      "access": "1"
+    },
+    "76": {
+      "id": "76",
+      "title": "Facebook",
+      "alias": "facebook",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"#\">Read More</a></div>\n</div>",
+      "fulltext": "",
+      "state": "-2",
+      "access": "1"
+    },
+    "79": {
+      "id": "79",
+      "title": "Daily Readings",
+      "alias": "daily-readings",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"daily-readings-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Daily Readings</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<div class=\"dr-feed-image\"><img src=\"images/template/dr-feed.jpg\" alt=\"\" /></div>\n<div class=\"dr-feed-box\">{loadmoduleid 141}</div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Read More</a></div>\n</div>",
+      "fulltext": "",
+      "state": "-2",
+      "access": "1"
+    }
+  },
+  "sectionContent": {
+    "top": [
+      {
+        "particleId": "contentarray-4541",
+        "particleTitle": "Alert",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-3310 > block-8067 > top > grid-2207 > block-8852 > contentarray-4541.attributes.article.filter",
+        "categories": [
+          "9"
+        ],
+        "articles": []
+      }
+    ],
+    "slideshow": [
+      {
+        "particleId": "swiper-9733",
+        "particleTitle": "Swiper",
+        "particleType": "swiper",
+        "filterPath": "container-top > grid-3379 > block-7708 > slideshow > grid-7263 > block-3551 > swiper-9733.attributes.article.filter",
+        "categories": [
+          "10"
+        ],
+        "articles": []
+      }
+    ],
+    "sidebar": [
+      {
+        "particleId": "contentarray-6756",
+        "particleTitle": "Events & News",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-7518 > block-1844 > sidebar > grid-1047 > block-4511 > contentarray-6756.attributes.article.filter",
+        "categories": [
+          "8"
+        ],
+        "articles": []
+      }
+    ],
+    "expanded": [
+      {
+        "particleId": "contentarray-6583",
+        "particleTitle": "Facebook",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-4759 > block-9793 > contentarray-6583.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "76"
+        ]
+      },
+      {
+        "particleId": "contentarray-3150",
+        "particleTitle": "Daily Readings",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-4759 > block-7324 > contentarray-3150.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "79"
+        ]
+      },
+      {
+        "particleId": "contentarray-7651",
+        "particleTitle": "Formed",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-4759 > block-7507 > contentarray-7651.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "75"
+        ]
+      }
+    ],
+    "footer": [
+      {
+        "particleId": "contentarray-9259",
+        "particleTitle": "Footer",
+        "particleType": "contentarray",
+        "filterPath": "container-footer > grid-2395 > block-7807 > footer > grid-6389 > block-9792 > contentarray-9259.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "36"
+        ]
+      }
+    ]
+  }
+}

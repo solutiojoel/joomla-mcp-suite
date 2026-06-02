@@ -1,0 +1,209 @@
+{
+  "source": "",
+  "outline": "17",
+  "theme": "rt_studius",
+  "exportedAt": "2026-05-21T19:59:45.422Z",
+  "categoryMap": {
+    "114": {
+      "id": "114",
+      "title": "Rotator - 2026"
+    },
+    "115": {
+      "id": "115",
+      "title": "News & Events (2026)"
+    }
+  },
+  "articleMap": {
+    "1541": {
+      "id": "1541",
+      "title": "Footer",
+      "alias": "footer",
+      "categoryId": "118",
+      "categoryTitle": "- Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/logo/logo.svg\" alt=\"\" /></a></div>\n<div class=\"footer-content\">\n<p><a href=\"contact-us/contact-directions\">3100 Hempstead Turnpike, Levittown, NY 11756</a><br />Ph: <a href=\"tel:516-731-4220\">516-731-4220</a> | Fax: 516-731-4355 | <a href=\"mailto:parish@stbernardchurch.org\" target=\"_blank\" rel=\"noopener noreferrer\">parish@stbernardchurch.org</a></p>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "1542": {
+      "id": "1542",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "categoryId": "118",
+      "categoryTitle": "- Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"mass-times-box\">\n<div class=\"mass-times-content\">\n<h1>Weekend Masses</h1>\n<p><strong>Saturday</strong>: 5:00pm<br /><strong>Sunday</strong>: 8:00am, 10:00am, 12:00pm<br /><strong>Mass in Spanish</strong> is celebrated on the second and fourth Saturdays of the month at 7:30pm<br /><strong>Mass in Urdu (Pakistan)</strong> is celebrated on the second Sunday of each month at 2:00pm</p>\n<h1>Daily Masses</h1>\n<p><strong>Monday - Saturday</strong>: 8:00am</p>\n<h1>Confessions</h1>\n<p><strong>Saturday</strong>: 3:00-4:00pm in Church Prayer Room</p>\n</div>\n<div class=\"mass-times-buttons\"><a class=\"button\" href=\"livestream\">Watch Mass Live</a><a class=\"button\" href=\"holy-days-special-masses\">Holy Days &amp; Special Masses </a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "1544": {
+      "id": "1544",
+      "title": "Our Mission",
+      "alias": "our-mission",
+      "categoryId": "118",
+      "categoryTitle": "- Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"mission-wrapper\">\n<div class=\"mission-title\">\n<div class=\"mission-inner-title\">\n<h1>Our Mission</h1>\n</div>\n</div>\n<div class=\"mission-content\">\n<p>With faith, hope, and love, the people of St. Bernard's Parish Family are on a mission to bring the gospel of Jesus to the Levittown Community and beyond.</p>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "1545": {
+      "id": "1545",
+      "title": "Facebook",
+      "alias": "facebook",
+      "categoryId": "118",
+      "categoryTitle": "- Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-3f3dc49b-6a5c-412d-b91b-e2a70bbe00aa\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/stbernardslevittown/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "1546": {
+      "id": "1546",
+      "title": "Bulletins",
+      "alias": "bulletins",
+      "categoryId": "118",
+      "categoryTitle": "- Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"bulletin-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Bulletins</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">{loadmoduleid 129}</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news-events/bulletin\">View All Bulletins</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "1547": {
+      "id": "1547",
+      "title": "Helpful Links",
+      "alias": "helpful-links",
+      "categoryId": "118",
+      "categoryTitle": "- Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"links-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Helpful Links</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">{loadmoduleid 130}</div>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "1557": {
+      "id": "1557",
+      "title": "Header Contact Info",
+      "alias": "header-contact-info",
+      "categoryId": "118",
+      "categoryTitle": "- Homepage Articles - Edit Only",
+      "introtext": "\t<p><a href=\"contact-us-cl/contact-directions\">3100 Hempstead Turnpike,<br />Levittown, NY 11756</a><br /><a href=\"tel:5167314220\" target=\"_blank\" rel=\"noopener noreferrer\">516-731-4220</a><br /><a href=\"mailto:parish@stbernardchurch.org\" target=\"_blank\" rel=\"noopener noreferrer\">parish@stbernardchurch.org</a></p>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    }
+  },
+  "sectionContent": {
+    "top": [
+      {
+        "particleId": "contentarray-4541",
+        "particleTitle": "Alert",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-6187 > block-2703 > top > grid-9063 > block-3886 > contentarray-4541.attributes.article.filter",
+        "categories": [],
+        "articles": []
+      }
+    ],
+    "navigation": [
+      {
+        "particleId": "contentarray-4661",
+        "particleTitle": "Header Contact Info",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-4635 > block-9896 > navigation > grid-9342 > block-5512 > contentarray-4661.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "1557"
+        ]
+      }
+    ],
+    "slideshow": [
+      {
+        "particleId": "contentarray-7235",
+        "particleTitle": "Mass Times",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-2806 > block-2788 > slideshow > grid-4953 > block-9307 > contentarray-7235.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "1542"
+        ]
+      },
+      {
+        "particleId": "swiper-9733",
+        "particleTitle": "Swiper",
+        "particleType": "swiper",
+        "filterPath": "container-top > grid-2806 > block-2788 > slideshow > grid-4953 > block-4809 > swiper-9733.attributes.article.filter",
+        "categories": [
+          "114"
+        ],
+        "articles": []
+      }
+    ],
+    "header": [
+      {
+        "particleId": "contentarray-1379",
+        "particleTitle": "Our Mission",
+        "particleType": "contentarray",
+        "filterPath": "header > grid-4504 > block-1769 > contentarray-1379.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "1544"
+        ]
+      }
+    ],
+    "sidebar": [
+      {
+        "particleId": "contentarray-6756",
+        "particleTitle": "Parish News & Events",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-6169 > block-6832 > sidebar > grid-5551 > block-2126 > contentarray-6756.attributes.article.filter",
+        "categories": [
+          "115"
+        ],
+        "articles": []
+      }
+    ],
+    "expanded": [
+      {
+        "particleId": "contentarray-6583",
+        "particleTitle": "Facebook",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-3695 > block-5280 > contentarray-6583.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "1545"
+        ]
+      },
+      {
+        "particleId": "contentarray-3150",
+        "particleTitle": "Bulletins",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-3695 > block-4479 > contentarray-3150.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "1546"
+        ]
+      },
+      {
+        "particleId": "contentarray-7651",
+        "particleTitle": "Helpful Links",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-3695 > block-8043 > contentarray-7651.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "1547"
+        ]
+      }
+    ],
+    "footer": [
+      {
+        "particleId": "contentarray-8847",
+        "particleTitle": "Footer",
+        "particleType": "contentarray",
+        "filterPath": "container-footer > grid-1508 > block-2566 > footer > grid-7873 > block-6929 > contentarray-8847.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "1541"
+        ]
+      }
+    ]
+  }
+}

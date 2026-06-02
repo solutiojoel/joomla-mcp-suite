@@ -1,0 +1,159 @@
+{
+  "source": "",
+  "outline": "33",
+  "theme": "rt_studius",
+  "exportedAt": "2026-05-21T20:04:01.565Z",
+  "categoryMap": {
+    "9": {
+      "id": "9",
+      "title": "Alert"
+    }
+  },
+  "articleMap": {
+    "36": {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-row footer-content-row\">\n<div class=\"footer-content\">\n<div class=\"footer-content-column\">\n<div class=\"footer-content-inner-column\">\n<h2><a href=\"home\">Parish Office Info</a></h2>\n<p><a href=\"about/contact-us\">St. Gertrude RC Church</a><br /><a href=\"about/contact-us\">28 School Street,</a><br /><a href=\"about/contact-us\">Bayville, NY 11709</a><br />Telephone: <a href=\"tel:5166281113\">(516) 628-1113</a><br />Fax: (516) 628-9032</p>\n<h2>Office Hours</h2>\n<p>Monday to Thursday: 9 AM - 4 PM<br />(closed 12 - 12:30 PM for lunch)</p>\n</div>\n<div class=\"footer-content-inner-column\">\n<h2>Religious Education</h2>\n<p>Phone: <a href=\"tel:516622432\">(516) 628-2432</a></p>\n<h2>Preschool</h2>\n<p>Phone: <a href=\"tel:5166283710\">(516) 628-3710</a></p>\n</div>\n</div>\n<div class=\"footer-links-column\">\n<h2>Links</h2>\n<div class=\"inner-links\"><a href=\"about/parish-registration\">Parish Registration</a><a href=\"items/182-how-do-i-plan-a-funeral\">Funeral Information</a><a href=\"https://www.drvc.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocese Website</a><a href=\"https://giving.myparishsoft.io//app/giving/FD-83\" target=\"_blank\" rel=\"noopener noreferrer\">Online Giving</a><a href=\"news/bulletin\">Bulletin</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.franciscanmedia.org/saint-of-the-day/\" target=\"_blank\" rel=\"noopener noreferrer\">Saint of the Day</a></div>\n</div>\n</div>\n<div class=\"footer-logo\"><a href=\"home\"><img src=\"images/template/emblem.svg\" alt=\"Footer Logo Emblem\" /></a></div>\n</div>\n<div class=\"footer-row footer-text-row\">\n<p>Contact of visit the rectory for assistance with sacraments, confession appointments,<br />religious education and formation, mass cards, etc. We look forward to connecting<br /> with you!</p>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "55": {
+      "id": "55",
+      "title": "Mass Schedule",
+      "alias": "mass-times",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<h1 class=\"mt-big-title\">Mass Schedule</h1>\n<h2>Sunday Mass</h2>\n<p>Saturday: 5:00 PM<br />Sunday: 7:30 AM, 9:30 AM, &amp; 11:30 AM</p>\n<h2>Daily Mass</h2>\n<p>Monday to Saturday:<br />8:30 AM</p>\n<h2>Confession</h2>\n<p>4:00 PM to 4:45 PM on Saturday &amp; by appointment at <a href=\"tel:5166281113\" target=\"_blank\" rel=\"noopener noreferrer\">516-628-1113</a> </p>\n<h2> </h2>\n<p> </p>\n<p> </p>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "74": {
+      "id": "74",
+      "title": "Bulletins",
+      "alias": "calendar",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"calendar-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Bulletins</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box bulletin-content\">{loadmoduleid 87}</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news/bulletin\">View Bulletin Archive</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "76": {
+      "id": "76",
+      "title": "Facebook",
+      "alias": "facebook",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://elfsightcdn.com/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-2c649894-42c4-4d36-8efe-cd33c38fc1fd\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/stgertsbayville\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "77": {
+      "id": "77",
+      "title": "Instagram",
+      "alias": "instagram",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"instagram-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Instagram</h3>\n</div>\n<div><!-- Elfsight Instagram Feed | StGertrude-Bay -->\n<script src=\"https://elfsightcdn.com/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-f7e2c5da-6c77-4d90-8e40-52c8bcd4368c\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n<div class=\"widget-text\">\n<p>\"Pour down on my soul those graces which flow from Your love. Let my heart be united with Yours. Let my will be conformed to Yours in all things. May Your Will be the rule of all my desires and actions. Amen.\"</p>\n<h6>- St. Gertrude</h6>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    }
+  },
+  "sectionContent": {
+    "top": [
+      {
+        "particleId": "contentarray-4541",
+        "particleTitle": "Alert",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-3807 > block-5536 > top > grid-4100 > block-1648 > contentarray-4541.attributes.article.filter",
+        "categories": [
+          "9"
+        ],
+        "articles": []
+      }
+    ],
+    "slideshow": [
+      {
+        "particleId": "swiper-9733",
+        "particleTitle": "Swiper",
+        "particleType": "swiper",
+        "filterPath": "container-top > grid-7327 > block-7133 > slideshow > grid-6447 > block-4524 > swiper-9733.attributes.article.filter",
+        "categories": [],
+        "articles": []
+      },
+      {
+        "particleId": "contentarray-7235",
+        "particleTitle": "Mass Times",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-7327 > block-7133 > slideshow > grid-6447 > block-4042 > contentarray-7235.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "55"
+        ]
+      }
+    ],
+    "sidebar": [
+      {
+        "particleId": "contentarray-6756",
+        "particleTitle": "News & Events",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-9327 > block-5162 > sidebar > grid-9279 > block-4454 > contentarray-6756.attributes.article.filter",
+        "categories": [],
+        "articles": []
+      }
+    ],
+    "mainbar": [
+      {
+        "particleId": "contentarray-2083",
+        "particleTitle": "Facebook",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-9327 > block-9688 > mainbar > grid-1218 > block-6548 > contentarray-2083.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "76"
+        ]
+      }
+    ],
+    "extension": [
+      {
+        "particleId": "contentarray-6948",
+        "particleTitle": "Calendar",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-8640 > block-7083 > contentarray-6948.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "74"
+        ]
+      },
+      {
+        "particleId": "contentarray-3618",
+        "particleTitle": "Instagram",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-8640 > block-3477 > contentarray-3618.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "77"
+        ]
+      }
+    ],
+    "footer": [
+      {
+        "particleId": "contentarray-8638",
+        "particleTitle": "Footer",
+        "particleType": "contentarray",
+        "filterPath": "container-footer > grid-4160 > block-4022 > footer > grid-8154 > block-1351 > contentarray-8638.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "36"
+        ]
+      }
+    ]
+  }
+}

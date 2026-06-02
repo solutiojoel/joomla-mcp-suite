@@ -1,0 +1,158 @@
+{
+  "source": "",
+  "outline": "33",
+  "theme": "rt_studius",
+  "exportedAt": "2026-05-21T20:11:32.592Z",
+  "categoryMap": {
+    "9": {
+      "id": "9",
+      "title": "Alert"
+    },
+    "10": {
+      "id": "10",
+      "title": "Rotator"
+    },
+    "51": {
+      "id": "51",
+      "title": "Family of the Month"
+    }
+  },
+  "articleMap": {
+    "55": {
+      "id": "55",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles - Edit Only",
+      "introtext": "\t<h1 class=\"mt-big-title\">Mass Times</h1>\n<h1>Weekend Mass</h1>\n<p><strong>Saturday:</strong> 5:00pm<br /><strong>1st Saturday:</strong> 11:00am<br /><strong>Sunday:</strong> 8:30am, 10:30am (<em>Español</em>), 12:30pm</p>\n<h1>Confession Times</h1>\n<p><strong>Wednesday:</strong> 9:30-11:00am<br /><strong>Saturday:</strong> 4:00-4:50pm<br /><strong>Or by appointment:</strong> 210-922-1685</p>\n<p> </p>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "76": {
+      "id": "76",
+      "title": "Facebook",
+      "alias": "facebook",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><!-- Elfsight Facebook Feed | StBon-Antonio -->\n<script src=\"https://elfsightcdn.com/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-d4235946-9bf9-4644-a768-f9b7daa78636\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/people/St-Bonaventure-Catholic-Church-San-Antonio-Texas/100064657300759/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "178": {
+      "id": "178",
+      "title": "Footer",
+      "alias": "footer-2",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-content\">\n<h1><a href=\"home\">St. Bonaventure<br />Catholic Church</a></h1>\n<p><strong><a href=\"about-us/contact-us\">1918 Palo Alto Rd.<br />San Antonio, TX 78211</a></strong><br />Phone: <a href=\"tel:2109221685\" target=\"_blank\" rel=\"noopener noreferrer\">210-922-1685</a></p>\n</div>\n<div class=\"footer-links\">\n<div class=\"footer-important-links\"><a href=\"about-us/join-our-parish\">Parish Registration</a><a href=\"news/donate\">Online Giving</a><a href=\"https://archsa.org/news/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan News</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.ewtn.com/\" target=\"_blank\" rel=\"noopener noreferrer\">EWTN</a></div>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "179": {
+      "id": "179",
+      "title": "Bulletins",
+      "alias": "bulletins",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"bulletin-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Bulletins</h3>\n</div>\n<div class=\"widget-feed bulletin-feed\">\n<div class=\"widget-feed-inner-box\">{loadmoduleid 87}</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news/bulletin\">View All Bulletins</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    }
+  },
+  "sectionContent": {
+    "top": [
+      {
+        "particleId": "contentarray-4541",
+        "particleTitle": "Alert",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-9930 > block-2470 > top > grid-8274 > block-6273 > contentarray-4541.attributes.article.filter",
+        "categories": [
+          "9"
+        ],
+        "articles": []
+      }
+    ],
+    "slideshow": [
+      {
+        "particleId": "swiper-9733",
+        "particleTitle": "Swiper",
+        "particleType": "swiper",
+        "filterPath": "container-top > grid-9466 > block-4730 > slideshow > grid-7458 > block-3100 > swiper-9733.attributes.article.filter",
+        "categories": [
+          "10"
+        ],
+        "articles": []
+      },
+      {
+        "particleId": "contentarray-7235",
+        "particleTitle": "Mass Times",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-9466 > block-4730 > slideshow > grid-7458 > block-6094 > contentarray-7235.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "55"
+        ]
+      }
+    ],
+    "mainbar": [
+      {
+        "particleId": "contentarray-6244",
+        "particleTitle": "Bulletins",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-6898 > block-1882 > mainbar > grid-5057 > block-1040 > contentarray-6244.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "179"
+        ]
+      },
+      {
+        "particleId": "contentarray-6583",
+        "particleTitle": "Facebook",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-6898 > block-1882 > mainbar > grid-5057 > block-7056 > contentarray-6583.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "76"
+        ]
+      }
+    ],
+    "expanded": [
+      {
+        "particleId": "contentarray-3357",
+        "particleTitle": "News & Events",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-1392 > block-9600 > contentarray-3357.attributes.article.filter",
+        "categories": [],
+        "articles": []
+      }
+    ],
+    "extension": [
+      {
+        "particleId": "contentarray-3765",
+        "particleTitle": "Family of the Month",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-6347 > block-4817 > contentarray-3765.attributes.article.filter",
+        "categories": [
+          "51"
+        ],
+        "articles": []
+      }
+    ],
+    "footer": [
+      {
+        "particleId": "contentarray-2348",
+        "particleTitle": "Footer",
+        "particleType": "contentarray",
+        "filterPath": "container-footer > grid-9616 > block-5847 > footer > grid-8133 > block-9882 > contentarray-2348.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "178"
+        ]
+      }
+    ]
+  }
+}

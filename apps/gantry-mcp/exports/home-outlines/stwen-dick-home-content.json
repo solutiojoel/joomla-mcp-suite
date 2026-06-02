@@ -1,0 +1,213 @@
+{
+  "source": "",
+  "outline": "14",
+  "theme": "rt_studius",
+  "exportedAt": "2026-05-21T20:12:29.512Z",
+  "categoryMap": {
+    "2": {
+      "id": "2",
+      "title": "Alert"
+    },
+    "55": {
+      "id": "55",
+      "title": "Rotator"
+    },
+    "61": {
+      "id": "61",
+      "title": "Upcoming Events"
+    }
+  },
+  "articleMap": {
+    "218227": {
+      "id": "218227",
+      "title": "Footer",
+      "alias": "footer",
+      "categoryId": "57",
+      "categoryTitle": "Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-content-row\">\n<div class=\"footer-content-logo\"><a href=\"home\"><img src=\"images/template/logo-emblem.svg\" alt=\"\" /></a></div>\n<div class=\"footer-content\">\n<h1><a href=\"home\">St. Wenceslaus<br />Catholic Church</a></h1>\n<p>Physical Address: <a href=\"about/contact-directions\">525 3rd Street East + Dickinson, ND 58601</a><br /><a href=\"tel:7012253972\" target=\"_blank\" rel=\"noopener noreferrer\">(701) 225-3972</a> | <a href=\"mailto:stwenc@ndsupernet.com\" target=\"_blank\" rel=\"noopener noreferrer\">stwenc@ndsupernet.com</a> | <a href=\"mailto:rshea@bismarkdiocese.com\" target=\"_blank\" rel=\"noopener noreferrer\">rshea@bismarckdiocese.com</a><br />Mailing Address: <a href=\"about/contact-directions\">505 3rd Street East + Dickinson, ND 58601</a></p>\n</div>\n<div class=\"footer-important-links\">\n<div class=\"footer-links\"><a href=\"about/parish-registration\">Parish Registration</a><a href=\"https://www.catholicscomehome.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Catholics Come Home</a><a href=\"https://trinitycatholicschools.com/\" target=\"_blank\" rel=\"noopener noreferrer\">Trinity Catholic Schools</a><a href=\"https://bismarckdiocese.com/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocese of Bismarck</a><a href=\"https://realpresenceradio.com/\" target=\"_blank\" rel=\"noopener noreferrer\">RPR Network</a></div>\n</div>\n</div>\n<div class=\"footer-lower-row\">\n<h6>Diocese of Bismarck Safe Environment Code of Conduct</h6>\n<p>The Diocese of Bismarck is firmly committed to the safety of your youth. Every parish is required to stay in compliance with the Diocesan Safe Environment regulations, including background checks for employees and volunteers, training and educational opportunities, and an annual audit.</p>\n<p><a href=\"?option=com_fileman&amp;view=file&amp;routed=1&amp;name=CodeOfConduct%20(1).pdf&amp;folder=documents&amp;container=fileman-files\" target=\"_blank\" rel=\"noopener noreferrer\">Click here to read the Code of Conduct</a></p>\n<p>For complete information, visit the <a href=\"https://bismarckdiocese.com/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocese of Bismarck.</a><br />For activities and other information, <a href=\"https://bismarckdiocese.com/training-children-adults\" target=\"_blank\" rel=\"noopener noreferrer\">CLICK HERE</a></p>\n</div>\n</div>\n<!----comment node----><!--a=1-->",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "218228": {
+      "id": "218228",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "categoryId": "57",
+      "categoryTitle": "Homepage Articles - Edit Only",
+      "introtext": "\t<h1 class=\"mt-big-title\">Mass Times</h1>\n<h1>Weekend Masses</h1>\n<p>Saturday 4:00 pm<br />Sunday 7:30 am &amp; 9:30 am</p>\n<h2>Daily Masses</h2>\n<p>Monday - 8:15 am Communion Service<br />Tuesday (Summer) - 5:15 pm Mass<br />Tuesday (School Term) - 8:15 am Mass<br />Wednesday - Friday 8:15 am Mass</p>\n<h3>Confessions</h3>\n<p>Saturdays - 2:30 - 3:45 pm<br />Tuesday - Friday: 30 Minutes prior to Mass<br />or by appointment</p>\n<h4>Adoration</h4>\n<p>Tuesdays 8:30 am - 9:00 pm</p>\n<!--a=1-->",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "218230": {
+      "id": "218230",
+      "title": "Calendar",
+      "alias": "calendar",
+      "categoryId": "57",
+      "categoryTitle": "Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"calendar-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Calendar</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><iframe width=\"800\" height=\"400\" style=\"border-width: 0;\" src=\"https://calendar.google.com/calendar/embed?height=400&amp;wkst=1&amp;ctz=America%2FDenver&amp;showTitle=0&amp;showNav=0&amp;showPrint=0&amp;showDate=0&amp;showTabs=0&amp;showCalendars=0&amp;showTz=0&amp;mode=AGENDA&amp;src=MWliOGlvbjczbzRjdnI5b25wdHFzODdlcjhAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ&amp;src=c29sdXRpb3NvZnR3YXJlLm5ldF84bXNtOTI4OHVpOGVwdTZ1Z2RuMTRmMjd0c0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t&amp;src=ZW4udXNhLm9mZmljaWFsI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&amp;color=%23d50000&amp;color=%23616161&amp;color=%23f09300\" frameborder=\"0\" scrolling=\"no\"></iframe></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news/calendar\">View Full Calendar</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "218231": {
+      "id": "218231",
+      "title": "Formed",
+      "alias": "formed",
+      "categoryId": "57",
+      "categoryTitle": "Homepage Articles - Edit Only",
+      "introtext": "\t<p><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed.png\" alt=\"\" /></a></p>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "218232": {
+      "id": "218232",
+      "title": "Facebook",
+      "alias": "facebook",
+      "categoryId": "57",
+      "categoryTitle": "Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-4a494ad5-1f4b-4a08-a317-aa525a2813fb\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/stwencnd\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "222751": {
+      "id": "222751",
+      "title": "Latest Homilies",
+      "alias": "latest-homilies",
+      "categoryId": "57",
+      "categoryTitle": "Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"homily-widget-wrapper widget-wrapper\" style=\"height: 900px;\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Latest Homilies</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">{loadmoduleid 111}</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news/homilies\">View Archive</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "222752": {
+      "id": "222752",
+      "title": "Welcome",
+      "alias": "welcome",
+      "categoryId": "57",
+      "categoryTitle": "Homepage Articles - Edit Only",
+      "introtext": "\t<div class=\"welcome-wrapper\">\n<div class=\"welcome-title\">\n<h3 class=\"g-title\">Welcome</h3>\n</div>\n<div class=\"welcome-content\">\n<p>Welcome to St. Wenceslaus Roman Catholic Church in Dickinson, North Dakota. Whether you're visiting or looking for a parish home, we invite you to worship with us and live the fullness of the Catholic faith.</p>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    }
+  },
+  "sectionContent": {
+    "top": [
+      {
+        "particleId": "contentarray-4541",
+        "particleTitle": "Alert",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-6966 > block-8392 > top > grid-4831 > block-3717 > contentarray-4541.attributes.article.filter",
+        "categories": [
+          "2"
+        ],
+        "articles": []
+      }
+    ],
+    "slideshow": [
+      {
+        "particleId": "swiper-9733",
+        "particleTitle": "Swiper",
+        "particleType": "swiper",
+        "filterPath": "container-top > grid-4340 > block-8096 > slideshow > grid-9121 > block-4720 > swiper-9733.attributes.article.filter",
+        "categories": [
+          "55"
+        ],
+        "articles": []
+      },
+      {
+        "particleId": "contentarray-2712",
+        "particleTitle": "Swiper Mass Times Overlay",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-4340 > block-8096 > slideshow > grid-6026 > block-6981 > contentarray-2712.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "218228"
+        ]
+      }
+    ],
+    "mainbar": [
+      {
+        "particleId": "contentarray-6756",
+        "particleTitle": "Upcoming Events",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-7105 > block-5850 > mainbar > grid-5327 > block-8529 > contentarray-6756.attributes.article.filter",
+        "categories": [
+          "61"
+        ],
+        "articles": []
+      }
+    ],
+    "expanded": [
+      {
+        "particleId": "contentarray-6583",
+        "particleTitle": "Facebook",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-2852 > block-5695 > contentarray-6583.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "218232"
+        ]
+      },
+      {
+        "particleId": "contentarray-3150",
+        "particleTitle": "Calendar",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-2852 > block-9066 > contentarray-3150.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "218230"
+        ]
+      },
+      {
+        "particleId": "contentarray-7651",
+        "particleTitle": "Latest Homilies",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-2852 > block-8613 > contentarray-7651.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "222751"
+        ]
+      },
+      {
+        "particleId": "contentarray-9587",
+        "particleTitle": "Formed Graphic",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-4947 > block-5348 > contentarray-9587.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "218231"
+        ]
+      }
+    ],
+    "extension": [
+      {
+        "particleId": "contentarray-2055",
+        "particleTitle": "Welcome",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-6342 > block-9512 > contentarray-2055.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "222752"
+        ]
+      }
+    ],
+    "footer": [
+      {
+        "particleId": "contentarray-7183",
+        "particleTitle": "Footer",
+        "particleType": "contentarray",
+        "filterPath": "container-footer > grid-8753 > block-6154 > footer > grid-7897 > block-9285 > contentarray-7183.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "218227"
+        ]
+      }
+    ]
+  }
+}

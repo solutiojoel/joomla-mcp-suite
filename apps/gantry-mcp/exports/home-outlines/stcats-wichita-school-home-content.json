@@ -1,0 +1,113 @@
+{
+  "source": "",
+  "outline": "72",
+  "theme": "rt_studius",
+  "exportedAt": "2026-05-21T20:06:26.646Z",
+  "categoryMap": {
+    "55": {
+      "id": "55",
+      "title": "School Alert"
+    },
+    "56": {
+      "id": "56",
+      "title": "School Rotator"
+    }
+  },
+  "articleMap": {
+    "408": {
+      "id": "408",
+      "title": "Calendar",
+      "alias": "calendar",
+      "categoryId": "51",
+      "categoryTitle": "School Homepage Articles",
+      "introtext": "\t<div class=\"calendar-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Calendar</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<h3 class=\"g-title\">Calendar</h3>\n<script src=\"https://calendarfeed.solutiocloud.us/embed/StCats-Wichita School.js\"></script>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"parents-students/calendars\">View Full Calendar</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "409": {
+      "id": "409",
+      "title": "Footer",
+      "alias": "footer",
+      "categoryId": "51",
+      "categoryTitle": "School Homepage Articles",
+      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-logo\"><a href=\"school\"><img src=\"images/template/logo-text-school.svg\" alt=\"Footer Logo\" /></a></div>\n<div class=\"footer-content\">\n<div class=\"footer-inner-content\">\n<p><a href=\"our-parish/contact-us\">3660 N. Ridge Rd.<br />Wichita, Kansas 67205</a><br />Phone: <a href=\"tel:3167192917\" target=\"_blank\" rel=\"noopener noreferrer\">(316) 719-2917</a><br />Fax: <a href=\"tel:3167192930\" target=\"_blank\" rel=\"noopener noreferrer\">(316) 719-2930</a></p>\n</div>\n<div class=\"footer-social-icons\">{loadmoduleid 194}</div>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "410": {
+      "id": "410",
+      "title": "Facebook",
+      "alias": "facebook",
+      "categoryId": "51",
+      "categoryTitle": "School Homepage Articles",
+      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"#\">Follow Us on Facebook!</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    }
+  },
+  "sectionContent": {
+    "top": [
+      {
+        "particleId": "contentarray-4541",
+        "particleTitle": "Alert",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-7274 > block-9194 > top > grid-7792 > block-9392 > contentarray-4541.attributes.article.filter",
+        "categories": [
+          "55"
+        ],
+        "articles": []
+      }
+    ],
+    "slideshow": [
+      {
+        "particleId": "swiper-9733",
+        "particleTitle": "Swiper",
+        "particleType": "swiper",
+        "filterPath": "container-top > grid-9927 > block-8988 > slideshow > grid-9873 > block-2602 > swiper-9733.attributes.article.filter",
+        "categories": [
+          "56"
+        ],
+        "articles": []
+      }
+    ],
+    "sidebar": [
+      {
+        "particleId": "contentarray-6583",
+        "particleTitle": "Facebook",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-5066 > block-4640 > sidebar > grid-3570 > block-7488 > contentarray-6583.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "410"
+        ]
+      }
+    ],
+    "mainbar": [
+      {
+        "particleId": "contentarray-3421",
+        "particleTitle": "Calendar",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-5066 > block-7006 > mainbar > grid-7194 > block-5601 > contentarray-3421.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "408"
+        ]
+      }
+    ],
+    "footer": [
+      {
+        "particleId": "contentarray-3689",
+        "particleTitle": "Footer",
+        "particleType": "contentarray",
+        "filterPath": "container-footer > grid-1739 > block-1745 > footer > grid-2205 > block-4484 > contentarray-3689.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "409"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,261 @@
+{
+  "source": "",
+  "outline": "33",
+  "theme": "rt_studius",
+  "exportedAt": "2026-05-21T19:51:08.571Z",
+  "categoryMap": {
+    "8": {
+      "id": "8",
+      "title": "News & Events"
+    },
+    "9": {
+      "id": "9",
+      "title": "Alert"
+    },
+    "10": {
+      "id": "10",
+      "title": "Rotator"
+    }
+  },
+  "articleMap": {
+    "36": {
+      "id": "36",
+      "title": "Footer",
+      "alias": "footer",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"footer-wrapper\">\n<div class=\"footer-info\">\n<div class=\"footer-title\">\n<div class=\"footer-info-logo\"><a href=\"home\"><img src=\"images/template/leaf-graphic.svg\" alt=\"\" /></a></div>\n<h2><a href=\"home\">St. Lawrence<br />Catholic Church</a></h2>\n</div>\n<div class=\"footer-content\">\n<p><a href=\"about/contact-us\">6222 Franconia Road<br />Alexandria, VA, 22310</a><br /><a href=\"tel:7039714378\" target=\"_blank\" rel=\"noopener noreferrer\">(703) 971-4378</a><br /><a href=\"mailto:office@stlawrencealex.org\" target=\"_blank\" rel=\"noopener noreferrer\">office@stlawrencealex.org</a></p>\n</div>\n</div>\n<div class=\"footer-links-icon\">\n<div class=\"footer-links\"><a href=\"about/parish-registration\">Parish Registration</a><a href=\"https://giving.myparishsoft.io//app/giving/FD-325\" target=\"_blank\" rel=\"noopener noreferrer\">Online Giving</a><a href=\"https://www.arlingtondiocese.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Diocesan Website</a><a href=\"https://bible.usccb.org/daily-bible-reading\" target=\"_blank\" rel=\"noopener noreferrer\">Daily Readings</a><a href=\"https://www.franciscanmedia.org/saint-of-the-day/\" target=\"_blank\" rel=\"noopener noreferrer\">Saint of the Day</a></div>\n<div class=\"footer-icon\"><img src=\"images/template/logomark.svg\" alt=\"\" /></div>\n</div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "55": {
+      "id": "55",
+      "title": "Mass Times",
+      "alias": "mass-times",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<h2>Sunday Masses</h2>\n<p>Saturday Vigil: 5:00 p.m.<br />Sunday: 7:30, 9:00 and 11:00 a.m.</p>\n<h2>Weekday Masses</h2>\n<p>M - F: 6:15 and 9:00 a.m. Saturday 9:00 a.m.</p>\n<h2>Confessions</h2>\n<p>Monday: 9:30 a.m.<br />Wednesday: 7:00 - 7:45 p.m.<br />Friday: 6:45 a.m. <br />Saturday: 3:30 - 4:30 p.m.</p>\n<h2>Adoration &amp; Novena</h2>\n<p>Wednesday: 9 a.m. - 1 p.m. &amp; Holy Hour 7:15 p.m. - 8:15 p.m.<br />Monday: 7:15 p.m. <em>Novena to Our Lady of Perpetual Help</em></p>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "74": {
+      "id": "74",
+      "title": "Calendar",
+      "alias": "calendar",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"calendar-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Calendar</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://calendarfeed.solutiocloud.us/embed/StLaw-Alex.js\"></script>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news/calendar\">View Full Calendar</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "75": {
+      "id": "75",
+      "title": "Formed",
+      "alias": "formed",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"formed-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Formed</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\"><a href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\"><img src=\"images/template/formed.png\" alt=\"\" /></a></div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://formed.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Watch Now</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "76": {
+      "id": "76",
+      "title": "Facebook",
+      "alias": "facebook",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"facebook-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Facebook</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"widget-feed-inner-box\">\n<script src=\"https://static.elfsight.com/platform/platform.js\" async=\"\"></script>\n<div class=\"elfsight-app-54fe2611-ae76-4aec-9f3d-a8bd5f7069aa\" data-elfsight-app-lazy=\"\"> </div>\n</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"https://www.facebook.com/p/St-Lawrence-Roman-Catholic-Church-100064653311142/\" target=\"_blank\" rel=\"noopener noreferrer\">Follow Us</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "223": {
+      "id": "223",
+      "title": "Navigation Contact Info",
+      "alias": "navigation-contact-info",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<p style=\"text-align: right;\"><a href=\"about/contact-us\">6222 Franconia Road<br />Alexandria, VA, 22310</a><br /><a href=\"tel:7039714378\" target=\"_blank\" rel=\"noopener noreferrer\">(703) 971-4378</a><br /><a href=\"mailto:office@stlawrencealex.org\" target=\"_blank\" rel=\"noopener noreferrer\">office@stlawrencealex.org</a></p>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "224": {
+      "id": "224",
+      "title": "Welcome",
+      "alias": "welcome",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"welcome-wrapper\">\n<div class=\"welcome-title\">\n<h3 class=\"g-title\">Welcome</h3>\n</div>\n<div class=\"welcome-content\">\n<p>Welcome to St. Lawrence the Martyr Catholic Church. Whether you are a longtime parishioner, new to the area, or visiting for the first time, we are grateful that you are here. Our parish is a community centered on Jesus Christ and nourished by the Holy Eucharist, where individuals and families grow in faith through prayer, the Sacraments, and service to others. I invite you to join us for Mass, become involved in the life of the parish, and allow our patron, St. Lawrence the Martyr, to inspire us to live the Gospel with faith, generosity, and joy. May God bless you and your family, and know that you are always welcome here.</p>\n</div>\n<div class=\"welcome-bottom-icon\"><img src=\"images/template/leaf-graphic.svg\" alt=\"\" /></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "225": {
+      "id": "225",
+      "title": "Sign Up for Parish Email",
+      "alias": "sign-up-for-parish-email",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<p>Receive occasional emails with parish news, upcoming events, ministry opportunities, and important announcements to help you stay connected with the life of the parish.</p>\n<!-- Begin Constant Contact Active Forms -->\n<script>// <![CDATA[\nvar _ctct_m = \"06b9d6346338bdc94ca55bfe42823dac\";\n// ]]></script>\n<script id=\"signupScript\" src=\"//static.ctctcdn.com/js/signup-form-widget/current/signup-form-widget.min.js\" async=\"\" defer=\"defer\"></script>\n<!-- End Constant Contact Active Forms -->\n<p> </p>\n<!-- Begin Constant Contact Inline Form Code -->\n<div class=\"ctct-inline-form\" data-form-id=\"d28bde00-32b3-49c6-884d-dc5e994dff39\"> </div>\n<!-- End Constant Contact Inline Form Code -->",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    },
+    "226": {
+      "id": "226",
+      "title": "Bulletins",
+      "alias": "bulletins",
+      "categoryId": "24",
+      "categoryTitle": "Homepage Articles",
+      "introtext": "\t<div class=\"bulletin-widget-wrapper widget-wrapper\">\n<div class=\"widget-title\">\n<h3 class=\"g-title\">Bulletins</h3>\n</div>\n<div class=\"widget-feed\">\n<div class=\"bulletin-content widget-feed-inner-box\">{loadmoduleid 87}</div>\n</div>\n<div class=\"widget-button\"><a class=\"button\" href=\"news/bulletin\">View Archive</a></div>\n</div>",
+      "fulltext": "",
+      "state": "1",
+      "access": "1"
+    }
+  },
+  "sectionContent": {
+    "top": [
+      {
+        "particleId": "contentarray-4541",
+        "particleTitle": "Alert",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-3508 > block-9112 > top > grid-2112 > block-2475 > contentarray-4541.attributes.article.filter",
+        "categories": [
+          "9"
+        ],
+        "articles": []
+      }
+    ],
+    "navigation": [
+      {
+        "particleId": "contentarray-6366",
+        "particleTitle": "Navigation Contact Info",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-5397 > block-2005 > navigation > grid-2040 > block-3561 > contentarray-6366.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "223"
+        ]
+      }
+    ],
+    "slideshow": [
+      {
+        "particleId": "swiper-9733",
+        "particleTitle": "Swiper",
+        "particleType": "swiper",
+        "filterPath": "container-top > grid-2128 > block-7070 > slideshow > grid-3024 > block-3189 > swiper-9733.attributes.article.filter",
+        "categories": [
+          "10"
+        ],
+        "articles": []
+      },
+      {
+        "particleId": "contentarray-5070",
+        "particleTitle": "Mass Times",
+        "particleType": "contentarray",
+        "filterPath": "container-top > grid-2128 > block-7070 > slideshow > grid-6518 > block-3589 > contentarray-5070.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "55"
+        ]
+      }
+    ],
+    "sidebar": [
+      {
+        "particleId": "contentarray-6756",
+        "particleTitle": "News & Events",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-5000 > block-5437 > sidebar > grid-7179 > block-6075 > contentarray-6756.attributes.article.filter",
+        "categories": [
+          "8"
+        ],
+        "articles": []
+      }
+    ],
+    "mainbar": [
+      {
+        "particleId": "contentarray-3776",
+        "particleTitle": "Calendar",
+        "particleType": "contentarray",
+        "filterPath": "container-main > grid-5000 > block-4286 > mainbar > grid-8430 > block-8569 > contentarray-3776.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "74"
+        ]
+      }
+    ],
+    "expanded": [
+      {
+        "particleId": "contentarray-6364",
+        "particleTitle": "Welcome",
+        "particleType": "contentarray",
+        "filterPath": "expanded > grid-4284 > block-4679 > contentarray-6364.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "224"
+        ]
+      }
+    ],
+    "extension": [
+      {
+        "particleId": "contentarray-3150",
+        "particleTitle": "Bulletins",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-7266 > block-2770 > contentarray-3150.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "226"
+        ]
+      },
+      {
+        "particleId": "contentarray-6583",
+        "particleTitle": "Facebook",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-7266 > block-8608 > contentarray-6583.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "76"
+        ]
+      },
+      {
+        "particleId": "contentarray-7651",
+        "particleTitle": "Formed",
+        "particleType": "contentarray",
+        "filterPath": "extension > grid-7266 > block-8521 > contentarray-7651.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "75"
+        ]
+      }
+    ],
+    "bottom": [
+      {
+        "particleId": "contentarray-4459",
+        "particleTitle": "Sign Up for Parish Email",
+        "particleType": "contentarray",
+        "filterPath": "bottom > grid-6040 > block-5739 > contentarray-4459.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "225"
+        ]
+      }
+    ],
+    "footer": [
+      {
+        "particleId": "contentarray-7255",
+        "particleTitle": "Footer",
+        "particleType": "contentarray",
+        "filterPath": "container-footer > grid-6444 > block-7875 > footer > grid-2939 > block-8263 > contentarray-7255.attributes.article.filter",
+        "categories": [],
+        "articles": [
+          "36"
+        ]
+      }
+    ]
+  }
+}
