@@ -1,0 +1,1359 @@
+schema: 1
+source:
+  outline: '33'
+  theme: rt_studius
+  host: sd-cemetery.backup.solutiosoftware.com
+exportedAt: '2026-05-21T19:58:47.585Z'
+layout:
+- attributes:
+    boxed: ''
+    class: ''
+    extra: []
+  id: container-top
+  layout: true
+  type: container
+  subtype: container
+  title: Container-top
+  children:
+  - id: grid-1332
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-3459
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 100
+      children:
+      - type: section
+        attributes:
+          boxed: '0'
+          class: ''
+          variations: ''
+        id: top
+        layout: true
+        subtype: section
+        title: Top
+        children:
+        - id: grid-8588
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-5105
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - id: system-messages-6764
+              title: System Messages
+              type: system
+              subtype: messages
+              attributes:
+                enabled: 1
+            attributes:
+              size: 100
+        - id: grid-6999
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-8626
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Alert
+              attributes:
+                article:
+                  filter:
+                    categories: '9'
+                    articles: ''
+                    featured: include
+                  limit:
+                    total: '10'
+                    columns: '1'
+                    start: '0'
+                  display:
+                    pagination_buttons: ''
+                    title:
+                      enabled: show
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+                enabled: 1
+              id: contentarray-4541
+              type: particle
+              subtype: contentarray
+            attributes:
+              id: modernAlert
+              class: modern-alert
+              size: 100
+        - id: grid-6886
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-5437
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Pop Up
+              attributes:
+                html: '<div id="pop-up-overlay-2"></div>
+
+                  <div id="pop-up-container-2">
+
+                  <div id="popup-2">
+
+                  <jdoc:include type="modules" name="pop-up" />
+
+                  </div>
+
+                  <button id="close-popup-button-2"><i class="fas fa-times-circle"></i></button>
+
+                  </div>'
+                enabled: 1
+              id: custom-1172
+              type: particle
+              subtype: custom
+            attributes:
+              class: pop-up-block-2
+              size: 100
+  - id: grid-7498
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-9479
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 100
+      children:
+      - type: section
+        inherit:
+          outline: default
+          include:
+          - attributes
+          - block
+          - children
+        id: navigation
+        layout: true
+        subtype: section
+        title: Navigation
+        attributes:
+          boxed: '2'
+          class: center-of-attention stock
+          variations: ''
+        children:
+        - id: grid-3899
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-1748
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Mobile Logo
+              id: logo-8965
+              type: particle
+              subtype: logo
+              attributes:
+                enabled: 1
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: logo-4067
+            attributes:
+              class: show-mobile
+              size: 100
+        - id: grid-8290
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-4640
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Translate - Phone Icon
+              attributes:
+                article:
+                  filter:
+                    categories: ''
+                    articles: '244'
+                    featured: include
+                  limit:
+                    total: '1'
+                    columns: '1'
+                    start: '0'
+                  display:
+                    pagination_buttons: ''
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+                enabled: 1
+              id: contentarray-9639
+              type: particle
+              subtype: contentarray
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: contentarray-2406
+            attributes:
+              class: translate-container
+              size: 100
+        - id: grid-3297
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-7265
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - id: spacer-5021
+              title: Spacer
+              type: spacer
+              subtype: spacer
+              attributes:
+                enabled: 1
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: spacer-8291
+            attributes:
+              size: 20
+          - id: block-7058
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Logo / Image
+              id: logo-7813
+              type: particle
+              subtype: logo
+              attributes:
+                enabled: 1
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: logo-7577
+            attributes:
+              class: hidden-phone
+              size: 60
+          - id: block-3242
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - id: spacer-4864
+              title: Spacer
+              type: spacer
+              subtype: spacer
+              attributes:
+                enabled: 1
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: spacer-6598
+            attributes:
+              size: 20
+        - id: grid-3627
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-3152
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - attributes:
+                menu: mainmenu
+                enabled: 1
+              id: menu-1289
+              title: Menu
+              type: particle
+              subtype: menu
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: menu-2477
+            attributes:
+              size: 100
+  - id: grid-1905
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-6936
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 100
+      children:
+      - type: section
+        attributes:
+          boxed: '2'
+          class: grand-entry slideshow-spacing
+          variations: ''
+        id: slideshow
+        layout: true
+        subtype: section
+        title: Slideshow
+        children:
+        - id: grid-1520
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-9747
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - attributes:
+                class: ''
+                source: joomla
+                image: img
+                height: 100%
+                heightMobile: 100%
+                nav: enabled
+                pagination: ''
+                autoplay: disabled
+                autoplayTimeout: '8000'
+                loop: enabled
+                speed: '800'
+                slides_linkable: disabled
+                touchmove: enabled
+                overlaycolor: rgba(255, 255, 255, 0)
+                direction: horizontal
+                effect: slide
+                items: []
+                largedesktopslides: '1'
+                largedesktopgroup: '1'
+                largedesktopspace: '0'
+                desktopslides: '1'
+                desktopgroup: '1'
+                desktopspace: '0'
+                tabletslides: '1'
+                tabletgroup: '1'
+                tabletspace: '0'
+                mobileslides: '1'
+                mobilegroup: '1'
+                mobilespace: '0'
+                thumbs: disabled
+                thumbsHeight: 15vh
+                thumbsMobileHeight: 150px
+                thumbsnav: disabled
+                thumbslayout: bottom
+                largedesktopthumbs: '5'
+                largedesktopthumbspace: '50'
+                desktopthumbs: '4'
+                desktopthumbspace: '40'
+                tabletthumbs: '3'
+                tabletthumbspace: '30'
+                mobilethumbs: '2'
+                mobilethumbspace: '20'
+                article:
+                  filter:
+                    categories: '10'
+                    articles: ''
+                    featured: include
+                  limit:
+                    total: ''
+                    start: '0'
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+                  display:
+                    image:
+                      enabled: full
+                    text:
+                      type: intro
+                      limit: ''
+                    title:
+                      enabled: ''
+                      limit: ''
+                    render_html_tags: '1'
+                    link:
+                      enabled: ''
+                      label: ''
+                      target: _self
+                enabled: 1
+              id: swiper-9733
+              title: Swiper
+              type: particle
+              subtype: swiper
+            attributes:
+              id: rotate-addpic
+              class: fullwidth-swiper
+              size: 100
+        - id: grid-6382
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-3711
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Swiper Overlay Title
+              attributes:
+                enabled: 0
+                html: <h1>Welcome!</h1>
+              id: custom-5955
+              type: particle
+              subtype: custom
+            attributes:
+              class: swiper-overlay-title
+              size: 100
+        - id: grid-9665
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-2488
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Swiper Overlay Quicklinks
+              attributes:
+                source: particle
+                class: ''
+                title: ''
+                icon: ''
+                image: ''
+                headline: ''
+                description: ''
+                linktext: ''
+                link: ''
+                linkclass: ''
+                linktarget: _self
+                subcontents:
+                - accent: none
+                  icon: ''
+                  img: ''
+                  rokboximage: ''
+                  rokboxcaption: ''
+                  subtitle: ''
+                  description: ''
+                  class: ''
+                  button: Search Burial Records
+                  buttonlink: /cemetery-directory/burial-search
+                  buttonclass: ''
+                  buttontarget: _self
+                  name: Search Burial Records
+                - accent: none
+                  icon: ''
+                  img: ''
+                  rokboximage: ''
+                  rokboxcaption: ''
+                  subtitle: ''
+                  description: ''
+                  class: ''
+                  button: 'Sign up for E-News '
+                  buttonlink: sign-up-for-e-news
+                  buttonclass: ''
+                  buttontarget: _self
+                  name: Sign up for E-News
+                - accent: none
+                  icon: ''
+                  img: ''
+                  rokboximage: ''
+                  rokboxcaption: ''
+                  subtitle: ''
+                  description: ''
+                  class: ''
+                  button: Photo Gallery
+                  buttonlink: /about/photo-gallery
+                  buttonclass: ''
+                  buttontarget: _self
+                  name: Photo Gallery
+                - accent: none
+                  icon: ''
+                  img: ''
+                  rokboximage: ''
+                  rokboxcaption: ''
+                  subtitle: ''
+                  description: ''
+                  class: ''
+                  button: Holy Cross Cemetery
+                  buttonlink: home-hc
+                  buttonclass: ''
+                  buttontarget: _self
+                  name: Holy Cross Cemetery
+                - accent: none
+                  icon: ''
+                  img: ''
+                  rokboximage: ''
+                  rokboxcaption: ''
+                  subtitle: ''
+                  description: ''
+                  class: ''
+                  button: Good Shepherd Cemetery
+                  buttonlink: home-gs
+                  buttonclass: ''
+                  buttontarget: _self
+                  name: Good Shepherd Cemetery
+                - accent: none
+                  icon: ''
+                  img: ''
+                  rokboximage: ''
+                  rokboxcaption: ''
+                  subtitle: ''
+                  description: ''
+                  class: ''
+                  button: XXXXX Cemetery
+                  buttonlink: /home-3
+                  buttonclass: ''
+                  buttontarget: _self
+                  name: XXXXX Cemetery
+                article:
+                  filter:
+                    categories: ''
+                    articles: ''
+                    featured: include
+                  limit:
+                    total: '5'
+                    start: '0'
+                  sort:
+                    orderby: publish_up
+                    ordering: ASC
+                  display:
+                    image:
+                      enabled: intro
+                    title:
+                      enabled: show
+                      limit: ''
+                    text:
+                      type: intro
+                      limit: ''
+                      formatting: text
+                    link:
+                      enabled: show
+                      label: ''
+                      target: _self
+                enabled: 1
+              id: blockcontent-8520
+              type: particle
+              subtype: blockcontent
+            attributes:
+              class: swiper-ql-overlay
+              size: 100
+- attributes:
+    boxed: '2'
+    class: ''
+    variations: ''
+  id: header
+  layout: true
+  type: section
+  subtype: header
+  title: Header
+  children:
+  - id: grid-8745
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-2606
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Welcome
+        attributes:
+          article:
+            filter:
+              categories: ''
+              articles: '245'
+              featured: include
+            limit:
+              total: '1'
+              columns: '1'
+              start: '0'
+            display:
+              pagination_buttons: ''
+            sort:
+              orderby: ordering
+              ordering: ASC
+          enabled: 1
+        id: contentarray-1119
+        type: particle
+        subtype: contentarray
+      attributes:
+        class: welcome-container
+        size: 100
+  - id: grid-8225
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-2375
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Cemeteries Info
+        attributes:
+          article:
+            filter:
+              categories: '75'
+              articles: ''
+              featured: include
+            limit:
+              total: '3'
+              columns: '1'
+              start: '0'
+            display:
+              pagination_buttons: ''
+              image:
+                enabled: full
+            sort:
+              orderby: ordering
+              ordering: ASC
+          enabled: 1
+        id: contentarray-7725
+        type: particle
+        subtype: contentarray
+      attributes:
+        class: info-container
+        size: 100
+- type: section
+  attributes:
+    boxed: '2'
+    class: ''
+    variations: ''
+  id: above
+  layout: true
+  subtype: section
+  title: Above
+  children:
+  - id: grid-4485
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-7344
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Why Choose us?
+        attributes:
+          article:
+            filter:
+              categories: ''
+              articles: '249'
+              featured: include
+            limit:
+              total: '1'
+              columns: '1'
+              start: '0'
+            display:
+              pagination_buttons: ''
+            sort:
+              orderby: ordering
+              ordering: ASC
+          enabled: 1
+        id: contentarray-2729
+        type: particle
+        subtype: contentarray
+      attributes:
+        class: choose-container
+        size: 100
+- type: section
+  attributes:
+    boxed: '2'
+    class: ''
+    variations: ''
+  id: feature
+  layout: true
+  subtype: section
+  title: Feature
+- type: section
+  attributes:
+    boxed: '2'
+    class: ''
+    variations: ''
+  id: showcase
+  layout: true
+  subtype: section
+  title: Showcase
+- type: section
+  attributes:
+    boxed: '2'
+    class: ''
+    variations: ''
+  id: utility
+  layout: true
+  subtype: section
+  title: Utility
+  children:
+  - id: grid-7863
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-1759
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Upcoming Events
+        attributes:
+          title: Upcoming Events
+          article:
+            filter:
+              categories: '8'
+              articles: ''
+              featured: include
+            limit:
+              total: '4'
+              columns: '1'
+              start: '0'
+            display:
+              pagination_buttons: ''
+              image:
+                enabled: full
+              text:
+                type: ''
+              title:
+                enabled: show
+              read_more:
+                enabled: show
+            sort:
+              orderby: ordering
+              ordering: ASC
+          enabled: 1
+        id: contentarray-2999
+        type: particle
+        subtype: contentarray
+      attributes:
+        id: ph-addpic
+        class: grid grid-articles grid-mobile-stacked grid-no-text grid-wide grid-img-box-shadow-50
+          grid-mobile-horizontal-scroll grid-columns-2 grid-hover-scale
+        size: 100
+  - id: grid-9222
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-1192
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: View All Events Button
+        attributes:
+          html: <a class="button" href="upcoming-events">View All Events</a>
+          enabled: 1
+        id: custom-5289
+        type: particle
+        subtype: custom
+      attributes:
+        class: news-button
+        size: 100
+- attributes:
+    boxed: '2'
+    class: ''
+    extra: []
+  id: container-main
+  layout: true
+  type: container
+  subtype: container
+  title: Container-main
+  children:
+  - id: grid-1891
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-2097
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 5
+      children:
+      - type: section
+        subtype: aside
+        attributes:
+          class: ''
+          variations: ''
+        id: sidebar
+        layout: true
+        title: Sidebar
+    - id: block-1992
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 90
+      children:
+      - type: section
+        subtype: main
+        title: Main
+        attributes:
+          class: ''
+          variations: ''
+        id: mainbar
+        layout: true
+    - id: block-1487
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 5
+      children:
+      - attributes:
+          class: ''
+          variations: ''
+        id: aside
+        layout: true
+        type: section
+        subtype: aside
+        title: Aside
+- type: section
+  attributes:
+    boxed: '2'
+    class: ''
+    variations: ''
+  id: expanded
+  layout: true
+  subtype: section
+  title: Expanded
+  children:
+  - id: grid-6150
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-2070
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Member of the Following Associations
+        attributes:
+          article:
+            filter:
+              categories: ''
+              articles: '250'
+              featured: include
+            limit:
+              total: '1'
+              columns: '1'
+              start: '0'
+            display:
+              pagination_buttons: ''
+            sort:
+              orderby: ordering
+              ordering: ASC
+          enabled: 1
+        id: contentarray-8435
+        type: particle
+        subtype: contentarray
+      attributes:
+        class: association-container
+        size: 100
+  - id: grid-4755
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-6149
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Link Resources
+        attributes:
+          source: particle
+          class: ''
+          title: ''
+          icon: ''
+          image: ''
+          headline: ''
+          description: ''
+          linktext: ''
+          link: ''
+          linkclass: ''
+          linktarget: _self
+          subcontents:
+          - accent: none
+            icon: ''
+            img: gantry-media://stories/template/quicklinks/link-local-resources.jpg
+            rokboximage: ''
+            rokboxcaption: ''
+            subtitle: ''
+            description: ''
+            class: ''
+            button: Local Resources
+            buttonlink: /resources/local-resources
+            buttonclass: ''
+            buttontarget: _self
+            name: Local Resources
+          - accent: none
+            icon: ''
+            img: gantry-media://stories/template/quicklinks/link-grief-support.jpg
+            rokboximage: ''
+            rokboxcaption: ''
+            subtitle: ''
+            description: ''
+            class: ''
+            button: Grief Support
+            buttonlink: /resources/grief-support
+            buttonclass: ''
+            buttontarget: _self
+            name: Grief Support
+          - accent: none
+            icon: ''
+            img: gantry-media://stories/template/quicklinks/link-visitors-guide.jpg
+            rokboximage: ''
+            rokboxcaption: ''
+            subtitle: ''
+            description: ''
+            class: ''
+            button: Visitors Guide
+            buttonlink: /resources/visitors-guide
+            buttonclass: ''
+            buttontarget: _self
+            name: Visitors Guide
+          - accent: none
+            icon: ''
+            img: gantry-media://stories/template/quicklinks/link-find-a-grave.jpg
+            rokboximage: ''
+            rokboxcaption: ''
+            subtitle: ''
+            description: ''
+            class: ''
+            button: Find a Grave
+            buttonlink: /cemetery-directory/burial-search
+            buttonclass: ''
+            buttontarget: _self
+            name: Find a Grave
+          article:
+            filter:
+              categories: ''
+              articles: ''
+              featured: include
+            limit:
+              total: '5'
+              start: '0'
+            sort:
+              orderby: publish_up
+              ordering: ASC
+            display:
+              image:
+                enabled: intro
+              title:
+                enabled: show
+                limit: ''
+              text:
+                type: intro
+                limit: ''
+                formatting: text
+              link:
+                enabled: show
+                label: ''
+                target: _self
+          enabled: 1
+        id: blockcontent-2786
+        type: particle
+        subtype: blockcontent
+      attributes:
+        class: linksources
+        size: 100
+  - id: grid-1007
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-9585
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Stay Connected
+        attributes:
+          article:
+            filter:
+              categories: ''
+              articles: '251'
+              featured: include
+            limit:
+              total: '1'
+              columns: '1'
+              start: '0'
+            display:
+              pagination_buttons: ''
+              image:
+                enabled: full
+            sort:
+              orderby: ordering
+              ordering: ASC
+          enabled: 1
+        id: contentarray-1714
+        type: particle
+        subtype: contentarray
+      attributes:
+        class: connected-container
+        size: 100
+- type: section
+  attributes:
+    boxed: '2'
+    class: ''
+    variations: ''
+  id: extension
+  layout: true
+  subtype: section
+  title: Extension
+- type: section
+  inherit:
+    outline: default
+    include:
+    - attributes
+    - children
+  id: bottom
+  layout: true
+  subtype: section
+  title: Bottom
+  attributes:
+    boxed: '2'
+    class: s-vertical-padding-2
+    variations: ''
+  children:
+  - id: grid-4679
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-7583
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Bottom Ads
+        attributes:
+          enabled: 0
+          module_id: '103'
+          key: bottom-ads
+        id: position-module-1851
+        type: position
+        subtype: module
+        inherit:
+          outline: default
+          include:
+          - attributes
+          - block
+          particle: position-module-6836
+      attributes:
+        size: 100
+- attributes:
+    boxed: '2'
+    class: ''
+    extra: []
+  id: container-footer
+  layout: true
+  type: container
+  subtype: container
+  title: Container-footer
+  children:
+  - id: grid-9346
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-3274
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 100
+      children:
+      - inherit:
+          outline: default
+          include:
+          - block
+          - children
+          - attributes
+        id: footer
+        layout: true
+        type: section
+        subtype: footer
+        title: Footer
+        attributes:
+          boxed: '2'
+          class: s-padding-2
+          variations: ''
+        children:
+        - id: grid-5139
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-3899
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Footer A
+              attributes:
+                key: footer-a
+                enabled: 1
+              id: position-position-9657
+              type: position
+              subtype: position
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: position-position-7466
+            attributes:
+              size: 33.3
+          - id: block-5793
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Footer B
+              attributes:
+                key: footer-b
+                enabled: 1
+              id: position-position-7403
+              type: position
+              subtype: position
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: position-position-7124
+            attributes:
+              size: 33.3
+          - id: block-4802
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Footer C
+              attributes:
+                key: footer-c
+                enabled: 1
+              id: position-position-8112
+              type: position
+              subtype: position
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: position-position-4556
+            attributes:
+              size: 33.3
+        - id: grid-8766
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-9046
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Footer
+              attributes:
+                article:
+                  filter:
+                    categories: ''
+                    articles: '36'
+                    featured: include
+                  limit:
+                    total: '1'
+                    columns: '1'
+                    start: '0'
+                  display:
+                    pagination_buttons: ''
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+                enabled: 1
+              id: contentarray-2081
+              type: particle
+              subtype: contentarray
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: contentarray-9803
+            attributes:
+              size: 100
+      - type: section
+        inherit:
+          outline: default
+          include:
+          - attributes
+          - block
+          - children
+        id: copyright
+        layout: true
+        subtype: section
+        title: Copyright
+        attributes:
+          boxed: ''
+          class: ''
+          variations: ''
+        children:
+        - id: grid-4158
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-5403
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Admin Footer
+              attributes:
+                html: "<div class=\"adminfootericon\" style=\"font-size: x-small;\
+                  \ line-height: 1.3; text-shadow: 2px 2px #000000; \">\n\t<a  style=\"\
+                  font-size: large;\" href=\"https://\nsd-cemetery.solutiosoftware.com/administrator/\"\
+                  \ target=\"_blank\">\n\t<i class=\"fa fa-lock\"></i></a>\n\t<br><br><a\
+                  \ style=\"color: #ffffff;\" href=\"http://solutiosoftware.com/\"\
+                  \ target=\"_blank\">Site by Solutio</a>\n<br><a  style=\"color:\
+                  \ #ffffff;\"  href=\"https://solutiosoftware.com/web-policy\" target=\"\
+                  _blank\" rel=\"noopener noreferrer\">Analytics Privacy Policy</a>\n\
+                  </div>"
+                enabled: 1
+              id: custom-7848
+              type: particle
+              subtype: custom
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: custom-4377
+            attributes:
+              size: 100
+- inherit:
+    outline: default
+    include:
+    - attributes
+    - children
+  id: offcanvas
+  layout: true
+  type: offcanvas
+  subtype: offcanvas
+  title: Offcanvas
+  attributes:
+    swipe: '0'
+  children:
+  - id: grid-6683
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-9923
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Mobile Menu
+        id: mobile-menu-9295
+        type: particle
+        subtype: mobile-menu
+        attributes:
+          enabled: 1
+        inherit:
+          outline: default
+          include:
+          - attributes
+          - block
+          particle: mobile-menu-9376
+      attributes:
+        size: 100
+  - id: grid-6209
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-4712
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Subsite Navigation
+        attributes:
+          enabled: 0
+          html: <div class="ql-toplinks-studius"><jdoc:include type="modules" name="subsite-navigation"
+            /></div>
+        id: custom-5973
+        type: particle
+        subtype: custom
+        inherit:
+          outline: default
+          include:
+          - attributes
+          - block
+          particle: custom-7381
+      attributes:
+        size: 100

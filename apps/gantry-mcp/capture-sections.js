@@ -43,7 +43,10 @@ if (!fs.existsSync(SRC_DIR)) {
   console.error(`Source directory not found: ${SRC_DIR}`);
   process.exit(1);
 }
-const sites = fs
+// --only-missing : skip any site that already has at least one section shot
+const ONLY_MISSING = process.argv.includes('--only-missing');
+
+let allSites = fs
   .readdirSync(SRC_DIR)
   .filter((f) => f.endsWith('.yaml'))
   .map((f) => {
@@ -53,7 +56,7 @@ const sites = fs
     } catch {
       return null;
     }
-    const id = f.replace(/-home\.yaml$/, '').replace(/-1$/, '');
+    const id = f.replace(/-(?:school-)?home\.yaml$/, '').replace(/-1$/, '');
     let url = parsed?.source?.host || null;
     // source.host is often stored without a scheme — Puppeteer needs a full URL.
     if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
@@ -61,12 +64,27 @@ const sites = fs
   })
   .filter((s) => s && s.url);
 
+// Deduplicate by id (same site may have home + school-home YAMLs)
+const seen = new Set();
+allSites = allSites.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
+
+const sites = ONLY_MISSING
+  ? allSites.filter(s => {
+      const dir = path.join(OUT_DIR, s.id);
+      return !fs.existsSync(dir) || fs.readdirSync(dir).filter(f => f.endsWith('.png')).length === 0;
+    })
+  : allSites;
+
 if (!sites.length) {
-  console.error('No sites with a source.host found in', SRC_DIR);
-  process.exit(1);
+  console.log('No sites to capture (all already have screenshots). Use without --only-missing to re-capture.');
+  process.exit(0);
 }
 
-console.log(`Capturing sections from ${sites.length} sites at ${VIEWPORT_WIDTH}px wide...\n`);
+if (ONLY_MISSING) {
+  console.log(`--only-missing: ${allSites.length - sites.length} sites already have shots, capturing ${sites.length} new.\n`);
+} else {
+  console.log(`Capturing sections from ${sites.length} sites at ${VIEWPORT_WIDTH}px wide...\n`);
+}
 
 // A real Chrome UA — many backup sites' WAF/.htaccess blocks "HeadlessChrome".
 const REAL_UA =
@@ -174,33 +192,27 @@ const REAL_UA =
     `\nDone. ${totalShots} section screenshots across ${okSites}/${sites.length} sites.`
   );
   console.log(`Manifest: ${path.join(OUT_DIR, 'manifest.json')}`);
-  console.log(`Next: re-run  node build-site-builder.js  to embed them.`);
-})().catch((err) => {
-  console.error('Fatal:', err);
-  process.exit(1);
-});
-
-// --- helpers ---
-
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
+})();
 
 /** Scroll the whole page to force lazy images to load, then return to top. */
 async function autoScroll(page) {
   await page.evaluate(async () => {
     await new Promise((resolve) => {
       let total = 0;
-      const step = 500;
+      const dist = 300;
       const timer = setInterval(() => {
-        window.scrollBy(0, step);
-        total += step;
+        window.scrollBy(0, dist);
+        total += dist;
         if (total >= document.body.scrollHeight) {
           clearInterval(timer);
           window.scrollTo(0, 0);
           resolve();
         }
-      }, 90);
+      }, 80);
     });
   });
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
 }

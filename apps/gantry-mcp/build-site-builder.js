@@ -416,6 +416,36 @@ const CSS_RAW = ${JSON.stringify(cssRaw)};
     font-family: var(--sans); font-size: 0.85rem; color: var(--text); background: var(--panel);
   }
 
+  /* ---- deploy tab ---- */
+  .deploy-form { display: flex; flex-direction: column; gap: 1rem; }
+  .deploy-field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .deploy-field label { font-size: 0.8rem; font-weight: 600; color: var(--soft); text-transform: uppercase; letter-spacing: 0.04em; }
+  .deploy-field input, .deploy-field select {
+    border: 1px solid var(--border); border-radius: 7px; padding: 0.45rem 0.6rem;
+    font-family: var(--sans); font-size: 0.9rem; color: var(--text); background: var(--panel);
+    width: 100%;
+  }
+  .deploy-field input:focus, .deploy-field select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .site-results { border: 1px solid var(--border); border-radius: 7px; max-height: 160px; overflow-y: auto; margin-top: 0.25rem; }
+  .site-result {
+    padding: 0.45rem 0.7rem; cursor: pointer; font-size: 0.88rem;
+    border-bottom: 1px solid var(--border); transition: background 0.1s;
+  }
+  .site-result:last-child { border-bottom: none; }
+  .site-result:hover, .site-result.selected { background: var(--accent); color: #fff; }
+  .deploy-status {
+    border-radius: 8px; padding: 0.75rem 0.9rem; font-size: 0.85rem; line-height: 1.5;
+    white-space: pre-wrap; font-family: var(--mono, monospace); margin-top: 0.5rem;
+    display: none;
+  }
+  .deploy-status.visible { display: block; }
+  .deploy-status.running { background: #1e293b; color: #94a3b8; }
+  .deploy-status.ok  { background: #052e16; color: #86efac; }
+  .deploy-status.err { background: #450a0a; color: #fca5a5; }
+  .btn-deploy { background: #0f766e; color: #fff; }
+  .btn-deploy:hover { background: #0d9488; }
+  .btn-deploy:disabled { opacity: 0.5; cursor: not-allowed; }
+
   .toast {
     position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%);
     background: var(--darker); color: var(--inv); padding: 0.6rem 1.1rem; border-radius: 8px;
@@ -436,7 +466,8 @@ const CSS_RAW = ${JSON.stringify(cssRaw)};
     <input id="target-outline" placeholder="outline" value="default" size="7" />
     <button class="btn btn-ghost" id="btn-reset">Reset</button>
     <button class="btn" id="btn-prefill">Prefill from a parish…</button>
-    <button class="btn btn-accent" id="btn-export">Export composite ▸</button>
+    <button class="btn btn-accent" id="btn-export">Export / Deploy ▸</button>
+    <button class="btn btn-ghost" id="btn-rebuild" title="Re-run build-site-builder.js to pick up new exports">↺ Rebuild</button>
   </div>
 </header>
 
@@ -474,6 +505,7 @@ const CSS_RAW = ${JSON.stringify(cssRaw)};
     <div class="modal-tabs">
       <button class="tab active" data-tab="yaml">Layout YAML</button>
       <button class="tab" data-tab="css">override.css</button>
+      <button class="tab" data-tab="deploy">🚀 Deploy Live</button>
     </div>
     <div class="modal-body">
       <div class="summary-line" id="export-summary"></div>
@@ -498,6 +530,30 @@ const CSS_RAW = ${JSON.stringify(cssRaw)};
         <div class="modal-actions">
           <button class="btn btn-accent" id="dl-css">Download override.css</button>
           <button class="btn" id="copy-css">Copy to clipboard</button>
+        </div>
+      </div>
+
+      <div class="tab-pane" data-pane="deploy" hidden>
+        <div class="deploy-form">
+          <div class="deploy-field">
+            <label>Target site</label>
+            <input type="search" id="deploy-site-search" placeholder="Search sites…" autocomplete="off" />
+            <div class="site-results" id="deploy-site-results" hidden></div>
+            <input type="hidden" id="deploy-site-url" />
+          </div>
+          <div class="deploy-field">
+            <label>Outline</label>
+            <select id="deploy-outline">
+              <option value="">Loading…</option>
+            </select>
+          </div>
+          <div class="deploy-field">
+            <label><input type="checkbox" id="deploy-dry-run" checked /> Dry run (preview only — no changes written)</label>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-deploy" id="btn-deploy-live" disabled>Deploy to site ▸</button>
+          </div>
+          <pre class="deploy-status" id="deploy-status"></pre>
         </div>
       </div>
     </div>
@@ -1158,13 +1214,160 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   renderZones(); toast('Cleared all slots');
 });
 document.getElementById('btn-prefill').addEventListener('click', prefillFrom);
+document.getElementById('btn-rebuild').addEventListener('click', () => {
+  const btn = document.getElementById('btn-rebuild');
+  btn.disabled = true;
+  btn.textContent = '↺ Rebuilding…';
+  const es = new EventSource('/api/rebuild');
+  const msgs = [];
+  es.onmessage = e => { msgs.push(e.data); };
+  es.onerror = () => {
+    es.close();
+    btn.disabled = false;
+    btn.textContent = '↺ Rebuild';
+    const last = msgs[msgs.length - 1] || '';
+    if (last.includes('COMPLETE')) {
+      toast('Rebuild complete — reloading…');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      toast('Rebuild finished (check console for errors)');
+    }
+  };
+});
 document.getElementById('modal-close').addEventListener('click', () =>
   document.getElementById('export-modal').classList.remove('open'));
 document.getElementById('export-modal').addEventListener('click', e => {
   if (e.target.id === 'export-modal') e.target.classList.remove('open');
 });
 document.querySelectorAll('.modal-tabs .tab').forEach(t =>
-  t.addEventListener('click', () => switchTab(t.dataset.tab)));
+  t.addEventListener('click', () => {
+    switchTab(t.dataset.tab);
+    if (t.dataset.tab === 'deploy') initDeployTab();
+  }));
+
+// ============================================================
+//  Deploy Live tab
+// ============================================================
+let _deployTabReady = false;
+let _deployYaml = '';
+
+function initDeployTab() {
+  if (_deployTabReady) return;
+  _deployTabReady = true;
+
+  // Load outline list
+  fetch('/api/outlines')
+    .then(r => r.json())
+    .then(list => {
+      const sel = document.getElementById('deploy-outline');
+      sel.innerHTML = list.map(o =>
+        '<option value="' + escHtml(o.id) + '">' + escHtml(o.label) + '</option>'
+      ).join('');
+    })
+    .catch(() => {
+      document.getElementById('deploy-outline').innerHTML =
+        '<option value="default">default</option>' +
+        '<option value="33">Parish Home (33)</option>' +
+        '<option value="72">School Home (72)</option>';
+    });
+
+  // Site search input
+  const searchEl   = document.getElementById('deploy-site-search');
+  const resultsEl  = document.getElementById('deploy-site-results');
+  const siteUrlEl  = document.getElementById('deploy-site-url');
+  const deployBtn  = document.getElementById('btn-deploy-live');
+  let searchTimer;
+
+  searchEl.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = searchEl.value.trim();
+    if (!q) { resultsEl.hidden = true; resultsEl.innerHTML = ''; return; }
+    searchTimer = setTimeout(() => {
+      fetch('/api/sites?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(sites => {
+          if (!sites.length) {
+            resultsEl.innerHTML = '<div class="site-result" style="color:var(--soft)">No matches</div>';
+          } else {
+            resultsEl.innerHTML = sites.slice(0, 12).map(s =>
+              '<div class="site-result" data-url="' + escHtml(s.url) + '" data-label="' + escHtml(s.label) + '">' +
+              escHtml(s.label) + ' <span style="opacity:.5;font-size:.78rem">' + escHtml(s.domain) + '</span></div>'
+            ).join('');
+            resultsEl.querySelectorAll('.site-result[data-url]').forEach(el => {
+              el.addEventListener('click', () => {
+                siteUrlEl.value = el.dataset.url;
+                searchEl.value  = el.dataset.label;
+                resultsEl.hidden = true;
+                deployBtn.disabled = false;
+              });
+            });
+          }
+          resultsEl.hidden = false;
+        })
+        .catch(() => {
+          resultsEl.innerHTML = '<div class="site-result" style="color:var(--soft)">API unavailable — enter URL manually</div>';
+          resultsEl.hidden = false;
+        });
+    }, 220);
+  });
+
+  // Hide dropdown when clicking outside
+  document.addEventListener('click', e => {
+    if (!resultsEl.contains(e.target) && e.target !== searchEl) resultsEl.hidden = true;
+  });
+
+  // Allow typing a URL directly into search field as fallback
+  searchEl.addEventListener('change', () => {
+    const v = searchEl.value.trim();
+    if (v.startsWith('http')) {
+      siteUrlEl.value = v;
+      deployBtn.disabled = false;
+    }
+  });
+}
+
+document.getElementById('btn-deploy-live').addEventListener('click', async () => {
+  const siteUrl   = document.getElementById('deploy-site-url').value.trim()
+    || document.getElementById('deploy-site-search').value.trim();
+  const outlineId = document.getElementById('deploy-outline').value;
+  const dryRun    = document.getElementById('deploy-dry-run').checked;
+  const statusEl  = document.getElementById('deploy-status');
+
+  if (!siteUrl) { toast('Select or enter a target site first.'); return; }
+
+  // Build YAML from current composition
+  const filledCount = Object.keys(filled).length;
+  if (!filledCount) { toast('Fill at least one section slot before deploying.'); return; }
+  const doc = buildExportDoc();
+  _deployYaml = jsyaml.dump(doc, { lineWidth: -1, noRefs: true });
+
+  const btn = document.getElementById('btn-deploy-live');
+  btn.disabled = true;
+  statusEl.className = 'deploy-status visible running';
+  statusEl.textContent = (dryRun ? '[DRY RUN] ' : '') + 'Deploying to ' + siteUrl + ' (outline ' + outlineId + ')…';
+
+  try {
+    const resp = await fetch('/api/deploy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ yaml: _deployYaml, siteUrl, outlineId, dryRun }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      statusEl.className = 'deploy-status visible ok';
+      statusEl.textContent = (dryRun ? '[DRY RUN COMPLETE]\n' : '[DEPLOYED]\n') + (data.message || 'Done.');
+    } else {
+      statusEl.className = 'deploy-status visible err';
+      statusEl.textContent = '[ERROR]\\n' + (data.error || JSON.stringify(data));
+    }
+  } catch (err) {
+    statusEl.className = 'deploy-status visible err';
+    statusEl.textContent = '[NETWORK ERROR]\\n' + err.message +
+      '\\n\\nMake sure site-builder-server.js is running on port 18303.';
+  } finally {
+    btn.disabled = false;
+  }
+});
 </script>
 </body>
 </html>`;

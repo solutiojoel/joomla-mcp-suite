@@ -1,0 +1,1235 @@
+schema: 1
+source:
+  outline: '14'
+  theme: rt_studius
+  host: stwen-dick.backup.solutiosoftware.com
+exportedAt: '2026-05-21T20:12:29.512Z'
+layout:
+- attributes:
+    boxed: ''
+    class: ''
+    extra: []
+  id: container-top
+  layout: true
+  type: container
+  subtype: container
+  title: Container-top
+  children:
+  - id: grid-6966
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-8392
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 100
+      children:
+      - type: section
+        attributes:
+          boxed: '0'
+          class: ''
+          variations: ''
+        id: top
+        layout: true
+        subtype: section
+        title: Top
+        children:
+        - id: grid-4691
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-2804
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - id: system-messages-6764
+              title: System Messages
+              type: system
+              subtype: messages
+              attributes:
+                enabled: 1
+            attributes:
+              size: 100
+        - id: grid-4831
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-3717
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Alert
+              attributes:
+                article:
+                  filter:
+                    categories: '2'
+                    articles: ''
+                    featured: include
+                  limit:
+                    total: '10'
+                    columns: '1'
+                    start: '0'
+                  display:
+                    pagination_buttons: ''
+                    title:
+                      enabled: show
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+                enabled: 1
+              id: contentarray-4541
+              type: particle
+              subtype: contentarray
+            attributes:
+              id: modernAlert
+              class: modern-alert
+              size: 100
+        - id: grid-6135
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-6750
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Pop Up
+              attributes:
+                html: '<div id="pop-up-overlay-2"></div>
+
+                  <div id="pop-up-container-2">
+
+                  <div id="popup-2">
+
+                  <jdoc:include type="modules" name="pop-up" />
+
+                  </div>
+
+                  <button id="close-popup-button-2"><i class="fas fa-times-circle"></i></button>
+
+                  </div>'
+                enabled: 1
+              id: custom-1172
+              type: particle
+              subtype: custom
+            attributes:
+              class: pop-up-block-2
+              size: 100
+  - id: grid-2812
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-2758
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 100
+      children:
+      - type: section
+        inherit:
+          outline: default
+          include:
+          - attributes
+          - block
+          - children
+        id: navigation
+        layout: true
+        subtype: section
+        title: Navigation
+        attributes:
+          boxed: '2'
+          class: free-menu stock
+          variations: ''
+        children:
+        - id: grid-7786
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-3640
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Mobile Logo
+              id: logo-8965
+              type: particle
+              subtype: logo
+              attributes:
+                enabled: 1
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: logo-4067
+            attributes:
+              class: show-mobile
+              size: 100
+        - id: grid-2505
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-2435
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Logo / Image
+              id: logo-9200
+              type: particle
+              subtype: logo
+              attributes:
+                enabled: 1
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: logo-7577
+            attributes:
+              class: hidden-phone
+              size: 56
+          - id: block-7770
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - id: spacer-1920
+              title: Spacer
+              type: spacer
+              subtype: spacer
+              attributes:
+                enabled: 1
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: spacer-6598
+            attributes:
+              size: 44
+        - id: grid-2511
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-4974
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - attributes:
+                menu: main-menu-cl
+                enabled: 1
+              id: menu-1289
+              title: Menu
+              type: particle
+              subtype: menu
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: menu-2477
+            attributes:
+              size: 100
+  - id: grid-4340
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-8096
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 100
+      children:
+      - type: section
+        attributes:
+          boxed: '2'
+          class: ''
+          variations: ''
+        id: slideshow
+        layout: true
+        subtype: section
+        title: Slideshow
+        children:
+        - id: grid-9121
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-4720
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - attributes:
+                class: ''
+                source: joomla
+                image: img
+                height: 100%
+                heightMobile: 100%
+                nav: disabled
+                pagination: ''
+                autoplay: disabled
+                autoplayTimeout: '8000'
+                loop: enabled
+                speed: '800'
+                slides_linkable: disabled
+                touchmove: enabled
+                overlaycolor: rgba(255, 255, 255, 0)
+                direction: horizontal
+                effect: slide
+                items: []
+                largedesktopslides: '1'
+                largedesktopgroup: '1'
+                largedesktopspace: '0'
+                desktopslides: '1'
+                desktopgroup: '1'
+                desktopspace: '0'
+                tabletslides: '1'
+                tabletgroup: '1'
+                tabletspace: '0'
+                mobileslides: '1'
+                mobilegroup: '1'
+                mobilespace: '0'
+                thumbs: disabled
+                thumbsHeight: 15vh
+                thumbsMobileHeight: 150px
+                thumbsnav: disabled
+                thumbslayout: bottom
+                largedesktopthumbs: '5'
+                largedesktopthumbspace: '50'
+                desktopthumbs: '4'
+                desktopthumbspace: '40'
+                tabletthumbs: '3'
+                tabletthumbspace: '30'
+                mobilethumbs: '2'
+                mobilethumbspace: '20'
+                article:
+                  filter:
+                    categories: '55'
+                    articles: ''
+                    featured: include
+                  limit:
+                    total: ''
+                    start: '0'
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+                  display:
+                    image:
+                      enabled: full
+                    text:
+                      type: ''
+                      limit: ''
+                    title:
+                      enabled: ''
+                      limit: ''
+                    render_html_tags: '1'
+                    link:
+                      enabled: ''
+                      label: ''
+                      target: _self
+                enabled: 1
+              id: swiper-9733
+              title: Swiper
+              type: particle
+              subtype: swiper
+            attributes:
+              id: rotate-addpic
+              class: fullwidth-swiper
+              size: 100
+        - id: grid-6026
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-6981
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Swiper Mass Times Overlay
+              attributes:
+                article:
+                  filter:
+                    categories: ''
+                    articles: '218228'
+                    featured: include
+                  limit:
+                    total: '1'
+                    columns: '1'
+                    start: '0'
+                  display:
+                    pagination_buttons: ''
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+                enabled: 1
+              id: contentarray-2712
+              type: particle
+              subtype: contentarray
+            attributes:
+              class: swiper-mass-times-overlay
+              size: 100
+- attributes:
+    boxed: '2'
+    class: ''
+    variations: ''
+  id: header
+  layout: true
+  type: section
+  subtype: header
+  title: Header
+- type: section
+  attributes:
+    boxed: '2'
+    class: s-padding-2
+    variations: ''
+  id: above
+  layout: true
+  subtype: section
+  title: Above
+- type: section
+  attributes:
+    boxed: '2'
+    class: ''
+    variations: ''
+  id: feature
+  layout: true
+  subtype: section
+  title: Feature
+- type: section
+  attributes:
+    boxed: '2'
+    class: ''
+    variations: ''
+  id: showcase
+  layout: true
+  subtype: section
+  title: Showcase
+- type: section
+  attributes:
+    boxed: '2'
+    class: standard-ql
+    variations: ''
+  id: utility
+  layout: true
+  subtype: section
+  title: Utility
+  children:
+  - id: grid-4310
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-1569
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Quicklinks
+        attributes:
+          source: particle
+          class: ''
+          title: ''
+          icon: ''
+          image: ''
+          headline: ''
+          description: ''
+          linktext: ''
+          link: ''
+          linkclass: ''
+          linktarget: _self
+          subcontents:
+          - accent: none
+            icon: ''
+            img: gantry-media://stories/template/ql/ql1.jpg
+            rokboximage: ''
+            rokboxcaption: ''
+            subtitle: ''
+            description: ''
+            class: ''
+            button: Ministry Schedules
+            buttonlink: https://secure.rotundasoftware.com/30/web-terminal/login/stwenc1
+            buttonclass: ''
+            buttontarget: _blank
+            name: Ministry Schedules
+          - accent: none
+            icon: ''
+            img: gantry-media://stories/template/ql/ql2.jpg
+            rokboximage: ''
+            rokboxcaption: ''
+            subtitle: ''
+            description: ''
+            class: ''
+            button: Become a Member
+            buttonlink: /about/parish-registration
+            buttonclass: ''
+            buttontarget: _self
+            name: Become a Member
+          - accent: none
+            icon: ''
+            img: gantry-media://stories/template/ql/ql3.jpg
+            rokboximage: ''
+            rokboxcaption: ''
+            subtitle: ''
+            description: ''
+            class: ''
+            button: Catholic Academy
+            buttonlink: https://thecatholicacademy.net/
+            buttonclass: ''
+            buttontarget: _blank
+            name: Catholic Academy
+          - accent: none
+            icon: ''
+            img: gantry-media://stories/template/ql/ql4.jpg
+            rokboximage: ''
+            rokboxcaption: ''
+            subtitle: ''
+            description: ''
+            class: ''
+            button: Trinity Catholic Schools
+            buttonlink: https://trinitycatholicschools.com/
+            buttonclass: ''
+            buttontarget: _blank
+            name: Trinity Catholic Schools
+          - accent: none
+            icon: ''
+            img: gantry-media://stories/template/ql/ql5.jpg
+            rokboximage: ''
+            rokboxcaption: ''
+            subtitle: ''
+            description: ''
+            class: ''
+            button: Online Giving
+            buttonlink: https://giving.parishsoft.com/app/giving/stw525109
+            buttonclass: ''
+            buttontarget: _blank
+            name: Online Giving
+          - accent: none
+            icon: ''
+            img: gantry-media://stories/template/ql/ql6.jpg
+            rokboximage: ''
+            rokboxcaption: ''
+            subtitle: ''
+            description: ''
+            class: ''
+            button: Bulletin
+            buttonlink: /news/bulletin
+            buttonclass: ''
+            buttontarget: _self
+            name: Bulletin
+          article:
+            filter:
+              categories: ''
+              articles: ''
+              featured: include
+            limit:
+              total: '5'
+              start: '0'
+            sort:
+              orderby: publish_up
+              ordering: ASC
+            display:
+              image:
+                enabled: intro
+              title:
+                enabled: show
+                limit: ''
+              text:
+                type: intro
+                limit: ''
+                formatting: text
+              link:
+                enabled: show
+                label: ''
+                target: _self
+          enabled: 1
+        id: blockcontent-9668
+        type: particle
+        subtype: blockcontent
+      attributes:
+        class: circle-ql
+        size: 100
+- attributes:
+    boxed: '2'
+    class: ''
+    extra: []
+  id: container-main
+  layout: true
+  type: container
+  subtype: container
+  title: Container-main
+  children:
+  - id: grid-7105
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-1645
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 5
+      children:
+      - type: section
+        subtype: aside
+        attributes:
+          class: ''
+          variations: ''
+        id: sidebar
+        layout: true
+        title: Sidebar
+    - id: block-5850
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 80
+      children:
+      - type: section
+        subtype: main
+        title: Main
+        attributes:
+          class: headlines-rounded-square
+          variations: ''
+        id: mainbar
+        layout: true
+        children:
+        - id: grid-1482
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-1244
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Upcoming Events Title
+              attributes:
+                html: <h2>Upcoming Events</h2>
+                enabled: 1
+              id: custom-8811
+              type: particle
+              subtype: custom
+            attributes:
+              class: news-title
+              variations: center
+              size: 100
+        - id: grid-5327
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-8529
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Upcoming Events
+              attributes:
+                article:
+                  filter:
+                    categories: '61'
+                    articles: ''
+                    featured: include
+                  limit:
+                    total: '3'
+                    columns: '1'
+                    start: '0'
+                  display:
+                    pagination_buttons: ''
+                    image:
+                      enabled: full
+                    text:
+                      type: ''
+                      limit: '90'
+                      formatting: text
+                    title:
+                      enabled: show
+                    read_more:
+                      enabled: show
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+                enabled: 1
+              id: contentarray-6756
+              type: particle
+              subtype: contentarray
+            attributes:
+              id: grid-addpic
+              class: ph-rounded-square ph-rounded-square-mobile ph-wide
+              size: 100
+        - id: grid-3398
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-4949
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: View All Events Button
+              attributes:
+                html: <a href="news" class="button">View All Events</a>
+                enabled: 1
+              id: custom-4753
+              type: particle
+              subtype: custom
+            attributes:
+              class: news-button
+              variations: center
+              size: 100
+    - id: block-9819
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 15
+      children:
+      - attributes:
+          class: headlines-rounded-square
+          variations: ''
+        id: aside
+        layout: true
+        type: section
+        subtype: aside
+        title: Aside
+        children:
+        - id: grid-4817
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-2997
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Home Ads
+              attributes:
+                module_id: '121'
+                key: home-ads
+                enabled: 1
+              id: position-module-7804
+              type: position
+              subtype: module
+            attributes:
+              class: ads-903 side-ads ads-901 ads-902
+              size: 100
+- type: section
+  attributes:
+    boxed: '2'
+    class: widget-parthenon-alt
+    variations: ''
+  id: expanded
+  layout: true
+  subtype: section
+  title: Expanded
+  children:
+  - id: grid-2852
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-5695
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Facebook
+        attributes:
+          article:
+            filter:
+              categories: ''
+              articles: '218232'
+              featured: include
+            limit:
+              total: '1'
+              columns: '1'
+              start: '0'
+            display:
+              pagination_buttons: ''
+            sort:
+              orderby: ordering
+              ordering: ASC
+          enabled: 1
+        id: contentarray-6583
+        type: particle
+        subtype: contentarray
+      attributes:
+        class: facebook-widget-container widget-container
+        size: 33.3
+    - id: block-9066
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Calendar
+        attributes:
+          article:
+            filter:
+              categories: ''
+              articles: '218230'
+              featured: include
+            limit:
+              total: '1'
+              columns: '1'
+              start: '0'
+            display:
+              pagination_buttons: ''
+            sort:
+              orderby: ordering
+              ordering: ASC
+          css:
+            class: ''
+          enabled: 1
+        id: contentarray-3150
+        type: particle
+        subtype: contentarray
+      attributes:
+        class: calendar-widget-container widget-container
+        size: 33.3
+    - id: block-8613
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Latest Homilies
+        attributes:
+          article:
+            filter:
+              categories: ''
+              articles: '222751'
+              featured: include
+            limit:
+              total: '1'
+              columns: '1'
+              start: '0'
+            display:
+              pagination_buttons: ''
+            sort:
+              orderby: ordering
+              ordering: ASC
+          enabled: 1
+        id: contentarray-7651
+        type: particle
+        subtype: contentarray
+      attributes:
+        class: homily-widget-container widget-container
+        size: 33.3
+  - id: grid-4947
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-5348
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Formed Graphic
+        attributes:
+          article:
+            filter:
+              categories: ''
+              articles: '218231'
+              featured: include
+            limit:
+              total: '1'
+              columns: '1'
+              start: '0'
+            display:
+              pagination_buttons: ''
+            sort:
+              orderby: ordering
+              ordering: ASC
+          enabled: 1
+        id: contentarray-9587
+        type: particle
+        subtype: contentarray
+      attributes:
+        class: formed-container
+        size: 100
+- type: section
+  attributes:
+    boxed: '2'
+    class: ''
+    variations: ''
+  id: extension
+  layout: true
+  subtype: section
+  title: Extension
+  children:
+  - id: grid-6342
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-9512
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Welcome
+        attributes:
+          article:
+            filter:
+              categories: ''
+              articles: '222752'
+              featured: include
+            limit:
+              total: '1'
+              columns: '1'
+              start: '0'
+            display:
+              pagination_buttons: ''
+            sort:
+              orderby: ordering
+              ordering: ASC
+          enabled: 1
+        id: contentarray-2055
+        type: particle
+        subtype: contentarray
+      attributes:
+        class: welcome-container
+        size: 100
+- type: section
+  inherit:
+    outline: default
+    include:
+    - attributes
+    - children
+  id: bottom
+  layout: true
+  subtype: section
+  title: Bottom
+  attributes:
+    boxed: '2'
+    class: s-vertical-padding-2
+    variations: ''
+  children:
+  - id: grid-2438
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-8422
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Bottom Ads
+        attributes:
+          module_id: '122'
+          enabled: 1
+        id: position-module-4284
+        type: position
+        subtype: module
+        inherit:
+          outline: default
+          include:
+          - attributes
+          - block
+          particle: position-module-4987
+      attributes:
+        size: 100
+- attributes:
+    boxed: '2'
+    class: ''
+    extra: []
+  id: container-footer
+  layout: true
+  type: container
+  subtype: container
+  title: Container-footer
+  children:
+  - id: grid-8753
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-6154
+      type: block
+      subtype: block
+      layout: true
+      attributes:
+        size: 100
+      children:
+      - inherit:
+          outline: default
+          include:
+          - block
+          - children
+          - attributes
+        id: footer
+        layout: true
+        type: section
+        subtype: footer
+        title: Footer
+        attributes:
+          boxed: '2'
+          class: s-padding-2
+          variations: ''
+        children:
+        - id: grid-4975
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-1034
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Footer A
+              attributes:
+                key: footer-a
+                enabled: 1
+              id: position-position-9155
+              type: position
+              subtype: position
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: position-position-9925
+            attributes:
+              size: 33.3
+          - id: block-5134
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Footer B
+              attributes:
+                key: footer-b
+                enabled: 1
+              id: position-position-9512
+              type: position
+              subtype: position
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: position-position-3534
+            attributes:
+              size: 33.3
+          - id: block-3634
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Footer C
+              attributes:
+                key: footer-c
+                enabled: 1
+              id: position-position-4302
+              type: position
+              subtype: position
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: position-position-1157
+            attributes:
+              size: 33.3
+        - id: grid-7897
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-9285
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Footer
+              attributes:
+                article:
+                  filter:
+                    categories: ''
+                    articles: '218227'
+                    featured: include
+                  limit:
+                    total: '1'
+                    columns: '1'
+                    start: '0'
+                  display:
+                    pagination_buttons: ''
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+                enabled: 1
+              id: contentarray-7183
+              type: particle
+              subtype: contentarray
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: contentarray-1849
+            attributes:
+              size: 100
+      - type: section
+        inherit:
+          outline: default
+          include:
+          - attributes
+          - block
+          - children
+        id: copyright
+        layout: true
+        subtype: section
+        title: Copyright
+        attributes:
+          boxed: ''
+          class: ''
+          variations: ''
+        children:
+        - id: grid-7502
+          type: grid
+          subtype: grid
+          layout: true
+          attributes: {}
+          children:
+          - id: block-8977
+            type: block
+            subtype: block
+            layout: true
+            children:
+            - title: Admin Footer
+              attributes:
+                html: "<div class=\"adminfootericon\" style=\"font-size: x-small;\
+                  \ line-height: 1.3; text-shadow: 2px 2px #000000; \">\n\t<a  style=\"\
+                  font-size: large;\" href=\"https://stwen-dick.solutiosoftware.com/administrator/\"\
+                  \ target=\"_blank\">\n\t<i class=\"fa fa-lock\"></i></a>\n\t<br><br><a\
+                  \ style=\"color: #ffffff;\" href=\"http://solutiosoftware.com/\"\
+                  \ target=\"_blank\">Site by Solutio</a>\n<br><a  style=\"color:\
+                  \ #ffffff;\"  href=\"https://solutiosoftware.com/web-policy\" target=\"\
+                  _blank\" rel=\"noopener noreferrer\">Analytics Privacy Policy</a>\n\
+                  </div>"
+                enabled: 1
+              id: custom-5626
+              type: particle
+              subtype: custom
+              inherit:
+                outline: default
+                include:
+                - attributes
+                - block
+                particle: custom-2544
+            attributes:
+              size: 100
+- inherit:
+    outline: default
+    include:
+    - attributes
+    - children
+  id: offcanvas
+  layout: true
+  type: offcanvas
+  subtype: offcanvas
+  title: Offcanvas
+  attributes:
+    swipe: '0'
+  children:
+  - id: grid-9848
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-1943
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Mobile Menu
+        id: mobile-menu-2199
+        type: particle
+        subtype: mobile-menu
+        attributes:
+          enabled: 1
+        inherit:
+          outline: default
+          include:
+          - attributes
+          - block
+          particle: mobile-menu-8992
+      attributes:
+        size: 100
+  - id: grid-6832
+    type: grid
+    subtype: grid
+    layout: true
+    attributes: {}
+    children:
+    - id: block-2794
+      type: block
+      subtype: block
+      layout: true
+      children:
+      - title: Subsite Navigation
+        attributes:
+          html: <div class="ql-toplinks-studius"><jdoc:include type="modules" name="subsite-navigation"
+            /></div>
+          enabled: 1
+        id: custom-6146
+        type: particle
+        subtype: custom
+        inherit:
+          outline: default
+          include:
+          - attributes
+          - block
+          particle: custom-2300
+      attributes:
+        size: 100

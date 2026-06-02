@@ -28,7 +28,8 @@ RUN cd apps/gantry-mcp && npm ci
 RUN cd apps/joomla-mcp && npm ci && npm run build
 RUN cd apps/joomla-orchestrator && npm ci
 
-# Only the orchestrator needs to be exposed publicly.
+# Orchestrator (MCP/HTTP) and site-builder webapp
 EXPOSE 9302
+EXPOSE 18303
 
 CMD ["bash", "scripts/start-all.sh"]
