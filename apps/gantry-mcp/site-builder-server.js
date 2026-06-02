@@ -136,12 +136,13 @@ app.post('/api/deploy', async (req, res) => {
 
         try {
           const ftpConf = await callTool(joomla, 'ftp_site_config', { domain });
-          if (ftpConf && typeof ftpConf === 'object') {
-            // upload_path is the FTP write-user's allowed directory — prefer it over pub_path
-            // which is the read-user's filesystem path and may differ.
-            if (ftpConf.upload_path) pubPath = ftpConf.upload_path;
-            else if (ftpConf.pub_path) pubPath = ftpConf.pub_path;
-            if (ftpConf.pub_url) pubUrl = ftpConf.pub_url.replace(/\/$/, '');
+                    // ftp_site_config returns { data: { upload_path, pub_path, pub_url } }
+          const ftpData = (ftpConf?.data && typeof ftpConf.data === 'object') ? ftpConf.data : ftpConf;
+          if (ftpData && typeof ftpData === 'object') {
+            if (ftpData.upload_path && !String(ftpData.upload_path).includes('not set'))
+              pubPath = ftpData.upload_path;
+            else if (ftpData.pub_path) pubPath = ftpData.pub_path;
+            if (ftpData.pub_url) pubUrl = ftpData.pub_url.replace(/\/$/, '');
           }
         } catch (e) {
           steps.push('[CSS WARN] Could not read ftp_site_config (' + e.message + ') — using default paths');
@@ -368,7 +369,22 @@ app.post('/api/deploy-with-content', async (req, res) => {
             if (match1) {
               const newId = String(match1.id);
               artOldToNew[particleId][art.id] = newId;
-              steps.push(`[ARTICLE] Existing "${art.title}" → ID ${newId} [${particleId}]`);
+              // Update the existing article's content to match the section's canonical HTML
+              const articleContent = [art.introtext || '', art.fulltext || ''].filter(Boolean).join('\n');
+              if (articleContent) {
+                try {
+                  await callTool(joomla, 'joomla_article', {
+                    action:  'update',
+                    id:      newId,
+                    content: articleContent,
+                  });
+                  steps.push(`[ARTICLE] Updated "${art.title}" (ID ${newId}) with section content [${particleId}]`);
+                } catch (updateErr) {
+                  steps.push(`[ARTICLE] Found "${art.title}" → ID ${newId} (update failed: ${updateErr.message}) [${particleId}]`);
+                }
+              } else {
+                steps.push(`[ARTICLE] Existing "${art.title}" → ID ${newId} [${particleId}]`);
+              }
               continue;
             }
             // 2. Create it
@@ -376,7 +392,7 @@ app.post('/api/deploy-with-content', async (req, res) => {
             await callTool(joomla, 'joomla_article', {
               action:     'create',
               title:      art.title,
-              alias:      art.alias || undefined,
+              // alias omitted — Joomla auto-generates from title, avoids alias conflicts
               categoryId: catId,
               content:    articleContent,
               state:      String(Number(art.state)  || 1),
@@ -452,10 +468,13 @@ app.post('/api/deploy-with-content', async (req, res) => {
         let pubUrl  = 'https://' + domain + '/images/pub';
         try {
           const ftpConf = await callTool(joomla, 'ftp_site_config', { domain });
-          if (ftpConf && typeof ftpConf === 'object') {
-            if (ftpConf.upload_path) pubPath = ftpConf.upload_path;
-            else if (ftpConf.pub_path) pubPath = ftpConf.pub_path;
-            if (ftpConf.pub_url) pubUrl = ftpConf.pub_url.replace(/\/$/, '');
+                    // ftp_site_config returns { data: { upload_path, pub_path, pub_url } }
+          const ftpData = (ftpConf?.data && typeof ftpConf.data === 'object') ? ftpConf.data : ftpConf;
+          if (ftpData && typeof ftpData === 'object') {
+            if (ftpData.upload_path && !String(ftpData.upload_path).includes('not set'))
+              pubPath = ftpData.upload_path;
+            else if (ftpData.pub_path) pubPath = ftpData.pub_path;
+            if (ftpData.pub_url) pubUrl = ftpData.pub_url.replace(/\/$/, '');
           }
         } catch (e) { steps.push('[CSS WARN] ' + e.message); }
         const remotePath = pubPath.replace(/\/$/, '') + '/' + cssFile;
