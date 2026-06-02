@@ -269,6 +269,160 @@ app.post('/api/deploy-with-content', async (req, res) => {
     return idStr.split(',').map(id => idMap[id.trim()] || id.trim()).join(',');
   }
 
+  function slugify(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  function normTitle(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+      .replace(/\s+/g, ' ');
+  }
+
+  function isLocalHref(href) {
+    if (!href) return false;
+    const h = String(href).trim();
+    if (!h || h.startsWith('#') || /^mailto:|^tel:|^javascript:/i.test(h)) return false;
+    if (/^https?:\/\//i.test(h)) {
+      try { return new URL(h).hostname === domainOf(siteUrl); } catch { return false; }
+    }
+    return !/^[a-z][a-z0-9+.-]*:/i.test(h);
+  }
+
+  function pathKeyFromHref(href) {
+    if (!href) return '';
+    let h = String(href).trim();
+    if (/^https?:\/\//i.test(h)) {
+      try { h = new URL(h).pathname; } catch {}
+    }
+    h = h.split('#')[0].split('?')[0].replace(/^\/+|\/+$/g, '');
+    return slugify(h.split('/').filter(Boolean).pop() || h);
+  }
+
+  async function buildTargetRouteIndex(joomla, domain) {
+    const routeByTitle = {};
+    const routeBySlug = {};
+    const menusResult = await callTool(joomla, 'joomla_list_menus', {});
+    const menus = Array.isArray(menusResult?.data) ? menusResult.data : [];
+    let inspected = 0;
+
+    for (const menu of menus) {
+      const menuType = String(menu.menuType || '').trim();
+      if (!menuType) continue;
+      let itemsResult;
+      try {
+        itemsResult = await callTool(joomla, 'joomla_list_menu_items', { menuId: menuType, limit: 500 });
+      } catch (_) { continue; }
+      const items = Array.isArray(itemsResult?.data) ? itemsResult.data : [];
+      const byId = {};
+      for (const item of items) byId[String(item.id)] = item;
+
+      for (const item of items) {
+        if (String(item.state || '1') === '-2') continue;
+        let detail = null;
+        try {
+          detail = await callTool(joomla, 'joomla_get_menu_item', { id: String(item.id) });
+          inspected++;
+        } catch (_) {}
+        const data = detail?.data || {};
+        const aliases = [];
+        let cur = item;
+        while (cur && cur.id) {
+          const curDetail = cur.id === item.id ? data : null;
+          const alias = curDetail?.alias || cur.alias || slugify(cur.title);
+          if (alias && alias !== 'root') aliases.unshift(alias);
+          cur = cur.parentId ? byId[String(cur.parentId)] : null;
+        }
+        const route = '/' + aliases.filter(Boolean).join('/');
+        const keys = [
+          normTitle(item.title),
+          normTitle(data.title),
+          slugify(item.title),
+          slugify(data.alias || item.title),
+        ].filter(Boolean);
+        for (const key of keys) {
+          routeByTitle[key] ||= route;
+          routeBySlug[key] ||= route;
+        }
+      }
+    }
+    steps.push(`[ROUTES] Read ${menus.length} menu(s), inspected ${inspected} item(s) on ${domain} using read-only site data`);
+    return { routeByTitle, routeBySlug };
+  }
+
+  function resolveTargetHref(href, label, routeIndex) {
+    if (!isLocalHref(href)) return href;
+    const labelKey = normTitle(label);
+    const hrefKey = pathKeyFromHref(href);
+    return routeIndex.routeByTitle[labelKey] ||
+      routeIndex.routeBySlug[slugify(label)] ||
+      routeIndex.routeBySlug[hrefKey] ||
+      routeIndex.routeByTitle[hrefKey] ||
+      href;
+  }
+
+  function rewriteHtmlLinks(html, routeIndex) {
+    if (!html || !routeIndex) return { html, count: 0 };
+    let count = 0;
+    const out = String(html).replace(/<a\b([^>]*?)\bhref=(["'])(.*?)\2([^>]*)>([\s\S]*?)<\/a>/gi,
+      (m, before, quote, href, after, inner) => {
+        const label = inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        const next = resolveTargetHref(href, label, routeIndex);
+        if (next !== href) {
+          count++;
+          return `<a${before}href=${quote}${next}${quote}${after}>${inner}</a>`;
+        }
+        return m;
+      });
+    return { html: out, count };
+  }
+
+  function rewriteObjectLinks(value, routeIndex) {
+    let count = 0;
+    function visit(node) {
+      if (!node || typeof node !== 'object') return;
+      if (Array.isArray(node)) { node.forEach(visit); return; }
+      const label = node.button || node.linktext || node.title || node.name || node.headline || '';
+      for (const key of ['buttonlink', 'link']) {
+        if (typeof node[key] === 'string') {
+          const next = resolveTargetHref(node[key], label, routeIndex);
+          if (next !== node[key]) { node[key] = next; count++; }
+        }
+      }
+      if (typeof node.html === 'string') {
+        const r = rewriteHtmlLinks(node.html, routeIndex);
+        if (r.count) { node.html = r.html; count += r.count; }
+      }
+      for (const v of Object.values(node)) visit(v);
+    }
+    visit(value);
+    return count;
+  }
+
+  async function findMatchingCategory(titleCandidates, oldIds, catOldToNew, joomla) {
+    for (const candidate of titleCandidates.map(String).map(s => s.trim()).filter(Boolean)) {
+      const search = await callTool(joomla, 'joomla_list_categories', {
+        extension: 'com_content', search: candidate,
+      });
+      const rows = Array.isArray(search?.data) ? search.data : [];
+      const exact = rows.find(c => normTitle(c.title) === normTitle(candidate));
+      if (exact) {
+        const id = String(exact.id);
+        for (const oldId of oldIds) catOldToNew[oldId] = id;
+        steps.push(`[CATEGORY] Matched target "${exact.title}" for "${candidate}" → ID ${id}`);
+        return true;
+      }
+    }
+    return false;
+  }
+
   try {
     joomla = await mcpClient(JOOMLA_URL);
 
@@ -276,8 +430,17 @@ app.post('/api/deploy-with-content', async (req, res) => {
     const particleIndex = {};
     for (const vc of variantContent) {
       for (const [particleId, pdata] of Object.entries(vc.particles || {})) {
-        if (!particleIndex[particleId]) particleIndex[particleId] = { articles: [], categories: [] };
+        if (!particleIndex[particleId]) {
+          particleIndex[particleId] = {
+            articles: [],
+            categories: [],
+            particleTitle: pdata.particleTitle || '',
+            particleType: pdata.particleType || '',
+          };
+        }
         const ex = particleIndex[particleId];
+        if (!ex.particleTitle && pdata.particleTitle) ex.particleTitle = pdata.particleTitle;
+        if (!ex.particleType && pdata.particleType) ex.particleType = pdata.particleType;
         for (const art of (pdata.articles  || [])) { if (!ex.articles.find(a => a.id === art.id)) ex.articles.push(art); }
         for (const cat of (pdata.categories || [])) { if (!ex.categories.find(c => c.id === cat.id)) ex.categories.push(cat); }
       }
@@ -285,19 +448,28 @@ app.post('/api/deploy-with-content', async (req, res) => {
 
     // ── Collect unique categories needed ────────────────────────────────────────
     const catTitleToOldIds = {};
+    const catOldIdToTitleCandidates = {};
     const catOldToNew = {};
 
     for (const pdata of Object.values(particleIndex)) {
       for (const cat of pdata.categories) {
         (catTitleToOldIds[cat.title] ||= []).push(cat.id);
+        const candidates = (catOldIdToTitleCandidates[cat.id] ||= []);
+        if (pdata.particleTitle) candidates.push(pdata.particleTitle);
+        if (cat.title) candidates.push(cat.title);
       }
       for (const art of pdata.articles) {
-        if (art.categoryTitle && art.categoryId)
+        if (art.categoryTitle && art.categoryId) {
           (catTitleToOldIds[art.categoryTitle] ||= []).push(art.categoryId);
+          const candidates = (catOldIdToTitleCandidates[art.categoryId] ||= []);
+          if (art.categoryTitle) candidates.push(art.categoryTitle);
+        }
       }
     }
     for (const title of Object.keys(catTitleToOldIds))
       catTitleToOldIds[title] = [...new Set(catTitleToOldIds[title])];
+    for (const oldId of Object.keys(catOldIdToTitleCandidates))
+      catOldIdToTitleCandidates[oldId] = [...new Set(catOldIdToTitleCandidates[oldId].filter(Boolean))];
 
     const totalArts = Object.values(particleIndex).reduce((n, p) => n + p.articles.length, 0);
     steps.push(`[CONTENT] ${Object.keys(catTitleToOldIds).length} categories, ${totalArts} articles to create`);
@@ -313,15 +485,45 @@ app.post('/api/deploy-with-content', async (req, res) => {
 
     if (dryRun) {
       for (const title of Object.keys(catTitleToOldIds))
-        steps.push(`[DRY RUN] Would create category: "${title}"`);
+        steps.push(`[DRY RUN] Would find/create category: "${title}"`);
       for (const [particleId, pdata] of Object.entries(particleIndex))
         for (const art of pdata.articles)
-          steps.push(`[DRY RUN] Would create article: "${art.title}" (cat: "${art.categoryTitle}") → particle ${particleId}`);
+          steps.push(`[DRY RUN] Would create/update article: "${art.title}" (cat: "${art.categoryTitle}") → particle ${particleId}`);
     } else {
+      const domain = domainOf(siteUrl);
+      let routeIndex = { routeByTitle: {}, routeBySlug: {} };
+      try {
+        // Confirm the target domain/path with the read-only FTP account before
+        // trusting site-specific path rewrites.
+        const ftpInfo = await callTool(joomla, 'ftp_site_config', { domain });
+        const ftpOk = ftpInfo?.success !== false;
+        const ftpData = (ftpInfo?.data && typeof ftpInfo.data === 'object') ? ftpInfo.data : {};
+        const webRoot = ftpData.web_root || '/';
+        let readOk = false;
+        if (ftpOk) {
+          const listResult = await callTool(joomla, 'ftp_list_files', { domain, path: webRoot });
+          readOk = listResult?.success !== false;
+        }
+        steps.push(`[FTP READ] ${domain} — ${ftpOk && readOk ? 'read-only OK' : (ftpInfo?.message || 'config/read unavailable')}`);
+      } catch (err) {
+        steps.push(`[FTP READ WARN] ${domain}: ${err.message}`);
+      }
+      try {
+        routeIndex = await buildTargetRouteIndex(joomla, domain);
+      } catch (err) {
+        steps.push(`[ROUTES WARN] Could not read target menu paths: ${err.message}`);
+      }
+
       // ── Find-or-create categories ────────────────────────────────────────────────
       // Search first — avoids duplicates and works even when post-create
       // verification fails (forge sites, unusual admin layouts).
       async function findOrCreateCategory(title, oldIds) {
+        const candidates = [
+          ...oldIds.flatMap(oldId => catOldIdToTitleCandidates[oldId] || []),
+          title,
+        ];
+        if (await findMatchingCategory([...new Set(candidates)], oldIds, catOldToNew, joomla)) return;
+
         const search1 = await callTool(joomla, 'joomla_list_categories', {
           extension: 'com_content', search: title,
         });
@@ -374,7 +576,9 @@ app.post('/api/deploy-with-content', async (req, res) => {
               const newId = String(match1.id);
               artOldToNew[particleId][art.id] = newId;
               // Update the existing article's content to match the section's canonical HTML
-              const articleContent = [art.introtext || '', art.fulltext || ''].filter(Boolean).join('\n');
+              let articleContent = [art.introtext || '', art.fulltext || ''].filter(Boolean).join('\n');
+              const linkRewrite = rewriteHtmlLinks(articleContent, routeIndex);
+              articleContent = linkRewrite.html;
               if (articleContent) {
                 try {
                   await callTool(joomla, 'joomla_article', {
@@ -382,7 +586,8 @@ app.post('/api/deploy-with-content', async (req, res) => {
                     id:      newId,
                     content: articleContent,
                   });
-                  steps.push(`[ARTICLE] Updated "${art.title}" (ID ${newId}) with section content [${particleId}]`);
+                  steps.push(`[ARTICLE] Updated "${art.title}" (ID ${newId}) with section content [${particleId}]` +
+                    (linkRewrite.count ? ` (${linkRewrite.count} link(s) remapped)` : ''));
                 } catch (updateErr) {
                   steps.push(`[ARTICLE] Found "${art.title}" → ID ${newId} (update failed: ${updateErr.message}) [${particleId}]`);
                 }
@@ -392,7 +597,9 @@ app.post('/api/deploy-with-content', async (req, res) => {
               continue;
             }
             // 2. Create it
-            const articleContent = [art.introtext || '', art.fulltext || ''].filter(Boolean).join('\n');
+            let articleContent = [art.introtext || '', art.fulltext || ''].filter(Boolean).join('\n');
+            const linkRewrite = rewriteHtmlLinks(articleContent, routeIndex);
+            articleContent = linkRewrite.html;
             await callTool(joomla, 'joomla_article', {
               action:     'create',
               title:      art.title,
@@ -412,7 +619,8 @@ app.post('/api/deploy-with-content', async (req, res) => {
             if (match2) {
               const newId = String(match2.id);
               artOldToNew[particleId][art.id] = newId;
-              steps.push(`[ARTICLE] Created "${art.title}" cat=${catId} → ID ${newId} [${particleId}]`);
+              steps.push(`[ARTICLE] Created "${art.title}" cat=${catId} → ID ${newId} [${particleId}]` +
+                (linkRewrite.count ? ` (${linkRewrite.count} link(s) remapped)` : ''));
             } else {
               steps.push(`[ARTICLE WARN] "${art.title}" [${particleId}]: created but could not retrieve ID`);
             }
@@ -425,6 +633,7 @@ app.post('/api/deploy-with-content', async (req, res) => {
       // ── Patch layout IDs ─────────────────────────────────────────────────────
       const patchedLayout = deepClone(layoutArray);
       let patchCount = 0;
+      const linkPatchCount = rewriteObjectLinks(patchedLayout, routeIndex);
       walkParticles(patchedLayout, node => {
         const pid    = node.id || '';
         const filter = node.attributes?.article?.filter;
@@ -438,7 +647,7 @@ app.post('/api/deploy-with-content', async (req, res) => {
           if (p !== String(filter.articles)) { filter.articles = p; patchCount++; }
         }
       });
-      steps.push(`[PATCH] Remapped ${patchCount} filter(s)`);
+      steps.push(`[PATCH] Remapped ${patchCount} filter(s), ${linkPatchCount} quicklink path(s)`);
       layoutArray = patchedLayout;
     }
 

@@ -219,18 +219,26 @@ if (!files.length) {
 const ZONES = [
   { container: 'container-top', sections: ['top', 'navigation', 'slideshow'] },
   { container: null, sections: ['header', 'above', 'feature', 'showcase', 'utility'] },
-  { container: 'container-main', sections: ['sidebar', 'mainbar', 'aside'] },
+  { container: null, sections: ['container-main'] },
   { container: null, sections: ['expanded', 'extension', 'bottom'] },
   { container: 'container-footer', sections: ['footer', 'copyright'] },
   { container: null, sections: ['offcanvas'] },
 ];
 const SECTION_ORDER = ZONES.flatMap((z) => z.sections);
+const CSS_SECTION_ORDER = [
+  'top','navigation','slideshow','header','above','feature','showcase','utility',
+  'container-main','sidebar','mainbar','aside','expanded','extension','bottom','footer','copyright','offcanvas',
+];
+const COMPOSITE_SECTION_PARTS = {
+  'container-main': ['sidebar', 'mainbar', 'aside'],
+};
 
 // --- Extract sections + container templates from each source ---
 
 const sectionLibrary = {};   // sectionId -> [{ sourceId, sourceName, host, type, node, summary }]
 const containerTemplates = {}; // container-top / container-main / container-footer
 const sources = [];
+let skippedEmptyVariants = 0;
 
 for (const filename of files) {
   const raw = fs.readFileSync(path.join(SRC_DIR, filename), 'utf8');
@@ -268,22 +276,44 @@ for (const filename of files) {
             inherit: {},
           };
         }
+        if (n.id === 'container-main') {
+          const contentData = buildCompositeContentData(sourceId, COMPOSITE_SECTION_PARTS[n.id]) || null;
+          const summary = summarizeSection(n, contentData);
+          if (isUsefulSectionVariant(summary, contentData)) {
+            (sectionLibrary[n.id] ||= []).push({
+              sourceId,
+              sourceName,
+              host,
+              type,
+              node: n,
+              summary,
+              shot: shotLookup[sourceId]?.[n.id] || null,
+              contentData,
+            });
+          } else {
+            skippedEmptyVariants++;
+          }
+        }
         walkExtract(n.children, n.id);
       } else if (type === 'grid' || type === 'block') {
         walkExtract(n.children, insideContainer);
       } else if (type === 'section' || type === 'offcanvas') {
         const contentData = buildVariantContentData(sourceId, n.id) || null;
         const summary = summarizeSection(n, contentData);
-        (sectionLibrary[n.id] ||= []).push({
-          sourceId,
-          sourceName,
-          host,
-          type,
-          node: n,
-          summary,
-          shot: shotLookup[sourceId]?.[n.id] || null,
-          contentData,
-        });
+        if (isUsefulSectionVariant(summary, contentData)) {
+          (sectionLibrary[n.id] ||= []).push({
+            sourceId,
+            sourceName,
+            host,
+            type,
+            node: n,
+            summary,
+            shot: shotLookup[sourceId]?.[n.id] || null,
+            contentData,
+          });
+        } else {
+          skippedEmptyVariants++;
+        }
         // sections don't nest sections, but be safe
         // (we intentionally don't recurse into the section's own grids here)
       }
@@ -291,34 +321,61 @@ for (const filename of files) {
   }
 }
 
+function buildCompositeContentData(sourceId, sectionIds) {
+  const merged = {};
+  for (const sid of sectionIds || []) {
+    const data = buildVariantContentData(sourceId, sid);
+    if (data) Object.assign(merged, data);
+  }
+  return Object.keys(merged).length ? merged : null;
+}
+
+function isUsefulSectionVariant(summary, contentData) {
+  if (!summary) return false;
+  if (summary.particleCount > 0) return true;
+  if (summary.rows.length > 0) return true;
+  if (contentData && Object.keys(contentData).length > 0) return true;
+  return false;
+}
+
 function summarizeSection(node, contentData) {
   // Collect particle rows: each grid -> [{subtype, title, size, enabled}]
   const rows = [];
   let particleCount = 0;
   const subtypes = {};
-  for (const grid of node.children || []) {
-    if (grid.type !== 'grid') continue;
-    const row = [];
-    for (const block of grid.children || []) {
-      if (block.type !== 'block') continue;
-      const size = Number(block.attributes?.size) || 0;
-      for (const p of block.children || []) {
-        if (['grid', 'block'].includes(p.type)) continue;
-        const enabled = p.attributes?.enabled !== 0 && p.attributes?.enabled !== '0';
-        row.push({
-          type: p.type,
-          subtype: p.subtype || '',
-          title: p.title || `${p.type}/${p.subtype}`,
-          size,
-          enabled,
-        });
-        particleCount++;
-        const key = `${p.type}/${p.subtype || '?'}`;
-        subtypes[key] = (subtypes[key] || 0) + 1;
+  function walkGrids(nodes) {
+    for (const grid of nodes || []) {
+      if (grid.type !== 'grid') {
+        if (Array.isArray(grid.children)) walkGrids(grid.children);
+        continue;
       }
+      const row = [];
+      for (const block of grid.children || []) {
+        if (block.type !== 'block') continue;
+        const size = Number(block.attributes?.size) || 0;
+        for (const p of block.children || []) {
+          if (p.type === 'section' || p.type === 'offcanvas') {
+            walkGrids(p.children || []);
+            continue;
+          }
+          if (['grid', 'block'].includes(p.type)) continue;
+          const enabled = p.attributes?.enabled !== 0 && p.attributes?.enabled !== '0';
+          row.push({
+            type: p.type,
+            subtype: p.subtype || '',
+            title: p.title || `${p.type}/${p.subtype}`,
+            size,
+            enabled,
+          });
+          particleCount++;
+          const key = `${p.type}/${p.subtype || '?'}`;
+          subtypes[key] = (subtypes[key] || 0) + 1;
+        }
+      }
+      if (row.length) rows.push(row);
     }
-    if (row.length) rows.push(row);
   }
+  walkGrids(node.children || []);
   const inherited = !!(node.inherit && Object.keys(node.inherit).length);
   return {
     rows,
@@ -392,10 +449,81 @@ function addGeneratedContentClasses(classes, contentData) {
   }
 }
 
+function normalizeGeneratedId(value) {
+  return String(value).replace(/\b([a-z][a-z0-9-]*?)-\d{3,}\b/gi, '$1-*');
+}
+
+function normalizeForDedupe(value, key = '') {
+  if (value === null || value === undefined) return value;
+  if (typeof value === 'string') {
+    return key === 'id' ? normalizeGeneratedId(value) : value.trim();
+  }
+  if (Array.isArray(value)) return value.map((v) => normalizeForDedupe(v, key));
+  if (typeof value !== 'object') return value;
+  const out = {};
+  for (const k of Object.keys(value).sort()) {
+    out[k] = normalizeForDedupe(value[k], k);
+  }
+  return out;
+}
+
+function normalizeContentDataForDedupe(contentData) {
+  if (!contentData) return null;
+  const out = {};
+  for (const [key, value] of Object.entries(contentData).sort()) {
+    out[normalizeGeneratedId(key)] = normalizeForDedupe(value);
+  }
+  return out;
+}
+
+function dedupeVariantKey(sectionId, variant) {
+  return JSON.stringify({
+    sectionId,
+    node: normalizeForDedupe(variant.node),
+    contentData: normalizeContentDataForDedupe(variant.contentData),
+  });
+}
+
+function variantQualityScore(variant) {
+  let score = 0;
+  if (cssRaw[variant.sourceId]) score += 100;
+  if (variant.shot) score += 20;
+  if (variant.contentData && Object.keys(variant.contentData).length) score += 10;
+  if (!/-school-school$/.test(variant.sourceId)) score += 5;
+  if (!/-school$/.test(variant.sourceId)) score += 2;
+  return score;
+}
+
+function dedupeSectionLibrary(library) {
+  let removed = 0;
+  for (const [sectionId, variants] of Object.entries(library)) {
+    const byKey = new Map();
+    for (const variant of variants) {
+      const key = dedupeVariantKey(sectionId, variant);
+      const current = byKey.get(key);
+      if (!current || variantQualityScore(variant) > variantQualityScore(current)) {
+        if (current) removed++;
+        byKey.set(key, variant);
+      } else {
+        removed++;
+      }
+    }
+    library[sectionId] = Array.from(byKey.values());
+  }
+  return removed;
+}
+
+const skippedDuplicateVariants = dedupeSectionLibrary(sectionLibrary);
 const libCount = Object.values(sectionLibrary).reduce((a, b) => a + b.length, 0);
 console.log(
   `Loaded ${sources.length} sources, ${Object.keys(sectionLibrary).length} section ids, ${libCount} section variants.`
 );
+if (skippedEmptyVariants) {
+  console.log(`Skipped ${skippedEmptyVariants} empty section variant(s).`);
+}
+if (skippedDuplicateVariants) {
+  console.log(`Skipped ${skippedDuplicateVariants} duplicate section variant(s).`);
+}
 
 // --- Emit HTML ---
 
@@ -419,13 +547,15 @@ const CONTAINER_TEMPLATES = ${safeJson(containerTemplates)};
 const SOURCES = ${safeJson(sources)};
 const ZONES = ${JSON.stringify(ZONES)};
 const SECTION_ORDER = ${JSON.stringify(SECTION_ORDER)};
+const CSS_SECTION_ORDER = ${JSON.stringify(CSS_SECTION_ORDER)};
+const COMPOSITE_SECTION_PARTS = ${JSON.stringify(COMPOSITE_SECTION_PARTS)};
 const CSS_RAW = ${safeJson(cssRaw)};
 const CSS_TEMPLATE_HEAD_JS = ${safeJson(CSS_TEMPLATE_HEAD)};
 const CSS_TEMPLATE_TAIL_JS = ${safeJson(CSS_TEMPLATE_TAIL)};
 const BASE_HOME_LAYOUT_JS  = ${safeJson(BASE_HOME_LAYOUT)};
 const BASE_HOME_FIXED_JS   = ${safeJson(BASE_HOME_FIXED)};
 const BASE_HOME_TOP_JS     = ${safeJson(BASE_HOME_TOP)};
-const SECTION_LABEL = {top:'TOP',navigation:'NAVIGATION',slideshow:'SLIDESHOW',header:'HEADER',above:'ABOVE',feature:'FEATURE',showcase:'SHOWCASE',utility:'UTILITY',sidebar:'SIDEBAR',mainbar:'MAIN',aside:'ASIDE',expanded:'EXPANDED',extension:'EXTENSION',footer:'FOOTER',copyright:'COPYRIGHT'};
+const SECTION_LABEL = {top:'TOP',navigation:'NAVIGATION',slideshow:'SLIDESHOW',header:'HEADER',above:'ABOVE',feature:'FEATURE',showcase:'SHOWCASE',utility:'UTILITY','container-main':'MAIN CONTAINER',sidebar:'SIDEBAR',mainbar:'MAIN',aside:'ASIDE',expanded:'EXPANDED',extension:'EXTENSION',footer:'FOOTER',copyright:'COPYRIGHT'};
 // Compute block widths for container-main from base template
 const CONTAINER_SECTION_WIDTHS = (function() {
   const w = {};
@@ -883,7 +1013,9 @@ function renderZones() {
   host.innerHTML = ZONES.map(zone => {
     const zlabel = zone.container
       ? zone.container.replace('container-', '') + ' container'
-      : 'root sections';
+      : (zone.sections.length === 1 && zone.sections[0].startsWith('container-')
+        ? zone.sections[0].replace('container-', '') + ' container'
+        : 'root sections');
     // Check if this zone has side-by-side sections (e.g. container-main)
     const widths = zone.sections.map(s => CONTAINER_SECTION_WIDTHS[s] || 0);
     const isRow  = widths.filter(w => w > 0).length > 1;
@@ -913,7 +1045,7 @@ function renderZones() {
       const targetSlot = slot.dataset.section;
       const variant = (SECTION_LIBRARY[origSectionId]||[]).find(v => v.sourceId === sourceId);
       if (!variant) return;
-      // Any variant into any slot — the section is re-homed on export.
+      // Any variant into any compatible slot — the node is re-homed on export.
       filled[targetSlot] = variant;
       renderZones();
       if (variant.node.id !== targetSlot) {
@@ -963,7 +1095,7 @@ function renderGroups(filter) {
   // Order groups by canonical section order
   const ids = Object.keys(SECTION_LIBRARY).sort(
     (a,b) => SECTION_ORDER.indexOf(a) - SECTION_ORDER.indexOf(b)
-  );
+  ).filter(id => SECTION_ORDER.includes(id));
   host.innerHTML = ids.map(sid => {
     let variants = SECTION_LIBRARY[sid];
     if (q) {
@@ -1043,10 +1175,18 @@ function wrapSection(node) {
   };
 }
 
-// Re-home a variant's section node into a target slot: deep-clone, then rewrite
-// id / type / title so the section is valid wherever it was dropped.
+// Re-home a variant's node into a target slot: deep-clone, then rewrite
+// id / type / title so the node is valid wherever it was dropped.
 function rehomeNode(variant, slotId) {
   const node = JSON.parse(JSON.stringify(variant.node));
+  if (slotId === 'container-main') {
+    node.id = 'container-main';
+    node.type = 'container';
+    node.subtype = node.subtype ?? false;
+    node.title = 'Container-main';
+    node.inherit = {};
+    return node;
+  }
   node.id = slotId;
   node.type = slotId === 'offcanvas' ? 'offcanvas' : 'section';
   node.subtype = node.type === 'offcanvas' ? 'offcanvas' : 'section';
@@ -1061,6 +1201,18 @@ const ALWAYS_FIXED_SECTIONS   = new Set(['top']);
 function patchBaseNode(node) {
   if (!node || typeof node !== 'object') return;
   const sid      = node.id;
+  if (node.type === 'container' && sid === 'container-main') {
+    const v = filled['container-main'];
+    if (v) {
+      const src = rehomeNode(v, 'container-main');
+      node.children = src.children || [];
+      node.attributes = Object.assign({}, node.attributes || {}, src.attributes || {});
+      node.subtype = src.subtype ?? node.subtype ?? false;
+      node.title = src.title || node.title || 'Container-main';
+      node.inherit = {};
+    }
+    return;
+  }
   const isSection = node.type === 'section' || node.type === 'offcanvas';
   if (isSection && sid) {
     if (ALWAYS_INHERIT_SECTIONS.has(sid) || ALWAYS_FIXED_SECTIONS.has(sid)) return;
@@ -1244,7 +1396,7 @@ function tokenizeCss(css) {
 // Which canonical sections does this selector reference (via #g-<id>)?
 function sectionsInSelector(selector) {
   const found = [];
-  for (const sid of SECTION_ORDER) {
+  for (const sid of CSS_SECTION_ORDER) {
     if (new RegExp('#g-' + sid + '(?![\\\\w-])').test(selector)) found.push(sid);
   }
   return found;
@@ -1340,6 +1492,14 @@ function rehomeCss(chunk, origId, slotId) {
     .replace(new RegExp('--section-' + origId + '-', 'g'), '--section-' + slotId + '-');
 }
 
+function cssSectionHeader(label) {
+  return [
+    '/*',
+    ' * ' + String(label || '').toUpperCase(),
+    ' */',
+  ].join('\\n');
+}
+
 // Assemble the composite override.css using the standard template format.
 function assembleCss(baseParish) {
   const baseSrc  = SOURCES.find(s => s.id === baseParish);
@@ -1350,25 +1510,47 @@ function assembleCss(baseParish) {
   const sectionBlocks = [], manifest = [];
   let sectionChunkCount = 0, missingCss = 0;
 
-  for (const sid of SECTION_ORDER) {
+  function cssSelections() {
+    const out = [];
+    for (const sid of SECTION_ORDER) {
+      const v = filled[sid];
+      if (!v) continue;
+      const parts = COMPOSITE_SECTION_PARTS[sid] || [sid];
+      if (COMPOSITE_SECTION_PARTS[sid]) {
+        out.push({ sid, cssId: sid, origCssId: sid, variant: v, label: SECTION_LABEL[sid] || sid.toUpperCase() });
+      }
+      for (const part of parts) {
+        out.push({
+          sid,
+          cssId: part,
+          origCssId: COMPOSITE_SECTION_PARTS[sid] ? part : (v.node.id || part),
+          variant: v,
+          label: SECTION_LABEL[part] || part.toUpperCase(),
+        });
+      }
+    }
+    return out;
+  }
+
+  for (const sel of cssSelections()) {
+    const sid = sel.sid, cssId = sel.cssId;
     if (sid === 'bottom') continue;
-    const v = filled[sid];
-    if (!v) continue;
-    const lib = CSS_LIBRARY[v.sourceId], origId = v.node.id, rehomed = origId !== sid;
-    const label = SECTION_LABEL[sid] || sid.toUpperCase();
+    const v = sel.variant;
+    const lib = CSS_LIBRARY[v.sourceId], origId = sel.origCssId || cssId, rehomed = origId !== cssId;
+    const label = sel.label;
     if (!lib) {
       missingCss++;
-      manifest.push('#g-' + sid + ' (no css)');
-      sectionBlocks.push('/*' + label + '*/' + '\\\n' + '/* no override.css for ' + v.sourceName + ' */');
+      manifest.push('#g-' + cssId + ' (no css)');
+      sectionBlocks.push(cssSectionHeader(label) + '\\n\\n' + '/* no override.css for ' + v.sourceName + ' */');
       continue;
     }
     let chunks = (lib.bySection[origId] || []).slice();
-    if (rehomed) chunks = chunks.map(c => rehomeCss(c, origId, sid));
+    if (rehomed) chunks = chunks.map(c => rehomeCss(c, origId, cssId));
     const kept = [];
     for (const c of chunks) { const k=norm(c); if(!seen.has(k)){seen.add(k);kept.push(c);} }
-    manifest.push('#g-'+sid+' <- '+v.sourceId+(rehomed?' (re-homed)':'')+(kept.length?'':' (no css)'));
+    manifest.push('#g-'+cssId+' <- '+v.sourceId+(sid !== cssId ? ' (' + sid + ' part)' : '')+(kept.length?'':' (no css)'));
     if (kept.length) {
-      sectionBlocks.push('/*' + label + '*/' + '\\\n' + kept.join('\\\n\\\n'));
+      sectionBlocks.push(cssSectionHeader(label) + '\\n\\n' + kept.join('\\n\\n'));
       sectionChunkCount += kept.length;
     }
   }
@@ -1382,15 +1564,15 @@ function assembleCss(baseParish) {
       gk.forEach(c => seen.add(norm(c)));
       if (gk.length) { out.push('\\\n/* site-specific globals (' + baseName + ') */'); out.push(gk.join('\\\n\\\n')); }
     }
-    out.push('\\\n');
-    out.push(sectionBlocks.join('\\\n\\\n'));
-    out.push('\\\n');
+    out.push('\\n\\n');
+    out.push(sectionBlocks.join('\\n\\n'));
+    out.push('\\n\\n');
     out.push(CSS_TEMPLATE_TAIL_JS);
   } else {
     out.push('/* Composite override.css - Solutio Site Builder */');
     const gk = baseLib.global.filter(c => !seen.has(norm(c)));
     gk.forEach(c => seen.add(norm(c)));
-    out.push(gk.join('\\\n\\\n')); out.push(''); out.push(sectionBlocks.join('\\\n\\\n'));
+    out.push(gk.join('\\n\\n')); out.push(''); out.push(sectionBlocks.join('\\n\\n'));
   }
 
   const stats = Object.keys(filled).length+' section(s) · '+sectionChunkCount+
@@ -1498,7 +1680,8 @@ function prefillFrom() {
   const src = SOURCES.find(s => s.id === pick.trim());
   if (!src) { toast('No parish "' + pick + '"'); return; }
   let n = 0;
-  for (const [sid, variants] of Object.entries(SECTION_LIBRARY)) {
+  for (const sid of SECTION_ORDER) {
+    const variants = SECTION_LIBRARY[sid] || [];
     const v = variants.find(x => x.sourceId === src.id);
     if (v) { filled[sid] = v; n++; }
   }
@@ -1651,7 +1834,9 @@ document.getElementById('btn-save-preset').addEventListener('click', async () =>
 
   // Slots: { sectionId → sourceId } — small, stable reference
   const slots = {};
-  for (const [sid, v] of Object.entries(filled)) slots[sid] = v.sourceId;
+  for (const [sid, v] of Object.entries(filled)) {
+    if (SECTION_ORDER.includes(sid)) slots[sid] = v.sourceId;
+  }
 
   try {
     const resp = await fetch('/api/presets', {
@@ -1706,6 +1891,7 @@ async function renderPresetDropdown() {
         for (const k of Object.keys(filled)) delete filled[k];
         let loaded = 0, missing = 0;
         for (const [sid, srcId] of Object.entries(preset.slots || {})) {
+          if (!SECTION_ORDER.includes(sid)) { missing++; continue; }
           const variants = SECTION_LIBRARY[sid] || [];
           const v = variants.find(x => x.sourceId === srcId);
           if (v) { filled[sid] = v; loaded++; }
