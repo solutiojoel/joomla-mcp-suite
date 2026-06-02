@@ -13,4 +13,6 @@ services:
     ports:
       - "18302:18302"
       - "18303:18303"
+    volumes:
+      - ./apps/gantry-mcp/exports:/workspace/apps/gantry-mcp/exports
     restart: unless-stopped
