@@ -490,6 +490,19 @@ function buildServer() {
       return { content: [{ type: 'text', text: out }] };
     }
 
+    // ── Freshdesk tools — no active site required ──
+    // These tools only need Freshdesk API credentials; they never touch Joomla.
+    if (name.startsWith('freshdesk_')) {
+      if (!joomlaToolMap.has(name)) {
+        return { isError: true, content: [{ type: 'text', text: `Unknown tool: ${name}` }] };
+      }
+      try {
+        return await callDownstream('joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN, name, args);
+      } catch (err) {
+        return { isError: true, content: [{ type: 'text', text: `freshdesk error: ${err.message}` }] };
+      }
+    }
+
     // ── Guard: site must be set before routing downstream ──
     // Auto-detect site URL from tool arguments if not yet set.
 

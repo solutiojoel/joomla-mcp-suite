@@ -155,3 +155,28 @@ freshdesk_update_ticket(ticket_id: ..., status: 4)   ← 4 = Resolved
 - Do not change ticket status without asking the user
 - Never guess at IDs — always look them up with list/search tools first
 - Prefer `description_text` (plain text) for reading; `description` (HTML) is available if formatting matters
+
+---
+
+## Drafting Client Replies
+
+### Joomla Backend Navigation
+
+When giving a client instructions for navigating the Joomla backend, use these terms:
+
+| What to say | What NOT to say |
+|---|---|
+| **Article Manager** (button on the Control Panel / dashboard) | "Content → Articles" |
+| **Extensions → Modules** | "the module manager" |
+| **Menus → [Menu Name]** | "the menu manager" |
+
+Clients access the Article Manager via a shortcut button on the Joomla Control Panel homepage — not through the top menu. Always phrase instructions accordingly, e.g.:
+
+> "Go to the **Article Manager** from your dashboard, then search for..."
+
+### Tone and Format
+
+- Write as the human agent would send it — warm, concise, client-friendly
+- Use numbered steps for multi-step instructions
+- Bold key UI element names (menu paths, button labels, field names)
+- No salutation or signature needed in the note body — Freshdesk adds those automatically when the agent sends the reply
