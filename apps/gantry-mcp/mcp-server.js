@@ -27,6 +27,7 @@ const http = require('http');
 const { randomUUID } = require('crypto');
 
 const session = require('./lib/session');
+const baseTemplate = require('./lib/base-template');
 const layout = require('./lib/layout');
 const layoutApi = require('./lib/layout-api');
 const outlines = require('./lib/outlines');
@@ -703,12 +704,16 @@ const TOOLS = [
     },
     handler: async (args) => {
       const ctx = await getCtx(args);
+      // Merge incoming layout with the base home template:
+      // enforces fixed sections (navigation/bottom/footer/copyright/offcanvas inherit),
+      // keeps top particles, and ensures all containers are always present.
+      const mergedLayout = baseTemplate.mergeWithBaseTemplate(args.layout);
       const before = await layoutApi.fetchSavedLayout(ctx, args.outline || 'default');
-      const diff = layoutApi.diffStructures(before, args.layout);
+      const diff = layoutApi.diffStructures(before, mergedLayout);
       if (args.dryRun) return { dryRun: true, diff };
       const backupPath = backup.takeBackup(ctx, args.outline || 'default', 'pre-import', before);
-      await layoutApi.saveLayoutDirect(ctx, ctx, args.outline || 'default', args.layout);
-      return { imported: true, backupPath };
+      await layoutApi.saveLayoutDirect(ctx, ctx, args.outline || 'default', mergedLayout);
+      return { imported: true, backupPath, baseTemplateApplied: true };
     },
   },
   /* ── New tools: particle inspection & mutation ─────────────────────────── */

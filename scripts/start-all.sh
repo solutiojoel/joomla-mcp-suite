@@ -56,6 +56,7 @@ wait_for_port 127.0.0.1 "${GANTRY_MCP_PORT}"
   cd /workspace/apps/gantry-mcp
   SITE_BUILDER_PORT="${SITE_BUILDER_PORT}" \
   GANTRY_MCP_URL="http://127.0.0.1:${GANTRY_MCP_PORT}/mcp" \
+  JOOMLA_MCP_URL="http://127.0.0.1:${JOOMLA_MCP_PORT}/mcp" \
   node site-builder-server.js
 ) &
 

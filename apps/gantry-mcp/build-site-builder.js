@@ -89,6 +89,46 @@ if (fs.existsSync(CSS_DIR)) {
   console.log('(no exports/override-css/ — composite CSS export will be unavailable)');
 }
 
+// --- CSS template shell ---
+const TEMPLATE_FILE = path.join(ROOT, 'exports', 'override-css', '_template.css');
+const TMPL_OPEN  = '/******************************************/\n/*INSERT ALL SECTIONS IN ORDER WITHIN HERE*/\n/******************************************/';
+const TMPL_CLOSE = '/******************************************/\n/******************************************/\n/******************************************/';
+let CSS_TEMPLATE_HEAD = '', CSS_TEMPLATE_TAIL = '';
+if (fs.existsSync(TEMPLATE_FILE)) {
+  try {
+    const tmpl = fs.readFileSync(TEMPLATE_FILE, 'utf8');
+    const oi = tmpl.indexOf(TMPL_OPEN), ci = tmpl.indexOf(TMPL_CLOSE);
+    if (oi !== -1 && ci !== -1) {
+      CSS_TEMPLATE_HEAD = tmpl.slice(0, oi + TMPL_OPEN.length);
+      CSS_TEMPLATE_TAIL = tmpl.slice(ci);
+      console.log('CSS template loaded (' + CSS_TEMPLATE_HEAD.length + '+' + CSS_TEMPLATE_TAIL.length + ' bytes)');
+    }
+  } catch (e) { console.warn('Could not load _template.css: ' + e.message); }
+}
+
+// --- Base home template (agent7 #Home outline) ---
+const BASE_TEMPLATE_FILE = path.join(ROOT, 'exports', 'base-home-template.yaml');
+let BASE_HOME_LAYOUT = null, BASE_HOME_FIXED = null, BASE_HOME_TOP = null;
+if (fs.existsSync(BASE_TEMPLATE_FILE)) {
+  try {
+    const bt = yaml.load(fs.readFileSync(BASE_TEMPLATE_FILE, 'utf8'));
+    BASE_HOME_LAYOUT = bt.layout || null;
+    BASE_HOME_FIXED  = bt.fixedSections || null;
+    function _findById(nodes, id) {
+      if (!Array.isArray(nodes)) return null;
+      for (const n of nodes) {
+        if (n.id === id) return n;
+        const f = _findById(n.children, id); if (f) return f;
+      }
+      return null;
+    }
+    BASE_HOME_TOP = _findById(BASE_HOME_LAYOUT, 'top');
+    console.log('Base home template loaded (' + (BASE_HOME_LAYOUT && BASE_HOME_LAYOUT.length) + ' nodes)');
+  } catch (e) { console.warn('Could not load base home template: ' + e.message); }
+} else {
+  console.log('(no base-home-template.yaml)');
+}
+
 const files = fs.readdirSync(SRC_DIR).filter((f) => f.endsWith('.yaml')).sort();
 if (!files.length) {
   console.error('No .yaml files found in', SRC_DIR);
@@ -229,6 +269,39 @@ const SOURCES = ${JSON.stringify(sources)};
 const ZONES = ${JSON.stringify(ZONES)};
 const SECTION_ORDER = ${JSON.stringify(SECTION_ORDER)};
 const CSS_RAW = ${JSON.stringify(cssRaw)};
+const CSS_TEMPLATE_HEAD_JS = ${JSON.stringify(CSS_TEMPLATE_HEAD)};
+const CSS_TEMPLATE_TAIL_JS = ${JSON.stringify(CSS_TEMPLATE_TAIL)};
+const BASE_HOME_LAYOUT_JS  = ${JSON.stringify(BASE_HOME_LAYOUT)};
+const BASE_HOME_FIXED_JS   = ${JSON.stringify(BASE_HOME_FIXED)};
+const BASE_HOME_TOP_JS     = ${JSON.stringify(BASE_HOME_TOP)};
+const SECTION_LABEL = {top:'TOP',navigation:'NAVIGATION',slideshow:'SLIDESHOW',header:'HEADER',above:'ABOVE',feature:'FEATURE',showcase:'SHOWCASE',utility:'UTILITY',sidebar:'SIDEBAR',mainbar:'MAIN',aside:'ASIDE',expanded:'EXPANDED',extension:'EXTENSION',footer:'FOOTER',copyright:'COPYRIGHT'};
+// Compute block widths for container-main from base template
+const CONTAINER_SECTION_WIDTHS = (function() {
+  const w = {};
+  if (!BASE_HOME_LAYOUT_JS) return w;
+  function scan(nodes) {
+    if (!Array.isArray(nodes)) return;
+    for (const n of nodes) {
+      if (n.type === 'container') {
+        for (const grid of (n.children || [])) {
+          if (grid.type !== 'grid') continue;
+          const blocks = grid.children || [];
+          if (blocks.length > 1) { // multi-column grid
+            for (const blk of blocks) {
+              if (blk.type === 'block' && blk.attributes && blk.attributes.size) {
+                const sec = (blk.children || []).find(c => c.type === 'section' || c.type === 'offcanvas');
+                if (sec && sec.id) w[sec.id] = Number(blk.attributes.size);
+              }
+            }
+          }
+        }
+      }
+      scan(n.children);
+    }
+  }
+  scan(BASE_HOME_LAYOUT_JS);
+  return w;
+})();
 `;
 
   return `<!doctype html>
@@ -287,6 +360,10 @@ const CSS_RAW = ${JSON.stringify(cssRaw)};
   }
   .build-intro { color: var(--soft); font-size: 0.88rem; margin-bottom: 1rem; max-width: 70ch; }
   .zone { margin-bottom: 0.4rem; }
+  .zone-row { display: flex; gap: 0.4rem; align-items: stretch; }
+  .zone-row .slot { min-width: 0; }
+  .zone-col { display: flex; flex-direction: column; min-width: 0; }
+  .zone-col-label { font-size: 0.65rem; font-weight: 700; color: var(--soft); text-transform: uppercase; letter-spacing: 0.05em; padding: 0.15rem 0.4rem; margin-bottom: 0.2rem; opacity:.7; }
   .zone-label {
     font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--soft); font-weight: 700; margin: 0.9rem 0 0.3rem; padding-left: 0.2rem;
@@ -548,6 +625,16 @@ const CSS_RAW = ${JSON.stringify(cssRaw)};
             </select>
           </div>
           <div class="deploy-field">
+            <label>CSS base site <span style="opacity:.6;font-weight:400">(global styles shell)</span></label>
+            <select id="deploy-css-base">
+              <option value="">— no CSS —</option>
+            </select>
+            <div style="font-size:.78rem;color:var(--soft);margin-top:.3rem">Section CSS is always pulled from whichever site contributed that section. This sets the global shell.</div>
+          </div>
+          <div class="deploy-field">
+            <label><input type="checkbox" id="deploy-upload-css" checked /> Upload composite CSS via FTP and link in page settings</label>
+          </div>
+          <div class="deploy-field">
             <label><input type="checkbox" id="deploy-dry-run" checked /> Dry run (preview only — no changes written)</label>
           </div>
           <div class="modal-actions">
@@ -628,6 +715,20 @@ function renderZones() {
     const zlabel = zone.container
       ? zone.container.replace('container-', '') + ' container'
       : 'root sections';
+    // Check if this zone has side-by-side sections (e.g. container-main)
+    const widths = zone.sections.map(s => CONTAINER_SECTION_WIDTHS[s] || 0);
+    const isRow  = widths.filter(w => w > 0).length > 1;
+    if (isRow) {
+      const cols = zone.sections.map((sid, i) => {
+        const w = widths[i] || Math.round(100 / zone.sections.length);
+        return '<div class="zone-col" style="width:' + w + '%">'  
+          + '<div class="zone-col-label">' + escHtml(sid) + ' ' + w + '%</div>'
+          + renderSlot(sid, zone)
+          + '</div>';
+      }).join('');
+      return '<div class="zone"><div class="zone-label">'+escHtml(zlabel)+'</div>'
+        + '<div class="zone-row">' + cols + '</div></div>';
+    }
     const slots = zone.sections.map(sid => renderSlot(sid, zone)).join('');
     return '<div class="zone"><div class="zone-label">'+escHtml(zlabel)+'</div>'+slots+'</div>';
   }).join('');
@@ -784,7 +885,42 @@ function rehomeNode(variant, slotId) {
   return node;
 }
 
+// Sections whose inherit settings are always locked to the base template.
+const ALWAYS_INHERIT_SECTIONS = new Set(['navigation','bottom','footer','copyright','offcanvas']);
+const ALWAYS_FIXED_SECTIONS   = new Set(['top']);
+
+function patchBaseNode(node) {
+  if (!node || typeof node !== 'object') return;
+  const sid      = node.id;
+  const isSection = node.type === 'section' || node.type === 'offcanvas';
+  if (isSection && sid) {
+    if (ALWAYS_INHERIT_SECTIONS.has(sid) || ALWAYS_FIXED_SECTIONS.has(sid)) return;
+    const v = filled[sid];
+    if (v) {
+      const src = rehomeNode(v, sid);
+      node.children = src.children || [];
+      if (src.attributes) {
+        node.attributes = Object.assign({}, node.attributes || {}, {
+          class:      src.attributes.class      || (node.attributes && node.attributes.class)      || '',
+          variations: src.attributes.variations || (node.attributes && node.attributes.variations) || '',
+          boxed: (node.attributes && node.attributes.boxed != null) ? node.attributes.boxed : (src.attributes.boxed || '2'),
+        });
+      }
+    } else {
+      if (!node.children) node.children = [];
+    }
+    return;
+  }
+  if (Array.isArray(node.children)) node.children.forEach(patchBaseNode);
+}
+
 function assembleLayout() {
+  if (BASE_HOME_LAYOUT_JS) {
+    const layout = JSON.parse(JSON.stringify(BASE_HOME_LAYOUT_JS));
+    layout.forEach(patchBaseNode);
+    return layout;
+  }
+  // Legacy fallback
   const layout = [];
   for (const zone of ZONES) {
     const present = zone.sections.filter(s => filled[s]);
@@ -997,87 +1133,61 @@ function rehomeCss(chunk, origId, slotId) {
     .replace(new RegExp('--section-' + origId + '-', 'g'), '--section-' + slotId + '-');
 }
 
-// Assemble the composite override.css for the current composition.
+// Assemble the composite override.css using the standard template format.
 function assembleCss(baseParish) {
-  const baseSrc = SOURCES.find(s => s.id === baseParish);
-  const baseName = baseSrc ? baseSrc.name : baseParish;
-  const baseLib = CSS_LIBRARY[baseParish] || { bySection: {}, global: [] };
+  const baseSrc  = SOURCES.find(s => s.id === baseParish);
+  const baseName = baseSrc ? baseSrc.name : (baseParish || 'none');
+  const baseLib  = CSS_LIBRARY[baseParish] || { bySection: {}, global: [] };
   const seen = new Set();
   const norm = (c) => c.replace(/\\s+/g, ' ').trim();
-
-  const sectionLines = [];
-  const sectionBlocks = [];
+  const sectionBlocks = [], manifest = [];
   let sectionChunkCount = 0, missingCss = 0;
 
   for (const sid of SECTION_ORDER) {
+    if (sid === 'bottom') continue;
     const v = filled[sid];
     if (!v) continue;
-    const lib = CSS_LIBRARY[v.sourceId];
-    const origId = v.node.id;
-    const rehomed = origId !== sid;
-
+    const lib = CSS_LIBRARY[v.sourceId], origId = v.node.id, rehomed = origId !== sid;
+    const label = SECTION_LABEL[sid] || sid.toUpperCase();
     if (!lib) {
       missingCss++;
-      sectionLines.push(' *   #g-' + sid + '  <- ' + v.sourceId + '  (no override.css for this parish)');
-      sectionBlocks.push('/* ---- #g-' + sid + '  (from ' + v.sourceName + ' — no override.css available) ---- */');
+      manifest.push('#g-' + sid + ' (no css)');
+      sectionBlocks.push('/*' + label + '*/' + '\\\n' + '/* no override.css for ' + v.sourceName + ' */');
       continue;
     }
-
     let chunks = (lib.bySection[origId] || []).slice();
     if (rehomed) chunks = chunks.map(c => rehomeCss(c, origId, sid));
-
     const kept = [];
-    for (const c of chunks) {
-      const key = norm(c);
-      if (seen.has(key)) continue;
-      seen.add(key); kept.push(c);
-    }
-
-    sectionLines.push(
-      ' *   #g-' + sid + '  <- ' + v.sourceId +
-      (rehomed ? '  (re-homed from #g-' + origId + ')' : '') +
-      (kept.length ? '' : '  (no section CSS found)')
-    );
-    const header = '/* ---- #g-' + sid + '  (from ' + v.sourceName +
-      (rehomed ? ', re-homed from #g-' + origId : '') + ') ---- */';
-    if (!kept.length) {
-      sectionBlocks.push(header + '\\n/* (no section-specific rules found in source) */');
-    } else {
-      sectionBlocks.push(header + '\\n' + kept.join('\\n\\n'));
+    for (const c of chunks) { const k=norm(c); if(!seen.has(k)){seen.add(k);kept.push(c);} }
+    manifest.push('#g-'+sid+' <- '+v.sourceId+(rehomed?' (re-homed)':'')+(kept.length?'':' (no css)'));
+    if (kept.length) {
+      sectionBlocks.push('/*' + label + '*/' + '\\\n' + kept.join('\\\n\\\n'));
       sectionChunkCount += kept.length;
     }
   }
 
+  const useTemplate = !!(CSS_TEMPLATE_HEAD_JS && CSS_TEMPLATE_TAIL_JS);
   const out = [];
-  out.push('/* ====================================================================');
-  out.push(' * Composite override.css  —  Solutio Site Builder (section composer)');
-  out.push(' * Generated: ' + new Date().toISOString());
-  out.push(' * Shell / global CSS base: ' + baseName);
-  out.push(' *');
-  out.push(' * Sections:');
-  for (const line of sectionLines) out.push(line);
-  out.push(' *');
-  out.push(' * NOTE: image url() paths (e.g. /images/template/...) point at the');
-  out.push(' * source parish. Upload matching assets to the new site or edit paths.');
-  out.push(' * Drop this in place of the theme\\'s override.css.');
-  out.push(' * ==================================================================== */');
-  out.push('');
-
-  const globalKept = [];
-  for (const c of baseLib.global) {
-    const key = norm(c);
-    if (seen.has(key)) continue;
-    seen.add(key); globalKept.push(c);
+  if (useTemplate) {
+    out.push(CSS_TEMPLATE_HEAD_JS);
+    if (baseParish) {
+      const gk = baseLib.global.filter(c => !seen.has(norm(c)));
+      gk.forEach(c => seen.add(norm(c)));
+      if (gk.length) { out.push('\\\n/* site-specific globals (' + baseName + ') */'); out.push(gk.join('\\\n\\\n')); }
+    }
+    out.push('\\\n');
+    out.push(sectionBlocks.join('\\\n\\\n'));
+    out.push('\\\n');
+    out.push(CSS_TEMPLATE_TAIL_JS);
+  } else {
+    out.push('/* Composite override.css - Solutio Site Builder */');
+    const gk = baseLib.global.filter(c => !seen.has(norm(c)));
+    gk.forEach(c => seen.add(norm(c)));
+    out.push(gk.join('\\\n\\\n')); out.push(''); out.push(sectionBlocks.join('\\\n\\\n'));
   }
-  out.push('/* ===== GLOBAL / SHELL CSS  (from ' + baseName + ') ===== */');
-  out.push(globalKept.length ? globalKept.join('\\n\\n') : '/* (none) */');
-  out.push('');
 
-  for (const block of sectionBlocks) { out.push(block); out.push(''); }
-
-  const stats = Object.keys(filled).length + ' section(s) · ' + sectionChunkCount +
-    ' section CSS block(s) · ' + globalKept.length + ' global block(s)' +
-    (missingCss ? ' · ' + missingCss + ' parish(es) without override.css' : '');
+  const stats = Object.keys(filled).length+' section(s) · '+sectionChunkCount+
+    ' CSS block(s)'+(missingCss?' · '+missingCss+' missing':'')+(useTemplate?' · template':'');
   return { css: out.join('\\n'), stats };
 }
 
@@ -1271,6 +1381,23 @@ function initDeployTab() {
         '<option value="72">School Home (72)</option>';
     });
 
+  // Populate CSS base selector from CSS_LIBRARY
+  const cssBaseEl = document.getElementById('deploy-css-base');
+  const cssParishes = Object.keys(CSS_LIBRARY);
+  if (cssParishes.length) {
+    // Pick best default: most sections used in current composition
+    const counts = {};
+    for (const v of Object.values(filled)) {
+      if (CSS_LIBRARY[v.sourceId]) counts[v.sourceId] = (counts[v.sourceId] || 0) + 1;
+    }
+    let best = cssParishes[0], bestN = -1;
+    for (const [pid, n] of Object.entries(counts)) { if (n > bestN) { best = pid; bestN = n; } }
+    cssBaseEl.innerHTML = '<option value="">\u2014 no CSS \u2014</option>' +
+      cssParishes.map(p => '<option value="' + escHtml(p) + '"' + (p === best ? ' selected' : '') + '>' + escHtml(p) + '</option>').join('');
+  } else {
+    cssBaseEl.innerHTML = '<option value="">\u2014 no CSS files available \u2014</option>';
+  }
+
   // Site search input
   const searchEl   = document.getElementById('deploy-site-search');
   const resultsEl  = document.getElementById('deploy-site-results');
@@ -1341,6 +1468,15 @@ document.getElementById('btn-deploy-live').addEventListener('click', async () =>
   const doc = buildExportDoc();
   _deployYaml = jsyaml.dump(doc, { lineWidth: -1, noRefs: true });
 
+  // Assemble composite CSS if a base parish is selected and upload is enabled
+  const cssBase = document.getElementById('deploy-css-base').value;
+  const uploadCss = document.getElementById('deploy-upload-css').checked;
+  let cssContent = null;
+  if (cssBase && uploadCss) {
+    const { css } = assembleCss(cssBase);
+    cssContent = css;
+  }
+
   const btn = document.getElementById('btn-deploy-live');
   btn.disabled = true;
   statusEl.className = 'deploy-status visible running';
@@ -1350,7 +1486,7 @@ document.getElementById('btn-deploy-live').addEventListener('click', async () =>
     const resp = await fetch('/api/deploy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ yaml: _deployYaml, siteUrl, outlineId, dryRun }),
+      body: JSON.stringify({ yaml: _deployYaml, siteUrl, outlineId, dryRun, css: cssContent, cssBase }),
     });
     const data = await resp.json();
     if (data.success) {
