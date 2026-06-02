@@ -133,8 +133,11 @@ app.post('/api/deploy', async (req, res) => {
         try {
           const ftpConf = await callTool(joomla, 'ftp_site_config', { domain });
           if (ftpConf && typeof ftpConf === 'object') {
-            if (ftpConf.pub_path) pubPath = ftpConf.pub_path;
-            if (ftpConf.pub_url)  pubUrl  = ftpConf.pub_url.replace(/\/$/, '');
+            // upload_path is the FTP write-user's allowed directory — prefer it over pub_path
+            // which is the read-user's filesystem path and may differ.
+            if (ftpConf.upload_path) pubPath = ftpConf.upload_path;
+            else if (ftpConf.pub_path) pubPath = ftpConf.pub_path;
+            if (ftpConf.pub_url) pubUrl = ftpConf.pub_url.replace(/\/$/, '');
           }
         } catch (e) {
           steps.push('[CSS WARN] Could not read ftp_site_config (' + e.message + ') — using default paths');
@@ -143,7 +146,7 @@ app.post('/api/deploy', async (req, res) => {
         const remotePath = pubPath.replace(/\/$/, '') + '/' + cssFile;
         const cssUrl     = pubUrl + '/' + cssFile;
 
-        // 2b. Upload CSS via FTP
+        // 2b. Upload CSS via FTP (write user)
         const uploadResult = await callTool(joomla, 'ftp_upload_file', {
           domain,
           path:    remotePath,
@@ -152,8 +155,16 @@ app.post('/api/deploy', async (req, res) => {
         const uploadMsg = typeof uploadResult === 'string'
           ? uploadResult
           : (uploadResult?.message || JSON.stringify(uploadResult));
-        steps.push('[CSS UPLOAD] ' + remotePath + ' — ' + uploadMsg);
+        const uploadOk = uploadResult?.success !== false &&
+                         !uploadMsg.toLowerCase().includes('refused') &&
+                         !uploadMsg.toLowerCase().includes('failed') &&
+                         !uploadMsg.toLowerCase().includes('error');
+        steps.push('[CSS UPLOAD] ' + remotePath + (uploadOk ? ' — OK' : ' — FAILED: ' + uploadMsg));
 
+        if (!uploadOk) {
+          steps.push('[CSS SKIP] Page settings not updated because upload failed.');
+          // Skip page settings update — jump to closing
+        } else {
         // 2c. Get current page head_bottom, replace/inject site-builder link
         let headBottom = '';
         try {
@@ -185,6 +196,7 @@ app.post('/api/deploy', async (req, res) => {
           edits:   { 'page[head][head_bottom]': newHeadBottom },
         });
         steps.push('[CSS LINKED] ' + cssUrl + ' → page[head][head_bottom]');
+        } // end uploadOk
       }
     }
 
@@ -201,6 +213,34 @@ app.post('/api/deploy', async (req, res) => {
 });
 
 // ── API: rebuild ──────────────────────────────────────────────────────────────
+
+// -- API: presets --
+const PRESETS_FILE = path.join(EXPORTS_DIR, 'presets.json');
+function readPresets() {
+  try { return JSON.parse(fs.readFileSync(PRESETS_FILE, 'utf8')); } catch { return []; }
+}
+function writePresets(list) {
+  fs.writeFileSync(PRESETS_FILE, JSON.stringify(list, null, 2));
+}
+app.get('/api/presets', (req, res) => { res.json(readPresets()); });
+app.post('/api/presets', (req, res) => {
+  const { name, slots, parishName } = req.body;
+  if (!name)  return res.status(400).json({ error: 'name is required' });
+  if (!slots) return res.status(400).json({ error: 'slots is required' });
+  const list = readPresets();
+  const idx  = list.findIndex(p => p.name === name);
+  const entry = { name, parishName: parishName || '', slots, savedAt: new Date().toISOString() };
+  if (idx >= 0) list[idx] = entry; else list.unshift(entry);
+  writePresets(list);
+  res.json({ saved: true, name });
+});
+app.delete('/api/presets/:name', (req, res) => {
+  const name = decodeURIComponent(req.params.name);
+  const list = readPresets().filter(p => p.name !== name);
+  writePresets(list);
+  res.json({ deleted: true, name });
+});
+
 app.post('/api/rebuild', (req, res) => {
   const script = path.join(ROOT, 'build-site-builder.js');
   if (!fs.existsSync(script)) return res.status(404).json({ error: 'build-site-builder.js not found' });

@@ -237,6 +237,8 @@
     <input id="target-outline" placeholder="outline" value="default" size="7" />
     <button class="btn btn-ghost" id="btn-reset">Reset</button>
     <button class="btn" id="btn-prefill">Prefill from a parish…</button>
+    <button class="btn" id="btn-save-preset">💾 Save Preset</button>
+    <button class="btn" id="btn-load-preset">📂 Load Preset</button>
     <button class="btn btn-accent" id="btn-export">Export / Deploy ▸</button>
     <button class="btn btn-ghost" id="btn-rebuild" title="Re-run build-site-builder.js to pick up new exports">↺ Rebuild</button>
   </div>
@@ -1062,6 +1064,88 @@ function prefillFrom() {
 }
 
 // ============================================================
+//  Presets — saved to localStorage
+// ============================================================
+const PRESET_KEY = 'siteBuilderPresets';
+
+function getPresets() {
+  try { return JSON.parse(localStorage.getItem(PRESET_KEY) || '{}'); } catch(e) { return {}; }
+}
+
+function savePresets(obj) {
+  localStorage.setItem(PRESET_KEY, JSON.stringify(obj));
+}
+
+function savePreset() {
+  const name = prompt('Preset name:');
+  if (!name || !name.trim()) return;
+  const key = name.trim();
+
+  // Serialize each filled slot as { targetSlot, origSectionId, sourceId }
+  const slots = [];
+  for (const [targetSlot, variant] of Object.entries(filled)) {
+    // origSectionId is the section id the variant actually lives under in SECTION_LIBRARY
+    let origSectionId = variant.node && variant.node.id ? variant.node.id : targetSlot;
+    // Double-check it's findable (handle re-homed variants where node.id is the original)
+    if (!(SECTION_LIBRARY[origSectionId] || []).find(v => v.sourceId === variant.sourceId)) {
+      // Fall back to searching all library sections
+      for (const [sid, variants] of Object.entries(SECTION_LIBRARY)) {
+        if (variants.find(v => v.sourceId === variant.sourceId && v.sourceName === variant.sourceName)) {
+          origSectionId = sid; break;
+        }
+      }
+    }
+    slots.push({ targetSlot, origSectionId, sourceId: variant.sourceId });
+  }
+
+  const presets = getPresets();
+  presets[key] = {
+    slots,
+    parishName: document.getElementById('parish-name').value,
+    targetHost: document.getElementById('target-host').value,
+    targetOutline: document.getElementById('target-outline').value,
+  };
+  savePresets(presets);
+  toast('Preset "' + key + '" saved (' + slots.length + ' slots)');
+}
+
+function loadPreset() {
+  const presets = getPresets();
+  const keys = Object.keys(presets);
+  if (!keys.length) { toast('No saved presets yet — fill some slots and click Save Preset.'); return; }
+
+  const list = keys.map((k, i) => (i+1) + '. ' + k + ' (' + (presets[k].slots||[]).length + ' slots)').join('\n');
+  const pick = prompt('Load which preset?\n\n' + list + '\n\nEnter name or number:');
+  if (!pick || !pick.trim()) return;
+
+  const trimmed = pick.trim();
+  let preset = presets[trimmed];
+  if (!preset) {
+    const n = parseInt(trimmed, 10);
+    if (!isNaN(n) && keys[n-1]) preset = presets[keys[n-1]];
+  }
+  if (!preset) { toast('Preset "' + trimmed + '" not found.'); return; }
+
+  // Restore inputs
+  if (preset.parishName !== undefined) document.getElementById('parish-name').value = preset.parishName;
+  if (preset.targetHost !== undefined) document.getElementById('target-host').value = preset.targetHost;
+  if (preset.targetOutline !== undefined) document.getElementById('target-outline').value = preset.targetOutline;
+
+  // Restore slots
+  for (const k of Object.keys(filled)) delete filled[k];
+  let restored = 0, skipped = 0;
+  for (const { targetSlot, origSectionId, sourceId } of (preset.slots || [])) {
+    const variant = (SECTION_LIBRARY[origSectionId] || []).find(v => v.sourceId === sourceId);
+    if (variant) { filled[targetSlot] = variant; restored++; }
+    else skipped++;
+  }
+  renderZones();
+  const msg = 'Loaded preset — ' + restored + ' slot(s) restored'
+    + (skipped ? ', ' + skipped + ' skipped (source no longer in library)' : '');
+  toast(msg);
+}
+
+// ============================================================
 //  Bootstrap
 // ============================================================
 renderZones();
@@ -1073,6 +1157,8 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   renderZones(); toast('Cleared all slots');
 });
 document.getElementById('btn-prefill').addEventListener('click', prefillFrom);
+document.getElementById('btn-save-preset').addEventListener('click', savePreset);
+document.getElementById('btn-load-preset').addEventListener('click', loadPreset);
 document.getElementById('btn-rebuild').addEventListener('click', () => {
   const btn = document.getElementById('btn-rebuild');
   btn.disabled = true;

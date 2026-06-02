@@ -364,6 +364,23 @@ const CONTAINER_SECTION_WIDTHS = (function() {
   .zone-row .slot { min-width: 0; }
   .zone-col { display: flex; flex-direction: column; min-width: 0; }
   .zone-col-label { font-size: 0.65rem; font-weight: 700; color: var(--soft); text-transform: uppercase; letter-spacing: 0.05em; padding: 0.15rem 0.4rem; margin-bottom: 0.2rem; opacity:.7; }
+  /* ---- preset panel ---- */
+  .preset-wrap { position: relative; display: inline-block; }
+  .preset-dropdown {
+    position: absolute; top: calc(100% + 4px); right: 0; z-index: 120;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    min-width: 240px; max-height: 360px; overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25); display: none;
+  }
+  .preset-dropdown.open { display: block; }
+  .preset-item { display: flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.85rem; }
+  .preset-item:last-child { border-bottom: none; }
+  .preset-item:hover { background: var(--accent-soft); }
+  .preset-item-name { flex: 1; font-weight: 600; }
+  .preset-item-meta { font-size: 0.72rem; color: var(--soft); }
+  .preset-item-del { margin-left: auto; background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 0.9rem; padding: 0 0.15rem; }
+  .preset-item-del:hover { color: #ef4444; }
+  .preset-empty { padding: 0.75rem; color: var(--soft); font-size: 0.85rem; text-align: center; }
   .zone-label {
     font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--soft); font-weight: 700; margin: 0.9rem 0 0.3rem; padding-left: 0.2rem;
@@ -545,6 +562,11 @@ const CONTAINER_SECTION_WIDTHS = (function() {
     <button class="btn" id="btn-prefill">Prefill from a parish…</button>
     <button class="btn btn-accent" id="btn-export">Export / Deploy ▸</button>
     <button class="btn btn-ghost" id="btn-rebuild" title="Re-run build-site-builder.js to pick up new exports">↺ Rebuild</button>
+    <div class="preset-wrap">
+      <button class="btn btn-ghost" id="btn-load-preset" title="Load a saved preset">📂 Load</button>
+      <div class="preset-dropdown" id="preset-dropdown"></div>
+    </div>
+    <button class="btn btn-ghost" id="btn-save-preset" title="Save current composition as preset">💾 Save Preset</button>
   </div>
 </header>
 
