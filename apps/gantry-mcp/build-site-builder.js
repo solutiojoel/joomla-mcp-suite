@@ -27,6 +27,7 @@ const yaml = require('js-yaml');
 const ROOT = __dirname;
 const SRC_DIR = path.join(ROOT, 'exports', 'home-outlines');
 const CSS_DIR = path.join(ROOT, 'exports', 'override-css');
+const CSS_PATTERNS_DIR = path.join(ROOT, 'templates', 'css-patterns');
 const OUT_FILE = path.join(ROOT, 'exports', 'site-builder.html');
 const SHOTS_MANIFEST = path.join(ROOT, 'exports', 'section-shots', 'manifest.json');
 
@@ -67,26 +68,61 @@ if (fs.existsSync(SHOTS_MANIFEST)) {
 // The parish id is normalised the same way the YAML source ids are, so the two
 // line up (e.g. "stlaw-alex-1-home.override.css" -> "stlaw-alex").
 const cssRaw = {};
+
+function normalizeCssSourceId(filename, parentDir) {
+  if (filename === 'override-school.css' && parentDir) return `${parentDir}-school`;
+  if (filename === 'override.css' && parentDir) return parentDir;
+  return filename
+    .replace(/\.bak$/i, '')
+    .replace(/\.override\.css$/i, '')
+    .replace(/\.css$/i, '')
+    .replace(/-home$/i, '')
+    .replace(/-1$/i, '');
+}
+
+function loadCssFile(filePath, sourceId, { preferExisting = false } = {}) {
+  if (!sourceId || sourceId.startsWith('_')) return false;
+  if (preferExisting && cssRaw[sourceId]) return false;
+  try {
+    cssRaw[sourceId] = fs.readFileSync(filePath, 'utf8');
+    return true;
+  } catch (err) {
+    console.warn(`Could not read ${filePath}: ${err.message}`);
+    return false;
+  }
+}
+
+let templateCssCount = 0;
+if (fs.existsSync(CSS_PATTERNS_DIR)) {
+  for (const dirent of fs.readdirSync(CSS_PATTERNS_DIR, { withFileTypes: true })) {
+    if (!dirent.isDirectory()) continue;
+    const siteDir = dirent.name;
+    const fullDir = path.join(CSS_PATTERNS_DIR, siteDir);
+    for (const f of fs.readdirSync(fullDir).filter((name) => name.endsWith('.css'))) {
+      const parishId = normalizeCssSourceId(f, siteDir);
+      if (loadCssFile(path.join(fullDir, f), parishId)) templateCssCount++;
+    }
+  }
+  console.log(`Found override.css for ${templateCssCount} template site(s) in templates/css-patterns/`);
+}
+
+let exportCssCount = 0;
 if (fs.existsSync(CSS_DIR)) {
-  const cssFiles = fs.readdirSync(CSS_DIR).filter((f) => f.endsWith('.css'));
+  const cssFiles = fs.readdirSync(CSS_DIR).filter((f) =>
+    f.endsWith('.css') && !f.startsWith('_')
+  );
   for (const f of cssFiles) {
-    const parishId = f
-      .replace(/-home\.override\.css$/, '')
-      .replace(/\.override\.css$/, '')
-      .replace(/-home\.css$/, '')
-      .replace(/\.css$/, '')
-      .replace(/-1$/, '');
-    try {
-      cssRaw[parishId] = fs.readFileSync(path.join(CSS_DIR, f), 'utf8');
-    } catch (err) {
-      console.warn(`Could not read ${f}: ${err.message}`);
+    const parishId = normalizeCssSourceId(f);
+    if (loadCssFile(path.join(CSS_DIR, f), parishId, { preferExisting: true })) {
+      exportCssCount++;
     }
   }
   console.log(
-    `Found override.css for ${Object.keys(cssRaw).length} parishes in override-css/`
+    `Found ${Object.keys(cssRaw).length} total override.css source(s) (` +
+    `${templateCssCount} template, ${exportCssCount} export-only).`
   );
-} else {
-  console.log('(no exports/override-css/ — composite CSS export will be unavailable)');
+} else if (!templateCssCount) {
+  console.log('(no templates/css-patterns/ or exports/override-css/ — composite CSS export will be unavailable)');
 }
 
 // --- Content companions (article/category data per section per source) ---
@@ -289,7 +325,44 @@ function summarizeSection(node) {
     subtypes,
     inherited,
     attributes: node.attributes || {},
+    cssClasses: collectCssClasses(node),
   };
+}
+
+function addClassTokens(target, value) {
+  if (value === null || value === undefined) return;
+  String(value)
+    .split(/\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .forEach((s) => target.add(s));
+}
+
+function collectCssClasses(node) {
+  const classes = new Set();
+  function walk(value, key = '') {
+    if (value === null || value === undefined) return;
+    if (typeof value === 'string') {
+      if (/^(class|classname|blockclass|linkclass|buttonclass)$/i.test(key)) {
+        addClassTokens(classes, value);
+      }
+      if (/html$/i.test(key)) {
+        for (const m of value.matchAll(/\bclass\s*=\s*["']([^"']+)["']/gi)) {
+          addClassTokens(classes, m[1]);
+        }
+      }
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((v) => walk(v, key));
+      return;
+    }
+    if (typeof value === 'object') {
+      for (const [k, v] of Object.entries(value)) walk(v, k);
+    }
+  }
+  walk(node);
+  return Array.from(classes).sort();
 }
 
 const libCount = Object.values(sectionLibrary).reduce((a, b) => a + b.length, 0);
@@ -671,7 +744,7 @@ const CONTAINER_SECTION_WIDTHS = (function() {
 
       <div class="tab-pane" data-pane="css" hidden>
         <div class="css-controls">
-          <label for="css-base">Shell / global CSS base:</label>
+          <label for="css-base">Override CSS template:</label>
           <select id="css-base"></select>
           <span>— section CSS always travels with each section.</span>
         </div>
@@ -1150,22 +1223,60 @@ function sectionsInSelector(selector) {
   return found;
 }
 
+function classesInSelector(selector) {
+  const found = new Set();
+  const stripped = String(selector)
+    .replace(/["'][^"']*["']/g, '')
+    .replace(/\\/\\*[^]*?\\*\\//g, '');
+  const re = /\\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)/g;
+  let m;
+  while ((m = re.exec(stripped))) found.add(m[1].replace(/\\\\([\\s\\S])/g, '$1'));
+  return Array.from(found);
+}
+
+const CSS_SECTION_CLASS_INDEX = {};
+for (const variants of Object.values(SECTION_LIBRARY || {})) {
+  for (const v of variants) {
+    const sourceId = v.sourceId;
+    const sectionId = v.node && v.node.id;
+    const classes = v.summary && v.summary.cssClasses;
+    if (!sourceId || !sectionId || !classes || !classes.length) continue;
+    const bySection = (CSS_SECTION_CLASS_INDEX[sourceId] ||= {});
+    const set = (bySection[sectionId] ||= new Set());
+    classes.forEach((c) => set.add(c));
+  }
+}
+
+function sectionsForSelectorClasses(selector, sourceId) {
+  const bySection = CSS_SECTION_CLASS_INDEX[sourceId];
+  if (!bySection) return [];
+  const selectorClasses = classesInSelector(selector);
+  if (!selectorClasses.length) return [];
+  const found = [];
+  for (const [sid, classSet] of Object.entries(bySection)) {
+    if (selectorClasses.some((c) => classSet.has(c))) found.push(sid);
+  }
+  return found;
+}
+
 // Split a list of tokenised items into { bySection, global }, recursing into
 // @media / @supports blocks so each section gets its own scoped wrapper.
-function splitCssItems(items) {
+function splitCssItems(items, sourceId) {
   const bySection = {};
   const global = [];
   for (const item of items) {
     if (item.type === 'rule') {
       const secs = sectionsInSelector(item.selector);
-      if (secs.length) {
-        for (const s of secs) (bySection[s] ||= []).push(item.raw);
+      const classSecs = secs.length ? [] : sectionsForSelectorClasses(item.selector, sourceId);
+      const targets = secs.length ? secs : classSecs;
+      if (targets.length) {
+        for (const s of targets) (bySection[s] ||= []).push(item.raw);
       } else {
         global.push(item.raw);
       }
     } else if (item.type === 'atrule') {
       if (item.name === 'media' || item.name === 'supports') {
-        const sub = splitCssItems(tokenizeCss(item.inner));
+        const sub = splitCssItems(tokenizeCss(item.inner), sourceId);
         for (const [s, chunks] of Object.entries(sub.bySection)) {
           (bySection[s] ||= []).push(
             '@' + item.name + ' ' + item.prelude + ' {\\n' + chunks.join('\\n') + '\\n}'
@@ -1187,7 +1298,7 @@ function splitCssItems(items) {
 const CSS_LIBRARY = {};
 for (const [pid, raw] of Object.entries(CSS_RAW || {})) {
   try {
-    CSS_LIBRARY[pid] = splitCssItems(tokenizeCss(raw));
+    CSS_LIBRARY[pid] = splitCssItems(tokenizeCss(raw), pid);
   } catch (e) {
     CSS_LIBRARY[pid] = { bySection: {}, global: [], error: e.message };
   }
@@ -1276,30 +1387,17 @@ function renderCssTab() {
   const pre = document.getElementById('export-css');
   const sel = document.getElementById('css-base');
   const cssParishes = Object.keys(CSS_LIBRARY);
-  if (!cssParishes.length) {
-    pre.textContent = '/* No override.css files found in exports/override-css/.\\n   Run the CSS export step to populate them, then re-run build-site-builder.js. */';
+  if (!cssParishes.length && !(CSS_TEMPLATE_HEAD_JS || CSS_TEMPLATE_TAIL_JS)) {
+    pre.textContent = '/* No CSS template or section CSS sources found.\\n   Add templates/css-patterns or exports/override-css data, then re-run build-site-builder.js. */';
     document.getElementById('css-summary').textContent = '';
     return;
   }
   if (!sel.dataset.ready) {
-    sel.innerHTML = cssParishes.map(p => {
-      const src = SOURCES.find(s => s.id === p);
-      return '<option value="' + escHtml(p) + '">' + escHtml(src ? src.name : p) + '</option>';
-    }).join('');
+    sel.innerHTML = '<option value="">_template.css (fresh override.css)</option>';
     sel.dataset.ready = '1';
-    sel.addEventListener('change', () => { sel.dataset.touched = '1'; renderCssTab(); });
   }
-  // Default the base to whichever filled parish (with CSS) appears most often.
-  if (!sel.dataset.touched) {
-    const counts = {};
-    for (const v of Object.values(filled)) {
-      if (CSS_LIBRARY[v.sourceId]) counts[v.sourceId] = (counts[v.sourceId] || 0) + 1;
-    }
-    let best = cssParishes[0], bestN = -1;
-    for (const [p, c] of Object.entries(counts)) if (c > bestN) { bestN = c; best = p; }
-    sel.value = best;
-  }
-  const { css, stats } = assembleCss(sel.value);
+  sel.value = '';
+  const { css, stats } = assembleCss('');
   pre.textContent = css;
   document.getElementById('css-summary').textContent = stats;
   document.getElementById('dl-css').onclick = () => {
@@ -1318,9 +1416,9 @@ function openExport() {
   document.getElementById('export-yaml').textContent = yamlText;
   document.getElementById('export-summary').textContent =
     filledCount + ' section(s) composed: ' + Object.keys(filled).join(', ');
-  // recompute the default CSS base for this composition unless user picked one
+  // Keep the CSS export on the fresh template shell.
   const cssBase = document.getElementById('css-base');
-  delete cssBase.dataset.touched;
+  cssBase.value = '';
   switchTab('yaml');
   document.getElementById('export-modal').classList.add('open');
   // wire buttons (re-wire each open)
@@ -1449,23 +1547,6 @@ function initDeployTab() {
         '<option value="33">Parish Home (33)</option>' +
         '<option value="72">School Home (72)</option>';
     });
-
-  // Populate CSS base selector from CSS_LIBRARY
-  const cssBaseEl = document.getElementById('deploy-css-base');
-  const cssParishes = Object.keys(CSS_LIBRARY);
-  if (cssParishes.length) {
-    // Pick best default: most sections used in current composition
-    const counts = {};
-    for (const v of Object.values(filled)) {
-      if (CSS_LIBRARY[v.sourceId]) counts[v.sourceId] = (counts[v.sourceId] || 0) + 1;
-    }
-    let best = cssParishes[0], bestN = -1;
-    for (const [pid, n] of Object.entries(counts)) { if (n > bestN) { best = pid; bestN = n; } }
-    cssBaseEl.innerHTML = '<option value="">\u2014 no CSS \u2014</option>' +
-      cssParishes.map(p => '<option value="' + escHtml(p) + '"' + (p === best ? ' selected' : '') + '>' + escHtml(p) + '</option>').join('');
-  } else {
-    cssBaseEl.innerHTML = '<option value="">\u2014 no CSS files available \u2014</option>';
-  }
 
   // Site search input
   const searchEl   = document.getElementById('deploy-site-search');
@@ -1657,11 +1738,12 @@ document.getElementById('btn-deploy-live').addEventListener('click', async () =>
   const doc = buildExportDoc();
   _deployYaml = jsyaml.dump(doc, { lineWidth: -1, noRefs: true });
 
-  // Use _template.css directly if upload is enabled
+  // Upload the same assembled CSS shown in the override.css export tab.
   const uploadCss = document.getElementById('deploy-upload-css').checked;
   let cssContent = null;
-  if (uploadCss && (CSS_TEMPLATE_HEAD_JS || CSS_TEMPLATE_TAIL_JS)) {
-    cssContent = CSS_TEMPLATE_HEAD_JS + '\\n' + CSS_TEMPLATE_TAIL_JS;
+  let cssBase = '';
+  if (uploadCss) {
+    cssContent = assembleCss('').css;
   }
 
   // Collect per-section contentData from filled slots (for deploy-with-content)
@@ -1696,6 +1778,7 @@ document.getElementById('btn-deploy-live').addEventListener('click', async () =>
       body: JSON.stringify({
         yaml: _deployYaml, siteUrl, outlineId, dryRun,
         css: cssContent,
+        cssBase,
         variantContent,
       }),
     });
