@@ -351,6 +351,9 @@
             <label><input type="checkbox" id="deploy-upload-css" checked /> Upload composite CSS via FTP and link in page settings</label>
           </div>
           <div class="deploy-field">
+            <label><input type="checkbox" id="deploy-create-content" /> Create articles &amp; categories on target site (uses section content data)</label>
+          </div>
+          <div class="deploy-field">
             <label><input type="checkbox" id="deploy-dry-run" checked /> Dry run (preview only — no changes written)</label>
           </div>
           <div class="modal-actions">
@@ -1348,7 +1351,7 @@ document.getElementById('btn-deploy-live').addEventListener('click', async () =>
     || document.getElementById('deploy-site-search').value.trim();
   const outlineId      = document.getElementById('deploy-outline').value;
   const dryRun         = document.getElementById('deploy-dry-run').checked;
-  const createContent  = document.getElementById('deploy-create-content').checked;
+  const createContent  = document.getElementById('deploy-create-content')?.checked ?? false;
   const statusEl       = document.getElementById('deploy-status');
 
   if (!siteUrl) { toast('Select or enter a target site first.'); return; }
