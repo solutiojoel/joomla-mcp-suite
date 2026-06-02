@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "joomla-orchestrator": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["c:\\Users\\Jeremy\\code-projects\\joomla-mcp-suite\\apps\\joomla-orchestrator\\orchestrator.js"]
+    }
+  }
+}

@@ -16,6 +16,7 @@ ENV XDG_CONFIG_HOME=/workspace/.config
 WORKDIR /workspace
 
 COPY apps ./apps
+COPY docs ./docs
 COPY scripts ./scripts
 COPY .env.example ./
 COPY README.md ./

@@ -7,6 +7,7 @@
       "args": [
         "dist/index.js"
       ],
+      "envFile": "${workspaceFolder}/.env",
       "dev": {
         "watch": "src/**/*.ts",
         "debug": {
