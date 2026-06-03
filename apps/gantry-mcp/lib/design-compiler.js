@@ -29,6 +29,16 @@ const _usedIds = new Set();
 
 function resetIds() { _usedIds.clear(); }
 
+/** Pre-populate the used-ID set from an existing layout so genId() never
+ *  produces a collision when compiling into an already-populated outline. */
+function seedIds(idSet) {
+  if (idSet instanceof Set) {
+    for (const id of idSet) _usedIds.add(id);
+  } else if (Array.isArray(idSet)) {
+    idSet.forEach(id => _usedIds.add(id));
+  }
+}
+
 function genId(subtype) {
   let id;
   do {
@@ -1063,20 +1073,17 @@ function getHomepageExamples(slug, options) {
   };
 }
 
-/* ─── Exports ────────────────────────────────────────────────────────────── */
-
 module.exports = {
-  compile,
   compileYaml,
+  compileSection,
   compileFile,
-  decompile,
+  resolveVars,
+  resetIds,
+  seedIds,
+  collectNodeIds,
   getParticleCatalog,
   getSectionTemplates,
-  getHomepageExamples,
   briefToDesignYaml,
-  buildTreeSummary,
-  // Exposed for testing
-  resolveVars,
-  genId,
-  resetIds,
+  getHomepageExamples,
+  decompile,
 };

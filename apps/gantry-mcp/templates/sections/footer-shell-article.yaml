@@ -1,0 +1,34 @@
+# Section Template: Footer — Single Shell Article
+# Usage: Footer rendered entirely from one Joomla shell article
+#        (logo, address, phone, links all inside the article HTML)
+# Place in: Base Outline, footer section
+#
+# REQUIRED CONTEXT VARIABLES:
+#   {{footer_article_id}} — Joomla article ID for the footer shell article
+#
+# NOTE: Belongs in the Base Outline. Sub-outlines inherit it.
+# Use this when the site does NOT use separate footer-a/b/c module positions.
+
+id: footer
+type: section
+
+grids:
+  - blocks:
+      - size: 100
+        particle: contentarray
+        title: "Footer"
+        attributes:
+          article:
+            filter:
+              categories: ""
+              articles: "{{footer_article_id}}"
+              featured: include
+            limit:
+              total: "1"
+              columns: "1"
+            display:
+              pagination_buttons: ""
+              title: { enabled: "hide" }
+            sort:
+              orderby: ordering
+              ordering: ASC

@@ -1,0 +1,45 @@
+# Section Template: News & Events Sidebar
+# Usage: News feed in the sidebar section — stacked photo-headline cards
+# Place in: container-main > sidebar
+#
+# REQUIRED CONTEXT VARIABLES:
+#   {{news_category_id}} — Joomla category ID for News & Events articles
+
+id: sidebar
+type: section
+attributes:
+  class: "news-to-me headlines-spacing"
+
+grids:
+  - blocks:
+      - size: 100
+        blockClass: ph-sideway-stack
+        particle: contentarray
+        title: "News & Events"
+        attributes:
+          article:
+            filter:
+              categories: "{{news_category_id}}"
+              articles: ""
+              featured: include
+            limit:
+              total: "4"
+              columns: "1"
+              start: "0"
+            display:
+              pagination_buttons: ""
+              image: { enabled: "full" }
+              title: { enabled: "show" }
+              text: { type: "intro", limit: "90", formatting: "text" }
+              read_more: { enabled: "show" }
+            sort:
+              orderby: ordering
+              ordering: ASC
+  - blocks:
+      - size: 100
+        blockClass: news-button
+        particle: custom
+        title: "View All News Button"
+        attributes:
+          html: '<a href="/news" class="button">View All News</a>'
+          enabled: 1

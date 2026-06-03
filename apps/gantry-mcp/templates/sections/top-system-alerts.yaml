@@ -1,17 +1,22 @@
-# Section Template: Alert / Announcement Banner
-# Usage: Dynamic alert pulled from a Joomla category.
-# Place in: #Home outline, top section (alongside system-messages)
-# Use with: gantry_section_apply, mode: merge (adds alongside system-messages)
+# Section Template: Top Section — System Messages + Alert Banner
+# Usage: Complete top section: system messages (required) + alert contentarray
+# Place in: #Home or any sub-outline, top section
+# Use with: gantry_section_apply, mode: replace
 #
 # REQUIRED CONTEXT VARIABLES:
-#   {{alert_category_id}} — Joomla category ID for alerts/announcements
+#   {{alert_category_id}} — Joomla category ID for alert articles
 #
-# TIP: Publish/unpublish articles in the alert category to control visibility.
+# NOTE: system/messages is REQUIRED in every outline's top section.
+# It renders Joomla flash messages (login errors, form confirmations, etc.)
 
 id: top
 type: section
 
 grids:
+  - blocks:
+      - size: 100
+        particle: system/messages
+        title: "System Messages"
   - blocks:
       - size: 100
         blockClass: modern-alert

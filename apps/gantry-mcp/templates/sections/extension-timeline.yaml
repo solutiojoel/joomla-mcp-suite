@@ -1,0 +1,37 @@
+# Section Template: Extension — Events Timeline
+# Usage: Upcoming events displayed as a vertical timeline
+# Place in: #Home outline, extension section
+#
+# REQUIRED CONTEXT VARIABLES:
+#   {{events_category_id}} — Joomla category ID for upcoming events articles
+#
+# The timeline particle shows articles as dated event entries.
+
+id: extension
+type: section
+
+grids:
+  - blocks:
+      - size: 100
+        particle: timeline
+        title: "Upcoming Events"
+        attributes:
+          source: joomla
+          article:
+            filter:
+              categories: "{{events_category_id}}"
+              articles: ""
+              featured: include
+            limit:
+              total: "5"
+              columns: "1"
+              start: "0"
+            display:
+              pagination_buttons: ""
+              title: { enabled: "show" }
+              image: { enabled: "" }
+              text: { type: "intro", limit: "120", formatting: "text" }
+              read_more: { enabled: "show" }
+            sort:
+              orderby: date
+              ordering: ASC

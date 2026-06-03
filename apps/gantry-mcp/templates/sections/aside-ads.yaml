@@ -1,0 +1,19 @@
+# Section Template: Sidebar Ad Positions
+# Usage: Ad/module position column in the aside section
+# Place in: container-main > aside
+#
+# No context variables required — uses a Joomla module position.
+# Assign ad modules to the "home-ads" position in the Joomla module manager.
+
+id: aside
+type: section
+attributes:
+  class: "news-to-me headlines-spacing"
+
+grids:
+  - blocks:
+      - size: 100
+        blockClass: ads-903 side-ads ads-901 ads-902
+        particle: position
+        title: "Home Ads"
+        position_type: module

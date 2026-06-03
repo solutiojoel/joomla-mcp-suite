@@ -711,6 +711,10 @@ const TOOLS = [
       const before = await layoutApi.fetchSavedLayout(ctx, args.outline || 'default');
       const diff = layoutApi.diffStructures(before, mergedLayout);
       if (args.dryRun) return { dryRun: true, diff };
+      // Section preservation: reject if any existing section would be deleted or moved
+      if (!args.force_section_delete) {
+        layoutApi.assertSectionsPreserved(layoutApi.snapshotSections(before), mergedLayout);
+      }
       const backupPath = backup.takeBackup(ctx, args.outline || 'default', 'pre-import', before);
       await layoutApi.saveLayoutDirect(ctx, ctx, args.outline || 'default', mergedLayout);
       return { imported: true, backupPath, baseTemplateApplied: true };
@@ -1307,6 +1311,10 @@ const TOOLS = [
 
       const before     = await layoutApi.fetchSavedLayout(ctx, outline);
       const diff       = layoutApi.diffStructures(before, result.layout);
+      // Section preservation: reject if any existing section would be deleted or moved
+      if (!args.force_section_delete) {
+        layoutApi.assertSectionsPreserved(layoutApi.snapshotSections(before), result.layout);
+      }
       const backupPath = backup.takeBackup(ctx, outline, 'pre-design-import', before);
       await layoutApi.saveLayoutDirect(ctx, ctx, outline, result.layout);
 
@@ -1902,125 +1910,175 @@ const TOOLS = [
     },
   },
 
-];
+  {
+    name: 'gantry_section_apply',
+    description:
+      'Apply a section design YAML to a SINGLE section in a live outline, leaving all ' +
+      'other sections completely untouched. The surgical alternative to gantry_layout_design. ' +
+      'Modes: ' +
+      '"replace" (default) clears the section then adds the new particles; ' +
+      '"merge" appends new particles alongside existing ones; ' +
+      '"clear" removes all particles from the section without adding new ones. ' +
+      'section_yaml accepts the same format as a single section in gantry_layout_design: ' +
+      'id, attributes.class, grids array with blocks, or a template: reference. ' +
+      'Context variables ({{article_id}}) are substituted from the context argument. ' +
+      'Always use dryRun:true first to confirm the compiled particles before applying.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        section: {
+          type: 'string',
+          description:
+            'Target section id in the live outline (e.g. "slideshow", "utility", "sidebar"). ' +
+            'Required if section_yaml does not include an id field.',
+        },
+        section_yaml: {
+          type: 'string',
+          description:
+            'YAML describing the section to apply. Same format as a single section block ' +
+            'in gantry_layout_design. Include id, optional attributes.class, and grids. ' +
+            'Example: "id: slideshow\nattributes:\n  class: floatator\ngrids:\n  - blocks: [...]"',
+        },
+        mode: {
+          type: 'string',
+          enum: ['replace', 'merge', 'clear'],
+          description:
+            '"replace" (default): remove existing particles then add new ones. ' +
+            '"merge": keep existing particles and append new ones. ' +
+            '"clear": remove all particles from the section (section_yaml not required).',
+        },
+        update_section_class: {
+          type: 'boolean',
+          description:
+            'When true (default), also update the section CSS class from attributes.class in the YAML. ' +
+            'Set false to leave the section class attribute unchanged.',
+        },
+        context: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Runtime context variables to substitute into the section YAML (e.g. { "mass_times_article_id": "55" }).',
+        },
+        dryRun: {
+          type: 'boolean',
+          description: 'Compile and validate but do not save. Returns diff and particle summary.',
+        },
+      },
+      required: ['site'],
+    },
+    handler: async (args) => {
+      const yaml = require('js-yaml');
 
-/* --------------------------- server bootstrap ------------------------- */
+      const mode = args.mode || 'replace';
+      const targetSectionId = args.section;
 
-function buildServer() {
-  const server = new Server(
-    { name: 'gantry5-mcp', version: '0.1.0' },
-    { capabilities: { tools: {} } }
-  );
-
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: TOOLS.map((tool) => ({
-      name: tool.name,
-      description: tool.description,
-      inputSchema: tool.schema,
-    })),
-  }));
-
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const toolName = request.params.name;
-    const toolArgs = request.params.arguments || {};
-    const tool = TOOLS.find((candidate) => candidate.name === toolName);
-
-    if (!tool) {
-      return {
-        isError: true,
-        content: [{ type: 'text', text: 'Unknown tool: ' + toolName }],
-      };
-    }
-
-    try {
-      const result = await tool.handler(toolArgs);
-      return {
-        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-      };
-    } catch (err) {
-      if (toolArgs.site) invalidateCtx(toolArgs.site, toolArgs.theme || '');
-      return {
-        isError: true,
-        content: [{ type: 'text', text: 'Error: ' + (err.message || String(err)) }],
-      };
-    }
-  });
-
-  return server;
-}
-
-async function readJsonBody(req) {
-  return new Promise((resolve, reject) => {
-    let data = '';
-    req.on('data', (chunk) => { data += chunk.toString(); });
-    req.on('end', () => {
-      if (!data) return resolve(undefined);
-      try { resolve(JSON.parse(data)); } catch { resolve(undefined); }
-    });
-    req.on('error', reject);
-  });
-}
-
-async function startHttp(port) {
-  const sessions = new Map();
-
-  const httpServer = http.createServer(async (req, res) => {
-    try {
-      const reqUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
-
-      if (reqUrl.pathname !== '/mcp') {
-        res.writeHead(404);
-        res.end('Not found');
-        return;
+      // Parse section YAML (not needed for clear mode if section arg provided)
+      let sectionDef = null;
+      if (args.section_yaml) {
+        try { sectionDef = yaml.load(args.section_yaml); }
+        catch (e) { return { valid: false, error: 'section_yaml parse error: ' + e.message }; }
       }
 
-      const sessionId = req.headers['mcp-session-id'];
-      let transport = sessionId ? sessions.get(sessionId) : undefined;
+      // Resolve section id
+      const resolvedSectionId = targetSectionId || (sectionDef && sectionDef.id);
+      if (!resolvedSectionId) {
+        throw new Error('Pass `section` argument or include `id` in section_yaml');
+      }
 
-      if (!transport) {
-        const mcpServer = buildServer();
-        transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => randomUUID(),
-          onsessioninitialized: (id) => {
-            sessions.set(id, transport);
-          },
+      if (mode !== 'clear' && !sectionDef) {
+        throw new Error('section_yaml is required for mode "' + mode + '"');
+      }
+
+      // Merge context: YAML context < runtime args context
+      const context = Object.assign({}, (sectionDef && sectionDef.context) || {}, args.context || {});
+
+      const ctx     = await getCtx(args);
+      const outline = await resolveOutlineArg(ctx, args);
+
+      // Fetch live layout so we can seed the ID generator
+      const liveStructure = await layoutApi.getLayoutStructure(ctx, outline);
+
+      // Seed compiler IDs from existing layout to prevent collisions
+      compiler.resetIds();
+      compiler.seedIds(compiler.collectNodeIds(liveStructure));
+
+      // Compile the new section content
+      let newGrids = [];
+      if (sectionDef && mode !== 'clear') {
+        // Ensure the sectionDef has the right id
+        const defWithId = Object.assign({}, sectionDef, { id: resolvedSectionId });
+        const compiled = compiler.compileSection(defWithId, context);
+        newGrids = compiled.children || [];
+
+        if (newGrids.length === 0) {
+          return {
+            valid: false,
+            error: 'Compiled section has no grids. Check that section_yaml has a non-empty grids array.',
+          };
+        }
+      }
+
+      // Apply the mutation
+      const r = await layoutApi.mutateLayout(
+        ctx,
+        outline,
+        (structure) => {
+          const found = layoutApi.findNode(structure, resolvedSectionId);
+          if (!found) throw new Error('Section "' + resolvedSectionId + '" not found in outline "' + outline + '"');
+
+          const section = found.node;
+          if (!['section', 'offcanvas'].includes(section.type)) {
+            throw new Error('"' + resolvedSectionId + '" is type "' + section.type + '"; expected section or offcanvas');
+          }
+
+          // Replace: strip non-inherited grid children
+          if (mode === 'replace' || mode === 'clear') {
+            section.children = (section.children || []).filter(child =>
+              child.inherit && Object.keys(child.inherit).length > 0
+            );
+          }
+
+          // Append new grids (not for clear)
+          if (mode !== 'clear') {
+            section.children = (section.children || []).concat(newGrids);
+          }
+
+          // Update section CSS class from YAML if requested
+          if (args.update_section_class !== false && sectionDef &&
+              sectionDef.attributes && sectionDef.attributes.class !== undefined) {
+            if (!section.attributes) section.attributes = {};
+            section.attributes.class = sectionDef.attributes.class;
+          }
+        },
+        { op: 'section-apply', dryRun: !!args.dryRun }
+      );
+
+      // Build a human-readable summary of what was applied
+      const summary = newGrids.map((grid, gi) => {
+        const blocks = grid.children || [];
+        const parts = blocks.map(b => {
+          const p = b.children && b.children[0];
+          const bc = (b.attributes && b.attributes.class) || '';
+          if (!p) return 'block';
+          return (p.subtype || p.type) + (bc ? '.' + bc.split(' ')[0] : '');
         });
-        await mcpServer.connect(transport);
-      }
+        return 'grid[' + gi + ']: ' + parts.join(' | ');
+      });
 
-      const body = req.method === 'POST' ? await readJsonBody(req) : undefined;
-      await transport.handleRequest(req, res, body);
+      return {
+        section:          resolvedSectionId,
+        outline,
+        mode,
+        grids_applied:    newGrids.length,
+        particles_applied: newGrids.reduce((n, g) => n + (g.children || []).length, 0),
+        summary,
+        dryRun:     !!r.dryRun,
+        diff:       r.diff   || null,
+        backupPath: r.backupPath || null,
+      };
+    },
+  },
 
-      if (req.method === 'DELETE' && sessionId) {
-        sessions.delete(sessionId);
-      }
-    } catch (err) {
-      if (!res.headersSent) {
-        res.writeHead(500, { 'content-type': 'text/plain' });
-      }
-      res.end('Error: ' + (err.message || String(err)));
-    }
-  });
 
-  await new Promise((resolve) => httpServer.listen(port, '0.0.0.0', resolve));
-  console.error('Gantry MCP Server running on HTTP port ' + port);
-}
-
-async function startStdio() {
-  const server = buildServer();
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error('Gantry MCP Server running on stdio');
-}
-
-async function main() {
-  const rawPort = process.env.HTTP_PORT || process.env.PORT;
-  const httpPort = rawPort ? parseInt(rawPort, 10) : null;
-  if (httpPort) await startHttp(httpPort);
-  else await startStdio();
-}
-
-main().catch((err) => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+];
