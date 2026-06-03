@@ -2082,3 +2082,124 @@ const TOOLS = [
 
 
 ];
+
+/* --------------------------- server bootstrap ------------------------- */
+
+function buildServer() {
+  const server = new Server(
+    { name: 'gantry5-mcp', version: '0.1.0' },
+    { capabilities: { tools: {} } }
+  );
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: TOOLS.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.schema,
+    })),
+  }));
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const toolName = request.params.name;
+    const toolArgs = request.params.arguments || {};
+    const tool = TOOLS.find((candidate) => candidate.name === toolName);
+
+    if (!tool) {
+      return {
+        isError: true,
+        content: [{ type: 'text', text: 'Unknown tool: ' + toolName }],
+      };
+    }
+
+    try {
+      const result = await tool.handler(toolArgs);
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    } catch (err) {
+      if (toolArgs.site) invalidateCtx(toolArgs.site, toolArgs.theme || '');
+      return {
+        isError: true,
+        content: [{ type: 'text', text: 'Error: ' + (err.message || String(err)) }],
+      };
+    }
+  });
+
+  return server;
+}
+
+async function readJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', (chunk) => { data += chunk.toString(); });
+    req.on('end', () => {
+      if (!data) return resolve(undefined);
+      try { resolve(JSON.parse(data)); } catch { resolve(undefined); }
+    });
+    req.on('error', reject);
+  });
+}
+
+async function startHttp(port) {
+  const sessions = new Map();
+
+  const httpServer = http.createServer(async (req, res) => {
+    try {
+      const reqUrl = new URL(req.url || '/', 'http://' + (req.headers.host || 'localhost'));
+
+      if (reqUrl.pathname !== '/mcp') {
+        res.writeHead(404);
+        res.end('Not found');
+        return;
+      }
+
+      const sessionId = req.headers['mcp-session-id'];
+      let transport = sessionId ? sessions.get(sessionId) : undefined;
+
+      if (!transport) {
+        const mcpServer = buildServer();
+        transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (id) => {
+            sessions.set(id, transport);
+          },
+        });
+        await mcpServer.connect(transport);
+      }
+
+      const body = req.method === 'POST' ? await readJsonBody(req) : undefined;
+      await transport.handleRequest(req, res, body);
+
+      if (req.method === 'DELETE' && sessionId) {
+        sessions.delete(sessionId);
+      }
+    } catch (err) {
+      if (!res.headersSent) {
+        res.writeHead(500, { 'content-type': 'text/plain' });
+      }
+      res.end('Error: ' + (err.message || String(err)));
+    }
+  });
+
+  await new Promise((resolve) => httpServer.listen(port, '0.0.0.0', resolve));
+  console.error('Gantry MCP Server running on HTTP port ' + port);
+}
+
+async function startStdio() {
+  const server = buildServer();
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error('Gantry MCP Server running on stdio');
+}
+
+async function main() {
+  const rawPort = process.env.HTTP_PORT || process.env.PORT;
+  const httpPort = rawPort ? parseInt(rawPort, 10) : null;
+  if (httpPort) await startHttp(httpPort);
+  else await startStdio();
+}
+
+main().catch((err) => {
+  console.error('Fatal error:', err);
+  process.exit(1);
+});
