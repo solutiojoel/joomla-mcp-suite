@@ -165,407 +165,137 @@ const tools = [
     },
   },
   {
-    name: "joomla_list_categories",
-    description: "List categories. Use 'search' to filter by title server-side. Optional extension (default: com_content). Paginated — default 200/page.",
+    name: "joomla_category",
+    description: "Manage Joomla categories. action: list|get|create|update|delete|checkin.",
     inputSchema: {
       type: "object",
       properties: {
-        search: { type: "string", description: "Server-side title filter." },
-        extension: { type: "string", description: "Component extension (default: com_content)" },
-        limit: { type: "number", description: "Per page (default: 200, max: 500)" },
-        page: { type: "number", description: "Page number, 1-based" },
-      },
-      required: [],
-    },
-  },
-  {
-    name: "joomla_get_category",
-    description: "Get a category by id or title. Ambiguous title returns a list to disambiguate.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Category ID for a direct lookup." },
-        title: { type: "string", description: "Search by title. Returns category directly if unique, or a list of matches." },
-      },
-      required: [],
-    },
-  },
-  {
-    name: "joomla_create_category",
-    description: "Create a category. Requires title.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        title: { type: "string" },
+        action: { type: "string", enum: ["list", "get", "create", "update", "delete", "checkin"], description: "Operation to perform." },
+        id: { type: "string", description: "Category ID (required for get/update/delete/checkin)." },
+        title: { type: "string", description: "Required for create. Used for search in get." },
         alias: { type: "string" },
         parentId: { type: "string", description: "Parent category ID (default: 1=root)" },
         description: { type: "string", description: "HTML description" },
         published: { type: "string", description: "1=published, 0=unpublished" },
-        extension: { type: "string", description: "Default: com_content" },
-      },
-      required: ["title"],
-    },
-  },
-  {
-    name: "joomla_update_category",
-    description: "Update a category by ID. Only provided fields are changed.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Category ID" },
-        title: { type: "string" },
-        alias: { type: "string" },
-        parentId: { type: "string" },
-        description: { type: "string", description: "HTML description" },
-        published: { type: "string", description: "1=published, 0=unpublished" },
+        extension: { type: "string", description: "Component extension (default: com_content)" },
         ordering: { type: "string", description: "Place after category with this ID. Use -1 for first." },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_delete_category",
-    description: "Delete a category by ID. Cannot delete categories that contain articles.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Category ID" },
-        expectedTitle: { type: "string", description: "Safety check: refuse unless title matches" },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_checkin_category",
-    description: "Check in a checked-out category.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Category ID" },
-        expectedTitle: { type: "string", description: "Safety check: refuse unless title matches" },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_list_modules",
-    description: "List modules. Use 'search' to filter by title server-side. client_id: 0=site, 1=admin.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        search: { type: "string", description: "Server-side title filter." },
-        client_id: { type: "string", description: "0=site, 1=admin (default: 0)" },
+        search: { type: "string", description: "Server-side title filter (list only)." },
         limit: { type: "number", description: "Per page (default: 200, max: 500)" },
         page: { type: "number", description: "Page number, 1-based" },
+        expectedTitle: { type: "string", description: "Safety check for delete/checkin: refuse unless title matches." },
       },
-      required: [],
+      required: ["action"],
     },
   },
   {
-    name: "joomla_list_module_types",
-    description: "List available module types that can be created.",
+    name: "joomla_module",
+    description: "Manage Joomla modules. action: list|get|create|update|delete|toggle|checkin. Use joomla_module_type to discover types and positions before creating.",
     inputSchema: {
       type: "object",
       properties: {
+        action: { type: "string", enum: ["list", "get", "create", "update", "delete", "toggle", "checkin"], description: "Operation to perform." },
+        id: { type: "string", description: "Module ID (required for get/update/delete/toggle/checkin)." },
+        title: { type: "string", description: "Required for create. Used for search in get." },
+        moduleType: { type: "string", description: "Required for create. Extension ID or visible title (e.g. Custom, Menu, Search)." },
         client_id: { type: "string", description: "0=site, 1=admin (default: 0)" },
-      },
-      required: [],
-    },
-  },
-  {
-    name: "joomla_list_module_positions",
-    description: "List module positions available in the template.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        client_id: { type: "string", description: "0=site, 1=admin (default: 0)" },
-      },
-      required: [],
-    },
-  },
-  {
-    name: "joomla_inspect_module_type",
-    description: "Inspect a module type before creating. Returns type-specific params, positions, assignment options.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        moduleType: { type: "string", description: "Extension ID or visible title (e.g. Custom, Menu)" },
-        client_id: { type: "string", description: "0=site, 1=admin (default: 0)" },
-      },
-      required: ["moduleType"],
-    },
-  },
-  {
-    name: "joomla_get_module",
-    description: "Get a module by id or title. Ambiguous title returns a list to disambiguate.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Module ID for a direct lookup." },
-        title: { type: "string", description: "Search by title. Returns module directly if unique, or a list of matches." },
-        client_id: { type: "string", description: "0=site, 1=admin (default: 0)" },
-      },
-      required: [],
-    },
-  },
-  {
-    name: "joomla_update_module",
-    description: "Update a module by ID. Supports params, advanced, page assignments, and fieldOverrides.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Module ID" },
-        title: { type: "string" },
         position: { type: "string" },
         published: { type: "string", description: "1=yes, 0=no" },
-        access: { type: "string", description: "1=Public, 2=Special, 3=Registered" },
+        state: { type: "string", enum: ["0", "1"], description: "toggle: 1=enable, 0=disable" },
+        access: { type: "string", description: "Access level ID. 1=Public, 2=Special, 3=Registered" },
         showtitle: { type: "string", description: "1=yes, 0=no" },
         ordering: { type: "string" },
         style: { type: "string" },
         language: { type: "string", description: "Defaults to *" },
-        note: { type: "string" },
-        assignment: { type: "string", description: "0=all pages, -=none, 1=only selected, -1=all except selected" },
-        assigned: { type: "array", items: { type: "string" }, description: "Menu item IDs for assignment" },
-        params: { type: "object", additionalProperties: { type: "string" }, description: "Type-specific params from joomla_inspect_module_type" },
-        advanced: { type: "object", additionalProperties: { type: "string" } },
-        fieldOverrides: { type: "object", additionalProperties: { type: "string" }, description: "Raw field overrides e.g. {\"jform[params][count]\":\"5\"}" },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_create_module",
-    description: "Create a module. Use joomla_list_module_types and joomla_inspect_module_type first.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        title: { type: "string" },
-        moduleType: { type: "string", description: "Extension ID or visible title (e.g. Custom, Menu, Search)" },
-        client_id: { type: "string", description: "0=site, 1=admin (default: 0)" },
-        position: { type: "string" },
-        published: { type: "string", description: "1=yes, 0=no" },
-        access: { type: "string", description: "Access level ID" },
-        showtitle: { type: "string", description: "1=yes, 0=no" },
-        ordering: { type: "string" },
-        style: { type: "string" },
-        language: { type: "string" },
         note: { type: "string" },
         assignment: { type: "string", description: "0=all pages, -=none, 1=only selected, -1=all except selected" },
         assigned: { type: "array", items: { type: "string" }, description: "Menu item IDs for assignment" },
         content: { type: "string", description: "HTML content for Custom modules" },
-        params: { type: "object", additionalProperties: { type: "string" } },
+        params: { type: "object", additionalProperties: { type: "string" }, description: "Type-specific params from joomla_module_type inspect" },
         advanced: { type: "object", additionalProperties: { type: "string" } },
-        fieldOverrides: { type: "object", additionalProperties: { type: "string" } },
-      },
-      required: ["title", "moduleType"],
-    },
-  },
-  {
-    name: "joomla_delete_module",
-    description: "Delete a module by ID.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Module ID" },
-        client_id: { type: "string", description: "0=site, 1=admin (for verification)" },
-        expectedTitle: { type: "string", description: "Safety check: refuse unless title matches" },
-        expectedModuleType: { type: "string", description: "Safety check: refuse unless type matches" },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_checkin_module",
-    description: "Check in a checked-out module.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Module ID" },
-        expectedTitle: { type: "string", description: "Safety check: refuse unless title matches" },
-        expectedModuleType: { type: "string", description: "Safety check: refuse unless type matches" },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_toggle_module",
-    description: "Enable (state=1) or disable (state=0) a module.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Module ID" },
-        state: { type: "string", description: "1=enable, 0=disable", enum: ["0", "1"] },
-        expectedTitle: { type: "string", description: "Safety check: refuse unless title matches" },
-        expectedModuleType: { type: "string", description: "Safety check: refuse unless type matches" },
-      },
-      required: ["id", "state"],
-    },
-  },
-  {
-    name: "joomla_list_menus",
-    description: "List all menus. Returns id and title for each.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-      required: [],
-    },
-  },
-  {
-    name: "joomla_create_menu",
-    description: "Create a menu container. Use the returned menuType when creating menu items.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        title: { type: "string", description: "Visible menu title" },
-        menuType: { type: "string", description: "System type slug, max 24 chars (defaults from title)" },
-        description: { type: "string" },
-        cssClasses: { type: "string" },
-      },
-      required: ["title"],
-    },
-  },
-  {
-    name: "joomla_list_menu_items",
-    description: "List menu items for a menu (menuId = menuType, e.g. 'mainmenu'). Use 'search' to filter by title.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        menuId: { type: "string", description: "Menu type identifier (e.g. mainmenu)" },
-        search: { type: "string", description: "Server-side title filter." },
-        limit: { type: "number", description: "Per page (default: 0=all, max 500)" },
+        fieldOverrides: { type: "object", additionalProperties: { type: "string" }, description: "Raw field overrides e.g. {\"jform[params][count]\":\"5\"}" },
+        search: { type: "string", description: "Server-side title filter (list only)." },
+        limit: { type: "number", description: "Per page (default: 200, max: 500)" },
         page: { type: "number", description: "Page number, 1-based" },
+        expectedTitle: { type: "string", description: "Safety check for delete/toggle/checkin: refuse unless title matches." },
+        expectedModuleType: { type: "string", description: "Safety check for delete/toggle/checkin: refuse unless type matches." },
       },
-      required: ["menuId"],
+      required: ["action"],
     },
   },
   {
-    name: "joomla_list_menu_item_types",
-    description: "List all available menu item types.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-      required: [],
-    },
-  },
-  {
-    name: "joomla_inspect_menu_item_type",
-    description: "Inspect a menu item type before creating. Returns type-specific fields.",
+    name: "joomla_module_type",
+    description: "Discover module types and positions. action: list|inspect|list_positions.",
     inputSchema: {
       type: "object",
       properties: {
-        itemType: { type: "string", description: "Encoded value, label, or request key (e.g. com_content.article)" },
+        action: { type: "string", enum: ["list", "inspect", "list_positions"], description: "list=available module types, inspect=type details and params, list_positions=template positions." },
+        moduleType: { type: "string", description: "Required for inspect. Extension ID or visible title (e.g. Custom, Menu)." },
+        client_id: { type: "string", description: "0=site, 1=admin (default: 0)" },
       },
-      required: ["itemType"],
+      required: ["action"],
     },
   },
   {
-    name: "joomla_get_menu_item",
-    description: "Get a menu item by id or title. Returns request and params fields. Ambiguous title returns a list.",
+    name: "joomla_menu",
+    description: "Manage menu containers. action: list|create.",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "Menu item ID for a direct lookup." },
-        title: { type: "string", description: "Search by title. Returns item directly if unique, or a list of matches." },
-        menuId: { type: "string", description: "Scope title search to a specific menu (e.g. mainmenu)." },
+        action: { type: "string", enum: ["list", "create"], description: "list=all menus, create=new menu container" },
+        title: { type: "string", description: "create: visible menu title" },
+        menuType: { type: "string", description: "create: system type slug, max 24 chars (defaults from title)" },
+        description: { type: "string", description: "create: menu description" },
+        cssClasses: { type: "string", description: "create: CSS classes" },
       },
-      required: [],
+      required: ["action"],
     },
   },
   {
-    name: "joomla_create_menu_item",
-    description: "Create a menu item. Use joomla_list_menu_item_types first.",
+    name: "joomla_menu_item",
+    description: "Manage menu items. action: list|get|create|update|delete|toggle|checkin.",
     inputSchema: {
       type: "object",
       properties: {
-        title: { type: "string" },
-        menuType: { type: "string", description: "Menu type (e.g. mainmenu)" },
-        itemType: { type: "string", description: "Encoded type or request key (e.g. com_content.article)" },
+        action: { type: "string", enum: ["list", "get", "create", "update", "delete", "toggle", "checkin"], description: "Operation to perform" },
+        id: { type: "string", description: "get|update|delete|toggle|checkin: menu item ID" },
+        menuId: { type: "string", description: "list: menu type identifier (e.g. mainmenu). get: scope title search." },
+        search: { type: "string", description: "list: server-side title filter" },
+        limit: { type: "number", description: "list: per page (default: 0=all, max 500)" },
+        page: { type: "number", description: "list: page number, 1-based" },
+        title: { type: "string", description: "get: search by title. create|update: item title." },
+        menuType: { type: "string", description: "create: menu type (e.g. mainmenu). update: move to another menu. delete|toggle|checkin: for verification." },
+        itemType: { type: "string", description: "create|update: encoded type or request key (e.g. com_content.article)" },
         alias: { type: "string" },
-        link: { type: "string", description: "Explicit link (e.g. index.php?option=com_content&view=article&id=123)" },
-        parentId: { type: "string", description: "Parent menu item ID (default: 1=root)" },
-        published: { type: "string", description: "1=published, 0=unpublished, -2=trashed" },
-        access: { type: "string", description: "Access level ID (usually 1=Public)" },
-        language: { type: "string", description: "Defaults to *" },
-        browserNav: { type: "string", description: "0=same window, 1=new window, 2=popup" },
-        home: { type: "string", description: "1=set as home page" },
+        link: { type: "string", description: "create|update: explicit link (e.g. index.php?option=com_content&view=article&id=123)" },
+        parentId: { type: "string", description: "create|update: parent menu item ID (default: 1=root)" },
+        published: { type: "string", description: "create|update: 1=published, 0=unpublished, -2=trashed" },
+        access: { type: "string", description: "create|update: access level ID (usually 1=Public)" },
+        language: { type: "string", description: "create|update: defaults to *" },
+        browserNav: { type: "string", description: "create|update: 0=same window, 1=new window, 2=popup" },
+        home: { type: "string", description: "create|update: 1=set as home page" },
         note: { type: "string" },
-        request: { type: "object", additionalProperties: { type: "string" }, description: "Type-specific request values e.g. {\"id\":\"123\"}" },
-        params: { type: "object", additionalProperties: { type: "string" } },
-        templateStyleId: { type: "string", description: "Gantry outline ID (0=site default). See templateStyleOptions in joomla_get_menu_item." },
-        fieldOverrides: { type: "object", additionalProperties: { type: "string" } },
-      },
-      required: ["title", "menuType", "itemType"],
-    },
-  },
-  {
-    name: "joomla_update_menu_item",
-    description: "Update a menu item by ID. Use instead of delete+recreate to avoid alias conflicts.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Menu item ID" },
-        title: { type: "string" },
-        itemType: { type: "string", description: "New type (e.g. com_content.category.blog)" },
-        alias: { type: "string" },
-        menuType: { type: "string", description: "Move to another menu" },
-        link: { type: "string" },
-        parentId: { type: "string" },
-        published: { type: "string" },
-        access: { type: "string" },
-        language: { type: "string" },
-        browserNav: { type: "string", description: "0=same window, 1=new window, 2=popup" },
-        home: { type: "string" },
-        note: { type: "string" },
-        templateStyleId: { type: "string", description: "Gantry outline ID (0=site default)" },
-        ordering: { type: "string", description: "Place after sibling with this ID. Use -1 for first." },
-        request: { type: "object", additionalProperties: { type: "string" } },
+        templateStyleId: { type: "string", description: "create|update: Gantry outline ID (0=site default)" },
+        ordering: { type: "string", description: "update: place after sibling with this ID. Use -1 for first." },
+        request: { type: "object", additionalProperties: { type: "string" }, description: "create|update: type-specific request values e.g. {\"id\":\"123\"}" },
         params: { type: "object", additionalProperties: { type: "string" } },
         fieldOverrides: { type: "object", additionalProperties: { type: "string" } },
+        state: { type: "string", description: "toggle: 1=publish, 0=unpublish", enum: ["0", "1"] },
+        expectedTitle: { type: "string", description: "delete|toggle|checkin: safety check — refuse unless title matches" },
+        expectedMenuType: { type: "string", description: "delete|toggle|checkin: safety check — refuse unless menu type matches" },
       },
-      required: ["id"],
+      required: ["action"],
     },
   },
   {
-    name: "joomla_delete_menu_item",
-    description: "Trash a menu item by ID.",
+    name: "joomla_menu_item_type",
+    description: "Discover available menu item types. action: list|inspect. Call before creating a menu item.",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "Menu item ID" },
-        menuType: { type: "string", description: "Menu type for post-delete verification" },
-        expectedTitle: { type: "string", description: "Safety check: refuse unless title matches" },
-        expectedMenuType: { type: "string", description: "Safety check: refuse unless menu type matches" },
+        action: { type: "string", enum: ["list", "inspect"], description: "list=all types, inspect=fields for a specific type" },
+        itemType: { type: "string", description: "inspect: encoded value, label, or request key (e.g. com_content.article)" },
       },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_toggle_menu_item",
-    description: "Publish (state=1) or unpublish (state=0) a menu item.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Menu item ID" },
-        state: { type: "string", description: "1=publish, 0=unpublish", enum: ["0", "1"] },
-        menuType: { type: "string" },
-        expectedTitle: { type: "string", description: "Safety check: refuse unless title matches" },
-        expectedMenuType: { type: "string", description: "Safety check: refuse unless menu type matches" },
-      },
-      required: ["id", "state"],
-    },
-  },
-  {
-    name: "joomla_checkin_menu_item",
-    description: "Check in a checked-out menu item.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Menu item ID" },
-        menuType: { type: "string" },
-        expectedTitle: { type: "string", description: "Safety check: refuse unless title matches" },
-        expectedMenuType: { type: "string", description: "Safety check: refuse unless menu type matches" },
-      },
-      required: ["id"],
+      required: ["action"],
     },
   },
   {
@@ -639,200 +369,62 @@ const tools = [
     },
   },
   {
-    name: "joomla_media_list",
-    description: "List Media Manager folders and files.",
-    inputSchema: { type: "object", properties: { folder: { type: "string" }, path: { type: "string" } } },
-  },
-  {
-    name: "joomla_media_create_folder",
-    description: "Create a Media Manager folder. Dry-run by default.",
+    name: "joomla_media",
+    description: "Manage Joomla Media Manager files and folders. action: list|create_folder|upload|delete|rename|move. Destructive actions are dry-run by default — pass confirm:true to execute.",
     inputSchema: {
       type: "object",
       properties: {
-        folderName: { type: "string" },
-        folderBase: { type: "string" },
-        path: { type: "string" },
-        dryRun: { type: "boolean" },
-        confirm: { type: "boolean" },
+        action: { type: "string", enum: ["list", "create_folder", "upload", "delete", "rename", "move"], description: "Operation to perform." },
+        path: { type: "string", description: "File/folder path relative to media root. Required for delete/rename/move." },
+        folder: { type: "string", description: "Subfolder for list or upload (e.g. 'stories')." },
+        folderName: { type: "string", description: "Required for create_folder." },
+        folderBase: { type: "string", description: "Base path for create_folder." },
+        fileUrl: { type: "string", description: "URL to download and upload (upload action)." },
+        base64Content: { type: "string", description: "Base64 file content (upload action). Requires fileName." },
+        fileName: { type: "string", description: "Target filename (upload action). Required with base64Content; inferred from fileUrl if omitted." },
+        newName: { type: "string", description: "New filename including extension (rename action)." },
+        targetFolder: { type: "string", description: "Destination folder relative to media root (move action). Empty string = root." },
+        type: { type: "string", enum: ["file", "folder"], description: "delete: file or folder (default: file)." },
+        dryRun: { type: "boolean", description: "Preview without executing (default: true for destructive actions)." },
+        confirm: { type: "boolean", description: "Set true to execute destructive actions." },
       },
-      required: ["folderName"],
+      required: ["action"],
     },
   },
   {
-    name: "joomla_media_upload",
-    description: "Upload a file to Media Manager via URL or base64. Use folder to target a subfolder (e.g. 'stories'). Dry-run by default.",
+    name: "joomla_docman_document",
+    description: "Manage DOCman documents. action: list|get|create|update|delete.",
     inputSchema: {
       type: "object",
       properties: {
-        fileUrl: { type: "string", description: "URL to download and upload." },
-        base64Content: { type: "string", description: "Base64 file content. Requires fileName." },
-        fileName: { type: "string", description: "Target filename. Required with base64Content; inferred from fileUrl if omitted." },
-        folder: { type: "string", description: "Subfolder relative to image root (e.g. 'stories'). Omit for root." },
-        dryRun: { type: "boolean" },
-        confirm: { type: "boolean", description: "Set true to upload." },
-      },
-      required: [],
-    },
-  },
-  {
-    name: "joomla_media_delete",
-    description: "Delete a file or folder from Media Manager. Dry-run by default.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Path relative to media root (e.g. 'template/test/image.png')" },
-        type: { type: "string", enum: ["file", "folder"], description: "Defaults to 'file'" },
-        dryRun: { type: "boolean" },
-        confirm: { type: "boolean" },
-      },
-      required: ["path"],
-    },
-  },
-  {
-    name: "joomla_media_rename",
-    description: "Rename a Media Manager file. Dry-run by default.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Current path relative to media root" },
-        newName: { type: "string", description: "New filename including extension" },
-        dryRun: { type: "boolean" },
-        confirm: { type: "boolean" },
-      },
-      required: ["path", "newName"],
-    },
-  },
-  {
-    name: "joomla_media_move",
-    description: "Move a Media Manager file to another folder. Dry-run by default.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Current path relative to media root" },
-        targetFolder: { type: "string", description: "Destination folder relative to media root. Empty string = root." },
-        dryRun: { type: "boolean" },
-        confirm: { type: "boolean" },
-      },
-      required: ["path", "targetFolder"],
-    },
-  },
-  {
-    name: "joomla_docman_list_documents",
-    description: "List all DOCman documents with id, title, category, state, and storage path.",
-    inputSchema: { type: "object", properties: {} },
-  },
-  {
-    name: "joomla_docman_list_categories",
-    description: "List all DOCman categories with id, title, parent, and state.",
-    inputSchema: { type: "object", properties: {} },
-  },
-  {
-    name: "joomla_docman_get_document",
-    description: "Get a DOCman document by ID.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Document ID." },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_docman_get_category",
-    description: "Get a DOCman category by ID.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Category ID." },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_docman_create_document",
-    description: "Create a DOCman document referencing an existing file in the storage folder.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        title: { type: "string" },
-        categoryId: { type: "string" },
+        action: { type: "string", enum: ["list", "get", "create", "update", "delete"], description: "Operation to perform." },
+        id: { type: "string", description: "Document ID (required for get/update/delete)." },
+        title: { type: "string", description: "Required for create." },
+        categoryId: { type: "string", description: "Required for create." },
         storagePath: { type: "string", description: "Relative path within DOCman files (e.g. 'bulletin/MyFile.pdf')" },
         storageType: { type: "string", description: "Defaults to 'file'" },
         description: { type: "string" },
         access: { type: "string", description: "1=Public, 2=Registered" },
         enabled: { type: "string", enum: ["0", "1"], description: "1=published (default)" },
       },
-      required: ["title", "categoryId"],
+      required: ["action"],
     },
   },
   {
-    name: "joomla_docman_create_category",
-    description: "Create a DOCman category.",
+    name: "joomla_docman_category",
+    description: "Manage DOCman categories. action: list|get|create|update|delete.",
     inputSchema: {
       type: "object",
       properties: {
-        title: { type: "string" },
-        parentId: { type: "string", description: "Omit for root-level" },
+        action: { type: "string", enum: ["list", "get", "create", "update", "delete"], description: "Operation to perform." },
+        id: { type: "string", description: "Category ID (required for get/update/delete)." },
+        title: { type: "string", description: "Required for create." },
+        parentId: { type: "string", description: "Parent category ID. Omit for root-level." },
         description: { type: "string" },
         access: { type: "string", description: "1=Public, 2=Registered" },
         enabled: { type: "string", enum: ["0", "1"], description: "1=published (default)" },
       },
-      required: ["title"],
-    },
-  },
-  {
-    name: "joomla_docman_update_document",
-    description: "Update a DOCman document — title, category, file path, or state.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        title: { type: "string" },
-        categoryId: { type: "string" },
-        storagePath: { type: "string" },
-        description: { type: "string" },
-        access: { type: "string" },
-        enabled: { type: "string", enum: ["0", "1"] },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_docman_update_category",
-    description: "Update a DOCman category — title, parent, or state.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        title: { type: "string" },
-        parentId: { type: "string" },
-        description: { type: "string" },
-        access: { type: "string" },
-        enabled: { type: "string", enum: ["0", "1"] },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_docman_delete_document",
-    description: "Delete a DOCman document. Destructive — confirm with user first.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Document ID to delete." },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_docman_delete_category",
-    description: "Delete a DOCman category. Destructive — confirm with user first.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Category ID to delete." },
-      },
-      required: ["id"],
+      required: ["action"],
     },
   },
   {
@@ -1112,162 +704,68 @@ const tools = [
   },
   // ==================== USER MANAGEMENT ====================
   {
-    name: "joomla_list_users",
-    description: "List users. Use 'search' to filter by name or email, 'group_id' to filter by group.",
+    name: "joomla_user",
+    description: "Manage Joomla users. action: list|get|create|update.",
     inputSchema: {
       type: "object",
       properties: {
-        search: { type: "string", description: "Filter by name or email" },
-        group_id: { type: "string", description: "Filter by user group ID" },
-        state: { type: "string", enum: ["0", "1"], description: "0=enabled, 1=blocked" },
+        action: { type: "string", enum: ["list", "get", "create", "update"], description: "Operation to perform." },
+        id: { type: "string", description: "User ID (required for get/update)." },
+        name: { type: "string", description: "Full display name. Required for create." },
+        username: { type: "string", description: "Login username (typically email). Required for create." },
+        email: { type: "string", description: "Required for create." },
+        password: { type: "string", description: "Required for create. Omit on update to keep existing." },
+        groups: {
+          type: "array",
+          items: { type: "string" },
+          description: "Group IDs. Required for create; replaces all groups on update. Grade groups: 15=1st, 16=2nd, 17=3rd, 18=4th, 19=5th, 20=6th, 33=7th, 23=8th, 14=Kinder, 26=Pre-K, 12=Basic Editor.",
+        },
+        block: { type: "boolean", description: "true=block/create-blocked, false=enable." },
+        search: { type: "string", description: "Filter by name or email (list only)." },
+        group_id: { type: "string", description: "Filter by group ID (list only)." },
+        state: { type: "string", enum: ["0", "1"], description: "list: 0=enabled, 1=blocked." },
         limit: { type: "number", description: "Per page (default: 200, max: 500)" },
         page: { type: "number", description: "Page number, 1-based" },
       },
-      required: [],
-    },
-  },
-  {
-    name: "joomla_get_user",
-    description: "Get full user details by ID including groups.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_create_user",
-    description: "Create a user. For teachers: include group 12 (Basic Editor) plus grade group.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        name: { type: "string", description: "Full display name" },
-        username: { type: "string", description: "Login username (typically email)" },
-        email: { type: "string" },
-        password: { type: "string" },
-        groups: {
-          type: "array",
-          items: { type: "string" },
-          description: "Group IDs. Grade groups: 15=1st, 16=2nd, 17=3rd, 18=4th, 19=5th, 20=6th, 33=7th, 23=8th, 14=Kinder, 26=Pre-K, 12=Basic Editor.",
-        },
-        block: { type: "boolean", description: "true=create as blocked (default: false)" },
-      },
-      required: ["name", "username", "email", "password", "groups"],
-    },
-  },
-  {
-    name: "joomla_update_user",
-    description: "Update a user. Omit password to keep existing. 'groups' replaces all assigned groups.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        name: { type: "string" },
-        username: { type: "string" },
-        email: { type: "string" },
-        password: { type: "string", description: "Omit to keep existing" },
-        block: { type: "boolean", description: "true=block, false=enable" },
-        groups: {
-          type: "array",
-          items: { type: "string" },
-          description: "Full replacement group list. Grade groups: 15=1st, 16=2nd, 17=3rd, 18=4th, 19=5th, 20=6th, 33=7th, 23=8th, 14=Kinder, 26=Pre-K, 12=Basic Editor.",
-        },
-      },
-      required: ["id"],
+      required: ["action"],
     },
   },
   // ==================== GROUPS ====================
   {
-    name: "joomla_list_groups",
-    description: "List all user groups with IDs, names, depth, and user counts.",
-    inputSchema: { type: "object", properties: {} },
-  },
-  {
-    name: "joomla_create_group",
-    description: "Create a user group.",
+    name: "joomla_group",
+    description: "Manage Joomla user groups. action: list|create|delete.",
     inputSchema: {
       type: "object",
       properties: {
-        title: { type: "string" },
-        parent_id: { type: "string", description: "Parent group ID. Omit for root level." },
+        action: { type: "string", enum: ["list", "create", "delete"], description: "Operation to perform." },
+        id: { type: "string", description: "Group ID (required for delete)." },
+        title: { type: "string", description: "Group name (required for create)." },
+        parent_id: { type: "string", description: "Parent group ID for create. Omit for root level." },
       },
-      required: ["title"],
-    },
-  },
-  {
-    name: "joomla_delete_group",
-    description: "Delete a user group. ACL rules are removed; users are not deleted.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Group ID to delete" },
-      },
-      required: ["id"],
+      required: ["action"],
     },
   },
   // ==================== PERMISSIONS ====================
   {
-    name: "joomla_get_category_permissions",
-    description: "Read ACL rules for a category. Returns group → action → value map (''=Inherit, '1'=Allow, '0'=Deny).",
+    name: "joomla_permissions",
+    description: "Read or update ACL rules for articles and categories. action: get|set. resource: category|article.",
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "Category ID" },
-        extension: { type: "string", description: "Default: com_content" },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_set_category_permissions",
-    description: "Update ACL rules on a category. Only provided group/action pairs are changed.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Category ID" },
+        action: { type: "string", enum: ["get", "set"], description: "get=read rules, set=update rules." },
+        resource: { type: "string", enum: ["category", "article"], description: "Resource type to read/write permissions for." },
+        id: { type: "string", description: "Category or article ID." },
         rules: {
           type: "object",
-          description: "{ \"<groupId>\": { \"core.edit\": \"1\" } }. ''=Inherit, '1'=Allow, '0'=Deny.",
+          description: "Required for set. { \"<groupId>\": { \"core.edit\": \"1\" } }. ''=Inherit, '1'=Allow, '0'=Deny.",
           additionalProperties: {
             type: "object",
             additionalProperties: { type: "string", enum: ["", "0", "1"] },
           },
         },
-        extension: { type: "string", description: "Default: com_content" },
+        extension: { type: "string", description: "Component extension for category permissions (default: com_content)." },
       },
-      required: ["id", "rules"],
-    },
-  },
-  {
-    name: "joomla_get_article_permissions",
-    description: "Read ACL rules for an article. Most articles inherit from category — only returns data when article-level overrides exist.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Article ID" },
-      },
-      required: ["id"],
-    },
-  },
-  {
-    name: "joomla_set_article_permissions",
-    description: "Update ACL rules on an article. Only provided group/action pairs are changed.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        rules: {
-          type: "object",
-          description: "{ \"<groupId>\": { \"core.edit\": \"1\" } }. ''=Inherit, '1'=Allow, '0'=Deny.",
-          additionalProperties: {
-            type: "object",
-            additionalProperties: { type: "string", enum: ["", "0", "1"] },
-          },
-        },
-      },
-      required: ["id", "rules"],
+      required: ["action", "resource", "id"],
     },
   },
   {
@@ -1401,496 +899,379 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
         };
       }
 
-      case "joomla_list_categories": {
+      case "joomla_category": {
         const login = await ensureLoggedIn();
         if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
 
-        const result = await joomla.listCategories(
-          args?.extension as string,
-          (args?.limit as number) || undefined,
-          (args?.page as number) || undefined,
-          (args?.search as string) || undefined,
-        );
+        const action = args?.action as string;
+        let result: JoomlaResponse;
+        switch (action) {
+          case "list": {
+            result = await joomla.listCategories(
+              args?.extension as string,
+              (args?.limit as number) || undefined,
+              (args?.page as number) || undefined,
+              (args?.search as string) || undefined,
+            );
+            break;
+          }
+          case "get": {
+            result = await joomla.getCategory(
+              (args?.id as string) || undefined,
+              (args?.title as string) || undefined,
+            );
+            break;
+          }
+          case "create": {
+            const title = args?.title as string;
+            if (!title) return { content: [{ type: "text", text: "Error: title is required for create" }], isError: true };
+            result = await joomla.createCategory({
+              title,
+              alias: args?.alias as string,
+              parentId: args?.parentId as string,
+              description: args?.description as string,
+              published: args?.published as string,
+              extension: args?.extension as string,
+            });
+            break;
+          }
+          case "update": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for update" }], isError: true };
+            result = await joomla.updateCategory(id, {
+              title: args?.title as string,
+              alias: args?.alias as string,
+              parentId: args?.parentId as string,
+              description: args?.description as string,
+              published: args?.published as string,
+              ordering: args?.ordering as string,
+            });
+            break;
+          }
+          case "delete": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for delete" }], isError: true };
+            result = await joomla.deleteCategory(id, {
+              expectedTitle: args?.expectedTitle as string,
+            });
+            break;
+          }
+          case "checkin": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for checkin" }], isError: true };
+            result = await joomla.checkInCategory(id, {
+              expectedTitle: args?.expectedTitle as string,
+            });
+            break;
+          }
+          default:
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|get|create|update|delete|checkin` }], isError: true };
+        }
+        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
+      }
+
+      case "joomla_module": {
+        const login = await ensureLoggedIn();
+        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
+
+        const action = args?.action as string;
+        let result: JoomlaResponse;
+        switch (action) {
+          case "list": {
+            result = await joomla.listModules(
+              args?.client_id as string,
+              (args?.search as string) || undefined,
+              (args?.limit as number) || undefined,
+              (args?.page as number) || undefined,
+            );
+            break;
+          }
+          case "get": {
+            result = await joomla.getModule(
+              (args?.id as string) || undefined,
+              (args?.title as string) || undefined,
+              (args?.client_id as string) || "0",
+            );
+            break;
+          }
+          case "create": {
+            const title = args?.title as string;
+            const moduleType = args?.moduleType as string;
+            if (!title || !moduleType)
+              return { content: [{ type: "text", text: "Error: title and moduleType are required for create" }], isError: true };
+            result = await joomla.createModule({
+              title,
+              moduleType,
+              clientId: args?.client_id as string,
+              position: args?.position as string,
+              published: args?.published as string,
+              access: args?.access as string,
+              showtitle: args?.showtitle as string,
+              ordering: args?.ordering as string,
+              style: args?.style as string,
+              language: args?.language as string,
+              note: args?.note as string,
+              assignment: args?.assignment as string,
+              assigned: args?.assigned as string[],
+              content: args?.content as string,
+              params: args?.params as Record<string, string>,
+              advanced: args?.advanced as Record<string, string>,
+              fieldOverrides: args?.fieldOverrides as Record<string, string>,
+            });
+            break;
+          }
+          case "update": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for update" }], isError: true };
+            result = await joomla.updateModule(id, {
+              title: args?.title as string,
+              position: args?.position as string,
+              published: args?.published as string,
+              access: args?.access as string,
+              showtitle: args?.showtitle as string,
+              ordering: args?.ordering as string,
+              style: args?.style as string,
+              language: args?.language as string,
+              note: args?.note as string,
+              assignment: args?.assignment as string,
+              assigned: args?.assigned as string[],
+              params: args?.params as Record<string, string>,
+              advanced: args?.advanced as Record<string, string>,
+              fieldOverrides: args?.fieldOverrides as Record<string, string>,
+            });
+            break;
+          }
+          case "delete": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for delete" }], isError: true };
+            result = await joomla.deleteModule(id, {
+              clientId: args?.client_id as string,
+              expectedTitle: args?.expectedTitle as string,
+              expectedModuleType: args?.expectedModuleType as string,
+            });
+            break;
+          }
+          case "toggle": {
+            const id = args?.id as string;
+            const state = args?.state as string;
+            if (!id || !state)
+              return { content: [{ type: "text", text: "Error: id and state are required for toggle" }], isError: true };
+            result = await joomla.toggleModule(id, state, {
+              expectedTitle: args?.expectedTitle as string,
+              expectedModuleType: args?.expectedModuleType as string,
+            });
+            break;
+          }
+          case "checkin": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for checkin" }], isError: true };
+            result = await joomla.checkInModule(id, {
+              expectedTitle: args?.expectedTitle as string,
+              expectedModuleType: args?.expectedModuleType as string,
+            });
+            break;
+          }
+          default:
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|get|create|update|delete|toggle|checkin` }], isError: true };
+        }
+        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
+      }
+
+      case "joomla_module_type": {
+        const login = await ensureLoggedIn();
+        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
+
+        const action = args?.action as string;
+        let result: JoomlaResponse;
+        switch (action) {
+          case "list": {
+            result = await joomla.listModuleTypes(args?.client_id as string);
+            break;
+          }
+          case "list_positions": {
+            result = await joomla.listModulePositions(args?.client_id as string);
+            break;
+          }
+          case "inspect": {
+            const moduleType = args?.moduleType as string;
+            if (!moduleType) return { content: [{ type: "text", text: "Error: moduleType is required for inspect" }], isError: true };
+            result = await joomla.inspectModuleType(moduleType, args?.client_id as string);
+            break;
+          }
+          default:
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|inspect|list_positions` }], isError: true };
+        }
+        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
+      }
+
+      case "joomla_menu": {
+        const login = await ensureLoggedIn();
+        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
+
+        const action = args?.action as string;
+        let result: JoomlaResponse;
+
+        switch (action) {
+          case "list":
+            result = await joomla.listMenus();
+            break;
+          case "create": {
+            const title = args?.title as string;
+            if (!title) return { content: [{ type: "text", text: "Error: title is required for create" }], isError: true };
+            result = await joomla.createMenu({
+              title,
+              menuType: args?.menuType as string,
+              description: args?.description as string,
+              cssClasses: args?.cssClasses as string,
+            });
+            break;
+          }
+          default:
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|create` }], isError: true };
+        }
+
         return {
           content: [{ type: "text", text: formatResult(result) }],
           isError: !result.success,
         };
       }
 
-      case "joomla_get_category": {
+      case "joomla_menu_item": {
         const login = await ensureLoggedIn();
         if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
 
-        const result = await joomla.getCategory(
-          (args?.id as string) || undefined,
-          (args?.title as string) || undefined,
-        );
+        const action = args?.action as string;
+        let result: JoomlaResponse;
+
+        switch (action) {
+          case "list": {
+            const menuId = args?.menuId as string;
+            if (!menuId) return { content: [{ type: "text", text: "Error: menuId is required for list" }], isError: true };
+            result = await joomla.listMenuItems(
+              menuId,
+              (args?.search as string) || undefined,
+              (args?.limit as number) || undefined,
+              (args?.page as number) || undefined,
+            );
+            break;
+          }
+          case "get":
+            result = await joomla.getMenuItem(
+              (args?.id as string) || undefined,
+              (args?.title as string) || undefined,
+              (args?.menuId as string) || undefined,
+            );
+            break;
+          case "create": {
+            const title = args?.title as string;
+            const menuType = args?.menuType as string;
+            const itemType = args?.itemType as string;
+            if (!title || !menuType || !itemType)
+              return { content: [{ type: "text", text: "Error: title, menuType, and itemType are required for create" }], isError: true };
+            result = await joomla.createMenuItem({
+              title,
+              menuType,
+              itemType,
+              alias: args?.alias as string,
+              link: args?.link as string,
+              parentId: args?.parentId as string,
+              published: args?.published as string,
+              access: args?.access as string,
+              language: args?.language as string,
+              browserNav: args?.browserNav as string,
+              home: args?.home as string,
+              note: args?.note as string,
+              templateStyleId: args?.templateStyleId as string,
+              request: args?.request as Record<string, string>,
+              params: args?.params as Record<string, string>,
+              fieldOverrides: args?.fieldOverrides as Record<string, string>,
+            });
+            break;
+          }
+          case "update": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for update" }], isError: true };
+            result = await joomla.updateMenuItem(id, {
+              title: args?.title as string,
+              itemType: args?.itemType as string,
+              alias: args?.alias as string,
+              menuType: args?.menuType as string,
+              link: args?.link as string,
+              parentId: args?.parentId as string,
+              published: args?.published as string,
+              access: args?.access as string,
+              language: args?.language as string,
+              browserNav: args?.browserNav as string,
+              home: args?.home as string,
+              note: args?.note as string,
+              templateStyleId: args?.templateStyleId as string,
+              ordering: args?.ordering as string,
+              request: args?.request as Record<string, string>,
+              params: args?.params as Record<string, string>,
+              fieldOverrides: args?.fieldOverrides as Record<string, string>,
+            });
+            break;
+          }
+          case "delete": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for delete" }], isError: true };
+            result = await joomla.deleteMenuItem(id, {
+              menuType: args?.menuType as string,
+              expectedTitle: args?.expectedTitle as string,
+              expectedMenuType: args?.expectedMenuType as string,
+            });
+            break;
+          }
+          case "toggle": {
+            const id = args?.id as string;
+            const state = args?.state as string;
+            if (!id || !state) return { content: [{ type: "text", text: "Error: id and state are required for toggle" }], isError: true };
+            result = await joomla.toggleMenuItem(id, state, args?.menuType as string, {
+              expectedTitle: args?.expectedTitle as string,
+              expectedMenuType: args?.expectedMenuType as string,
+            });
+            break;
+          }
+          case "checkin": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for checkin" }], isError: true };
+            result = await joomla.checkInMenuItem(id, args?.menuType as string, {
+              expectedTitle: args?.expectedTitle as string,
+              expectedMenuType: args?.expectedMenuType as string,
+            });
+            break;
+          }
+          default:
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|get|create|update|delete|toggle|checkin` }], isError: true };
+        }
+
         return {
           content: [{ type: "text", text: formatResult(result) }],
           isError: !result.success,
         };
       }
 
-      case "joomla_create_category": {
+      case "joomla_menu_item_type": {
         const login = await ensureLoggedIn();
         if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
 
-        const title = args?.title as string;
-        if (!title) return { content: [{ type: "text", text: "Error: title is required" }], isError: true };
+        const action = args?.action as string;
+        let result: JoomlaResponse;
+
+        switch (action) {
+          case "list":
+            result = await joomla.listMenuItemTypes();
+            break;
+          case "inspect": {
+            const itemType = args?.itemType as string;
+            if (!itemType) return { content: [{ type: "text", text: "Error: itemType is required for inspect" }], isError: true };
+            result = await joomla.inspectMenuItemType(itemType);
+            break;
+          }
+          default:
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|inspect` }], isError: true };
+        }
 
-        const result = await joomla.createCategory({
-          title,
-          alias: args?.alias as string,
-          parentId: args?.parentId as string,
-          description: args?.description as string,
-          published: args?.published as string,
-          extension: args?.extension as string,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_update_category": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-
-        const result = await joomla.updateCategory(id, {
-          title: args?.title as string,
-          alias: args?.alias as string,
-          parentId: args?.parentId as string,
-          description: args?.description as string,
-          published: args?.published as string,
-          ordering: args?.ordering as string,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_delete_category": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-
-        const result = await joomla.deleteCategory(id, {
-          expectedTitle: args?.expectedTitle as string,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_checkin_category": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-
-        const result = await joomla.checkInCategory(id, {
-          expectedTitle: args?.expectedTitle as string,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_list_modules": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const result = await joomla.listModules(
-          args?.client_id as string,
-          (args?.search as string) || undefined,
-          (args?.limit as number) || undefined,
-          (args?.page as number) || undefined,
-        );
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_list_module_types": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const result = await joomla.listModuleTypes(args?.client_id as string);
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_list_module_positions": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const result = await joomla.listModulePositions(args?.client_id as string);
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_inspect_module_type": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const moduleType = args?.moduleType as string;
-        if (!moduleType) return { content: [{ type: "text", text: "Error: moduleType is required" }], isError: true };
-
-        const result = await joomla.inspectModuleType(moduleType, args?.client_id as string);
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_get_module": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const result = await joomla.getModule(
-          (args?.id as string) || undefined,
-          (args?.title as string) || undefined,
-          (args?.client_id as string) || "0",
-        );
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_update_module": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-
-        const result = await joomla.updateModule(id, {
-          title: args?.title as string,
-          position: args?.position as string,
-          published: args?.published as string,
-          access: args?.access as string,
-          showtitle: args?.showtitle as string,
-          ordering: args?.ordering as string,
-          style: args?.style as string,
-          language: args?.language as string,
-          note: args?.note as string,
-          assignment: args?.assignment as string,
-          assigned: args?.assigned as string[],
-          params: args?.params as Record<string, string>,
-          advanced: args?.advanced as Record<string, string>,
-          fieldOverrides: args?.fieldOverrides as Record<string, string>,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_create_module": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const title = args?.title as string;
-        const moduleType = args?.moduleType as string;
-        if (!title || !moduleType)
-          return { content: [{ type: "text", text: "Error: title and moduleType are required" }], isError: true };
-
-        const result = await joomla.createModule({
-          title,
-          moduleType,
-          clientId: args?.client_id as string,
-          position: args?.position as string,
-          published: args?.published as string,
-          access: args?.access as string,
-          showtitle: args?.showtitle as string,
-          ordering: args?.ordering as string,
-          style: args?.style as string,
-          language: args?.language as string,
-          note: args?.note as string,
-          assignment: args?.assignment as string,
-          assigned: args?.assigned as string[],
-          content: args?.content as string,
-          params: args?.params as Record<string, string>,
-          advanced: args?.advanced as Record<string, string>,
-          fieldOverrides: args?.fieldOverrides as Record<string, string>,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_delete_module": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-
-        const result = await joomla.deleteModule(id, {
-          clientId: args?.client_id as string,
-          expectedTitle: args?.expectedTitle as string,
-          expectedModuleType: args?.expectedModuleType as string,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_checkin_module": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-
-        const result = await joomla.checkInModule(id, {
-          expectedTitle: args?.expectedTitle as string,
-          expectedModuleType: args?.expectedModuleType as string,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_toggle_module": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const id = args?.id as string;
-        const state = args?.state as string;
-        if (!id || !state)
-          return { content: [{ type: "text", text: "Error: id and state are required" }], isError: true };
-
-        const result = await joomla.toggleModule(id, state, {
-          expectedTitle: args?.expectedTitle as string,
-          expectedModuleType: args?.expectedModuleType as string,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_list_menus": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const result = await joomla.listMenus();
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_create_menu": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const title = args?.title as string;
-        if (!title) return { content: [{ type: "text", text: "Error: title is required" }], isError: true };
-
-        const result = await joomla.createMenu({
-          title,
-          menuType: args?.menuType as string,
-          description: args?.description as string,
-          cssClasses: args?.cssClasses as string,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_list_menu_items": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const menuId = args?.menuId as string;
-        if (!menuId) return { content: [{ type: "text", text: "Error: menuId is required" }], isError: true };
-
-        const result = await joomla.listMenuItems(
-          menuId,
-          (args?.search as string) || undefined,
-          (args?.limit as number) || undefined,
-          (args?.page as number) || undefined,
-        );
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_list_menu_item_types": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const result = await joomla.listMenuItemTypes();
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_inspect_menu_item_type": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const itemType = args?.itemType as string;
-        if (!itemType) return { content: [{ type: "text", text: "Error: itemType is required" }], isError: true };
-
-        const result = await joomla.inspectMenuItemType(itemType);
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_get_menu_item": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const result = await joomla.getMenuItem(
-          (args?.id as string) || undefined,
-          (args?.title as string) || undefined,
-          (args?.menuId as string) || undefined,
-        );
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_create_menu_item": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const title = args?.title as string;
-        const menuType = args?.menuType as string;
-        const itemType = args?.itemType as string;
-        if (!title || !menuType || !itemType)
-          return { content: [{ type: "text", text: "Error: title, menuType, and itemType are required" }], isError: true };
-
-        const result = await joomla.createMenuItem({
-          title,
-          menuType,
-          itemType,
-          alias: args?.alias as string,
-          link: args?.link as string,
-          parentId: args?.parentId as string,
-          published: args?.published as string,
-          access: args?.access as string,
-          language: args?.language as string,
-          browserNav: args?.browserNav as string,
-          home: args?.home as string,
-          note: args?.note as string,
-          templateStyleId: args?.templateStyleId as string,
-          request: args?.request as Record<string, string>,
-          params: args?.params as Record<string, string>,
-          fieldOverrides: args?.fieldOverrides as Record<string, string>,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_update_menu_item": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-
-        const result = await joomla.updateMenuItem(id, {
-          title: args?.title as string,
-          itemType: args?.itemType as string,
-          alias: args?.alias as string,
-          menuType: args?.menuType as string,
-          link: args?.link as string,
-          parentId: args?.parentId as string,
-          published: args?.published as string,
-          access: args?.access as string,
-          language: args?.language as string,
-          browserNav: args?.browserNav as string,
-          home: args?.home as string,
-          note: args?.note as string,
-          templateStyleId: args?.templateStyleId as string,
-          ordering: args?.ordering as string,
-          request: args?.request as Record<string, string>,
-          params: args?.params as Record<string, string>,
-          fieldOverrides: args?.fieldOverrides as Record<string, string>,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_delete_menu_item": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-
-        const result = await joomla.deleteMenuItem(id, {
-          menuType: args?.menuType as string,
-          expectedTitle: args?.expectedTitle as string,
-          expectedMenuType: args?.expectedMenuType as string,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_toggle_menu_item": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const id = args?.id as string;
-        const state = args?.state as string;
-        if (!id || !state) return { content: [{ type: "text", text: "Error: id and state are required" }], isError: true };
-
-        const result = await joomla.toggleMenuItem(id, state, args?.menuType as string, {
-          expectedTitle: args?.expectedTitle as string,
-          expectedMenuType: args?.expectedMenuType as string,
-        });
-        return {
-          content: [{ type: "text", text: formatResult(result) }],
-          isError: !result.success,
-        };
-      }
-
-      case "joomla_checkin_menu_item": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-
-        const result = await joomla.checkInMenuItem(id, args?.menuType as string, {
-          expectedTitle: args?.expectedTitle as string,
-          expectedMenuType: args?.expectedMenuType as string,
-        });
         return {
           content: [{ type: "text", text: formatResult(result) }],
           isError: !result.success,
@@ -1956,182 +1337,181 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 
-      case "joomla_media_list": {
+      case "joomla_media": {
         const login = await ensureLoggedIn();
         if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.mediaList((args?.path as string) || (args?.folder as string) || "index.php?option=com_media");
+
+        const action = args?.action as string;
+        let result: JoomlaResponse;
+        switch (action) {
+          case "list": {
+            result = await joomla.mediaList((args?.path as string) || (args?.folder as string) || "index.php?option=com_media");
+            break;
+          }
+          case "create_folder": {
+            const folderName = args?.folderName as string;
+            if (!folderName) return { content: [{ type: "text", text: "Error: folderName is required for create_folder" }], isError: true };
+            result = await joomla.createMediaFolder({
+              folderName,
+              folderBase: args?.folderBase as string,
+              path: args?.path as string,
+              dryRun: args?.dryRun as boolean,
+              confirm: args?.confirm as boolean,
+            });
+            break;
+          }
+          case "upload": {
+            result = await joomla.uploadMediaFile({
+              fileUrl: args?.fileUrl as string,
+              base64Content: args?.base64Content as string,
+              fileName: args?.fileName as string,
+              folder: args?.folder as string,
+              dryRun: args?.dryRun as boolean,
+              confirm: args?.confirm as boolean,
+            });
+            break;
+          }
+          case "delete": {
+            const path = args?.path as string;
+            if (!path) return { content: [{ type: "text", text: "Error: path is required for delete" }], isError: true };
+            result = await joomla.deleteMedia({
+              path,
+              type: args?.type as "file" | "folder",
+              dryRun: args?.dryRun as boolean,
+              confirm: args?.confirm as boolean,
+            });
+            break;
+          }
+          case "rename": {
+            const path = args?.path as string;
+            const newName = args?.newName as string;
+            if (!path) return { content: [{ type: "text", text: "Error: path is required for rename" }], isError: true };
+            if (!newName) return { content: [{ type: "text", text: "Error: newName is required for rename" }], isError: true };
+            result = await joomla.renameMediaFile({
+              path,
+              newName,
+              dryRun: args?.dryRun as boolean,
+              confirm: args?.confirm as boolean,
+            });
+            break;
+          }
+          case "move": {
+            const path = args?.path as string;
+            const targetFolder = args?.targetFolder as string;
+            if (!path) return { content: [{ type: "text", text: "Error: path is required for move" }], isError: true };
+            if (targetFolder === undefined) return { content: [{ type: "text", text: "Error: targetFolder is required for move" }], isError: true };
+            result = await joomla.moveMediaFile({
+              path,
+              targetFolder,
+              dryRun: args?.dryRun as boolean,
+              confirm: args?.confirm as boolean,
+            });
+            break;
+          }
+          default:
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|create_folder|upload|delete|rename|move` }], isError: true };
+        }
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 
-      case "joomla_media_create_folder": {
+      case "joomla_docman_document": {
         const login = await ensureLoggedIn();
         if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const folderName = args?.folderName as string;
-        if (!folderName) return { content: [{ type: "text", text: "Error: folderName is required" }], isError: true };
-        const result = await joomla.createMediaFolder({
-          folderName,
-          folderBase: args?.folderBase as string,
-          path: args?.path as string,
-          dryRun: args?.dryRun as boolean,
-          confirm: args?.confirm as boolean,
-        });
+
+        const action = args?.action as string;
+        let result: JoomlaResponse;
+        switch (action) {
+          case "list": {
+            result = await joomla.listDocmanDocuments();
+            break;
+          }
+          case "get": {
+            if (!args?.id) return { content: [{ type: "text", text: "Error: id is required for get" }], isError: true };
+            result = await joomla.getDocmanDocument(String(args.id));
+            break;
+          }
+          case "create": {
+            if (!args?.title || !args?.categoryId) return { content: [{ type: "text", text: "Error: title and categoryId are required for create" }], isError: true };
+            result = await joomla.createDocmanDocument({
+              title: String(args.title),
+              categoryId: String(args.categoryId),
+              storagePath: args?.storagePath !== undefined ? String(args.storagePath) : undefined,
+              storageType: args?.storageType !== undefined ? String(args.storageType) : undefined,
+              description: args?.description !== undefined ? String(args.description) : undefined,
+              access: args?.access !== undefined ? String(args.access) : undefined,
+              enabled: args?.enabled !== undefined ? String(args.enabled) : undefined,
+            });
+            break;
+          }
+          case "update": {
+            if (!args?.id) return { content: [{ type: "text", text: "Error: id is required for update" }], isError: true };
+            result = await joomla.updateDocmanDocument(String(args.id), {
+              title: args?.title !== undefined ? String(args.title) : undefined,
+              categoryId: args?.categoryId !== undefined ? String(args.categoryId) : undefined,
+              storagePath: args?.storagePath !== undefined ? String(args.storagePath) : undefined,
+              description: args?.description !== undefined ? String(args.description) : undefined,
+              access: args?.access !== undefined ? String(args.access) : undefined,
+              enabled: args?.enabled !== undefined ? String(args.enabled) : undefined,
+            });
+            break;
+          }
+          case "delete": {
+            if (!args?.id) return { content: [{ type: "text", text: "Error: id is required for delete" }], isError: true };
+            result = await joomla.deleteDocmanDocument(String(args.id));
+            break;
+          }
+          default:
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|get|create|update|delete` }], isError: true };
+        }
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 
-      case "joomla_media_upload": {
+      case "joomla_docman_category": {
         const login = await ensureLoggedIn();
         if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.uploadMediaFile({
-          fileUrl: args?.fileUrl as string,
-          base64Content: args?.base64Content as string,
-          fileName: args?.fileName as string,
-          folder: args?.folder as string,
-          dryRun: args?.dryRun as boolean,
-          confirm: args?.confirm as boolean,
-        });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
 
-      case "joomla_media_delete": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const path = args?.path as string;
-        if (!path) return { content: [{ type: "text", text: "Error: path is required" }], isError: true };
-        const result = await joomla.deleteMedia({
-          path,
-          type: args?.type as "file" | "folder",
-          dryRun: args?.dryRun as boolean,
-          confirm: args?.confirm as boolean,
-        });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_media_rename": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const path = args?.path as string;
-        const newName = args?.newName as string;
-        if (!path) return { content: [{ type: "text", text: "Error: path is required" }], isError: true };
-        if (!newName) return { content: [{ type: "text", text: "Error: newName is required" }], isError: true };
-        const result = await joomla.renameMediaFile({
-          path,
-          newName,
-          dryRun: args?.dryRun as boolean,
-          confirm: args?.confirm as boolean,
-        });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_media_move": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const path = args?.path as string;
-        const targetFolder = args?.targetFolder as string;
-        if (!path) return { content: [{ type: "text", text: "Error: path is required" }], isError: true };
-        if (targetFolder === undefined) return { content: [{ type: "text", text: "Error: targetFolder is required" }], isError: true };
-        const result = await joomla.moveMediaFile({
-          path,
-          targetFolder,
-          dryRun: args?.dryRun as boolean,
-          confirm: args?.confirm as boolean,
-        });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_docman_list_documents": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.listDocmanDocuments();
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_docman_list_categories": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.listDocmanCategories();
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_docman_get_document": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.getDocmanDocument(String(args?.id));
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_docman_get_category": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.getDocmanCategory(String(args?.id));
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_docman_create_document": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.createDocmanDocument({
-          title: String(args?.title),
-          categoryId: String(args?.categoryId),
-          storagePath: args?.storagePath !== undefined ? String(args.storagePath) : undefined,
-          storageType: args?.storageType !== undefined ? String(args.storageType) : undefined,
-          description: args?.description !== undefined ? String(args.description) : undefined,
-          access: args?.access !== undefined ? String(args.access) : undefined,
-          enabled: args?.enabled !== undefined ? String(args.enabled) : undefined,
-        });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_docman_create_category": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.createDocmanCategory({
-          title: String(args?.title),
-          parentId: args?.parentId !== undefined ? String(args.parentId) : undefined,
-          description: args?.description !== undefined ? String(args.description) : undefined,
-          access: args?.access !== undefined ? String(args.access) : undefined,
-          enabled: args?.enabled !== undefined ? String(args.enabled) : undefined,
-        });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_docman_update_document": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.updateDocmanDocument(String(args?.id), {
-          title: args?.title !== undefined ? String(args.title) : undefined,
-          categoryId: args?.categoryId !== undefined ? String(args.categoryId) : undefined,
-          storagePath: args?.storagePath !== undefined ? String(args.storagePath) : undefined,
-          description: args?.description !== undefined ? String(args.description) : undefined,
-          access: args?.access !== undefined ? String(args.access) : undefined,
-          enabled: args?.enabled !== undefined ? String(args.enabled) : undefined,
-        });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_docman_update_category": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.updateDocmanCategory(String(args?.id), {
-          title: args?.title !== undefined ? String(args.title) : undefined,
-          parentId: args?.parentId !== undefined ? String(args.parentId) : undefined,
-          description: args?.description !== undefined ? String(args.description) : undefined,
-          access: args?.access !== undefined ? String(args.access) : undefined,
-          enabled: args?.enabled !== undefined ? String(args.enabled) : undefined,
-        });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_docman_delete_document": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.deleteDocmanDocument(String(args?.id));
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_docman_delete_category": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.deleteDocmanCategory(String(args?.id));
+        const action = args?.action as string;
+        let result: JoomlaResponse;
+        switch (action) {
+          case "list": {
+            result = await joomla.listDocmanCategories();
+            break;
+          }
+          case "get": {
+            if (!args?.id) return { content: [{ type: "text", text: "Error: id is required for get" }], isError: true };
+            result = await joomla.getDocmanCategory(String(args.id));
+            break;
+          }
+          case "create": {
+            if (!args?.title) return { content: [{ type: "text", text: "Error: title is required for create" }], isError: true };
+            result = await joomla.createDocmanCategory({
+              title: String(args.title),
+              parentId: args?.parentId !== undefined ? String(args.parentId) : undefined,
+              description: args?.description !== undefined ? String(args.description) : undefined,
+              access: args?.access !== undefined ? String(args.access) : undefined,
+              enabled: args?.enabled !== undefined ? String(args.enabled) : undefined,
+            });
+            break;
+          }
+          case "update": {
+            if (!args?.id) return { content: [{ type: "text", text: "Error: id is required for update" }], isError: true };
+            result = await joomla.updateDocmanCategory(String(args.id), {
+              title: args?.title !== undefined ? String(args.title) : undefined,
+              parentId: args?.parentId !== undefined ? String(args.parentId) : undefined,
+              description: args?.description !== undefined ? String(args.description) : undefined,
+              access: args?.access !== undefined ? String(args.access) : undefined,
+              enabled: args?.enabled !== undefined ? String(args.enabled) : undefined,
+            });
+            break;
+          }
+          case "delete": {
+            if (!args?.id) return { content: [{ type: "text", text: "Error: id is required for delete" }], isError: true };
+            result = await joomla.deleteDocmanCategory(String(args.id));
+            break;
+          }
+          default:
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|get|create|update|delete` }], isError: true };
+        }
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 
@@ -2398,123 +1778,123 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
 
       // ==================== USER MANAGEMENT ====================
 
-      case "joomla_list_users": {
+      case "joomla_user": {
         const login = await ensureLoggedIn();
         if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.listUsers(
-          args?.search as string | undefined,
-          args?.group_id as string | undefined,
-          args?.state as string | undefined,
-          args?.limit as number | undefined,
-          args?.page as number | undefined,
-        );
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
 
-      case "joomla_get_user": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-        const result = await joomla.getUser(id);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_create_user": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const name = args?.name as string;
-        const username = args?.username as string;
-        const email = args?.email as string;
-        const password = args?.password as string;
-        const groups = args?.groups as string[];
-        if (!name || !username || !email || !password || !groups?.length) {
-          return { content: [{ type: "text", text: "Error: name, username, email, password, and groups are required" }], isError: true };
+        const action = args?.action as string;
+        let result: JoomlaResponse;
+        switch (action) {
+          case "list": {
+            result = await joomla.listUsers(
+              args?.search as string | undefined,
+              args?.group_id as string | undefined,
+              args?.state as string | undefined,
+              args?.limit as number | undefined,
+              args?.page as number | undefined,
+            );
+            break;
+          }
+          case "get": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for get" }], isError: true };
+            result = await joomla.getUser(id);
+            break;
+          }
+          case "create": {
+            const name = args?.name as string;
+            const username = args?.username as string;
+            const email = args?.email as string;
+            const password = args?.password as string;
+            const groups = args?.groups as string[];
+            if (!name || !username || !email || !password || !groups?.length)
+              return { content: [{ type: "text", text: "Error: name, username, email, password, and groups are required for create" }], isError: true };
+            result = await joomla.createUser({ name, username, email, password, groups, block: args?.block as boolean | undefined });
+            break;
+          }
+          case "update": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for update" }], isError: true };
+            result = await joomla.updateUser(id, {
+              name: args?.name as string | undefined,
+              username: args?.username as string | undefined,
+              email: args?.email as string | undefined,
+              password: args?.password as string | undefined,
+              block: args?.block as boolean | undefined,
+              groups: args?.groups as string[] | undefined,
+            });
+            break;
+          }
+          default:
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|get|create|update` }], isError: true };
         }
-        const result = await joomla.createUser({ name, username, email, password, groups, block: args?.block as boolean | undefined });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_update_user": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-        const result = await joomla.updateUser(id, {
-          name: args?.name as string | undefined,
-          username: args?.username as string | undefined,
-          email: args?.email as string | undefined,
-          password: args?.password as string | undefined,
-          block: args?.block as boolean | undefined,
-          groups: args?.groups as string[] | undefined,
-        });
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 
       // ==================== GROUPS ====================
 
-      case "joomla_list_groups": {
+      case "joomla_group": {
         const login = await ensureLoggedIn();
         if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.listGroups();
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
 
-      case "joomla_create_group": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const title = args?.title as string;
-        if (!title) return { content: [{ type: "text", text: "Error: title is required" }], isError: true };
-        const result = await joomla.createGroup({ title, parentId: args?.parent_id as string | undefined });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_delete_group": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-        const result = await joomla.deleteGroup(id);
+        const action = args?.action as string;
+        let result: JoomlaResponse;
+        switch (action) {
+          case "list": {
+            result = await joomla.listGroups();
+            break;
+          }
+          case "create": {
+            const title = args?.title as string;
+            if (!title) return { content: [{ type: "text", text: "Error: title is required for create" }], isError: true };
+            result = await joomla.createGroup({ title, parentId: args?.parent_id as string | undefined });
+            break;
+          }
+          case "delete": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for delete" }], isError: true };
+            result = await joomla.deleteGroup(id);
+            break;
+          }
+          default:
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|create|delete` }], isError: true };
+        }
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 
       // ==================== PERMISSIONS ====================
 
-      case "joomla_get_category_permissions": {
+      case "joomla_permissions": {
         const login = await ensureLoggedIn();
         if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
+
+        const action = args?.action as string;
+        const resource = args?.resource as string;
         const id = args?.id as string;
         if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-        const result = await joomla.getCategoryPermissions(id, args?.extension as string | undefined);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
 
-      case "joomla_set_category_permissions": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const id = args?.id as string;
-        const rules = args?.rules as Record<string, Record<string, string>>;
-        if (!id || !rules) return { content: [{ type: "text", text: "Error: id and rules are required" }], isError: true };
-        const result = await joomla.setCategoryPermissions(id, rules, args?.extension as string | undefined);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_get_article_permissions": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const id = args?.id as string;
-        if (!id) return { content: [{ type: "text", text: "Error: id is required" }], isError: true };
-        const result = await joomla.getArticlePermissions(id);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "joomla_set_article_permissions": {
-        const login = await ensureLoggedIn();
-        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const id = args?.id as string;
-        const rules = args?.rules as Record<string, Record<string, string>>;
-        if (!id || !rules) return { content: [{ type: "text", text: "Error: id and rules are required" }], isError: true };
-        const result = await joomla.setArticlePermissions(id, rules);
+        let result: JoomlaResponse;
+        if (action === "get") {
+          if (resource === "category") {
+            result = await joomla.getCategoryPermissions(id, args?.extension as string | undefined);
+          } else if (resource === "article") {
+            result = await joomla.getArticlePermissions(id);
+          } else {
+            return { content: [{ type: "text", text: `Error: unknown resource "${resource}". Valid: category|article` }], isError: true };
+          }
+        } else if (action === "set") {
+          const rules = args?.rules as Record<string, Record<string, string>>;
+          if (!rules) return { content: [{ type: "text", text: "Error: rules are required for set" }], isError: true };
+          if (resource === "category") {
+            result = await joomla.setCategoryPermissions(id, rules, args?.extension as string | undefined);
+          } else if (resource === "article") {
+            result = await joomla.setArticlePermissions(id, rules);
+          } else {
+            return { content: [{ type: "text", text: `Error: unknown resource "${resource}". Valid: category|article` }], isError: true };
+          }
+        } else {
+          return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: get|set` }], isError: true };
+        }
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 
