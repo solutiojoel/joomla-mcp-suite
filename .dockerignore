@@ -4,3 +4,4 @@
 **/.DS_Store
 **/.env
 **/coverage
+apps/gantry-mcp/exports/mockup-assets

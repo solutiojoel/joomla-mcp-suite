@@ -315,6 +315,7 @@
       <div class="tabs">
         <button class="tab active" data-tab="sections">Sections</button>
         <button class="tab" data-tab="outline">Outline Scope</button>
+        <button class="tab" data-tab="content">Content Plan</button>
         <button class="tab" data-tab="articles">Articles</button>
         <button class="tab" data-tab="assets">Assets</button>
         <button class="tab" data-tab="links">Links</button>
@@ -326,6 +327,7 @@
 
       <div class="pane" id="pane-sections"></div>
       <div class="pane" id="pane-outline" hidden></div>
+      <div class="pane" id="pane-content" hidden></div>
       <div class="pane" id="pane-articles" hidden></div>
       <div class="pane" id="pane-assets" hidden></div>
       <div class="pane" id="pane-links" hidden></div>
@@ -465,10 +467,14 @@
         const item = plan[scope] || {};
         const sections = item.sections || [];
         const articles = item.articles || [];
+        const categories = item.categories || [];
         const instructions = item.instructions || [];
+        const inherited = item.alwaysInheritedOnHome || item.inheritsFromBaseOutline || [];
         return '<div class="card"><h3>' + esc(title) + '</h3>' +
           '<p>' + esc(item.purpose || '') + '</p>' +
+          '<p><strong>Always inherited on #Home:</strong> ' + (inherited.length ? inherited.map((s) => esc(s)).join(', ') : 'none') + '</p>' +
           '<p><strong>Sections:</strong> ' + (sections.length ? sections.map((s) => esc(s.id)).join(', ') : 'none') + '</p>' +
+          '<p><strong>Categories:</strong> ' + (categories.length ? categories.map((c) => esc(c.title)).join(', ') : 'none') + '</p>' +
           '<p><strong>Articles:</strong> ' + (articles.length ? articles.map((a) => esc(a.title)).join(', ') : 'none') + '</p>' +
           '<div class="tag-row">' + instructions.map((text) => '<span class="tag warn">' + esc(text) + '</span>').join('') + '</div></div>';
       }
@@ -476,6 +482,31 @@
         renderScope('base_outline', 'Base Outline') +
         renderScope('home_outline', 'Home Outline') +
         '</div>';
+
+      const categories = latest.contentCategories || [];
+      const contentPlan = latest.sectionContentPlan || [];
+      $('pane-content').innerHTML =
+        '<h2>Feed Categories</h2>' +
+        renderCards(categories, (c) =>
+          '<div class="card"><h3>' + esc(c.title) + '</h3>' +
+          '<p><strong>Scope:</strong> ' + esc(c.scope === 'base_outline' ? 'Base Outline' : 'Home Outline') + '</p>' +
+          '<p><strong>Alias:</strong> ' + esc(c.alias) + '</p>' +
+          '<p><strong>Section:</strong> ' + esc(c.sourceSection) + '</p>' +
+          '<p><strong>Purpose:</strong> ' + esc(c.purpose) + '</p>' +
+          '<p><strong>Display:</strong> ' + esc(c.displayThrough) + '</p>' +
+          '<p><strong>Starter articles:</strong> ' + esc((c.starterArticles || []).map((a) => a.title).join(', ') || 'none') + '</p></div>'
+        ) +
+        '<h2>Section Display Contracts</h2>' +
+        renderCards(contentPlan, (p) =>
+          '<div class="card"><h3>' + esc(p.section) + '</h3>' +
+          '<p><strong>Scope:</strong> ' + esc(p.scope === 'base_outline' ? 'Base Outline' : 'Home Outline') + '</p>' +
+          '<p><strong>Particle:</strong> ' + esc(p.particle) + '</p>' +
+          '<p><strong>Display:</strong> ' + esc(p.displayContract) + '</p>' +
+          '<p><strong>Categories:</strong> ' + esc((p.requiredCategories || []).map((c) => c.title).join(', ') || 'none') + '</p>' +
+          '<p><strong>Articles:</strong> ' + esc((p.requiredArticles || []).map((a) => a.title).join(', ') || 'none') + '</p>' +
+          '<p><strong>Static items:</strong> ' + esc((p.staticItems || []).map((i) => i.label).join(', ') || 'none') + '</p>' +
+          '<div class="tag-row">' + (p.notes || []).map((text) => '<span class="tag warn">' + esc(text) + '</span>').join('') + '</div></div>'
+        );
 
       $('pane-articles').innerHTML = renderCards(latest.homepageArticles, (a) =>
         '<div class="card"><h3>' + esc(a.title) + '</h3>' +
@@ -492,7 +523,7 @@
         '<p><strong>Local folder:</strong> ' + esc(staged.folder || '') + '</p>' +
         '<p><strong>Browser folder:</strong> ' + esc(staged.publicFolder || '') + '</p>' +
         '<p><strong>Joomla upload folder:</strong> ' + esc(staged.joomlaFolder || '') + '</p>' +
-        '<p>Use the local paths as FTP upload sources. After upload, reference implementation assets with the root-relative /images/... paths only.</p></div>' +
+        '<p>Use the local paths as FTP upload sources. Upload implementation assets under /images/pub/, then reference them with the root-relative /images/pub/... paths only.</p></div>' +
         renderCards(staged.assets || [], (asset) =>
           '<div class="card"><h3>' + esc(asset.filename) + '</h3>' +
           '<p><strong>Role:</strong> ' + esc(asset.role) + '</p>' +

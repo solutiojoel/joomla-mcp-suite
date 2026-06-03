@@ -146,7 +146,10 @@ const BASE_SECTIONS = [
   { id: 'bottom',     type: 'section', title: 'Bottom'     },
   { id: 'footer',     type: 'section', title: 'Footer'     },
   { id: 'copyright',  type: 'section', title: 'Copyright'  },
+  { id: 'offcanvas',  type: 'offcanvas', title: 'Offcanvas' },
 ];
+
+const ALWAYS_INHERITED_SECTION_IDS = new Set(BASE_SECTIONS.map(s => s.id));
 
 function makeInheritanceStub(sectionDef) {
   return {
@@ -173,6 +176,26 @@ function collectNodeIds(layout) {
   }
   w(layout);
   return ids;
+}
+
+function pruneInheritedSections(nodes, warnings, parentId = 'layout') {
+  if (!Array.isArray(nodes)) return nodes;
+  const kept = [];
+  for (const node of nodes) {
+    if (!node || typeof node !== 'object') continue;
+    if (ALWAYS_INHERITED_SECTION_IDS.has(node.id) && !(node.inherit && node.inherit.outline)) {
+      warnings.push(
+        `${node.id}: removed explicit ${node.type || 'section'} from ${parentId}; ` +
+        'Home/sub-outlines inherit navigation, bottom, footer, copyright, and offcanvas from the Base Outline.'
+      );
+      continue;
+    }
+    if (Array.isArray(node.children)) {
+      node.children = pruneInheritedSections(node.children, warnings, node.id || parentId);
+    }
+    kept.push(node);
+  }
+  return kept;
 }
 
 
@@ -493,21 +516,26 @@ function compile(design, context) {
     } catch (e) { errors.push(`footer_container: ${e.message}`); }
   }
 
+  // 6. Offcanvas
+  if (design.offcanvas || design.preserve_base_inheritance === false) {
+    try {
+      layout.push(compileOffcanvas(design.offcanvas, ctx));
+    } catch (e) { errors.push(`offcanvas: ${e.message}`); }
+  }
+
   // Inject Base Outline inheritance stubs for any missing standard sections.
   // Ensures a full import never silently drops inherited navigation/footer/etc.
-  // Suppress with:  preserve_base_inheritance: false  in design YAML.
+  // Suppress with: preserve_base_inheritance: false in design YAML for Base Outline work.
   if (design.preserve_base_inheritance !== false) {
+    const cleaned = pruneInheritedSections(layout, warnings);
+    layout.length = 0;
+    layout.push(...cleaned);
     const existingIds = collectNodeIds(layout);
     const stubs = BASE_SECTIONS
       .filter(sec => !existingIds.has(sec.id))
       .map(makeInheritanceStub);
     if (stubs.length) layout.push(...stubs);
   }
-
-  // 6. Offcanvas
-  try {
-    layout.push(compileOffcanvas(design.offcanvas, ctx));
-  } catch (e) { errors.push(`offcanvas: ${e.message}`); }
 
   // Validate
   validateLayout(layout, errors, warnings);
@@ -653,12 +681,6 @@ function briefToDesignYaml(brief, context) {
     }
   }
 
-  // Always include navigation
-  if (!usedTemplates.includes('header-navigation')) {
-    usedTemplates.unshift('header-navigation');
-    notes.push('Added header-navigation (always required)');
-  }
-
   // Build the design YAML scaffold
   const parishName  = extractParishName(brief) || 'Our Parish';
   const menuId      = extractNumber(brief, /(?:main\s+)?menu\s+(?:id\s+)?(?:is\s+)?(\d+)/i) || 1;
@@ -679,7 +701,7 @@ function briefToDesignYaml(brief, context) {
     ``,
     `top_container:`,
     `  sections:`,
-    `    - template: header-navigation`,
+    `    # Navigation is inherited from the Base Outline.`,
   ];
 
   const topSections   = [];

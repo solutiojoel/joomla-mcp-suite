@@ -25,6 +25,7 @@ const SECTION_TEMPLATES_DIR = path.join(ROOT, 'templates', 'sections');
 const HOMEPAGES_DIR = path.join(ROOT, 'templates', 'homepages');
 
 const PORT = Number(process.env.MOCKUP_BUILDER_PORT || 18304);
+const ALWAYS_INHERITED_HOME_SECTIONS = ['navigation', 'bottom', 'footer', 'copyright', 'offcanvas'];
 
 const app = express();
 app.use(express.json({ limit: '150mb' }));
@@ -201,7 +202,7 @@ function stageUploadedImages(input) {
     const localPath = path.join(folder, filename);
     fs.writeFileSync(localPath, decoded.buffer);
     const appPath = `/mockup-assets/${folderName}/${filename}`;
-    const joomlaPath = `/images/template/mockups/${folderName}/${filename}`;
+    const joomlaPath = `/images/pub/mockups/${folderName}/${filename}`;
     const workspaceRelativePath = path.join('apps', 'gantry-mcp', 'exports', 'mockup-assets', folderName, filename).replace(/\\/g, '/');
     staged.push({
       role: file.role,
@@ -224,7 +225,7 @@ function stageUploadedImages(input) {
     folderName,
     folder,
     publicFolder: `/mockup-assets/${folderName}`,
-    joomlaFolder: `/images/template/mockups/${folderName}`,
+    joomlaFolder: `/images/pub/mockups/${folderName}`,
     assets: staged,
   };
 }
@@ -235,7 +236,7 @@ function inferSections(input) {
   const sections = [];
 
   function scopeForSection(id) {
-    if (['navigation', 'footer', 'bottom', 'copyright', 'offcanvas'].includes(id)) return 'base_outline';
+    if (ALWAYS_INHERITED_HOME_SECTIONS.includes(id)) return 'base_outline';
     return 'home_outline';
   }
 
@@ -290,16 +291,16 @@ function inferArticles(input, sections) {
     articles.push({ title, alias, category, scope: articleScope(sourceSection), sourceSection, purpose, htmlNotes });
   }
 
-  if (sections.some((s) => s.id === 'slideshow') && hasAny(notes, ['mass', 'schedule', 'confession'])) {
+  if (sections.some((s) => s.id === 'slideshow')) {
     add('Mass Schedule', 'mass-times', 'Editor-managed schedule shell pulled through contentarray.', 'slideshow', 'Use headings for Sunday Mass, Daily Mass, Confession; links only where needed, such as phone links.');
   }
-  if (sections.some((s) => s.id === 'container-main') && hasAny(notes, ['facebook'])) {
-    add('Facebook', 'facebook', 'Social embed shell article pulled through contentarray.', 'mainbar', 'Include widget wrapper, embed code, and Follow Us button.');
+  if (sections.some((s) => s.id === 'container-main')) {
+    add(hasAny(notes, ['facebook']) ? 'Facebook' : 'Social Feed', hasAny(notes, ['facebook']) ? 'facebook' : 'social-feed', 'Social/widget shell article pulled through contentarray in the main content area.', 'mainbar', 'Include widget wrapper, embed code or placeholder, and a Follow Us/View More button if the mockup shows one.');
   }
-  if (sections.some((s) => s.id === 'extension') && hasAny(notes, ['instagram'])) {
+  if (sections.some((s) => s.id === 'extension')) {
     add('Instagram', 'instagram', 'Instagram embed and optional quote shell article.', 'extension', 'Include widget wrapper, embed code, quote text, and attribution.');
   }
-  if (sections.some((s) => s.id === 'extension') && hasAny(notes, ['calendar', 'bulletin'])) {
+  if (sections.some((s) => s.id === 'extension')) {
     add(hasAny(notes, ['bulletin']) ? 'Bulletins' : 'Calendar', hasAny(notes, ['bulletin']) ? 'bulletins' : 'calendar', 'Calendar/bulletin module wrapper shell article.', 'extension', 'Use a module placeholder or embed wrapper plus archive/full calendar button.');
   }
   if (sections.some((s) => s.id === 'footer')) {
@@ -307,6 +308,133 @@ function inferArticles(input, sections) {
   }
 
   return articles;
+}
+
+function inferCategories(input, sections) {
+  const categories = [];
+  const notes = input.designNotes || '';
+
+  function add(title, alias, purpose, sourceSection, displayThrough, starterArticles) {
+    if (categories.some((c) => c.alias === alias)) return;
+    categories.push({
+      title,
+      alias,
+      scope: sourceSection === 'footer' ? 'base_outline' : 'home_outline',
+      sourceSection,
+      purpose,
+      displayThrough,
+      starterArticles: starterArticles || [],
+    });
+  }
+
+  if (sections.some((s) => s.id === 'slideshow')) {
+    add(
+      'Rotator',
+      'rotator',
+      'Hero/slider articles used by the swiper particle.',
+      'slideshow',
+      'swiper.article.filter.categories; each article image becomes a slide. Keep slides_linkable disabled unless requested.',
+      [
+        { title: 'Welcome Slide', content: 'Short optional slide caption; primary image should be the hero photo from the mockup/assets.' },
+        { title: 'Parish Life Slide', content: 'Optional secondary slide if the mockup shows a rotating hero.' },
+      ]
+    );
+  }
+
+  if (sections.some((s) => s.id === 'container-main')) {
+    add(
+      hasAny(notes, ['event']) ? 'News & Events' : 'Parish News & Events',
+      'news-events',
+      'Dynamic feed for the homepage News & Events section.',
+      'sidebar',
+      'contentarray.article.filter.categories with image/title/intro/read-more enabled; usually ph-sideway-stack/news-to-me styling.',
+      [
+        { title: 'Welcome to Our Parish!', content: 'Intro article matching the first visible news card or a brief welcome/news teaser.' },
+        { title: 'Upcoming Parish Event', content: 'Placeholder event/news article with intro image and short excerpt.' },
+        { title: 'Annual Announcement', content: 'Placeholder announcement article with intro image and short excerpt.' },
+      ]
+    );
+  }
+
+  if (hasAny(notes, ['alert', 'announcement', 'notice'])) {
+    add(
+      'Alert',
+      'alert',
+      'Optional alert/announcement feed at the top of the page.',
+      'top',
+      'contentarray.article.filter.categories; title shown, one column, no pagination.',
+      [{ title: 'Homepage Alert', content: 'Short urgent announcement shown in the alert banner.' }]
+    );
+  }
+
+  return categories;
+}
+
+function buildSectionContentPlan(sections, articles, categories) {
+  function article(alias) {
+    return articles.find((a) => a.alias === alias);
+  }
+  function category(alias) {
+    return categories.find((c) => c.alias === alias);
+  }
+
+  return sections.map((section) => {
+    const plan = {
+      section: section.id,
+      scope: section.scope,
+      particle: section.particle,
+      contentModel: section.contentSource,
+      displayContract: '',
+      requiredCategories: [],
+      requiredArticles: [],
+      staticItems: [],
+      notes: [],
+    };
+
+    if (section.id === 'slideshow') {
+      plan.requiredCategories.push(category('rotator'));
+      plan.requiredArticles.push(article('mass-times'));
+      plan.displayContract = 'Swiper pulls hero images from Rotator category; Mass Schedule contentarray pulls one shell article and hides title/read-more.';
+      plan.notes.push('Create/resolve both the Rotator category and Mass Schedule article before applying the hero section.');
+    } else if (section.id === 'utility') {
+      plan.displayContract = 'Custom welcome heading plus blockcontent quicklink repeater; no Homepage Articles should be created for each quicklink.';
+      plan.staticItems = ['Online Giving', 'Bulletin', 'Faith Formation', 'Join Us', 'Pre-K'].map((label) => ({
+        label,
+        source: 'blockcontent.subcontents[]',
+        needsMenuUrl: true,
+      }));
+    } else if (section.id === 'container-main') {
+      plan.requiredCategories.push(category('news-events'));
+      plan.requiredArticles.push(article('facebook') || article('social-feed'));
+      plan.displayContract = 'News contentarray pulls a category feed; social/widget area pulls a single shell article; ads use module/position content.';
+      plan.notes.push('The news feed is a category, not a Homepage Articles shell article. Create starter news articles in that category.');
+    } else if (section.id === 'expanded') {
+      plan.displayContract = 'Blockcontent card/resource grid; items are static repeaters with images and button links.';
+      plan.staticItems = ['Resource Card 1', 'Resource Card 2', 'Resource Card 3', 'Resource Card 4'].map((label) => ({
+        label,
+        source: 'blockcontent.subcontents[]',
+        needsMenuUrl: true,
+      }));
+    } else if (section.id === 'extension') {
+      plan.requiredArticles.push(article('calendar') || article('bulletins'));
+      plan.requiredArticles.push(article('instagram'));
+      plan.displayContract = 'Two contentarray shell articles, typically Calendar/Bulletins and Instagram, styled by calendar-container and instagram-container.';
+    } else if (section.id === 'footer') {
+      plan.requiredArticles.push(article('footer'));
+      plan.displayContract = 'Base Outline footer contentarray pulls one Footer shell article; all sub-outlines inherit it.';
+    } else if (section.id === 'navigation') {
+      plan.displayContract = 'Base Outline inherited logo/menu/toplinks. Toplinks are blockcontent static items, not Homepage Articles.';
+      plan.staticItems = ['Contact Us', 'Search'].map((label) => ({
+        label,
+        source: 'blockcontent.subcontents[]',
+        needsMenuUrl: true,
+      }));
+    }
+
+    plan.requiredCategories = plan.requiredCategories.filter(Boolean);
+    plan.requiredArticles = plan.requiredArticles.filter(Boolean);
+    return plan;
+  });
 }
 
 function inferLinkLabels(input) {
@@ -383,17 +511,21 @@ function buildDesignYamlScaffold(input, sections) {
   return lines.join('\n');
 }
 
-function buildWorkPlan(sections, articles) {
+function buildWorkPlan(sections, articles, categories) {
   const baseSections = sections.filter((s) => s.scope === 'base_outline');
   const homeSections = sections.filter((s) => s.scope !== 'base_outline');
   const baseArticles = articles.filter((a) => a.scope === 'base_outline');
   const homeArticles = articles.filter((a) => a.scope !== 'base_outline');
+  const baseCategories = categories.filter((c) => c.scope === 'base_outline');
+  const homeCategories = categories.filter((c) => c.scope !== 'base_outline');
 
   return {
     base_outline: {
       purpose: 'Site-wide inherited structure shared by #Home and sub-outlines.',
+      alwaysInheritedOnHome: ALWAYS_INHERITED_HOME_SECTIONS,
       sections: baseSections,
       articles: baseArticles,
+      categories: baseCategories,
       instructions: [
         'Edit navigation in the Base Outline, not in the #Home outline.',
         'Create or update the Footer shell article in Homepage Articles, then point the Base Outline footer contentarray at that article.',
@@ -402,8 +534,10 @@ function buildWorkPlan(sections, articles) {
     },
     home_outline: {
       purpose: 'Homepage-specific layout and content sections.',
+      inheritsFromBaseOutline: ALWAYS_INHERITED_HOME_SECTIONS,
       sections: homeSections,
       articles: homeArticles,
+      categories: homeCategories,
       instructions: [
         'Apply hero, utility, main content, expanded, and extension changes in the #Home outline.',
         'Do not duplicate inherited navigation or footer sections in the #Home layout.',
@@ -413,7 +547,7 @@ function buildWorkPlan(sections, articles) {
   };
 }
 
-function buildPrompt(input, sections, articles, links, stagedAssets) {
+function buildPrompt(input, sections, articles, categories, contentPlan, links, stagedAssets) {
   const implementationAssets = (stagedAssets && stagedAssets.assets || []).filter((asset) => asset.uploadToJoomla);
   const mockupAssets = (stagedAssets && stagedAssets.assets || []).filter((asset) => asset.role === 'mockup');
   const assetList = implementationAssets
@@ -430,6 +564,12 @@ function buildPrompt(input, sections, articles, links, stagedAssets) {
   const articleText = articles.map((a) =>
     `- ${a.scope}: create/resolve "${a.title}" (${a.alias}) in ${a.category}: ${a.purpose}`
   ).join('\n') || '- No shell Homepage Articles inferred yet.';
+  const categoryText = categories.map((c) =>
+    `- ${c.scope}: create/resolve category "${c.title}" (${c.alias}) for ${c.sourceSection}; display through ${c.displayThrough}`
+  ).join('\n') || '- No feed categories inferred yet.';
+  const contentPlanText = contentPlan.map((p) =>
+    `- ${p.section}: ${p.displayContract} Categories: ${p.requiredCategories.map(c => c.title).join(', ') || 'none'}; Articles: ${p.requiredArticles.map(a => a.title).join(', ') || 'none'}; Static items: ${p.staticItems.map(i => i.label).join(', ') || 'none'}.`
+  ).join('\n');
 
   const linkText = links.map((label) => `- Resolve or create menu/page link for: ${label}`).join('\n') || '- Resolve links from visible labels and notes.';
 
@@ -451,20 +591,28 @@ function buildPrompt(input, sections, articles, links, stagedAssets) {
     '',
     'Asset upload rule:',
     '- Use staged localPath values as the source files when uploading assets by FTP.',
-    '- Upload implementation assets into the matching Joomla /images/template/mockups/... path.',
+    '- Upload implementation assets into the matching writable Joomla /images/pub/mockups/... path.',
+    '- The FTP write tool can only write under /images/pub/, so do not target /images/template/ for these assets.',
     '- In articles, particles, and CSS, reference uploaded assets with root-relative paths only, starting with /images/. Do not include the base domain.',
     '',
     'Use these established construction methods as the foundation, but do not simply copy an existing layout:',
     sectionText,
     '',
     'Outline scope rules:',
-    '- Base Outline: navigation, footer, bottom, copyright, and offcanvas are site-wide inherited areas.',
+    '- Base Outline: Navigation, Bottom, Footer, Copyright, and Offcanvas are site-wide inherited areas.',
     '- Base Outline: the Footer shell article contentarray selection belongs here so sub-outlines inherit the same footer.',
     '- Home Outline: slideshow, utility, main content, expanded, extension, and other homepage-only sections belong here.',
-    '- Never duplicate inherited navigation or footer in #Home unless inheritance has intentionally been broken.',
+    '- Home Outline always inherits Navigation, Bottom, Footer, Copyright, and Offcanvas from the Base Outline.',
+    '- Never duplicate inherited Navigation, Bottom, Footer, Copyright, or Offcanvas in #Home unless inheritance has intentionally been broken.',
     '',
     'Homepage Articles to create or resolve:',
     articleText,
+    '',
+    'Feed categories and starter articles to create or resolve:',
+    categoryText,
+    '',
+    'Section content/display plan:',
+    contentPlanText,
     '',
     'Menu/page links to resolve:',
     linkText,
@@ -476,7 +624,7 @@ function buildPrompt(input, sections, articles, links, stagedAssets) {
     '- Use custom only for small structural HTML and standalone buttons/headings.',
     '- Do not create empty anchors for static display cards.',
     '- Do not make whole sections clickable unless explicitly requested.',
-    '- Preserve base outline inheritance for navigation/footer/bottom/copyright/offcanvas unless a deliberate override is approved.',
+    '- Preserve base outline inheritance for Navigation/Bottom/Footer/Copyright/Offcanvas unless a deliberate override is approved.',
     '- Make inherited section edits in the Base Outline first, then make homepage-specific edits in #Home.',
     '- Validate links, article IDs, category IDs, module positions, and responsive CSS before applying.',
   ].join('\n');
@@ -486,6 +634,8 @@ function analyzeMockup(input) {
   const stagedAssets = stageUploadedImages(input);
   const sections = inferSections(input);
   const articles = inferArticles(input, sections);
+  const categories = inferCategories(input, sections);
+  const contentPlan = buildSectionContentPlan(sections, articles, categories);
   const links = inferLinkLabels(input);
   const cssPlan = sections.map((section) => ({
     section: section.id,
@@ -497,14 +647,16 @@ function analyzeMockup(input) {
 
   return {
     summary: `Generated mockup implementation brief for ${input.siteType || 'church'} ${input.targetOutline || '#Home'}.`,
-    outlineWorkPlan: buildWorkPlan(sections, articles),
+    outlineWorkPlan: buildWorkPlan(sections, articles, categories),
     stagedAssets,
     sections,
     homepageArticles: articles,
+    contentCategories: categories,
+    sectionContentPlan: contentPlan,
     linksToResolve: links,
     cssPlan,
     designYamlScaffold: buildDesignYamlScaffold(input, sections),
-    visionPrompt: buildPrompt(input, sections, articles, links, stagedAssets),
+    visionPrompt: buildPrompt(input, sections, articles, categories, contentPlan, links, stagedAssets),
   };
 }
 
