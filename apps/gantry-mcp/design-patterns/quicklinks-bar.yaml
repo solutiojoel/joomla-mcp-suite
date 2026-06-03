@@ -1,0 +1,97 @@
+name: quicklinks-bar
+label: Quicklinks Bar (Utility Section)
+site_types: [parish, school, cemetery]
+
+intent: >
+  A horizontal row of 4–6 image+label link boxes below the hero, giving visitors
+  fast access to the most common destinations (Mass Times, Bulletin, Giving, Calendar,
+  Registration, etc.). This is the standard Solutio utility-section treatment and
+  appears on nearly every parish homepage.
+
+particle_choice:
+  use: blockcontent
+  why: >
+    Quicklinks are static navigation — the links and images do not come from Joomla
+    articles. blockcontent's subcontents repeater provides exactly one record per
+    link, with a label, image, and buttonlink. Using contentarray would require
+    creating a Joomla article per link, which is the wrong content model for navigation.
+
+content_contract:
+  source_type: static_particle
+  description: >
+    All content is hardcoded in the particle subcontents array. Each item needs:
+    name (label), button (button text), buttonlink (href), buttontarget, img (image path).
+    Images live at: gantry-media://stories/template/quicklinks/{filename}.jpg
+    Common stock images: church.jpg, computer2.jpg, register.jpg, giving.jpg,
+    bulletin.jpg, calendar.jpg, staff.jpg, sacraments.jpg
+  item_count:
+    min: 4
+    max: 6
+    note: "5 is the most common count. More than 6 causes layout compression on tablet."
+  display_rules:
+    title: omit
+    headline: omit
+    note: "Leave the particle title and headline blank — the labels live on each item."
+
+layout_contract:
+  section: utility
+  preferred_position: full_width
+  blockClass: ql-united
+  width: 100
+  alternatives:
+    - blockClass: ql-window-title
+      use_when: The quicklinks bar has a section title above it or sits beside another particle.
+    - blockClass: standard-ql
+      use_when: Legacy sites or when ql-united is not in the CSS pattern.
+  notes: >
+    ql-united spans the full utility section width with no side padding. This is the
+    most common treatment. If the site has a welcome message or section title particle
+    beside the quicklinks, use ql-window-title instead and size accordingly.
+
+css_contract:
+  required_selectors:
+    - ".ql-united"
+    - ".ql-united .blockcontent-item"
+    - ".ql-united .blockcontent-item img"
+  behavior: >
+    Items display as equal-width columns with image on top, label below. The image
+    fills the item width. On mobile, items wrap to 2-column or single-column grids
+    depending on the CSS pattern. Hover states are typically defined per-site.
+  override_notes: >
+    If images are not square, add object-fit:cover rules in override.css.
+    If the client wants colored icon tiles instead of photos, switch to icon-based
+    items and add background-color CSS per item class.
+
+link_behavior:
+  whole_block_linkable: false
+  item_linkable: true
+  item_link_field: buttonlink
+  note: >
+    Each item is individually linkable via buttonlink. Every item MUST have a
+    buttonlink set — an empty buttonlink produces a broken empty anchor tag.
+    Internal links use relative paths (e.g. "/mass-times").
+    External links use full URLs with buttontarget: "_blank".
+
+guardrails:
+  - Every subcontents item must have a non-empty buttonlink. Never leave buttonlink blank.
+  - Do not use contentarray for quicklinks — this is static navigation, not article content.
+  - Confirm image filenames exist in the template quicklinks directory before applying.
+  - If the site CSS pattern does not define ql-united, fall back to standard-ql or add ql-united to override.css.
+  - Do not exceed 6 items without confirming the client's CSS handles the extra column.
+
+description_prompts:
+  good: >
+    "5-item quicklinks bar in the utility section using ql-united: Mass Times (/mass-times),
+    Bulletin (/bulletin), Online Giving (/giving), Calendar (/calendar),
+    Registration (/registration). Each with a matching stock quicklinks image."
+  minimal: >
+    "Standard 5-item quicklinks bar — provide the link labels and URLs."
+
+context_variables: {}
+
+seen_on:
+  - stchris-speed (blockClass ql-united, 5 items)
+  - stlaw-alex (blockClass ql-window-title)
+  - stagnes-concord (blockClass ql-united)
+  - seas-ontario
+  - stbern-levit

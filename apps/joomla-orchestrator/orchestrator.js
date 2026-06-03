@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * Joomla Orchestrator — MCP server that routes tool calls to downstream servers.
+ * Joomla Orchestrator - MCP server that routes tool calls to downstream servers.
  *
  * Content tools (articles, categories, menus, modules) → joomla-mcp
  * Design tools  (gantry layouts, outlines, styles)      → gantry-mcp
@@ -13,7 +13,7 @@
  *   3. User provides URL → set_active_site is called
  *   4. Subsequent tool calls are routed to the right downstream server
  *
- * This is the foundation — routing logic, intent classification, multi-site
+ * This is the foundation - routing logic, intent classification, multi-site
  * support, and credential management can all be extended here.
  */
 
@@ -100,7 +100,7 @@ async function callDownstream(label, url, token, toolName, toolArgs) {
     } catch (err) {
       if (client) client.close().catch(() => {});
       if (attempt === 2) throw err;
-      log(`${label} call failed (attempt ${attempt}), retrying — ${err.message}`);
+      log(`${label} call failed (attempt ${attempt}), retrying - ${err.message}`);
     }
   }
 }
@@ -118,7 +118,7 @@ async function loadDownstreamTools() {
       tools.forEach(t => toolMap.set(t.name, t));
       log(`loaded ${toolMap.size} tools from ${label}`);
     } catch (err) {
-      log(`WARNING: could not load ${label} tools — ${err.message}`);
+      log(`WARNING: could not load ${label} tools - ${err.message}`);
     }
   }
 }
@@ -168,7 +168,7 @@ function buildServer() {
                 '**Theme:** rt_studius',
                 '**Standard outlines:** Parish Home (outline 33) | School Home (outline 72)',
                 '',
-                '**Non-negotiable rules:**',
+                '**Non-negotiable structural rules:**',
                 '- `navigation`, `footer`, `copyright`, `bottom` always inherit from the default outline',
                 '- Every site has `system/messages` + Alert contentarray in the `top` section',
                 '- Exactly one swiper particle in `slideshow`',
@@ -177,7 +177,16 @@ function buildServer() {
                 '- Copyright always has the Solutio admin footer HTML',
                 '- CSS uses min(Nvw, Nrem) sizing, 50.99rem breakpoints, CSS variables only',
                 '',
-                'Call `solutio_style_guide` at any point for the full reference, or with a `section` parameter for a focused part (inherit_rules, css, parish, school, checklist, naming).',
+                '**Design workflow - required tool call order:**',
+                '1. `solutio_design_workflow` - load the full design process guide (do this now)',
+                '2. `gantry_design_patterns` - load the pattern knowledge base (why each particle+CSS choice is made)',
+                '3. `gantry_design_plan_from_brief(brief: "...")` - generate a plan with required IDs and guardrails before writing any YAML',
+                '4. `gantry_homepage_examples` - find a similar site and decompile it as a starting point',
+                '5. Resolve all content IDs via `joomla_list_categories` / `joomla_list_articles`',
+                '6. `gantry_validate_design_contract` - validate design YAML before applying',
+                '7. `gantry_layout_design(dryRun: true)` - dry run, then apply',
+                '',
+                'Call `solutio_style_guide` for structural conventions, `solutio_particles` for particle field schemas.',
                 '',
                 'Which site are we building, and is it a **parish home**, **school home**, or another page type?',
               ].join('\n'),
@@ -207,8 +216,8 @@ function buildServer() {
               'Which site would you like to work on? Please provide the full site URL (e.g. `https://example.com`).',
               '',
               'Once I have the site, tell me what you\'d like to do:',
-              '- **Content** — articles, categories, menus, modules',
-              '- **Design** — Gantry layouts, outlines, styles, particles',
+              '- **Content** - articles, categories, menus, modules',
+              '- **Design** - Gantry layouts, outlines, styles, particles',
               '',
               'For builds and design work, use `solutio_style_guide` to load the Solutio house conventions, or start with the `build_solutio_site` prompt.',
             ].join('\n'),
@@ -309,7 +318,7 @@ function buildServer() {
       {
         name: 'solutio_particles',
         description:
-          'Return the Solutio particle reference — every particle type with purpose, visual role, ' +
+          'Return the Solutio particle reference - every particle type with purpose, visual role, ' +
           'complete field schema, standard configurations, and a decision guide for choosing the right particle. ' +
           'Call this before adding or editing any Gantry particle. ' +
           'Use the particle parameter to look up a specific type.',
@@ -325,9 +334,22 @@ function buildServer() {
           },
         },
       },
+      {
+        name: 'solutio_design_workflow',
+        description:
+          'Return the Solutio Gantry design workflow guide - the step-by-step process for ' +
+          'building or rebuilding a homepage layout correctly. ' +
+          'Covers: required tool call order (patterns -> plan -> examples -> resolve IDs -> ' +
+          'validate -> dry run -> apply -> verify), brief format, particle decision rules, ' +
+          'and the most common mistakes to avoid. ' +
+          'CALL THIS at the start of any homepage build or major layout change. ' +
+          'Works alongside solutio_style_guide (structural rules) and gantry_design_patterns ' +
+          '(per-section design knowledge).',
+        inputSchema: { type: 'object', properties: {} },
+      },
     ];
 
-    // joomla_login is internal plumbing — the orchestrator calls it automatically
+    // joomla_login is internal plumbing - the orchestrator calls it automatically
     // via set_active_site and on auth error recovery. Hiding it prevents the AI
     // from calling it directly, which would bypass activeSiteUrl tracking.
     const HIDDEN_JOOMLA_TOOLS = new Set(['joomla_login']);
@@ -351,7 +373,7 @@ function buildServer() {
 
       // Auto-login: immediately prime the joomla-mcp session for this site.
       // This avoids the first tool call failing because no session exists yet.
-      // We fire-and-forget (non-fatal if it fails — credentials may not be set).
+      // We fire-and-forget (non-fatal if it fails - credentials may not be set).
       let loginNote = '';
       try {
         const loginResult = await callDownstream(
@@ -367,7 +389,7 @@ function buildServer() {
           loginNote = '\n\nJoomla session established automatically.';
         }
       } catch (e) {
-        loginNote = `\n\nNote: auto-login attempt failed (${e.message}) — check credentials or call set_active_site again.`;
+        loginNote = `\n\nNote: auto-login attempt failed (${e.message}) - check credentials or call set_active_site again.`;
       }
 
       return {
@@ -408,7 +430,7 @@ function buildServer() {
         if (!note) return { isError: true, content: [{ type: 'text', text: 'note is required' }] };
         const category = args.category || 'General';
         const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16) + ' UTC';
-        const entry = `\n**[${timestamp}] ${category}** — ${note}\n`;
+        const entry = `\n**[${timestamp}] ${category}** - ${note}\n`;
         if (!fs.existsSync(notesPath)) {
           fs.mkdirSync(path.dirname(notesPath), { recursive: true });
           fs.writeFileSync(notesPath, `# Site Notes: ${hostname}\n\nNotes logged by AI agents as they discover site-specific quirks and conventions.\n`);
@@ -460,7 +482,7 @@ function buildServer() {
       return {
         content: [{
           type: 'text',
-          text: `Tools reloaded — joomla-mcp: ${joomlaToolMap.size} tools, gantry-mcp: ${gantryToolMap.size} tools.`,
+          text: `Tools reloaded - joomla-mcp: ${joomlaToolMap.size} tools, gantry-mcp: ${gantryToolMap.size} tools.`,
         }],
       };
     }
@@ -490,7 +512,15 @@ function buildServer() {
       return { content: [{ type: 'text', text: out }] };
     }
 
-    // ── Freshdesk tools — no active site required ──
+    if (name === 'solutio_design_workflow') {
+      const docPath = path.join(__dirname, '..', 'joomla-mcp', 'docs', 'agents', 'gantry-design-agent.md');
+      if (!fs.existsSync(docPath)) {
+        return { isError: true, content: [{ type: 'text', text: `Design workflow guide not found at ${docPath}` }] };
+      }
+      return { content: [{ type: 'text', text: fs.readFileSync(docPath, 'utf8') }] };
+    }
+
+    // ── Freshdesk tools - no active site required ──
     // These tools only need Freshdesk API credentials; they never touch Joomla.
     if (name.startsWith('freshdesk_')) {
       if (!joomlaToolMap.has(name)) {
@@ -550,7 +580,7 @@ function buildServer() {
     // a lazy reload once before giving up.
 
     if (gantryToolMap.has(name) || gantryToolMap.size === 0) {
-      // Lazy reload if tool map is empty — gantry-mcp may have started after us
+      // Lazy reload if tool map is empty - gantry-mcp may have started after us
       if (gantryToolMap.size === 0) {
         log(`gantryToolMap empty, attempting lazy reload before routing ${name}…`);
         try {
@@ -573,7 +603,7 @@ function buildServer() {
       try {
         return await callDownstream('gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN, name, gantryArgs);
       } catch (err) {
-        // Transport/connection error — callDownstream already retried once.
+        // Transport/connection error - callDownstream already retried once.
         // Force a tool-map reload so next call gets fresh session data.
         log(`gantry-mcp transport error on ${name}, will reload tool map: ${err.message}`);
         try {
@@ -602,10 +632,10 @@ async function startHttp(port) {
   const sessions = new Map();
 
   const httpServer = http.createServer(async (req, res) => {
-    // ── CORS — must be set on every response including errors ─────────────────
+    // ── CORS - must be set on every response including errors ─────────────────
     res.setHeader('Access-Control-Allow-Origin',  process.env.CORS_ORIGIN || '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-    // Reflect whatever headers the client asks for — handles mcp-protocol-version
+    // Reflect whatever headers the client asks for - handles mcp-protocol-version
     // and any future MCP headers without needing further changes here.
     res.setHeader('Access-Control-Allow-Headers',
       req.headers['access-control-request-headers'] ||
@@ -660,7 +690,7 @@ function log(msg) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 (async () => {
-  log('loading tools from downstream servers…');
+  log('loading tools from downstream servers...');
   await loadDownstreamTools();
 
   const rawPort  = process.env.HTTP_PORT || process.env.PORT;

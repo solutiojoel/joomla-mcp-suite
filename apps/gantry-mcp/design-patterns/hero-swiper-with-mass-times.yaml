@@ -1,0 +1,132 @@
+name: hero-swiper-with-mass-times
+label: Hero Swiper with Mass Times Overlay
+site_types: [parish]
+
+intent: >
+  Full-width rotating hero image slideshow that fills 70% of the slideshow section,
+  with a Mass Times content block occupying the remaining 30% as a right-side sidebar.
+  Together they form the visual centerpiece of a parish homepage — slides cycle
+  automatically while Mass Times stays static and editor-managed.
+
+particle_choice:
+  hero:
+    use: swiper
+    why: >
+      Swiper is the only Studius particle designed for rotating multi-slide hero images.
+      It handles autoplay, bullets/navigation, responsive height, and category-fed
+      Joomla article images natively. No other particle supports multi-slide rotation.
+  mass_times:
+    use: contentarray
+    why: >
+      Mass Times are editor-managed content that clergy update seasonally. A contentarray
+      pointing to a single shell article lets editors update times in the Joomla article
+      editor without touching the Gantry layout. Do NOT use blockcontent (hardcoded,
+      requires developer to change) or custom (same problem).
+
+content_contract:
+  hero:
+    source_type: category
+    required_field: attributes.article.filter.categories
+    description: >
+      A Joomla category containing the slide articles. Each article's intro image
+      becomes the slide background. Typically named "Rotator" or "Hero Slides".
+      Category must contain at least one published article with an intro image.
+    display_rules:
+      slides_linkable: disabled
+      note: >
+        Hero slides are visual — do not make them clickable unless the client
+        explicitly requests each slide to link to a specific page.
+  mass_times:
+    source_type: article
+    required_field: attributes.article.filter.articles
+    description: >
+      A single Joomla shell article containing all Mass Times as structured HTML.
+      Typically titled "Mass Times". The article introtext contains h1/p tags for
+      each service type (Sunday, Weekday, Reconciliation, etc.).
+    display_rules:
+      title: hide
+      pagination: off
+      read_more: off
+      note: >
+        Title is suppressed — the article body provides its own headings.
+        Never show pagination on a single-article contentarray.
+
+layout_contract:
+  section: slideshow
+  section_class: "floatator slideshow-spacing"
+  grid_layout: side-by-side
+  blocks:
+    - role: hero
+      size: 70
+      blockClass: fullwidth-swiper rotate-wide
+    - role: mass_times
+      size: 30
+      blockClass: mass-times-block
+  notes: >
+    The 70/30 split is the Solutio standard for this pattern. Changing to 60/40 or
+    50/50 is possible but requires corresponding CSS adjustments. The slideshow section
+    class "floatator" enables the responsive overlay behavior on mobile where the
+    mass times block stacks below the swiper.
+
+css_contract:
+  required_selectors:
+    - ".mass-times-block"
+    - "#g-slideshow .g-grid"
+  behavior: >
+    On desktop, the two blocks sit side-by-side in a grid. On mobile, "floatator"
+    causes the mass-times-block to stack below the swiper. The swiper block uses
+    fullwidth-swiper to remove default padding so images bleed to the section edge.
+  override_notes: >
+    If the Mass Times should visually overlay the hero (absolute positioning) rather
+    than sit beside it, switch blockClass to "mass-times-overlay" and add appropriate
+    CSS. That is a different visual treatment — confirm with client before using.
+
+link_behavior:
+  hero:
+    whole_block_linkable: false
+    item_linkable: false
+    default: disabled
+    exception: >
+      Only enable slides_linkable if the client wants each hero slide to be a
+      clickable banner linking to a specific page (uncommon). Requires each slide
+      article to have a target URL set.
+  mass_times:
+    whole_block_linkable: false
+    allowed_links: >
+      Anchor tags inside the Mass Times article body only (e.g. a "Watch Mass Live"
+      button linking to the livestream page). Do not make the particle or block itself
+      a link.
+
+guardrails:
+  - Verify the slide category ID exists and contains at least one published article with an intro image before compiling.
+  - Verify the Mass Times article ID exists and is published before compiling.
+  - Do not set slides_linkable:enabled unless the client explicitly requested clickable slides.
+  - Do not use blockcontent for Mass Times — it breaks editor self-service.
+  - Do not hide the swiper navigation (nav: disabled) unless the client has only one slide.
+  - The blockClass "mass-times-block" must match the CSS rule in override.css — confirm before applying.
+
+description_prompts:
+  good: >
+    "Hero swiper pulling from the Rotator category (ID: {{rotator_category_id}}),
+    with Mass Times from article ID {{mass_times_article_id}} as a 30% right sidebar.
+    Slides are not clickable. Mass Times title is hidden."
+  minimal: >
+    "Standard hero swiper with Mass Times sidebar — need rotator category ID and
+    mass times article ID."
+
+context_variables:
+  rotator_category_id:
+    required: true
+    find_with: joomla_list_categories
+    hint: "Look for a category named 'Rotator', 'Hero', or 'Slides'"
+  mass_times_article_id:
+    required: true
+    find_with: joomla_list_articles
+    hint: "Look for an article titled 'Mass Times' in the Homepage Articles category"
+
+seen_on:
+  - stchris-speed (slideshow section, block classes fullwidth-swiper + mass-times-block)
+  - stlaw-alex
+  - stbern-levit
+  - seas-ontario
+  - stagnes-concord

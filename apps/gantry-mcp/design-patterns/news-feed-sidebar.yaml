@@ -1,0 +1,111 @@
+name: news-feed-sidebar
+label: News & Events Feed (Sidebar or Full-Width)
+site_types: [parish, school, cemetery]
+
+intent: >
+  A live feed of recent news and events articles pulled from a Joomla category,
+  displayed as a stacked list of cards with thumbnail images, titles, and intro text.
+  This is the primary dynamic content section on parish homepages — it updates
+  automatically as editors publish new articles.
+
+particle_choice:
+  use: contentarray
+  why: >
+    News is dynamic CMS content — editors publish articles continuously and expect
+    them to appear on the homepage automatically. contentarray's category filter pulls
+    the N most recent articles without any layout changes. blockcontent cannot do this
+    (static items only). This is the canonical pattern for any live article feed.
+
+content_contract:
+  source_type: category
+  required_field: attributes.article.filter.categories
+  description: >
+    A Joomla category containing news and event articles. Commonly named "Parish News
+    & Events", "News", "School News", etc. Articles should have intro images for best
+    visual results. The filter pulls articles by ordering (newest first by default).
+  display_rules:
+    title: show
+    image: full
+    text_type: intro
+    text_limit: "90"
+    text_formatting: text
+    read_more: show
+    pagination: off
+    columns: "1"
+    limit: "4"
+    sort_orderby: ordering
+    sort_ordering: ASC
+    note: >
+      4 articles is the standard count for a sidebar. Increase to 6 for a full-width
+      news section. Use "full" image (intro image) for visual cards. Limit intro text
+      to ~90 characters to keep cards even. Always show read-more so visitors can reach
+      the full article.
+
+layout_contract:
+  section: sidebar
+  alternatives:
+    - section: mainbar
+      note: Used when news is the dominant section alongside a social feed
+    - section: expanded
+      note: Used when news is full-width with no adjacent sidebar particle
+  blockClass: ph-sideway-stack
+  alternatives_blockClass:
+    - news-to-me
+    - headlines-spacing
+  width: varies
+  notes: >
+    ph-sideway-stack produces the standard "photo headline" news card style —
+    image on the left, title and excerpt on the right. This is the most common
+    treatment. news-to-me is an alternative styling with the image on top.
+    Place a "View All News" button (contentarray pointing to news-button article
+    or a blockcontent with a single link) below the feed if the section supports it.
+
+css_contract:
+  required_selectors:
+    - ".ph-sideway-stack"
+    - ".ph-sideway-stack .contentarray-item"
+    - ".ph-sideway-stack .contentarray-item img"
+  behavior: >
+    Items stack vertically. Each item shows the image floated left (~120px wide),
+    with the title and excerpt beside it. A horizontal rule or spacing separates items.
+    On mobile items go full-width with image on top.
+  override_notes: >
+    Adjust image width via ".ph-sideway-stack .contentarray-item img { width: Npx; }"
+    If using news-to-me, the image goes full-width above the text.
+
+link_behavior:
+  whole_block_linkable: false
+  item_linkable: true
+  item_link_via: article_title_and_read_more
+  note: >
+    Article titles and read-more links are naturally clickable — they route to the
+    full article page. Do not make the entire card a block link. The read_more button
+    provides the explicit CTA.
+
+guardrails:
+  - Verify the news category ID exists and contains published articles before applying.
+  - Always show read_more — hiding it leaves visitors with no way to reach the full article.
+  - Do not disable images unless the client explicitly wants a text-only list.
+  - Do not use articles filter (specific IDs) for a news feed — always use categories filter.
+  - Confirm ph-sideway-stack is defined in the site's CSS pattern or override.css.
+  - If the site has both news and social/Facebook in adjacent blocks, ensure widths sum to 100.
+
+description_prompts:
+  good: >
+    "News & Events feed in the sidebar section, pulling from Parish News category
+    (ID: {{news_category_id}}). 4 articles, full images, 90-char intro text, read-more
+    enabled. blockClass ph-sideway-stack."
+  minimal: >
+    "News feed — need category ID."
+
+context_variables:
+  news_category_id:
+    required: true
+    find_with: joomla_list_categories
+    hint: "Look for a category named 'News', 'Parish News', 'Parish News & Events', or 'School News'"
+
+seen_on:
+  - stchris-speed (sidebar section, blockClass ph-sideway-stack, category 8)
+  - stagnes-concord (sidebar, ph-sideway-stack)
+  - stlaw-alex (mainbar)
+  - seas-ontario

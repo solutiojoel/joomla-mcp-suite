@@ -5,7 +5,7 @@
   "main": "gantry.js",
   "scripts": {
     "start": "node gantry.js",
-    "lint": "node --check gantry.js && node --check lib/session.js && node --check lib/layout.js && node --check lib/menu.js && node --check lib/util.js"
+    "lint": "node --check gantry.js && node --check mcp-server.js && node --check site-builder-server.js && node --check mockup-brief-server.js && node --check lib/session.js && node --check lib/layout.js && node --check lib/menu.js && node --check lib/util.js"
   },
   "type": "commonjs",
   "dependencies": {

@@ -29,8 +29,9 @@ RUN cd apps/gantry-mcp && npm ci
 RUN cd apps/joomla-mcp && npm ci && npm run build
 RUN cd apps/joomla-orchestrator && npm ci
 
-# Orchestrator (MCP/HTTP) and site-builder webapp
+# Orchestrator (MCP/HTTP), site-builder webapp, and mockup brief webapp
 EXPOSE 9302
 EXPOSE 18303
+EXPOSE 18304
 
 CMD ["bash", "scripts/start-all.sh"]

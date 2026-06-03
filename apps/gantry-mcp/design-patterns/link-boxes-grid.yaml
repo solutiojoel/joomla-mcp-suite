@@ -1,0 +1,99 @@
+name: link-boxes-grid
+label: Link Boxes / Ministry Card Grid
+site_types: [parish, school, cemetery]
+
+intent: >
+  A grid of large image-backed card links, typically 3–6 cards wide, each linking
+  to a ministry, program, or major site section. These are static navigation —
+  the cards do not change unless someone edits the layout. They serve as a visual
+  "what do you want to do" navigation layer below the quicklinks bar.
+
+particle_choice:
+  use: blockcontent
+  why: >
+    Ministry cards are static navigation, not article content. The links and images
+    are fixed and curated by the developer/designer — editors do not manage them.
+    blockcontent's subcontents repeater with full-image items and buttonlinks is
+    exactly the right model. contentarray is wrong here because articles change
+    frequency and ordering is not curated enough for primary navigation cards.
+
+content_contract:
+  source_type: static_particle
+  description: >
+    All content is hardcoded in the subcontents repeater. Each item needs:
+    name (card label), button (button text, usually same as name), buttonlink (href),
+    img (image path), class: "full-image" (makes image fill the card background).
+    Images typically live at: gantry-media://template/{section-name}.jpg or
+    gantry-media://stories/template/{filename}.jpg
+  item_count:
+    min: 3
+    max: 6
+    note: "4 or 6 items gives clean even columns. Odd counts work with CSS flex-wrap."
+  display_rules:
+    title: omit
+    headline: omit
+    note: "Leave particle-level title blank — item labels serve as card text."
+
+layout_contract:
+  section: expanded
+  alternatives:
+    - section: utility
+      note: Used when link-boxes sit directly below quicklinks in a combined utility area
+    - section: feature
+      note: Used on some sites for a prominent card section above news
+  blockClass: link-boxes
+  width: 100
+  notes: >
+    link-boxes is a full-width grid. The CSS pattern controls how many columns appear
+    at each breakpoint — typically 3 cols on desktop, 2 on tablet, 1 on mobile.
+    If using 6 items, confirm the CSS supports a 6-column or 3×2 layout.
+
+css_contract:
+  required_selectors:
+    - ".link-boxes"
+    - ".link-boxes .blockcontent-item"
+    - ".link-boxes .blockcontent-item.full-image"
+    - ".link-boxes .blockcontent-item a.button"
+  behavior: >
+    Each item renders as a square or rectangular card. The "full-image" class on each
+    item makes the image fill the card background. The button text overlays the image
+    (typically at bottom with a semi-transparent background or on hover). On mobile,
+    items stack to 1 or 2 columns.
+  override_notes: >
+    Image overlay opacity, hover effects, and label placement all require override.css
+    rules. Confirm the client's desired treatment before applying.
+
+link_behavior:
+  whole_block_linkable: false
+  item_linkable: true
+  item_link_field: buttonlink
+  note: >
+    Every item must have a buttonlink. The card is fully clickable via the button element.
+    Internal links use relative paths. External links need buttontarget: "_blank".
+    Never leave buttonlink blank — it produces an empty anchor with no href.
+
+guardrails:
+  - Every item must have a non-empty buttonlink. No empty hrefs.
+  - Every item must have class: "full-image" for the standard card treatment.
+  - Do not use contentarray for ministry cards — content is static navigation.
+  - Confirm the image paths exist in Joomla media before applying.
+  - Do not exceed 6 items without confirming the CSS handles the column count.
+  - If items are clickable image links with no visible button text, set button to "" and confirm the CSS hides the button element while keeping the card clickable.
+
+description_prompts:
+  good: >
+    "6-item ministry card grid in the expanded section using link-boxes. Items:
+    Faith Formation (/faith-formation), Sacraments (/sacraments),
+    Ministries (/ministries), School (/school), Staff (/about/staff),
+    Contact (/contact-us). Each with a full-image card from gantry-media://template/."
+  minimal: >
+    "Ministry link boxes grid — provide item labels, URLs, and image filenames."
+
+context_variables: {}
+
+seen_on:
+  - stchris-speed (expanded section, blockClass link-boxes)
+  - stlaw-alex
+  - stagnes-concord
+  - stbern-levit
+  - seas-ontario

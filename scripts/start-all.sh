@@ -5,6 +5,7 @@ export JOOMLA_MCP_PORT="${JOOMLA_MCP_PORT:-9300}"
 export GANTRY_MCP_PORT="${GANTRY_MCP_PORT:-9301}"
 export ORCHESTRATOR_PORT="${ORCHESTRATOR_PORT:-9302}"
 export SITE_BUILDER_PORT="${SITE_BUILDER_PORT:-18303}"
+export MOCKUP_BUILDER_PORT="${MOCKUP_BUILDER_PORT:-18304}"
 
 # Force orchestrator to talk to services running in the same container.
 export JOOMLA_MCP_URL="${JOOMLA_MCP_URL:-http://127.0.0.1:${JOOMLA_MCP_PORT}/mcp}"
@@ -58,6 +59,12 @@ wait_for_port 127.0.0.1 "${GANTRY_MCP_PORT}"
   GANTRY_MCP_URL="http://127.0.0.1:${GANTRY_MCP_PORT}/mcp" \
   JOOMLA_MCP_URL="http://127.0.0.1:${JOOMLA_MCP_PORT}/mcp" \
   node site-builder-server.js
+) &
+
+(
+  cd /workspace/apps/gantry-mcp
+  MOCKUP_BUILDER_PORT="${MOCKUP_BUILDER_PORT}" \
+  node mockup-brief-server.js
 ) &
 
 # Exit container if any one process exits unexpectedly.

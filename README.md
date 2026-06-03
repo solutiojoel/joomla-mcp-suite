@@ -67,6 +67,8 @@ http://localhost:18302/mcp
 | Port | Visibility | Service |
 |------|-----------|---------|
 | `18302` | External | Orchestrator — the only port you need to connect to |
+| `18303` | External | Gantry Site Builder web app |
+| `18304` | External | Gantry Mockup Brief Builder web app |
 | `18300` | Internal | Joomla MCP server |
 | `18301` | Internal | Gantry MCP server |
 

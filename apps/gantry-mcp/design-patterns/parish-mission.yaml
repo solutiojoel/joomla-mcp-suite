@@ -1,0 +1,105 @@
+name: parish-mission
+label: Parish Mission Statement (Static Shell Section)
+site_types: [parish]
+
+intent: >
+  Renders a parish mission statement, welcome message, or introductory text block
+  from a single Joomla shell article. This is a static display section — the content
+  doesn't change often, but when it does, staff can update the article without
+  touching Gantry. Typically placed in the utility section below the hero, or in
+  a dedicated expanded/feature section.
+
+particle_choice:
+  use: contentarray
+  why: >
+    The mission statement is text content managed by the pastor or communications
+    director. Storing it in a Joomla article makes it editor-accessible. A custom
+    particle or blockcontent would require developer access to update the text.
+    contentarray pointing to a single article renders the full HTML content cleanly.
+
+content_contract:
+  source_type: article
+  required_field: attributes.article.filter.articles
+  description: >
+    A single Joomla shell article containing the mission statement HTML. Typically
+    titled "Parish Mission" or "Welcome". The article introtext contains a
+    structured HTML block — often a wrapper div with a title heading and paragraphs,
+    sometimes including a bullet list of mission points.
+    Category is typically "Homepage Articles" or equivalent.
+  display_rules:
+    title: hide
+    image: none
+    pagination: off
+    read_more: off
+    text_type: intro
+    note: >
+      Always hide the article title — the article body provides its own styled heading.
+      Use "intro" text type to render the introtext field (which contains all the HTML).
+      Never show read-more on a mission statement.
+
+layout_contract:
+  section: utility
+  alternatives:
+    - section: expanded
+      note: Used when the mission statement is a standalone prominent section
+    - section: feature
+      note: Used on some sites for a visually distinct "About Us" band
+  blockClass: parish-mission-wrapper
+  alternatives_blockClass:
+    - ""
+    - mission-block
+  width: 100
+  notes: >
+    Mission statement typically sits in the utility section when it appears alongside
+    or below quicklinks. If it gets its own full-width section, use expanded.
+    The parish-mission-wrapper blockClass is the Solutio standard — it carries the
+    background treatment (often a colored or textured band) that distinguishes this
+    section visually.
+
+css_contract:
+  required_selectors:
+    - ".parish-mission-wrapper"
+    - ".mission-wrapper"
+    - ".mission-title"
+    - ".mission-content"
+  behavior: >
+    parish-mission-wrapper (block class) sets the section background color/image.
+    Inside the article, .mission-wrapper, .mission-title, and .mission-content
+    control the inner layout — title on one side, content on the other, or stacked.
+    On mobile they stack vertically.
+  override_notes: >
+    Background color for the mission band is usually set in override.css targeting
+    .parish-mission-wrapper or the section ID. The inner classes are in the article HTML.
+
+link_behavior:
+  whole_block_linkable: false
+  item_linkable: false
+  note: >
+    The mission statement is a display block, not a navigation element. No links
+    should be added to the block itself. If the article body includes anchor links
+    (rare), they are part of the article HTML and acceptable.
+
+guardrails:
+  - Verify the mission article ID exists and is published.
+  - Do not show article title or read-more.
+  - Do not use blockcontent — the mission statement is free-form editorial text.
+  - If no mission article exists yet, note it as a missing dependency.
+  - Confirm parish-mission-wrapper is defined in override.css before using it as blockClass.
+
+description_prompts:
+  good: >
+    "Parish mission statement from article ID {{mission_article_id}} in the utility section.
+    blockClass parish-mission-wrapper. Full width, title hidden, no read-more."
+  minimal: >
+    "Parish mission section — need article ID."
+
+context_variables:
+  mission_article_id:
+    required: true
+    find_with: joomla_list_articles
+    hint: "Look for an article titled 'Parish Mission', 'Welcome', or 'Mission Statement' in the Homepage Articles category"
+
+seen_on:
+  - stchris-speed (utility section, blockClass parish-mission-wrapper, article 56)
+  - stagnes-concord
+  - stlaw-alex

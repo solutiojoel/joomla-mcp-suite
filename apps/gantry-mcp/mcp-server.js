@@ -1502,265 +1502,525 @@ const TOOLS = [
     },
   },
 
+  /* -- Design knowledge layer ------------------------------------------- */
+  {
+    name: 'gantry_design_patterns',
+    description:
+      'Return the design pattern knowledge base - a library of named, explained ' +
+      'section patterns that teach the LLM WHY each particle+CSS+content combination ' +
+      'was chosen. Each pattern covers: intent, particle_choice rationale, content ' +
+      'contract (what Joomla IDs are needed), layout contract (section, blockClass, ' +
+      'width), CSS contract (required selectors, behavior), link behavior rules, and ' +
+      'guardrails. ' +
+      'Call with no name to list all patterns. Call with a name to get the full ' +
+      'pattern detail. ' +
+      'REQUIRED first call before designing any homepage section. Use patterns to ' +
+      'choose the right particle, understand what content IDs to look up, and know ' +
+      'which guardrails apply before writing design YAML.',
+    schema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description:
+            'Pattern name to fetch in full (e.g. "hero-swiper-with-mass-times", ' +
+            '"quicklinks-bar", "alert-banner"). Omit to list all patterns.',
+        },
+        site_type: {
+          type: 'string',
+          enum: ['parish', 'school', 'cemetery'],
+          description: 'Filter listing to patterns applicable to this site type.',
+        },
+      },
+    },
+    handler: async (args) => {
+      const fs   = require('fs');
+      const path = require('path');
+      const yaml = require('js-yaml');
+
+      const patternsDir = path.join(__dirname, 'design-patterns');
+      if (!fs.existsSync(patternsDir)) {
+        return { patterns: [], note: 'No design-patterns/ directory found.' };
+      }
+
+      const files = fs.readdirSync(patternsDir).filter(f => f.endsWith('.yaml'));
+
+      if (args.name) {
+        const file = files.find(f => f === args.name + '.yaml' || f === args.name);
+        if (!file) throw new Error(`Pattern "${args.name}" not found. Available: ${files.map(f => f.replace('.yaml','')).join(', ')}`);
+        const raw = fs.readFileSync(path.join(patternsDir, file), 'utf8');
+        return yaml.load(raw);
+      }
+
+      const index = files.map(f => {
+        try {
+          const raw = fs.readFileSync(path.join(patternsDir, f), 'utf8');
+          const p = yaml.load(raw);
+          if (args.site_type && p.site_types && !p.site_types.includes(args.site_type)) return null;
+          const intent = (p.intent || '').replace(/\s+/g, ' ').trim();
+          return {
+            name:       p.name,
+            label:      p.label,
+            site_types: p.site_types,
+            intent:     intent.slice(0, 120) + (intent.length > 120 ? '...' : ''),
+            particle:   p.particle_choice && (p.particle_choice.use ||
+                          Object.keys(p.particle_choice).map(k => p.particle_choice[k] && p.particle_choice[k].use).filter(Boolean).join(', ')),
+            blockClass: (p.layout_contract && p.layout_contract.blockClass) || '',
+            section:    (p.layout_contract && p.layout_contract.section) || '',
+          };
+        } catch (e) { return null; }
+      }).filter(Boolean);
+
+      return { count: index.length, patterns: index };
+    },
+  },
+
+  {
+    name: 'gantry_design_plan_from_brief',
+    description:
+      'Generate a structured DESIGN PLAN from a plain-English brief - BEFORE writing ' +
+      'any design YAML. Returns a checklist of: selected patterns, why each was chosen, ' +
+      'required Joomla content IDs to look up, CSS classes needed, guardrails that apply, ' +
+      'and missing information that must be resolved before proceeding. ' +
+      'This is step 1 of the design workflow. After resolving all missing info, call ' +
+      'gantry_layout_from_brief or gantry_layout_design to produce the actual YAML.',
+    schema: {
+      type: 'object',
+      properties: {
+        brief: {
+          type: 'string',
+          description:
+            'Plain-English description of the layout needed. Include site type, sections ' +
+            'required, and any known IDs. Example: "Parish homepage. Hero slider, mass ' +
+            'times sidebar, quicklinks bar, news feed, Facebook widget, footer."',
+        },
+        site_type: {
+          type: 'string',
+          enum: ['parish', 'school', 'cemetery'],
+          description: 'Site type - controls which patterns are eligible.',
+        },
+      },
+      required: ['brief'],
+    },
+    handler: async (args) => {
+      const fs   = require('fs');
+      const path = require('path');
+      const yaml = require('js-yaml');
+
+      const patternsDir = path.join(__dirname, 'design-patterns');
+      const files = fs.existsSync(patternsDir)
+        ? fs.readdirSync(patternsDir).filter(f => f.endsWith('.yaml'))
+        : [];
+
+      const patterns = files.map(f => {
+        try { return yaml.load(fs.readFileSync(path.join(patternsDir, f), 'utf8')); }
+        catch (e) { return null; }
+      }).filter(Boolean);
+
+      const brief = (args.brief || '').toLowerCase();
+
+      const KEYWORDS = {
+        'hero-swiper-with-mass-times': ['hero', 'swiper', 'slider', 'slideshow', 'mass times', 'rotator'],
+        'alert-banner':  ['alert', 'announcement', 'banner', 'notice'],
+        'quicklinks-bar': ['quicklink', 'quick link', 'utility', 'ql', 'link bar', 'nav bar', 'links bar'],
+        'news-feed-sidebar': ['news', 'events', 'feed', 'articles', 'parish news'],
+        'link-boxes-grid': ['link box', 'ministry', 'card grid', 'card', 'link grid', 'categories', 'programs'],
+        'social-widget': ['facebook', 'instagram', 'social', 'widget', 'embed'],
+        'footer-shell': ['footer'],
+        'parish-mission': ['mission', 'welcome', 'about', 'statement'],
+      };
+
+      const selected = [];
+      const missing  = [];
+      const allGuardrails = [];
+
+      for (const [patternName, keywords] of Object.entries(KEYWORDS)) {
+        if (keywords.some(k => brief.includes(k))) {
+          const pattern = patterns.find(p => p.name === patternName);
+          if (!pattern) continue;
+          if (args.site_type && pattern.site_types && !pattern.site_types.includes(args.site_type)) continue;
+
+          const pc = pattern.particle_choice || {};
+          const particleUse = pc.use || Object.keys(pc).map(k => pc[k] && pc[k].use).filter(Boolean).join(', ');
+          const lc = pattern.layout_contract || {};
+
+          const entry = {
+            pattern:    patternName,
+            label:      pattern.label,
+            why:        'Matched keywords: ' + keywords.filter(k => brief.includes(k)).join(', '),
+            particle:   particleUse,
+            section:    lc.section || '(see pattern)',
+            blockClass: lc.blockClass || '',
+            required_ids: [],
+            guardrails: pattern.guardrails || [],
+          };
+
+          for (const [varName, varDef] of Object.entries(pattern.context_variables || {})) {
+            if (varDef.required) {
+              entry.required_ids.push({ variable: varName, find_with: varDef.find_with, hint: varDef.hint });
+              missing.push({ for_pattern: patternName, variable: varName, find_with: varDef.find_with, hint: varDef.hint });
+            }
+          }
+
+          allGuardrails.push(...(pattern.guardrails || []).map(g => '[' + patternName + '] ' + g));
+          selected.push(entry);
+        }
+      }
+
+      return {
+        brief: args.brief,
+        patterns_selected: selected.length,
+        plan: selected,
+        missing_information: missing,
+        all_guardrails: allGuardrails,
+        next_steps: [
+          missing.length > 0
+            ? 'Resolve ' + missing.length + ' missing content IDs using joomla_list_categories and joomla_list_articles'
+            : 'All required IDs are known - proceed to gantry_layout_from_brief or write design YAML directly',
+          'Run gantry_layout_design with dryRun:true to validate before applying',
+          'After applying, fetch frontend page and verify each section renders correctly',
+        ],
+      };
+    },
+  },
+
+  {
+    name: 'gantry_validate_design_contract',
+    description:
+      'Validate a design YAML against design pattern contracts - checking content rules, ' +
+      'link behavior, and guardrails BEFORE applying. Returns errors and warnings with ' +
+      'fix instructions. Call this after writing design YAML and before gantry_layout_design. ' +
+      'Catches: empty buttonlinks, wrong particle for content type, missing article/category ' +
+      'IDs, conflicting filter settings.',
+    schema: {
+      type: 'object',
+      properties: {
+        design_yaml: {
+          type: 'string',
+          description: 'Design YAML string to validate.',
+        },
+        pattern_name: {
+          type: 'string',
+          description: 'Specific pattern to validate against. Omit to run all checks.',
+        },
+      },
+      required: ['design_yaml'],
+    },
+    handler: async (args) => {
+      const yaml = require('js-yaml');
+
+      let design;
+      try { design = yaml.load(args.design_yaml); }
+      catch (e) { return { valid: false, errors: ['YAML parse error: ' + e.message], warnings: [] }; }
+
+      const errors   = [];
+      const warnings = [];
+
+      const sections = [
+        ...(design.sections || []),
+        ...((design.top_container && design.top_container.sections) || []),
+        ...((design.main_container && design.main_container.sections) || []),
+        ...((design.footer_container && design.footer_container.sections) || []),
+      ];
+
+      for (const section of sections) {
+        const sid = section.id || 'unknown-section';
+        for (const grid of (section.grids || [])) {
+          for (const block of (grid.blocks || [])) {
+            const particle = block.particle || block.type || '';
+            const bc       = block.blockClass || '';
+            const attrs    = block.attributes || {};
+
+            // blockcontent checks
+            if (particle === 'blockcontent') {
+              const items = attrs.subcontents || [];
+              items.forEach((item, i) => {
+                if (!item.buttonlink && item.buttonlink !== 0) {
+                  errors.push('[' + sid + '] blockcontent item[' + i + '] "' + (item.name || '') + '" has empty buttonlink - produces broken anchor.');
+                }
+              });
+              if (bc.includes('mass-times') || bc.includes('mass_times')) {
+                errors.push('[' + sid + '] blockClass "' + bc + '" looks like Mass Times but particle is blockcontent. Mass Times must use contentarray (editor-managed article).');
+              }
+            }
+
+            // contentarray checks
+            if (particle === 'contentarray') {
+              const filter = ((attrs.article || {}).filter) || {};
+              const hasCategories = filter.categories && filter.categories !== '';
+              const hasArticles   = filter.articles   && filter.articles   !== '';
+              if (!hasCategories && !hasArticles) {
+                errors.push('[' + sid + '] contentarray has neither filter.categories nor filter.articles set - will render nothing.');
+              }
+              if (hasCategories && hasArticles) {
+                warnings.push('[' + sid + '] contentarray has both categories AND articles set - articles filter takes precedence; categories will be ignored.');
+              }
+              if (hasArticles) {
+                const limit = ((attrs.article || {}).limit || {}).total;
+                if (limit && parseInt(limit, 10) > 1) {
+                  warnings.push('[' + sid + '] contentarray points to specific article IDs but limit.total > 1. For shell articles, set total:"1".');
+                }
+                const disp = ((attrs.article || {}).display || {});
+                if (disp.pagination_buttons) {
+                  errors.push('[' + sid + '] contentarray shell article has pagination_buttons enabled - must be blank/off.');
+                }
+              }
+              if (hasCategories) {
+                const disp = ((attrs.article || {}).display || {});
+                const rm = disp.read_more || {};
+                if (rm.enabled === 'hide') {
+                  warnings.push('[' + sid + '] contentarray category feed has read_more hidden - visitors cannot reach full articles.');
+                }
+              }
+            }
+
+            // swiper checks
+            if (particle === 'swiper') {
+              const filter = ((attrs.article || {}).filter) || {};
+              const hasCategories = filter.categories && filter.categories !== '';
+              const hasArticles   = filter.articles   && filter.articles   !== '';
+              if (!hasCategories && !hasArticles) {
+                errors.push('[' + sid + '] swiper has no article filter set - will render empty slides.');
+              }
+            }
+
+            // Placeholder check
+            const raw = JSON.stringify(attrs);
+            const placeholders = raw.match(/\{\{[^}]+\}\}/g);
+            if (placeholders) {
+              errors.push('[' + sid + '] Unresolved placeholders in ' + (block.title || particle) + ': ' + [...new Set(placeholders)].join(', '));
+            }
+          }
+        }
+      }
+
+      return {
+        valid:    errors.length === 0,
+        errors,
+        warnings,
+        summary: errors.length === 0
+          ? 'No contract violations found.' + (warnings.length ? ' ' + warnings.length + ' warning(s) to review.' : '')
+          : errors.length + ' error(s) must be fixed before applying.',
+      };
+    },
+  },
+
+  {
+    name: 'gantry_explain_existing_section',
+    description:
+      'Explain a live section in plain English: why each particle was chosen, where its ' +
+      'content comes from, what the CSS block classes do, what link behavior applies, and ' +
+      'what guardrails protect it. Use this before editing a section you did not build. ' +
+      'Combines live layout data with design pattern knowledge.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        section: {
+          type: 'string',
+          description: 'Section id to explain (e.g. "slideshow", "utility", "sidebar", "footer").',
+        },
+      },
+      required: ['site', 'section'],
+    },
+    handler: async (args) => {
+      const fs   = require('fs');
+      const path = require('path');
+      const yaml = require('js-yaml');
+
+      const ctx       = await getCtx(args);
+      const outline   = await resolveOutlineArg(ctx, args);
+      const structure = await layoutApi.getLayoutStructure(ctx, outline);
+
+      const particles = layoutApi.findParticles(structure, { section: args.section });
+      if (particles.length === 0) {
+        return { section: args.section, note: 'No particles found in section "' + args.section + '".' };
+      }
+
+      const patternsDir = path.join(__dirname, 'design-patterns');
+      const patternFiles = fs.existsSync(patternsDir)
+        ? fs.readdirSync(patternsDir).filter(f => f.endsWith('.yaml'))
+        : [];
+      const patterns = patternFiles.map(f => {
+        try { return yaml.load(fs.readFileSync(path.join(patternsDir, f), 'utf8')); }
+        catch (e) { return null; }
+      }).filter(Boolean);
+
+      const explanations = particles.map(({ particle, block, attributes }) => {
+        const subtype    = particle.subtype || particle.type;
+        const blockClass = (block && block.attributes && block.attributes.class) || '';
+
+        const match = patterns.find(p => {
+          const lc = p.layout_contract || {};
+          const pc = p.particle_choice || {};
+          const particleUse = pc.use || Object.keys(pc).map(k => pc[k] && pc[k].use).find(Boolean);
+          const classMatch  = lc.blockClass && blockClass.includes(lc.blockClass.split(' ')[0]);
+          return particleUse === subtype && (classMatch || !lc.blockClass);
+        });
+
+        const contentSource = (() => {
+          const filter = ((attributes && attributes.article) || {}).filter || {};
+          if (filter.articles && filter.articles.length) return 'Article ID(s): ' + (Array.isArray(filter.articles) ? filter.articles.join(', ') : filter.articles);
+          if (filter.categories && filter.categories.length) return 'Category ID(s): ' + (Array.isArray(filter.categories) ? filter.categories.join(', ') : filter.categories);
+          const sub = ((attributes && attributes.subcontents) || []).length;
+          if (sub > 0) return sub + ' static hardcoded items';
+          return '(static particle or no filter)';
+        })();
+
+        const entry = {
+          particle_id:    particle.id,
+          title:          particle.title || '',
+          subtype,
+          blockClass,
+          section:        args.section,
+          content_source: contentSource,
+        };
+
+        if (match) {
+          entry.pattern             = match.name;
+          entry.intent              = (match.intent || '').replace(/\s+/g, ' ').trim();
+          entry.why_this_particle   = (match.particle_choice && (match.particle_choice.why ||
+            Object.values(match.particle_choice).map(v => v && v.why).find(Boolean))) || '';
+          entry.css_behavior        = ((match.css_contract && match.css_contract.behavior) || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+          entry.link_behavior       = ((match.link_behavior && match.link_behavior.note) || '').replace(/\s+/g, ' ').trim();
+          entry.guardrails          = match.guardrails || [];
+        } else {
+          entry.pattern = null;
+          entry.note    = 'No matching design pattern found - manual inspection recommended.';
+        }
+
+        return entry;
+      });
+
+      return {
+        outline,
+        section: args.section,
+        particle_count: explanations.length,
+        explanations,
+      };
+    },
+  },
+
 ];
 
 /* --------------------------- server bootstrap ------------------------- */
 
-const server = new Server(
-  { name: 'gantry5-mcp', version: '0.1.0' },
-  { capabilities: { tools: {} } }
-);
+function buildServer() {
+  const server = new Server(
+    { name: 'gantry5-mcp', version: '0.1.0' },
+    { capabilities: { tools: {} } }
+  );
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: TOOLS.map((t) => ({
-    name: t.name,
-    description: t.description,
-    inputSchema: t.schema,
-  })),
-}));
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: TOOLS.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.schema,
+    })),
+  }));
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const tool = TOOLS.find((t) => t.name === request.params.name);
-  if (!tool) {
-    return {
-      isError: true,
-      content: [{ type: 'text', text: `Unknown tool: ${request.params.name}` }],
-    };
-  }
-  try {
-    const result = await tool.handler(request.params.arguments || {});
-    return {
-      content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-    };
-  } catch (err) {
-    // If auth seems to have expired, drop the cached ctx so the next call re-logs in.
-    if (/401|403|login|cookie/i.test(err.message || '')) {
-      const args = request.params.arguments || {};
-      invalidateCtx(args.site, args.theme || '');
-    }
-    return {
-      isError: true,
-      content: [{ type: 'text', text: `Error: ${err.message || String(err)}` }],
-    };
-  }
-});
-
-// Ensure cached ctxs get cleaned up on shutdown
-async function shutdown() {
-  for (const { ctx } of ctxCache.values()) {
-    await ctx.close?.().catch(() => {});
-  }
-  ctxCache.clear();
-  process.exit(0);
-}
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
-
-// ---------------------------------------------------------------------------
-// Plain JSON-RPC HTTP handler -- bypasses StreamableHTTPServerTransport.
-// The MCP SDK transport requires Accept: application/json + text/event-stream.
-// The Rust rmcp client (Claude Code) only sends application/json, getting
-// a 406 back on every call. This handler accepts any client and always
-// returns plain application/json -- no SSE, no Accept header policing.
-// ---------------------------------------------------------------------------
-
-async function handleJsonRpcMsg(msg) {
-  const id = (msg.id !== undefined && msg.id !== null) ? msg.id : null;
-
-  if (!msg.method) {
-    return { jsonrpc: '2.0', error: { code: -32600, message: 'Invalid request' }, id };
-  }
-
-  if (msg.method === 'initialize') {
-    return {
-      jsonrpc: '2.0',
-      result: {
-        protocolVersion: '2024-11-05',
-        capabilities: { tools: {} },
-        serverInfo: { name: 'gantry5-mcp', version: '0.1.0' },
-      },
-      id,
-    };
-  }
-
-  if (msg.method === 'notifications/initialized' || msg.method === 'ping') {
-    const isNotification = msg.id === undefined || msg.id === null;
-    return isNotification ? null : { jsonrpc: '2.0', result: {}, id };
-  }
-
-  if (msg.method === 'tools/list') {
-    return {
-      jsonrpc: '2.0',
-      result: {
-        tools: TOOLS.map((t) => ({
-          name: t.name,
-          description: t.description,
-          inputSchema: t.schema,
-        })),
-      },
-      id,
-    };
-  }
-
-  if (msg.method === 'tools/call') {
-    const toolName = (msg.params || {}).name;
-    const toolArgs = (msg.params || {}).arguments || {};
-    const tool = TOOLS.find((t) => t.name === toolName);
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const toolName = request.params.name;
+    const toolArgs = request.params.arguments || {};
+    const tool = TOOLS.find((candidate) => candidate.name === toolName);
 
     if (!tool) {
       return {
-        jsonrpc: '2.0',
-        result: {
-          isError: true,
-          content: [{ type: 'text', text: 'Unknown tool: ' + toolName }],
-        },
-        id,
+        isError: true,
+        content: [{ type: 'text', text: 'Unknown tool: ' + toolName }],
       };
     }
 
     try {
       const result = await tool.handler(toolArgs);
       return {
-        jsonrpc: '2.0',
-        result: {
-          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-        },
-        id,
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
       };
     } catch (err) {
-      if (/401|403|login|cookie/i.test(err.message || '')) {
-        invalidateCtx(toolArgs.site, toolArgs.theme || '');
-      }
+      if (toolArgs.site) invalidateCtx(toolArgs.site, toolArgs.theme || '');
       return {
-        jsonrpc: '2.0',
-        result: {
-          isError: true,
-          content: [{ type: 'text', text: 'Error: ' + (err.message || String(err)) }],
-        },
-        id,
+        isError: true,
+        content: [{ type: 'text', text: 'Error: ' + (err.message || String(err)) }],
       };
     }
-  }
+  });
 
-  return {
-    jsonrpc: '2.0',
-    error: { code: -32601, message: 'Method not found: ' + msg.method },
-    id,
-  };
+  return server;
+}
+
+async function readJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', (chunk) => { data += chunk.toString(); });
+    req.on('end', () => {
+      if (!data) return resolve(undefined);
+      try { resolve(JSON.parse(data)); } catch { resolve(undefined); }
+    });
+    req.on('error', reject);
+  });
 }
 
 async function startHttp(port) {
-  // ---------------------------------------------------------------------------
-  // Custom JSON-RPC-over-HTTP handler. We bypass StreamableHTTPServerTransport
-  // because it requires Accept: application/json + text/event-stream, but the
-  // Rust rmcp client only sends application/json, causing a 406 on every call.
-  //
-  // Protocol (MCP Streamable HTTP 2024-11-05):
-  //   GET /mcp  — persistent SSE stream (keepalive comments only; we have no
-  //               server-initiated notifications, but the client may open this).
-  //   POST /mcp — JSON-RPC request or notification.
-  //     Notification (no "id" field): respond 202 No Content.
-  //     Request (has "id"):           respond 200 text/event-stream with one
-  //                                   "data: <json>\n\n" event, then close.
-  // ---------------------------------------------------------------------------
+  const sessions = new Map();
 
-  const httpServer = http.createServer((req, res) => {
-    const pathname = new URL(req.url || '/', 'http://localhost').pathname;
+  const httpServer = http.createServer(async (req, res) => {
+    try {
+      const reqUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
 
-    if (pathname !== '/mcp') {
-      res.writeHead(404);
-      res.end();
-      return;
-    }
+      if (reqUrl.pathname !== '/mcp') {
+        res.writeHead(404);
+        res.end('Not found');
+        return;
+      }
 
-    // GET: persistent SSE stream for server-to-client notifications.
-    if (req.method === 'GET') {
-      res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      });
-      res.write(': ping\n\n');
-      const ka = setInterval(() => { if (!res.writableEnded) res.write(': ping\n\n'); }, 20000);
-      req.on('close', () => clearInterval(ka));
-      return;
-    }
+      const sessionId = req.headers['mcp-session-id'];
+      let transport = sessionId ? sessions.get(sessionId) : undefined;
 
-    if (req.method !== 'POST') {
-      res.writeHead(405);
-      res.end();
-      return;
-    }
-
-    let body = '';
-    req.on('data', (chunk) => { body += chunk; });
-    req.on('end', () => {
-      (async () => {
-        let parsed;
-        try {
-          parsed = JSON.parse(body);
-        } catch (e) {
-          // Parse error — still respond in SSE format so the client can read it.
-          const errJson = JSON.stringify({
-            jsonrpc: '2.0',
-            error: { code: -32700, message: 'Parse error: ' + e.message },
-            id: null,
-          });
-          res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' });
-          res.end('data: ' + errJson + '\n\n');
-          return;
-        }
-
-        // JSON-RPC notification: no "id" field. Respond 202, no body.
-        if (!('id' in parsed)) {
-          res.writeHead(202);
-          res.end();
-          return;
-        }
-
-        // Batch requests (array): process all, return array of results.
-        let result;
-        try {
-          if (Array.isArray(parsed)) {
-            const results = await Promise.all(parsed.map(handleJsonRpcMsg));
-            result = results.filter((r) => r !== null);
-          } else {
-            result = await handleJsonRpcMsg(parsed);
-          }
-        } catch (err) {
-          process.stderr.write('handleJsonRpcMsg error: ' + err.message + '\n');
-          result = {
-            jsonrpc: '2.0',
-            error: { code: -32603, message: 'Internal error: ' + err.message },
-            id: parsed.id !== undefined ? parsed.id : null,
-          };
-        }
-
-        // Respond as SSE so the rmcp StreamableHttpClientWorker can read it.
-        const json = JSON.stringify(result);
-        res.writeHead(200, {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
+      if (!transport) {
+        const mcpServer = buildServer();
+        transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (id) => {
+            sessions.set(id, transport);
+          },
         });
-        res.write('data: ' + json + '\n\n');
-        res.end();
-      })();
-    });
+        await mcpServer.connect(transport);
+      }
+
+      const body = req.method === 'POST' ? await readJsonBody(req) : undefined;
+      await transport.handleRequest(req, res, body);
+
+      if (req.method === 'DELETE' && sessionId) {
+        sessions.delete(sessionId);
+      }
+    } catch (err) {
+      if (!res.headersSent) {
+        res.writeHead(500, { 'content-type': 'text/plain' });
+      }
+      res.end('Error: ' + (err.message || String(err)));
+    }
   });
 
-  await new Promise((resolve) => httpServer.listen(port, resolve));
-  process.stderr.write('gantry5-mcp ready (HTTP port ' + port + ')\n');
+  await new Promise((resolve) => httpServer.listen(port, '0.0.0.0', resolve));
+  console.error('Gantry MCP Server running on HTTP port ' + port);
 }
-(async () => {
+
+async function startStdio() {
+  const server = buildServer();
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error('Gantry MCP Server running on stdio');
+}
+
+async function main() {
   const rawPort = process.env.HTTP_PORT || process.env.PORT;
   const httpPort = rawPort ? parseInt(rawPort, 10) : null;
+  if (httpPort) await startHttp(httpPort);
+  else await startStdio();
+}
 
-  if (httpPort) {
-    await startHttp(httpPort);
-  } else {
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-    process.stderr.write('gantry5-mcp ready (stdio)\n');
-  }
-})();
+main().catch((err) => {
+  console.error('Fatal error:', err);
+  process.exit(1);
+});

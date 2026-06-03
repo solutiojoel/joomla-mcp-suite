@@ -1,0 +1,113 @@
+name: footer-shell
+label: Footer Shell Article
+site_types: [parish, school, cemetery]
+
+intent: >
+  Renders the site footer content - logo, address, phone, office hours, and
+  quick footer links - from a single Joomla shell article. The footer article
+  is managed by staff: address changes, new links, and phone updates happen in
+  the article editor, not Gantry. The footer section and footer contentarray
+  article selection belong in the Base Outline so every sub-outline inherits
+  the same footer.
+
+particle_choice:
+  use: contentarray
+  why: >
+    Footer content (address, phone, hours, links) changes periodically and is
+    managed by non-technical staff. Storing it in a Joomla article and rendering
+    it via contentarray gives staff full edit access. A custom particle or hardcoded
+    Gantry HTML would require developer access to update. blockcontent cannot render
+    free-form HTML like a logo + address block cleanly.
+
+content_contract:
+  source_type: article
+  required_field: attributes.article.filter.articles
+  description: >
+    A single Joomla shell article containing the complete footer HTML. Typically
+    titled "Footer". The article introtext typically contains:
+    - A footer-wrapper div
+    - Logo image linking to the homepage
+    - Parish/school name as h1
+    - Address, phone, and hours as paragraph text
+    - Footer links div with a-tags for key pages (Registration, Giving, Archdiocese, etc.)
+    The article should be in the "Homepage Articles" category (or equivalent).
+  display_rules:
+    title: hide
+    image: none
+    pagination: off
+    read_more: off
+    note: >
+      Always hide the article title - the footer article body provides its own logo
+      and name heading. Never show images (image handled inside article HTML),
+      read-more, or pagination.
+
+layout_contract:
+  section: footer
+  outline_scope: base_outline
+  inheritance: inherited_by_sub_outlines
+  preferred_position: full_width
+  blockClass: ""
+  width: 100
+  alternatives:
+    - note: >
+        Some sites use a 3-column footer layout with separate particles for logo,
+        links, and contact. In that case, use footer-3col section template instead.
+        This pattern covers the single-article approach only.
+  notes: >
+    The footer section is a Base Outline concern. Sub-outlines should inherit it.
+    The footer section typically has fixed inherited styles (background color, padding)
+    set in the Gantry Base Outline. The shell article provides all the visual content.
+    Do not add extra particles to a child/home outline footer when using this pattern
+    unless inheritance has intentionally been broken and approved.
+
+css_contract:
+  required_selectors:
+    - ".footer-wrapper"
+    - ".footer-icon-content"
+    - ".footer-links"
+    - ".footer-inner-links"
+  behavior: >
+    CSS targets classes inside the footer article HTML (footer-wrapper, footer-icon-content,
+    footer-links, footer-inner-links). These are defined in the site's override.css.
+    The Gantry block class is typically blank for footer - the section itself provides
+    the background color.
+  override_notes: >
+    Footer background color is usually set in Gantry styles (not override.css).
+    Typography, link colors, and logo sizing are in override.css targeting the
+    footer-wrapper classes.
+
+link_behavior:
+  whole_block_linkable: false
+  item_linkable: true
+  note: >
+    Footer links are anchor tags inside the article HTML. Each link is individually
+    clickable. External links (Archdiocese, Giving platform) should have target="_blank"
+    set in the article HTML. Do not make the whole footer block a link.
+
+guardrails:
+  - Verify the footer article ID exists and is published.
+  - Do not show article title or read-more.
+  - Do not use blockcontent for the footer - the address/logo combination requires free-form HTML.
+  - If no footer article exists yet, note it as a missing dependency and provide a sample HTML template.
+  - The footer section and footer article selection are inherited from the Base Outline - do not duplicate them in #Home or child outlines.
+  - Make footer article/contentarray changes in the Base Outline first, then let #Home and other sub-outlines inherit them.
+
+description_prompts:
+  good: >
+    "Footer content from shell article ID {{footer_article_id}}. Full width, no title,
+    no images, no read-more."
+  minimal: >
+    "Footer shell article - need article ID."
+
+context_variables:
+  footer_article_id:
+    required: true
+    find_with: joomla_list_articles
+    hint: "Look for an article titled 'Footer' in the Homepage Articles category"
+
+seen_on:
+  - stchris-speed (footer section, article 36)
+  - stlaw-alex
+  - stagnes-concord
+  - seas-ontario
+  - stbern-levit

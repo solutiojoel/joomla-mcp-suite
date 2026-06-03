@@ -3,8 +3,11 @@
 # Covers: desktop logo (hidden-phone), mobile logo (show-mobile), spacer,
 #         utility toplinks (ql-toplinks-studius), main menu (full-width)
 #
-# This section almost always inherits from #Outline. Only define it fresh
-# when setting up the base outline for the first time.
+# IMPORTANT INHERITANCE RULE:
+# Navigation is a Base Outline section. Edit logo/menu/toplinks/header styling
+# in the Base Outline, then let #Home and all sub-outlines inherit it. Do not
+# duplicate navigation in a child/home outline unless inheritance has been
+# intentionally broken and approved.
 
 id: navigation
 type: section

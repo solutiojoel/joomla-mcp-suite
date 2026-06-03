@@ -1,0 +1,93 @@
+name: alert-banner
+label: Alert / Announcement Banner
+site_types: [parish, school, cemetery]
+
+intent: >
+  A thin banner at the very top of the page (above navigation) that displays
+  time-sensitive parish announcements. Editors publish/unpublish articles in
+  the Alert category to control visibility. When no alert articles are published,
+  the section renders empty and collapses.
+
+particle_choice:
+  use: contentarray
+  why: >
+    Alerts are editor-managed: staff publish and unpublish articles to show/hide
+    banners without touching Gantry. A contentarray filtered by the Alert category
+    is the only approach that supports this. Do NOT use custom (hardcoded HTML) or
+    blockcontent (static, requires layout edit to change content).
+
+content_contract:
+  source_type: category
+  required_field: attributes.article.filter.categories
+  description: >
+    A dedicated Joomla category for alert articles (commonly named "Alert" or
+    "Announcements"). Staff publish an article in this category to activate the
+    banner; they unpublish it to remove it. The article title becomes the banner
+    text unless display overrides hide it.
+  display_rules:
+    title: show
+    image: none
+    text_type: intro
+    pagination: off
+    read_more: off
+    limit: "10"
+    note: >
+      Limit to 10 so multiple simultaneous alerts can stack. Show title so the
+      alert headline is visible. Suppress image and read-more for a compact banner.
+
+layout_contract:
+  section: top
+  preferred_position: first_particle_in_section
+  blockClass: modern-alert
+  width: 100
+  notes: >
+    The alert banner must be the first (or only) content particle in the top section,
+    above any other custom HTML in that section. This ensures it appears above navigation.
+    Some sites also place a custom HTML spacer or utility line in the top section — the
+    alert should precede those.
+
+css_contract:
+  required_selectors:
+    - ".modern-alert"
+    - "#g-top .modern-alert"
+  behavior: >
+    The modern-alert class applies a colored background (typically warning yellow or
+    brand red), centers the text, and adds padding. On mobile it stacks and remains
+    full-width. The section collapses when the contentarray returns no articles.
+  override_notes: >
+    If the client wants a different color scheme or icon prefix, add rules to
+    override.css targeting ".modern-alert .contentarray-item".
+
+link_behavior:
+  whole_block_linkable: false
+  item_linkable: true
+  note: >
+    Individual alert articles can contain anchor links in their body (e.g. "Read more
+    about our closure"). The whole banner block should not be a link. If the client
+    wants a clickable banner, the editor adds a link inside the article body.
+
+guardrails:
+  - Verify the alert category ID exists before compiling.
+  - Do not point to a specific article ID — always use the category filter so editors can manage alerts without Gantry access.
+  - Do not set display.title to hide — the title is the alert text.
+  - Do not enable images or read-more buttons on alert banners.
+  - If no alert category exists yet, note it as a missing dependency and ask the client to create one.
+
+description_prompts:
+  good: >
+    "Alert banner at top of page, pulling from Alert category (ID: {{alert_category_id}}).
+    Shows article title only, no images, no read-more."
+  minimal: >
+    "Alert banner — need alert category ID."
+
+context_variables:
+  alert_category_id:
+    required: true
+    find_with: joomla_list_categories
+    hint: "Look for a category named 'Alert', 'Alerts', or 'Announcements'"
+
+seen_on:
+  - stchris-speed (top section, blockClass modern-alert, category 9)
+  - stlaw-alex
+  - stagnes-concord
+  - seas-ontario

@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gantry Mockup Brief Builder</title>
+  <style>
+    :root {
+      --ink: #18212f;
+      --muted: #647084;
+      --line: #d8dee9;
+      --panel: #ffffff;
+      --soft: #f5f7fb;
+      --accent: #176b8f;
+      --accent-2: #d58a28;
+      --good: #247857;
+      --warn: #a16207;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--soft);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+    header {
+      background: #12344a;
+      color: white;
+      padding: 1rem 1.25rem;
+      border-bottom: 4px solid var(--accent-2);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    header p {
+      margin: 0.2rem 0 0;
+      max-width: 75rem;
+      color: rgba(255,255,255,0.8);
+      font-size: 0.9rem;
+    }
+    main {
+      display: grid;
+      grid-template-columns: minmax(22rem, 32rem) 1fr;
+      min-height: calc(100vh - 78px);
+    }
+    aside {
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      padding: 1rem;
+      overflow: auto;
+    }
+    section.output {
+      padding: 1rem;
+      overflow: auto;
+    }
+    .group {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0.9rem;
+      margin-bottom: 0.85rem;
+      background: white;
+    }
+    .group h2 {
+      margin: 0 0 0.7rem;
+      font-size: 0.92rem;
+      text-transform: uppercase;
+      color: #334155;
+      letter-spacing: 0;
+    }
+    label {
+      display: block;
+      font-size: 0.82rem;
+      color: #344258;
+      font-weight: 650;
+      margin: 0.65rem 0 0.25rem;
+    }
+    input[type="text"], select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0.55rem 0.65rem;
+      color: var(--ink);
+      background: #fff;
+      font: inherit;
+      font-size: 0.9rem;
+    }
+    textarea {
+      min-height: 9rem;
+      resize: vertical;
+    }
+    input[type="file"] {
+      width: 100%;
+      font-size: 0.85rem;
+    }
+    .checks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.35rem 0.75rem;
+      margin-top: 0.35rem;
+    }
+    .checks label {
+      margin: 0;
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+      font-weight: 500;
+      font-size: 0.86rem;
+      color: #26364a;
+    }
+    .button-row {
+      display: flex;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      margin-top: 0.8rem;
+    }
+    button {
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: var(--accent);
+      color: white;
+      padding: 0.55rem 0.75rem;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+    button.secondary {
+      background: white;
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    button:hover { filter: brightness(0.96); }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.65rem;
+    }
+    .preview {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f8fafc;
+      overflow: hidden;
+    }
+    .preview img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      display: block;
+    }
+    .preview div {
+      padding: 0.35rem 0.45rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+    .tabs {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.8rem;
+    }
+    .tab {
+      background: white;
+      border-color: var(--line);
+      color: #29384f;
+    }
+    .tab.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .pane {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+      gap: 0.75rem;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0.8rem;
+      background: #fff;
+    }
+    .card h3 {
+      margin: 0 0 0.35rem;
+      font-size: 1rem;
+      color: #113c56;
+    }
+    .card p {
+      margin: 0.28rem 0;
+      color: #42526a;
+      font-size: 0.88rem;
+    }
+    .tag-row {
+      display: flex;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+      margin-top: 0.45rem;
+    }
+    .tag {
+      border-radius: 999px;
+      background: #e9f3f7;
+      color: #14506d;
+      padding: 0.18rem 0.45rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .tag.warn {
+      background: #fef3c7;
+      color: var(--warn);
+    }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: #142033;
+    }
+    .status {
+      font-size: 0.83rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+    }
+    .kb {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+      gap: 0.6rem;
+    }
+    .kb div {
+      padding: 0.7rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f8fafc;
+    }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+      aside { border-right: 0; border-bottom: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gantry Mockup Brief Builder</h1>
+    <p>Upload a mockup and implementation assets, describe the intent, then generate a Gantry-aware implementation brief using the local particle/catalog/example knowledge base.</p>
+  </header>
+
+  <main>
+    <aside>
+      <div class="group">
+        <h2>Target</h2>
+        <label for="site-type">Site Type</label>
+        <select id="site-type">
+          <option value="church">Church / Parish</option>
+          <option value="school">School</option>
+          <option value="subsite">Subsite</option>
+          <option value="cemetery">Cemetery</option>
+        </select>
+
+        <label for="outline">Target Outline</label>
+        <input id="outline" type="text" value="#Home">
+
+        <label for="homepage-category">Homepage Article Category</label>
+        <input id="homepage-category" type="text" value="Homepage Articles">
+
+        <label for="build-slug">Site Build Folder</label>
+        <input id="build-slug" type="text" placeholder="stgertrude-bay-home">
+      </div>
+
+      <div class="group">
+        <h2>Mockup</h2>
+        <label for="mockup">Mockup Image</label>
+        <input id="mockup" type="file" accept="image/*">
+
+        <label for="assets">Implementation Images / Assets</label>
+        <input id="assets" type="file" accept="image/*" multiple>
+        <div class="preview-grid" id="previews"></div>
+      </div>
+
+      <div class="group">
+        <h2>Design Cues</h2>
+        <div class="checks" id="section-checks">
+          <label><input type="checkbox" value="navigation" checked> Navigation</label>
+          <label><input type="checkbox" value="slideshow" checked> Hero</label>
+          <label><input type="checkbox" value="utility" checked> Quicklinks</label>
+          <label><input type="checkbox" value="main" checked> News/Social</label>
+          <label><input type="checkbox" value="expanded" checked> Cards</label>
+          <label><input type="checkbox" value="extension" checked> Widgets</label>
+          <label><input type="checkbox" value="footer" checked> Footer</label>
+        </div>
+
+        <label for="notes">Design Notes</label>
+        <textarea id="notes" placeholder="Describe what the mockup shows, content behavior, link behavior, existing inspiration, and anything that should not happen."></textarea>
+
+        <div class="button-row">
+          <button id="analyze">Generate Brief</button>
+          <button id="copy-prompt" class="secondary">Copy Prompt</button>
+        </div>
+        <div class="status" id="status">Knowledge base loading...</div>
+      </div>
+    </aside>
+
+    <section class="output">
+      <div class="tabs">
+        <button class="tab active" data-tab="sections">Sections</button>
+        <button class="tab" data-tab="outline">Outline Scope</button>
+        <button class="tab" data-tab="articles">Articles</button>
+        <button class="tab" data-tab="assets">Assets</button>
+        <button class="tab" data-tab="links">Links</button>
+        <button class="tab" data-tab="css">CSS</button>
+        <button class="tab" data-tab="yaml">YAML</button>
+        <button class="tab" data-tab="prompt">Prompt</button>
+        <button class="tab" data-tab="knowledge">Knowledge</button>
+      </div>
+
+      <div class="pane" id="pane-sections"></div>
+      <div class="pane" id="pane-outline" hidden></div>
+      <div class="pane" id="pane-articles" hidden></div>
+      <div class="pane" id="pane-assets" hidden></div>
+      <div class="pane" id="pane-links" hidden></div>
+      <div class="pane" id="pane-css" hidden></div>
+      <div class="pane" id="pane-yaml" hidden></div>
+      <div class="pane" id="pane-prompt" hidden></div>
+      <div class="pane" id="pane-knowledge" hidden></div>
+    </section>
+  </main>
+
+  <script>
+    let knowledge = null;
+    let latest = null;
+    let mockupMeta = null;
+    let assetMeta = [];
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    async function imageMeta(file) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = url;
+      });
+      const meta = { name: file.name, size: file.size, width: img.naturalWidth, height: img.naturalHeight, url, dataUrl };
+      return meta;
+    }
+
+    async function refreshPreviews() {
+      const holder = $('previews');
+      holder.innerHTML = '';
+      const cards = [];
+      if (mockupMeta) cards.push({ ...mockupMeta, label: 'Mockup' });
+      for (const asset of assetMeta) cards.push({ ...asset, label: 'Asset' });
+      for (const item of cards) {
+        const div = document.createElement('div');
+        div.className = 'preview';
+        div.innerHTML = '<img src="' + item.url + '" alt="">' +
+          '<div><strong>' + esc(item.label) + '</strong><br>' + esc(item.name) +
+          '<br>' + item.width + 'x' + item.height + '</div>';
+        holder.appendChild(div);
+      }
+    }
+
+    $('mockup').addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      mockupMeta = file ? await imageMeta(file) : null;
+      refreshPreviews();
+    });
+
+    $('assets').addEventListener('change', async (event) => {
+      assetMeta = [];
+      for (const file of Array.from(event.target.files || [])) {
+        assetMeta.push(await imageMeta(file));
+      }
+      refreshPreviews();
+    });
+
+    function selectedSections() {
+      return Array.from(document.querySelectorAll('#section-checks input:checked')).map((el) => el.value);
+    }
+
+    function requestPayload() {
+      return {
+        siteType: $('site-type').value,
+        targetOutline: $('outline').value.trim() || '#Home',
+        homepageCategory: $('homepage-category').value.trim() || 'Homepage Articles',
+        buildSlug: $('build-slug').value.trim(),
+        designNotes: $('notes').value,
+        selectedSections: selectedSections(),
+        mockupImage: mockupMeta ? {
+          name: mockupMeta.name,
+          width: mockupMeta.width,
+          height: mockupMeta.height,
+          size: mockupMeta.size,
+          dataUrl: mockupMeta.dataUrl
+        } : null,
+        assetImages: assetMeta.map((asset) => ({
+          name: asset.name,
+          width: asset.width,
+          height: asset.height,
+          size: asset.size,
+          dataUrl: asset.dataUrl
+        }))
+      };
+    }
+
+    async function analyze() {
+      $('status').textContent = 'Generating brief...';
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(requestPayload())
+      });
+      latest = await res.json();
+      if (!res.ok) {
+        $('status').textContent = latest.error || 'Analysis failed.';
+        return;
+      }
+      $('status').textContent = latest.summary;
+      render();
+    }
+
+    function renderCards(items, renderer) {
+      if (!items || !items.length) return '<p class="status">No items generated yet.</p>';
+      return '<div class="cards">' + items.map(renderer).join('') + '</div>';
+    }
+
+    function render() {
+      if (!latest) {
+        $('pane-sections').innerHTML = '<p class="status">Upload a mockup, add notes, and generate a brief.</p>';
+        return;
+      }
+      $('pane-sections').innerHTML = renderCards(latest.sections, (s) =>
+        '<div class="card"><h3>' + esc(s.id) + '</h3>' +
+        '<p><strong>Scope:</strong> ' + esc(s.scope === 'base_outline' ? 'Base Outline (inherited)' : 'Home Outline') + '</p>' +
+        '<p><strong>Particle:</strong> ' + esc(s.particle) + '</p>' +
+        '<p><strong>Why:</strong> ' + esc(s.reason) + '</p>' +
+        '<p><strong>Content:</strong> ' + esc(s.contentSource) + '</p>' +
+        '<p><strong>Links:</strong> ' + esc(s.linkBehavior) + '</p>' +
+        '<div class="tag-row">' + (s.classes || []).map((c) => '<span class="tag">' + esc(c) + '</span>').join('') + '</div></div>'
+      );
+
+      const plan = latest.outlineWorkPlan || {};
+      function renderScope(scope, title) {
+        const item = plan[scope] || {};
+        const sections = item.sections || [];
+        const articles = item.articles || [];
+        const instructions = item.instructions || [];
+        return '<div class="card"><h3>' + esc(title) + '</h3>' +
+          '<p>' + esc(item.purpose || '') + '</p>' +
+          '<p><strong>Sections:</strong> ' + (sections.length ? sections.map((s) => esc(s.id)).join(', ') : 'none') + '</p>' +
+          '<p><strong>Articles:</strong> ' + (articles.length ? articles.map((a) => esc(a.title)).join(', ') : 'none') + '</p>' +
+          '<div class="tag-row">' + instructions.map((text) => '<span class="tag warn">' + esc(text) + '</span>').join('') + '</div></div>';
+      }
+      $('pane-outline').innerHTML = '<div class="cards">' +
+        renderScope('base_outline', 'Base Outline') +
+        renderScope('home_outline', 'Home Outline') +
+        '</div>';
+
+      $('pane-articles').innerHTML = renderCards(latest.homepageArticles, (a) =>
+        '<div class="card"><h3>' + esc(a.title) + '</h3>' +
+        '<p><strong>Scope:</strong> ' + esc(a.scope === 'base_outline' ? 'Base Outline (inherited)' : 'Home Outline') + '</p>' +
+        '<p><strong>Alias:</strong> ' + esc(a.alias) + '</p>' +
+        '<p><strong>Category:</strong> ' + esc(a.category) + '</p>' +
+        '<p><strong>Purpose:</strong> ' + esc(a.purpose) + '</p>' +
+        '<p><strong>HTML notes:</strong> ' + esc(a.htmlNotes) + '</p></div>'
+      );
+
+      const staged = latest.stagedAssets || {};
+      $('pane-assets').innerHTML =
+        '<div class="card"><h3>Staged Folder</h3>' +
+        '<p><strong>Local folder:</strong> ' + esc(staged.folder || '') + '</p>' +
+        '<p><strong>Browser folder:</strong> ' + esc(staged.publicFolder || '') + '</p>' +
+        '<p><strong>Joomla upload folder:</strong> ' + esc(staged.joomlaFolder || '') + '</p>' +
+        '<p>Use the local paths as FTP upload sources. After upload, reference implementation assets with the root-relative /images/... paths only.</p></div>' +
+        renderCards(staged.assets || [], (asset) =>
+          '<div class="card"><h3>' + esc(asset.filename) + '</h3>' +
+          '<p><strong>Role:</strong> ' + esc(asset.role) + '</p>' +
+          '<p><strong>Local path:</strong> ' + esc(asset.localPath) + '</p>' +
+          '<p><strong>Workspace path:</strong> ' + esc(asset.workspaceRelativePath) + '</p>' +
+          '<p><strong>Preview:</strong> ' + esc(asset.appPath) + '</p>' +
+          '<p><strong>Use on site:</strong> ' + esc(asset.joomlaPath || 'reference only, do not upload to Joomla') + '</p>' +
+          '<p><strong>FTP hint:</strong> ' + esc(asset.ftpTargetHint || '') + '</p></div>'
+        );
+
+      $('pane-links').innerHTML = latest.linksToResolve && latest.linksToResolve.length
+        ? '<div class="cards">' + latest.linksToResolve.map((label) =>
+            '<div class="card"><h3>' + esc(label) + '</h3><p>Resolve existing menu item/page URL or create the destination before using this as a blockcontent link.</p><span class="tag warn">needs URL</span></div>'
+          ).join('') + '</div>'
+        : '<p class="status">No explicit link labels inferred yet. Add labels to design notes for better output.</p>';
+
+      $('pane-css').innerHTML = renderCards(latest.cssPlan, (c) =>
+        '<div class="card"><h3>' + esc(c.section) + '</h3>' +
+        '<p>' + esc(c.behavior) + '</p>' +
+        '<p><strong>Write CSS from mockup:</strong> yes</p>' +
+        '<div class="tag-row">' + (c.classes || []).map((cls) => '<span class="tag">' + esc(cls) + '</span>').join('') + '</div></div>'
+      );
+
+      $('pane-yaml').innerHTML = '<pre>' + esc(latest.designYamlScaffold || '') + '</pre>';
+      $('pane-prompt').innerHTML = '<pre>' + esc(latest.visionPrompt || '') + '</pre>';
+      renderKnowledge();
+    }
+
+    function renderKnowledge() {
+      if (!knowledge) {
+        $('pane-knowledge').innerHTML = '<p class="status">Knowledge base not loaded.</p>';
+        return;
+      }
+      const particles = Object.values(knowledge.particles || {});
+      const templates = knowledge.section_templates || [];
+      $('pane-knowledge').innerHTML =
+        '<div class="kb">' +
+        '<div><strong>Particles</strong><br>' + particles.map((p) => esc(p.name)).join(', ') + '</div>' +
+        '<div><strong>Section Templates</strong><br>' + templates.map((t) => esc(t.name)).join(', ') + '</div>' +
+        '<div><strong>Homepage Examples</strong><br>' + esc((knowledge.homepage_examples || []).length) + ' captured examples</div>' +
+        '<div><strong>Principle</strong><br>Existing examples are evidence for construction methods, not mandatory pieces to copy.</div>' +
+        '</div>';
+    }
+
+    document.querySelectorAll('.tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        const active = tab.dataset.tab;
+        for (const pane of document.querySelectorAll('.pane')) {
+          pane.hidden = pane.id !== 'pane-' + active;
+        }
+      });
+    });
+
+    $('analyze').addEventListener('click', analyze);
+    $('copy-prompt').addEventListener('click', async () => {
+      const text = latest && latest.visionPrompt ? latest.visionPrompt : '';
+      if (!text) return;
+      await navigator.clipboard.writeText(text);
+      $('status').textContent = 'Prompt copied.';
+    });
+
+    async function init() {
+      try {
+        const res = await fetch('/api/knowledge');
+        knowledge = await res.json();
+        $('status').textContent = 'Knowledge base loaded.';
+      } catch (err) {
+        $('status').textContent = 'Could not load knowledge base: ' + err.message;
+      }
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>

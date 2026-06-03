@@ -1,0 +1,105 @@
+name: social-widget
+label: Social Media Widget (Facebook / Instagram Embed)
+site_types: [parish, school, cemetery]
+
+intent: >
+  Embeds a third-party social media feed widget (typically Facebook via Elfsight,
+  or Instagram) on the homepage by pointing a contentarray to a single shell article
+  that contains the embed script and wrapper HTML. The embed code lives in the article
+  so it can be updated by staff without touching the Gantry layout.
+
+particle_choice:
+  use: contentarray
+  why: >
+    The social embed code (Elfsight script tag, iframe, etc.) is stored in a Joomla
+    shell article. contentarray renders the article's raw HTML into the layout block.
+    This keeps the embed code editor-accessible: if the Elfsight app ID changes or
+    the client switches social platforms, staff update the article — not the layout.
+    custom particle could work but the HTML would be locked in Gantry, not editable
+    without developer access.
+
+content_contract:
+  source_type: article
+  required_field: attributes.article.filter.articles
+  description: >
+    A single Joomla shell article containing the social widget HTML. Typically titled
+    "Facebook" or "Instagram". The article introtext contains:
+    - A wrapper div with CSS classes (e.g. facebook-widget-wrapper widget-wrapper)
+    - An optional title heading
+    - The embed script and widget div
+    - An optional "Follow Us" button linking to the social profile
+    The article should be in the "Homepage Articles" category (or equivalent).
+  display_rules:
+    title: hide
+    image: none
+    pagination: off
+    read_more: off
+    note: >
+      Always hide the article title — the widget article body provides its own heading.
+      Never show images or read-more on a social widget shell article.
+
+layout_contract:
+  section: mainbar
+  alternatives:
+    - section: sidebar
+      note: Used on some sites where news is in mainbar and social is in sidebar
+    - section: expanded
+      note: Used for a full-width social section with no adjacent particles
+  blockClass: facebook-widget-container widget-container
+  alternatives_blockClass:
+    - instagram-container
+  width: varies
+  notes: >
+    When the social widget sits beside the news feed, the two blocks share the
+    mainbar/sidebar split. Common widths: 60% news + 40% social, or 50/50.
+    The widget-container class is shared across all social widget types.
+    The platform-specific class (facebook-widget-container, instagram-container)
+    allows per-platform CSS overrides.
+
+css_contract:
+  required_selectors:
+    - ".facebook-widget-container"
+    - ".widget-container"
+    - ".widget-wrapper"
+    - ".widget-feed"
+  behavior: >
+    The widget-wrapper div (inside the article) handles the visual box — title bar,
+    feed area, and follow button. CSS targets the wrapper classes inside the article
+    HTML, not the Gantry block class directly. The block class is mainly for
+    layout positioning (width, margins).
+  override_notes: >
+    Social widget height is typically set inline on the wrapper div (e.g. style="height:900px").
+    If the client wants a different height, update the article HTML, not override.css.
+
+link_behavior:
+  whole_block_linkable: false
+  item_linkable: false
+  note: >
+    The social widget renders its own interactive links internally (post links,
+    follow buttons). The block itself is not a link. The "Follow Us" button inside
+    the article body is the only external link and is part of the article HTML.
+
+guardrails:
+  - Verify the social widget article ID exists and is published.
+  - Do not hardcode embed scripts in the custom particle — always use the article approach.
+  - Do not show the article title or read-more — the article body contains its own heading.
+  - Confirm the Elfsight app ID or embed URL is current before launching — these expire or change.
+  - If no social widget article exists yet, note it as a missing dependency.
+
+description_prompts:
+  good: >
+    "Facebook widget in the mainbar section from article ID {{facebook_article_id}}.
+    blockClass facebook-widget-container widget-container. Title hidden, no read-more."
+  minimal: >
+    "Social widget embed — need article ID containing the embed code."
+
+context_variables:
+  facebook_article_id:
+    required: true
+    find_with: joomla_list_articles
+    hint: "Look for an article titled 'Facebook', 'Instagram', or 'Social' in the Homepage Articles category"
+
+seen_on:
+  - stchris-speed (mainbar section, blockClass facebook-widget-container widget-container, article 76)
+  - stlaw-alex (mainbar, facebook)
+  - stagnes-concord (sidebar, facebook)
