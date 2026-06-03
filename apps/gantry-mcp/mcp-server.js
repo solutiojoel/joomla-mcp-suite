@@ -713,7 +713,7 @@ const TOOLS = [
       if (args.dryRun) return { dryRun: true, diff };
       // Section preservation: reject if any existing section would be deleted or moved
       if (!args.force_section_delete) {
-        layoutApi.assertSectionsPreserved(layoutApi.snapshotSections(before), mergedLayout);
+        layoutApi.assertSectionsPreserved(layoutApi.snapshotSections(before), mergedLayout, { checkParent: false });
       }
       const backupPath = backup.takeBackup(ctx, args.outline || 'default', 'pre-import', before);
       await layoutApi.saveLayoutDirect(ctx, ctx, args.outline || 'default', mergedLayout);
@@ -1313,7 +1313,7 @@ const TOOLS = [
       const diff       = layoutApi.diffStructures(before, result.layout);
       // Section preservation: reject if any existing section would be deleted or moved
       if (!args.force_section_delete) {
-        layoutApi.assertSectionsPreserved(layoutApi.snapshotSections(before), result.layout);
+        layoutApi.assertSectionsPreserved(layoutApi.snapshotSections(before), result.layout, { checkParent: false });
       }
       const backupPath = backup.takeBackup(ctx, outline, 'pre-design-import', before);
       await layoutApi.saveLayoutDirect(ctx, ctx, outline, result.layout);
@@ -1993,8 +1993,16 @@ const TOOLS = [
       // Merge context: YAML context < runtime args context
       const context = Object.assign({}, (sectionDef && sectionDef.context) || {}, args.context || {});
 
-      const ctx     = await getCtx(args);
-      const outline = await resolveOutlineArg(ctx, args);
+      const ctx = await getCtx(args);
+
+      // Base-outline sections always live in the default outline, never in #Home.
+      // Auto-route them regardless of what outline was passed.
+      const BASE_OUTLINE_SECTIONS = new Set(['navigation', 'bottom', 'footer', 'copyright', 'offcanvas']);
+      const isBaseSection = BASE_OUTLINE_SECTIONS.has(resolvedSectionId);
+      const outline = isBaseSection ? 'default' : await resolveOutlineArg(ctx, args);
+      const outlineNote = isBaseSection
+        ? 'Auto-routed to base outline (default) -- ' + resolvedSectionId + ' is a base-outline section.'
+        : null;
 
       // Fetch live layout so we can seed the ID generator
       const liveStructure = await layoutApi.getLayoutStructure(ctx, outline);
@@ -2069,6 +2077,7 @@ const TOOLS = [
       return {
         section:          resolvedSectionId,
         outline,
+        ...(outlineNote ? { note: outlineNote } : {}),
         mode,
         grids_applied:    newGrids.length,
         particles_applied: newGrids.reduce((n, g) => n + (g.children || []).length, 0),

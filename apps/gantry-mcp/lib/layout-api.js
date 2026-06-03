@@ -766,7 +766,16 @@ function snapshotSections(structure) {
   return snap;
 }
 
-function assertSectionsPreserved(snapshot, afterStructure) {
+/**
+ * @param {Array} snapshot  - result of snapshotSections(before)
+ * @param {Array} afterStructure
+ * @param {object} [opts]
+ * @param {boolean} [opts.checkParent=true] - also verify sections haven't moved
+ *   between containers.  Set false for full-layout replacements where new
+ *   container IDs are generated (gantry_layout_import / gantry_layout_design).
+ */
+function assertSectionsPreserved(snapshot, afterStructure, opts) {
+  const checkParent = !opts || opts.checkParent !== false;
   const afterMap = new Map();
   function visit(nodes, parentId) {
     if (!Array.isArray(nodes)) return;
@@ -786,7 +795,7 @@ function assertSectionsPreserved(snapshot, afterStructure) {
       errors.push('Section "' + id + '" (' + type + ') was deleted. '
         + 'Sections must never be removed from an outline. '
         + 'To clear a section remove its particles but keep the section node.');
-    } else if (afterMap.get(id) !== parentId) {
+    } else if (checkParent && afterMap.get(id) !== parentId) {
       errors.push('Section "' + id + '" (' + type + ') was moved '
         + 'from container "' + parentId + '" to "' + afterMap.get(id)
         + '". Sections must never be moved between containers.');
