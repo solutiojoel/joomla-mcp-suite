@@ -711,6 +711,10 @@ const TOOLS = [
       const before = await layoutApi.fetchSavedLayout(ctx, args.outline || 'default');
       const diff = layoutApi.diffStructures(before, mergedLayout);
       if (args.dryRun) return { dryRun: true, diff };
+      // Section preservation: reject if any existing section would be deleted or moved
+      if (!args.force_section_delete) {
+        layoutApi.assertSectionsPreserved(layoutApi.snapshotSections(before), mergedLayout, { checkParent: false });
+      }
       const backupPath = backup.takeBackup(ctx, args.outline || 'default', 'pre-import', before);
       await layoutApi.saveLayoutDirect(ctx, ctx, args.outline || 'default', mergedLayout);
       return { imported: true, backupPath, baseTemplateApplied: true };
@@ -1307,6 +1311,10 @@ const TOOLS = [
 
       const before     = await layoutApi.fetchSavedLayout(ctx, outline);
       const diff       = layoutApi.diffStructures(before, result.layout);
+      // Section preservation: reject if any existing section would be deleted or moved
+      if (!args.force_section_delete) {
+        layoutApi.assertSectionsPreserved(layoutApi.snapshotSections(before), result.layout, { checkParent: false });
+      }
       const backupPath = backup.takeBackup(ctx, outline, 'pre-design-import', before);
       await layoutApi.saveLayoutDirect(ctx, ctx, outline, result.layout);
 
@@ -1902,6 +1910,186 @@ const TOOLS = [
     },
   },
 
+  {
+    name: 'gantry_section_apply',
+    description:
+      'Apply a section design YAML to a SINGLE section in a live outline, leaving all ' +
+      'other sections completely untouched. The surgical alternative to gantry_layout_design. ' +
+      'Modes: ' +
+      '"replace" (default) clears the section then adds the new particles; ' +
+      '"merge" appends new particles alongside existing ones; ' +
+      '"clear" removes all particles from the section without adding new ones. ' +
+      'section_yaml accepts the same format as a single section in gantry_layout_design: ' +
+      'id, attributes.class, grids array with blocks, or a template: reference. ' +
+      'Context variables ({{article_id}}) are substituted from the context argument. ' +
+      'Always use dryRun:true first to confirm the compiled particles before applying.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        section: {
+          type: 'string',
+          description:
+            'Target section id in the live outline (e.g. "slideshow", "utility", "sidebar"). ' +
+            'Required if section_yaml does not include an id field.',
+        },
+        section_yaml: {
+          type: 'string',
+          description:
+            'YAML describing the section to apply. Same format as a single section block ' +
+            'in gantry_layout_design. Include id, optional attributes.class, and grids. ' +
+            'Example: "id: slideshow\nattributes:\n  class: floatator\ngrids:\n  - blocks: [...]"',
+        },
+        mode: {
+          type: 'string',
+          enum: ['replace', 'merge', 'clear'],
+          description:
+            '"replace" (default): remove existing particles then add new ones. ' +
+            '"merge": keep existing particles and append new ones. ' +
+            '"clear": remove all particles from the section (section_yaml not required).',
+        },
+        update_section_class: {
+          type: 'boolean',
+          description:
+            'When true (default), also update the section CSS class from attributes.class in the YAML. ' +
+            'Set false to leave the section class attribute unchanged.',
+        },
+        context: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Runtime context variables to substitute into the section YAML (e.g. { "mass_times_article_id": "55" }).',
+        },
+        dryRun: {
+          type: 'boolean',
+          description: 'Compile and validate but do not save. Returns diff and particle summary.',
+        },
+      },
+      required: ['site'],
+    },
+    handler: async (args) => {
+      const yaml = require('js-yaml');
+
+      const mode = args.mode || 'replace';
+      const targetSectionId = args.section;
+
+      // Parse section YAML (not needed for clear mode if section arg provided)
+      let sectionDef = null;
+      if (args.section_yaml) {
+        try { sectionDef = yaml.load(args.section_yaml); }
+        catch (e) { return { valid: false, error: 'section_yaml parse error: ' + e.message }; }
+      }
+
+      // Resolve section id
+      const resolvedSectionId = targetSectionId || (sectionDef && sectionDef.id);
+      if (!resolvedSectionId) {
+        throw new Error('Pass `section` argument or include `id` in section_yaml');
+      }
+
+      if (mode !== 'clear' && !sectionDef) {
+        throw new Error('section_yaml is required for mode "' + mode + '"');
+      }
+
+      // Merge context: YAML context < runtime args context
+      const context = Object.assign({}, (sectionDef && sectionDef.context) || {}, args.context || {});
+
+      const ctx = await getCtx(args);
+
+      // Base-outline sections always live in the default outline, never in #Home.
+      // Auto-route them regardless of what outline was passed.
+      const BASE_OUTLINE_SECTIONS = new Set(['navigation', 'bottom', 'footer', 'copyright', 'offcanvas']);
+      const isBaseSection = BASE_OUTLINE_SECTIONS.has(resolvedSectionId);
+      const outline = isBaseSection ? 'default' : await resolveOutlineArg(ctx, args);
+      const outlineNote = isBaseSection
+        ? 'Auto-routed to base outline (default) -- ' + resolvedSectionId + ' is a base-outline section.'
+        : null;
+
+      // Fetch live layout so we can seed the ID generator
+      const liveStructure = await layoutApi.getLayoutStructure(ctx, outline);
+
+      // Seed compiler IDs from existing layout to prevent collisions
+      compiler.resetIds();
+      compiler.seedIds(compiler.collectNodeIds(liveStructure));
+
+      // Compile the new section content
+      let newGrids = [];
+      if (sectionDef && mode !== 'clear') {
+        // Ensure the sectionDef has the right id
+        const defWithId = Object.assign({}, sectionDef, { id: resolvedSectionId });
+        const compiled = compiler.compileSection(defWithId, context);
+        newGrids = compiled.children || [];
+
+        if (newGrids.length === 0) {
+          return {
+            valid: false,
+            error: 'Compiled section has no grids. Check that section_yaml has a non-empty grids array.',
+          };
+        }
+      }
+
+      // Apply the mutation
+      const r = await layoutApi.mutateLayout(
+        ctx,
+        outline,
+        (structure) => {
+          const found = layoutApi.findNode(structure, resolvedSectionId);
+          if (!found) throw new Error('Section "' + resolvedSectionId + '" not found in outline "' + outline + '"');
+
+          const section = found.node;
+          if (!['section', 'offcanvas'].includes(section.type)) {
+            throw new Error('"' + resolvedSectionId + '" is type "' + section.type + '"; expected section or offcanvas');
+          }
+
+          // Replace: strip non-inherited grid children
+          if (mode === 'replace' || mode === 'clear') {
+            section.children = (section.children || []).filter(child =>
+              child.inherit && Object.keys(child.inherit).length > 0
+            );
+          }
+
+          // Append new grids (not for clear)
+          if (mode !== 'clear') {
+            section.children = (section.children || []).concat(newGrids);
+          }
+
+          // Update section CSS class from YAML if requested
+          if (args.update_section_class !== false && sectionDef &&
+              sectionDef.attributes && sectionDef.attributes.class !== undefined) {
+            if (!section.attributes) section.attributes = {};
+            section.attributes.class = sectionDef.attributes.class;
+          }
+        },
+        { op: 'section-apply', dryRun: !!args.dryRun }
+      );
+
+      // Build a human-readable summary of what was applied
+      const summary = newGrids.map((grid, gi) => {
+        const blocks = grid.children || [];
+        const parts = blocks.map(b => {
+          const p = b.children && b.children[0];
+          const bc = (b.attributes && b.attributes.class) || '';
+          if (!p) return 'block';
+          return (p.subtype || p.type) + (bc ? '.' + bc.split(' ')[0] : '');
+        });
+        return 'grid[' + gi + ']: ' + parts.join(' | ');
+      });
+
+      return {
+        section:          resolvedSectionId,
+        outline,
+        ...(outlineNote ? { note: outlineNote } : {}),
+        mode,
+        grids_applied:    newGrids.length,
+        particles_applied: newGrids.reduce((n, g) => n + (g.children || []).length, 0),
+        summary,
+        dryRun:     !!r.dryRun,
+        diff:       r.diff   || null,
+        backupPath: r.backupPath || null,
+      };
+    },
+  },
+
+
 ];
 
 /* --------------------------- server bootstrap ------------------------- */
@@ -1966,7 +2154,7 @@ async function startHttp(port) {
 
   const httpServer = http.createServer(async (req, res) => {
     try {
-      const reqUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+      const reqUrl = new URL(req.url || '/', 'http://' + (req.headers.host || 'localhost'));
 
       if (reqUrl.pathname !== '/mcp') {
         res.writeHead(404);

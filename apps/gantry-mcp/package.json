@@ -17,10 +17,6 @@
     "puppeteer": "^23.0.0"
   },
   "bin": {
-    "gantry": "./gantry.js",
-    "gantry-mcp": "./mcp-server.js"
-  },
-  "engines": {
-    "node": ">=18"
+    "gantry5": "gantry.js"
   }
 }

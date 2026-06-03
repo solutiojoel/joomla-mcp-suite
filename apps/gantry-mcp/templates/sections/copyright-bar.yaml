@@ -1,0 +1,26 @@
+# Section Template: Copyright / Admin Bar
+# Usage: Solutio admin footer with lock icon, site credit, and privacy policy link
+# Place in: Base Outline, copyright section
+#
+# No context variables required.
+# NOTE: Belongs in the Base Outline. Sub-outlines inherit it.
+
+id: copyright
+type: section
+
+grids:
+  - blocks:
+      - size: 100
+        particle: custom
+        title: "Admin Footer"
+        attributes:
+          enabled: 1
+          html: |
+            <div class="adminfootericon" style="font-size: x-small; line-height: 1.3; text-shadow: 2px 2px #000000;">
+              <a style="font-size: large;" href="/administrator/" target="_blank">
+                <i class="fa fa-lock"></i></a>
+              <br><br>
+              <a style="color: #ffffff;" href="http://solutiosoftware.com/" target="_blank">Site by Solutio</a>
+              <br>
+              <a style="color: #ffffff;" href="https://solutiosoftware.com/web-policy" target="_blank" rel="noopener noreferrer">Analytics Privacy Policy</a>
+            </div>

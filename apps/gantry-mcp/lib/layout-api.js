@@ -743,6 +743,69 @@ async function saveLayoutDirect(pageOrCtx, ctx, outline, structure) {
  *   2. (null|undefined, ctx, outline, mutator, opts) — legacy HTTP (page omitted)
  *   3. (ctx, outline, mutator, opts)              — new clean signature
  */
+/* ---------------------------------------------------------------
+ *  Section preservation guard
+ *  Sections/containers/offcanvas define the layout skeleton.
+ *  They must NEVER be deleted or moved between containers.
+ * --------------------------------------------------------------- */
+
+function snapshotSections(structure) {
+  const snap = [];
+  function visit(nodes, parentId) {
+    if (!Array.isArray(nodes)) return;
+    for (const node of nodes) {
+      if (!node || typeof node !== 'object') continue;
+      const t = node.type || '';
+      if (['section', 'container', 'offcanvas'].includes(t)) {
+        snap.push({ id: node.id, type: t, parentId: parentId || null });
+      }
+      if (Array.isArray(node.children)) visit(node.children, node.id || parentId);
+    }
+  }
+  visit(structure, null);
+  return snap;
+}
+
+/**
+ * @param {Array} snapshot  - result of snapshotSections(before)
+ * @param {Array} afterStructure
+ * @param {object} [opts]
+ * @param {boolean} [opts.checkParent=true] - also verify sections haven't moved
+ *   between containers.  Set false for full-layout replacements where new
+ *   container IDs are generated (gantry_layout_import / gantry_layout_design).
+ */
+function assertSectionsPreserved(snapshot, afterStructure, opts) {
+  const checkParent = !opts || opts.checkParent !== false;
+  const afterMap = new Map();
+  function visit(nodes, parentId) {
+    if (!Array.isArray(nodes)) return;
+    for (const node of nodes) {
+      if (!node || typeof node !== 'object') continue;
+      const t = node.type || '';
+      if (['section', 'container', 'offcanvas'].includes(t)) {
+        afterMap.set(node.id, parentId || null);
+      }
+      if (Array.isArray(node.children)) visit(node.children, node.id || parentId);
+    }
+  }
+  visit(afterStructure, null);
+  const errors = [];
+  for (const { id, type, parentId } of snapshot) {
+    if (!afterMap.has(id)) {
+      errors.push('Section "' + id + '" (' + type + ') was deleted. '
+        + 'Sections must never be removed from an outline. '
+        + 'To clear a section remove its particles but keep the section node.');
+    } else if (checkParent && afterMap.get(id) !== parentId) {
+      errors.push('Section "' + id + '" (' + type + ') was moved '
+        + 'from container "' + parentId + '" to "' + afterMap.get(id)
+        + '". Sections must never be moved between containers.');
+    }
+  }
+  if (errors.length > 0) {
+    throw new Error('SECTION_PRESERVATION_VIOLATION:\n' + errors.join('\n'));
+  }
+}
+
 async function mutateLayout(arg1, arg2, arg3, arg4, arg5) {
   let ctx, outline, mutator, opts, page;
   if (arg1 && typeof arg1.evaluate === 'function') {
@@ -783,8 +846,14 @@ async function mutateLayout(arg1, arg2, arg3, arg4, arg5) {
     backupPath = backup.takeBackup(ctx, outline, op, before);
   }
 
+  const _sectionSnapshot = snapshotSections(before);
+
   const after = JSON.parse(JSON.stringify(before));
   const result = mutator(after);
+  // Enforce section preservation before saving
+  const { preserveSections = true } = opts;
+  if (preserveSections) assertSectionsPreserved(_sectionSnapshot, after);
+
 
   // Always diff — even for real saves. Callers can detect no-ops via diff.
   const diff = diffStructures(before, after);
@@ -1380,6 +1449,8 @@ function extractElementByClassAt(html, className, fromIndex) {
 
 module.exports = {
   walk,
+  snapshotSections,
+  assertSectionsPreserved,
   findNode,
   removeNode,
   makeParticleNode,

@@ -5,3 +5,4 @@
 **/.env
 **/coverage
 apps/gantry-mcp/exports/mockup-assets
+apps/gantry-mcp/exports/mockup-projects

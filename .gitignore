@@ -4,3 +4,4 @@ node_modules/
 **/dist/
 *.log
 apps/gantry-mcp/exports/mockup-assets/
+apps/gantry-mcp/exports/mockup-projects/

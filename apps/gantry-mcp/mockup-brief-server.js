@@ -20,6 +20,7 @@ const ROOT = __dirname;
 const EXPORTS_DIR = path.join(ROOT, 'exports');
 const HTML_FILE = path.join(EXPORTS_DIR, 'mockup-brief-builder.html');
 const MOCKUP_ASSETS_DIR = path.join(EXPORTS_DIR, 'mockup-assets');
+const MOCKUP_PROJECTS_DIR = path.join(EXPORTS_DIR, 'mockup-projects');
 const PARTICLES_DIR = path.join(ROOT, 'particles');
 const SECTION_TEMPLATES_DIR = path.join(ROOT, 'templates', 'sections');
 const HOMEPAGES_DIR = path.join(ROOT, 'templates', 'homepages');
@@ -33,6 +34,10 @@ app.use(express.static(EXPORTS_DIR));
 
 function readYamlFile(filePath) {
   return yaml.load(fs.readFileSync(filePath, 'utf8'));
+}
+
+function ensureDir(dir) {
+  fs.mkdirSync(dir, { recursive: true });
 }
 
 function sanitizeJson(value) {
@@ -179,13 +184,75 @@ function uniquePath(dir, filename) {
   return candidate;
 }
 
+function stripDataUrls(value) {
+  if (Array.isArray(value)) return value.map(stripDataUrls);
+  if (!value || typeof value !== 'object') return value;
+  const out = {};
+  for (const [key, child] of Object.entries(value)) {
+    if (key === 'dataUrl') continue;
+    out[key] = stripDataUrls(child);
+  }
+  return out;
+}
+
+function projectPath(id) {
+  return path.join(MOCKUP_PROJECTS_DIR, `${slugify(id, 'project')}.json`);
+}
+
+function listProjects() {
+  ensureDir(MOCKUP_PROJECTS_DIR);
+  return fs.readdirSync(MOCKUP_PROJECTS_DIR)
+    .filter((file) => file.endsWith('.json'))
+    .map((file) => {
+      try {
+        const project = JSON.parse(fs.readFileSync(path.join(MOCKUP_PROJECTS_DIR, file), 'utf8'));
+        return {
+          id: project.id,
+          name: project.name,
+          buildSlug: project.input && project.input.buildSlug,
+          updatedAt: project.updatedAt,
+          createdAt: project.createdAt,
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean)
+    .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+}
+
+function saveProject(payload) {
+  ensureDir(MOCKUP_PROJECTS_DIR);
+  const now = new Date().toISOString();
+  const cleanInput = stripDataUrls(payload.input || {});
+  const id = slugify(payload.id || payload.name || cleanInput.buildSlug || 'mockup-project', 'mockup-project');
+  const existingPath = projectPath(id);
+  let existing = {};
+  if (fs.existsSync(existingPath)) {
+    try { existing = JSON.parse(fs.readFileSync(existingPath, 'utf8')); } catch {}
+  }
+  const project = {
+    id,
+    name: payload.name || existing.name || cleanInput.buildSlug || id,
+    createdAt: existing.createdAt || now,
+    updatedAt: now,
+    input: cleanInput,
+    analysis: payload.analysis || null,
+  };
+  fs.writeFileSync(existingPath, JSON.stringify(project, null, 2));
+  return project;
+}
+
 function stageUploadedImages(input) {
-  const staged = [];
+  const existing = input.existingStagedAssets && Array.isArray(input.existingStagedAssets.assets)
+    ? input.existingStagedAssets
+    : null;
+  const staged = existing ? [...existing.assets] : [];
   const siteSlug = slugify(input.buildSlug || input.siteSlug || input.siteName || input.targetOutline || input.siteType, 'site-build');
   const buildId = slugify(input.buildId || new Date().toISOString().slice(0, 10), 'build');
-  const folderName = `${siteSlug}-${buildId}`;
+  const folderName = existing && existing.folderName ? existing.folderName : `${siteSlug}-${buildId}`;
   const folder = path.join(MOCKUP_ASSETS_DIR, folderName);
-  fs.mkdirSync(folder, { recursive: true });
+  ensureDir(folder);
 
   const files = [];
   if (input.mockupImage && input.mockupImage.dataUrl) {
@@ -669,6 +736,42 @@ app.get('/', (_req, res) => {
 
 app.get('/api/knowledge', (_req, res) => {
   res.json(getKnowledgeBase());
+});
+
+app.get('/api/projects', (_req, res) => {
+  try {
+    res.json({ projects: listProjects() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/projects/:id', (req, res) => {
+  try {
+    const filePath = projectPath(req.params.id);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Project not found' });
+    res.json(JSON.parse(fs.readFileSync(filePath, 'utf8')));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/projects', (req, res) => {
+  try {
+    res.json(saveProject(req.body || {}));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/projects/:id', (req, res) => {
+  try {
+    const filePath = projectPath(req.params.id);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    res.json({ deleted: true, id: req.params.id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/analyze', (req, res) => {

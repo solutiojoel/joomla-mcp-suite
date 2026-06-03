@@ -259,6 +259,24 @@
   <main>
     <aside>
       <div class="group">
+        <h2>Project</h2>
+        <label for="project-select">Saved Project</label>
+        <select id="project-select">
+          <option value="">New project</option>
+        </select>
+
+        <label for="project-name">Project Name</label>
+        <input id="project-name" type="text" placeholder="St. Gertrude mockup build">
+
+        <div class="button-row">
+          <button id="save-project">Save Project</button>
+          <button id="load-project" class="secondary">Load</button>
+          <button id="new-project" class="secondary">New</button>
+          <button id="delete-project" class="secondary">Delete</button>
+        </div>
+      </div>
+
+      <div class="group">
         <h2>Target</h2>
         <label for="site-type">Site Type</label>
         <select id="site-type">
@@ -343,6 +361,8 @@
     let latest = null;
     let mockupMeta = null;
     let assetMeta = [];
+    let loadedProject = null;
+    let loadedStagedAssets = null;
 
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s == null ? '' : s)
@@ -373,6 +393,17 @@
       const cards = [];
       if (mockupMeta) cards.push({ ...mockupMeta, label: 'Mockup' });
       for (const asset of assetMeta) cards.push({ ...asset, label: 'Asset' });
+      if (loadedStagedAssets && loadedStagedAssets.assets) {
+        for (const asset of loadedStagedAssets.assets) {
+          cards.push({
+            url: asset.appPath,
+            name: asset.name || asset.filename,
+            width: asset.width || '',
+            height: asset.height || '',
+            label: asset.role === 'mockup' ? 'Saved Mockup' : 'Saved Asset'
+          });
+        }
+      }
       for (const item of cards) {
         const div = document.createElement('div');
         div.className = 'preview';
@@ -409,6 +440,7 @@
         buildSlug: $('build-slug').value.trim(),
         designNotes: $('notes').value,
         selectedSections: selectedSections(),
+        existingStagedAssets: loadedStagedAssets,
         mockupImage: mockupMeta ? {
           name: mockupMeta.name,
           width: mockupMeta.width,
@@ -426,6 +458,115 @@
       };
     }
 
+    async function loadProjects() {
+      const res = await fetch('/api/projects');
+      const data = await res.json();
+      const select = $('project-select');
+      const current = select.value;
+      select.innerHTML = '<option value="">New project</option>' +
+        (data.projects || []).map((project) =>
+          '<option value="' + esc(project.id) + '">' + esc(project.name || project.id) +
+          (project.updatedAt ? ' - ' + esc(project.updatedAt.slice(0, 10)) : '') + '</option>'
+        ).join('');
+      if (current) select.value = current;
+    }
+
+    function applyInput(input) {
+      input = input || {};
+      $('site-type').value = input.siteType || 'church';
+      $('outline').value = input.targetOutline || '#Home';
+      $('homepage-category').value = input.homepageCategory || 'Homepage Articles';
+      $('build-slug').value = input.buildSlug || '';
+      $('notes').value = input.designNotes || '';
+      const selected = new Set(input.selectedSections || []);
+      document.querySelectorAll('#section-checks input').forEach((box) => {
+        box.checked = selected.size ? selected.has(box.value) : box.checked;
+      });
+    }
+
+    function clearProjectState() {
+      loadedProject = null;
+      loadedStagedAssets = null;
+      latest = null;
+      mockupMeta = null;
+      assetMeta = [];
+      $('project-select').value = '';
+      $('project-name').value = '';
+      $('site-type').value = 'church';
+      $('outline').value = '#Home';
+      $('homepage-category').value = 'Homepage Articles';
+      $('build-slug').value = '';
+      $('notes').value = '';
+      $('mockup').value = '';
+      $('assets').value = '';
+      document.querySelectorAll('#section-checks input').forEach((box) => { box.checked = true; });
+      refreshPreviews();
+      render();
+    }
+
+    async function loadSelectedProject() {
+      const id = $('project-select').value;
+      if (!id) return;
+      const res = await fetch('/api/projects/' + encodeURIComponent(id));
+      const project = await res.json();
+      if (!res.ok) {
+        $('status').textContent = project.error || 'Could not load project.';
+        return;
+      }
+      loadedProject = project;
+      latest = project.analysis || null;
+      loadedStagedAssets = latest && latest.stagedAssets ? latest.stagedAssets : (project.input && project.input.existingStagedAssets) || null;
+      mockupMeta = null;
+      assetMeta = [];
+      $('mockup').value = '';
+      $('assets').value = '';
+      $('project-name').value = project.name || project.id;
+      applyInput(project.input || {});
+      refreshPreviews();
+      render();
+      $('status').textContent = 'Loaded project: ' + (project.name || project.id);
+    }
+
+    async function saveCurrentProject() {
+      const name = $('project-name').value.trim() || $('build-slug').value.trim() || 'Mockup project';
+      const input = requestPayload();
+      if (input.mockupImage) delete input.mockupImage.dataUrl;
+      input.assetImages = (input.assetImages || []).map((asset) => {
+        const copy = { ...asset };
+        delete copy.dataUrl;
+        return copy;
+      });
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          id: loadedProject && loadedProject.id,
+          name,
+          input,
+          analysis: latest,
+        })
+      });
+      const project = await res.json();
+      if (!res.ok) {
+        $('status').textContent = project.error || 'Could not save project.';
+        return;
+      }
+      loadedProject = project;
+      $('project-name').value = project.name;
+      await loadProjects();
+      $('project-select').value = project.id;
+      $('status').textContent = 'Saved project: ' + project.name;
+    }
+
+    async function deleteSelectedProject() {
+      const id = $('project-select').value || (loadedProject && loadedProject.id);
+      if (!id) return;
+      await fetch('/api/projects/' + encodeURIComponent(id), { method: 'DELETE' });
+      clearProjectState();
+      await loadProjects();
+      $('status').textContent = 'Deleted project.';
+    }
+
     async function analyze() {
       $('status').textContent = 'Generating brief...';
       const res = await fetch('/api/analyze', {
@@ -439,6 +580,7 @@
         return;
       }
       $('status').textContent = latest.summary;
+      loadedStagedAssets = latest.stagedAssets || loadedStagedAssets;
       render();
     }
 
@@ -580,6 +722,13 @@
     });
 
     $('analyze').addEventListener('click', analyze);
+    $('save-project').addEventListener('click', saveCurrentProject);
+    $('load-project').addEventListener('click', loadSelectedProject);
+    $('new-project').addEventListener('click', clearProjectState);
+    $('delete-project').addEventListener('click', deleteSelectedProject);
+    $('project-select').addEventListener('change', () => {
+      if ($('project-select').value) loadSelectedProject();
+    });
     $('copy-prompt').addEventListener('click', async () => {
       const text = latest && latest.visionPrompt ? latest.visionPrompt : '';
       if (!text) return;
@@ -591,6 +740,7 @@
       try {
         const res = await fetch('/api/knowledge');
         knowledge = await res.json();
+        await loadProjects();
         $('status').textContent = 'Knowledge base loaded.';
       } catch (err) {
         $('status').textContent = 'Could not load knowledge base: ' + err.message;

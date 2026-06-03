@@ -1,0 +1,47 @@
+# Section Template: Footer — 3-Column Module Positions + Shell Article
+# Usage: Standard Solutio footer with three module position columns
+#        and a footer shell article below them.
+# Place in: Base Outline, footer section
+#
+# REQUIRED CONTEXT VARIABLES:
+#   {{footer_article_id}} — Joomla article ID for the footer shell article
+#
+# NOTE: Belongs in the Base Outline. Sub-outlines inherit it.
+
+id: footer
+type: section
+attributes:
+  class: "s-padding-2"
+
+grids:
+  - blocks:
+      - size: 33.3
+        particle: position
+        title: "Footer A"
+        position_type: position
+      - size: 33.3
+        particle: position
+        title: "Footer B"
+        position_type: position
+      - size: 33.4
+        particle: position
+        title: "Footer C"
+        position_type: position
+  - blocks:
+      - size: 100
+        particle: contentarray
+        title: "Footer"
+        attributes:
+          article:
+            filter:
+              categories: ""
+              articles: "{{footer_article_id}}"
+              featured: include
+            limit:
+              total: "1"
+              columns: "1"
+            display:
+              pagination_buttons: ""
+            sort:
+              orderby: ordering
+              ordering: ASC

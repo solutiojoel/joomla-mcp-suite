@@ -1,0 +1,26 @@
+# Section Template: Offcanvas — Mobile Menu + Subsite Navigation
+# Usage: Mobile slide-out drawer with mobile-menu particle and subsite HTML
+# Place in: Base Outline, offcanvas section
+#
+# REQUIRED CONTEXT VARIABLES:
+#   {{site_name}} — Parish or school name shown in the mobile subsite navigation
+#
+# NOTE: Belongs in the Base Outline. Sub-outlines inherit it.
+
+id: offcanvas
+type: offcanvas
+
+grids:
+  - blocks:
+      - size: 50
+        particle: mobile-menu
+        title: "Mobile Menu"
+      - size: 50
+        particle: custom
+        title: "Subsite Navigation"
+        attributes:
+          enabled: 1
+          html: |
+            <div class="subsite-nav">
+              <p class="subsite-name">{{site_name}}</p>
+            </div>

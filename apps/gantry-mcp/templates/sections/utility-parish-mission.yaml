@@ -1,0 +1,35 @@
+# Section Template: Utility — Parish Mission Statement
+# Usage: Full-width parish mission/welcome text from a Joomla shell article
+# Place in: #Home outline, utility section
+# Alternative to utility-quicklinks.yaml when mission statement is the primary utility content
+#
+# REQUIRED CONTEXT VARIABLES:
+#   {{mission_article_id}} — Joomla article ID for the parish mission shell article
+
+id: utility
+type: section
+attributes:
+  class: ""
+
+grids:
+  - blocks:
+      - size: 100
+        blockClass: parish-mission-wrapper
+        particle: contentarray
+        title: "Parish Mission"
+        attributes:
+          article:
+            filter:
+              categories: ""
+              articles: "{{mission_article_id}}"
+              featured: include
+            limit:
+              total: "1"
+              columns: "1"
+            display:
+              pagination_buttons: ""
+              title: { enabled: "hide" }
+              text: { type: "intro" }
+            sort:
+              orderby: ordering
+              ordering: ASC

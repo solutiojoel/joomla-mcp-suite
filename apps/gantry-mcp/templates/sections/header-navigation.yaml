@@ -1,13 +1,10 @@
 # Section Template: Header Navigation
-# Usage: Navigation section with logo, spacer, toplinks, and main menu
-# Covers: desktop logo (hidden-phone), mobile logo (show-mobile), spacer,
-#         utility toplinks (ql-toplinks-studius), main menu (full-width)
+# Usage: Navigation section — logo, toplinks, main menu
+# Place in: Base Outline, navigation section
+# Use with: gantry_section_apply on the BASE OUTLINE (not #Home)
 #
-# IMPORTANT INHERITANCE RULE:
-# Navigation is a Base Outline section. Edit logo/menu/toplinks/header styling
-# in the Base Outline, then let #Home and all sub-outlines inherit it. Do not
-# duplicate navigation in a child/home outline unless inheritance has been
-# intentionally broken and approved.
+# INHERITANCE RULE: Navigation belongs in the Base Outline only.
+# All sub-outlines (#Home, sub-pages) inherit it. Do not duplicate.
 
 id: navigation
 type: section
@@ -15,14 +12,14 @@ attributes:
   class: "ole-faithful stock"
 
 grids:
-  # Row 1 (mobile): mobile logo shown only on phones
+  # Row 1 (mobile only): mobile logo
   - blocks:
       - size: 100
         blockClass: show-mobile
         particle: logo
         title: "Mobile Logo"
 
-  # Row 2 (desktop): logo left, spacer center, toplinks right
+  # Row 2 (desktop): logo | spacer | toplinks
   - blocks:
       - size: 65
         blockClass: hidden-phone
@@ -39,22 +36,44 @@ grids:
           source: particle
           title: ""
           subcontents:
-            # Populate with 2-3 utility links (Mass Times, Contact Us, etc.)
             - name: "Mass Times"
               button: "Mass Times"
               buttonlink: "/mass-times"
               buttontarget: "_self"
               accent: none
+              class: ""
+              icon: ""
+              img: ""
+              subtitle: ""
+              description: ""
+              buttonclass: ""
+              rokboximage: ""
+              rokboxcaption: ""
             - name: "Contact Us"
               button: "Contact Us"
               buttonlink: "/contact-us"
               buttontarget: "_self"
               accent: none
+              class: ""
+              icon: ""
+              img: ""
+              subtitle: ""
+              description: ""
+              buttonclass: ""
+              rokboximage: ""
+              rokboxcaption: ""
 
   # Row 3: full-width main menu
   - blocks:
       - size: 100
         particle: menu
-        title: "Menu"
+        title: "Navigation Menu"
         attributes:
-          enabled: 1
+          showTitle: 0
+          layout: horizontal
+          startLevel: 1
+          endLevel: 0
+          showAllChildren: 1
+          activeClass: active
+          highlightClass: active
+          activeDropdownClass: active
