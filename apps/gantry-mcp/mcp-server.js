@@ -161,6 +161,103 @@ async function resolveOutlineArg(ctx, args) {
   return (await outlines.resolveOutline(ctx, raw)).id;
 }
 
+async function resolveOutlineWithTitle(ctx, ref) {
+  const raw = String(ref || '').trim();
+  await outlines.openOutlines(ctx);
+  const all = await outlines.listOutlines(ctx);
+  if (!raw || raw === 'default') {
+    return all.find((outline) => outline.id === 'default') || { id: 'default', title: 'Base Outline' };
+  }
+  if (/^\d+$/.test(raw)) {
+    return all.find((outline) => outline.id === raw) || { id: raw, title: raw };
+  }
+  return outlines.resolveOutline(ctx, raw);
+}
+
+function normalizeOutlineTitle(title) {
+  return String(title || '').replace(/^Studius -\s*/, '').trim();
+}
+
+function isSubsiteParentOutline(outline) {
+  const title = normalizeOutlineTitle(outline && outline.title);
+  if (!/\sOutline$/i.test(title)) return false;
+  return !['Base Outline', '#Outline', 'Outline'].includes(title);
+}
+
+function inferSubsiteChildTitles(parentTitle) {
+  const title = normalizeOutlineTitle(parentTitle);
+  if (!/\sOutline$/i.test(title)) return [];
+  const base = title.replace(/\sOutline$/i, '');
+  return [`${base} Home`, `${base} Grid`, `${base} Sponsors`];
+}
+
+async function syncSubsiteSharedPageSettings(ctx, sourceRef, options = {}) {
+  const source = await resolveOutlineWithTitle(ctx, sourceRef);
+  if (!isSubsiteParentOutline(source) && !options.force) {
+    return {
+      synced: false,
+      skipped: true,
+      reason: `Outline "${source.title}" does not look like a subsite parent #Outline.`,
+      source,
+      targets: [],
+    };
+  }
+
+  const targetRefs = options.targets && options.targets.length
+    ? options.targets
+    : inferSubsiteChildTitles(source.title);
+  const targets = [];
+  const missing = [];
+
+  for (const ref of targetRefs) {
+    try {
+      targets.push(await resolveOutlineWithTitle(ctx, ref));
+    } catch (err) {
+      missing.push({ ref, error: err.message });
+    }
+  }
+
+  await pageMod.openPage(ctx, source.id);
+  const sourceFields = await pageMod.listPage(ctx, { all: true });
+
+  const results = [];
+  for (const target of targets) {
+    await pageMod.openPage(ctx, target.id);
+    const targetFields = await pageMod.listPage(ctx, { all: true });
+    const { edits, skipped } = pageMod.buildPageSharedHeadAssetEdits(sourceFields, targetFields, {
+      forceLocal: options.forceLocal !== false,
+    });
+
+    const result = {
+      target,
+      saved: false,
+      fields: Object.keys(edits),
+      skipped,
+    };
+
+    if (!options.dryRun) {
+      await pageMod.editPage(ctx, edits);
+      await pageMod.savePage(ctx);
+      result.saved = true;
+    }
+
+    results.push(result);
+  }
+
+  return {
+    synced: !options.dryRun,
+    dryRun: !!options.dryRun,
+    source,
+    targets: results,
+    missing,
+  };
+}
+
+function shouldSyncSharedPageSettings(args, edits) {
+  if (args.syncSubsiteChildren === false) return false;
+  return Object.keys(edits || {}).some((name) => name.startsWith('page[head]') || name.startsWith('page[assets]'));
+}
+
 const TOOLS = [
   /* Outlines */
   {
@@ -1049,6 +1146,10 @@ const TOOLS = [
         ...SITE_THEME_FIELDS,
         ...OUTLINE_FIELD,
         edits: { type: 'object', additionalProperties: true },
+        syncSubsiteChildren: {
+          type: 'boolean',
+          description: 'Defaults to true. If editing Head Properties or Assets on a subsite #Outline, also sync those fields to Home/Grid/Sponsors.',
+        },
       },
       required: ['site', 'edits'],
     },
@@ -1096,7 +1197,10 @@ const TOOLS = [
       await pageMod.openPage(ctx, args.outline || 'default');
       await pageMod.editPage(ctx, args.edits);
       await pageMod.savePage(ctx);
-      return { saved: Object.keys(args.edits) };
+      const subsiteSync = shouldSyncSharedPageSettings(args, args.edits)
+        ? await syncSubsiteSharedPageSettings(ctx, args.outline || 'default')
+        : null;
+      return { saved: Object.keys(args.edits), subsiteSync };
     },
   },
   {
@@ -1177,6 +1281,42 @@ const TOOLS = [
     },
   },
   {
+    name: 'gantry_subsite_page_shared_sync',
+    description:
+      'Copy only Page Settings > Head Properties and Assets from a subsite #<Subsite> Outline to its #<Subsite> Home, #<Subsite> Grid, and #<Subsite> Sponsors outlines. Does not touch Body settings, so child Body Classes/Body Id remain intact.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        source: { type: 'string', description: 'Subsite parent outline id/title, e.g. "#School Outline".' },
+        targets: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional explicit child outline ids/titles. Defaults to inferred Home, Grid, and Sponsors.',
+        },
+        forceLocal: {
+          type: 'boolean',
+          description: 'When true/default, clears page[origin] on target outlines so Page Settings stay local.',
+        },
+        force: {
+          type: 'boolean',
+          description: 'Allow syncing from a source title that does not look like a subsite parent #Outline.',
+        },
+        dryRun: { type: 'boolean', description: 'Preview target edits without saving.' },
+      },
+      required: ['site', 'source'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      return syncSubsiteSharedPageSettings(ctx, args.source, {
+        targets: args.targets || [],
+        forceLocal: args.forceLocal !== false,
+        force: !!args.force,
+        dryRun: !!args.dryRun,
+      });
+    },
+  },
+  {
     name: 'gantry_page_settings_breakdown',
     description:
       'Return Page Settings broken into Head Properties, Assets, Body Attributes, and Font Awesome sections with parsed meta/CSS/JS/tag-attribute rows.',
@@ -1254,6 +1394,10 @@ const TOOLS = [
           },
         },
         dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+        syncSubsiteChildren: {
+          type: 'boolean',
+          description: 'Defaults to true. If editing a subsite #Outline, also sync Head Properties to Home/Grid/Sponsors.',
+        },
       },
       required: ['site'],
     },
@@ -1264,7 +1408,10 @@ const TOOLS = [
       if (args.dryRun) return { dryRun: true, edits };
       await pageMod.editPage(ctx, edits);
       await pageMod.savePage(ctx);
-      return { saved: Object.keys(edits) };
+      const subsiteSync = shouldSyncSharedPageSettings(args, edits)
+        ? await syncSubsiteSharedPageSettings(ctx, args.outline || 'default')
+        : null;
+      return { saved: Object.keys(edits), subsiteSync };
     },
   },
   {
@@ -1282,6 +1429,10 @@ const TOOLS = [
           additionalProperties: true,
         },
         dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+        syncSubsiteChildren: {
+          type: 'boolean',
+          description: 'Defaults to true. If editing a subsite #Outline, also sync Head Properties to Home/Grid/Sponsors.',
+        },
       },
       required: ['site'],
     },
@@ -1295,7 +1446,10 @@ const TOOLS = [
       if (args.dryRun) return { dryRun: true, edits };
       await pageMod.editPage(ctx, edits);
       await pageMod.savePage(ctx);
-      return { saved: Object.keys(edits) };
+      const subsiteSync = shouldSyncSharedPageSettings(args, edits)
+        ? await syncSubsiteSharedPageSettings(ctx, args.outline || 'default')
+        : null;
+      return { saved: Object.keys(edits), subsiteSync };
     },
   },
   {
@@ -1310,6 +1464,10 @@ const TOOLS = [
         favicon: { type: 'string', description: 'Favicon path.' },
         touchicon: { type: 'string', description: 'Touch icon path.' },
         dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+        syncSubsiteChildren: {
+          type: 'boolean',
+          description: 'Defaults to true. If editing a subsite #Outline, also sync Assets to Home/Grid/Sponsors.',
+        },
       },
       required: ['site'],
     },
@@ -1320,7 +1478,10 @@ const TOOLS = [
       if (args.dryRun) return { dryRun: true, edits };
       await pageMod.editPage(ctx, edits);
       await pageMod.savePage(ctx);
-      return { saved: Object.keys(edits) };
+      const subsiteSync = shouldSyncSharedPageSettings(args, edits)
+        ? await syncSubsiteSharedPageSettings(ctx, args.outline || 'default')
+        : null;
+      return { saved: Object.keys(edits), subsiteSync };
     },
   },
   {
@@ -1382,6 +1543,10 @@ const TOOLS = [
           },
         },
         dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+        syncSubsiteChildren: {
+          type: 'boolean',
+          description: 'Defaults to true. If editing a subsite #Outline, also sync Assets to Home/Grid/Sponsors.',
+        },
       },
       required: ['site'],
     },
@@ -1392,7 +1557,10 @@ const TOOLS = [
       if (args.dryRun) return { dryRun: true, edits };
       await pageMod.editPage(ctx, edits);
       await pageMod.savePage(ctx);
-      return { saved: Object.keys(edits) };
+      const subsiteSync = shouldSyncSharedPageSettings(args, edits)
+        ? await syncSubsiteSharedPageSettings(ctx, args.outline || 'default')
+        : null;
+      return { saved: Object.keys(edits), subsiteSync };
     },
   },
   {

@@ -458,6 +458,25 @@ function buildPageCopyEdits(sourceFields, targetFields, options = {}) {
   return { edits, skipped };
 }
 
+function buildPageSharedHeadAssetEdits(sourceFields, targetFields, options = {}) {
+  const source = fieldsToMap(sourceFields);
+  const target = fieldsToMap(targetFields);
+  const edits = {};
+  const skipped = [];
+
+  for (const [name, value] of Object.entries(source)) {
+    if (name.startsWith('page[head]') || name.startsWith('page[assets]')) {
+      edits[name] = value;
+    }
+  }
+
+  if (options.forceLocal !== false && Object.prototype.hasOwnProperty.call(target, 'page[origin]')) {
+    edits['page[origin]'] = '';
+  }
+
+  return { edits, skipped };
+}
+
 function readJsonField(map, name, fallback) {
   const raw = map[name];
   if (!raw) return Array.isArray(fallback) ? [...fallback] : fallback;
@@ -660,6 +679,7 @@ module.exports = {
   editAssetLists,
   editBody,
   buildPageCopyEdits,
+  buildPageSharedHeadAssetEdits,
   ensureSiteDefaults,
   buildSiteDefaults,
 };

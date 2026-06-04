@@ -222,6 +222,19 @@ Standard Layout screen node ids to consider for full subsite #Outline cloning:
 - Head Properties and Assets must match #<Subsite> Outline.
 - Do not entangle/inherit Page Settings.
 
+5. Ongoing subsite Page Settings updates:
+- Because subsite child outlines keep Page Settings local instead of entangled,
+  later edits to #<Subsite> Outline Page Settings are not inherited automatically.
+- Whenever #<Subsite> Outline Page Settings > Head Properties or Assets change,
+  immediately sync those same Head Properties and Assets to #<Subsite> Home,
+  #<Subsite> Grid, and #<Subsite> Sponsors.
+- Use gantry_subsite_page_shared_sync for an explicit pass.
+- The Head/Assets edit tools should also run this sync automatically when the
+  edited outline is a subsite parent #Outline.
+- Sync only Head Properties and Assets. Do not overwrite child Body settings:
+  Home keeps gantry site-home withmaxwidth, Grid keeps Body Id site-grid, and
+  Sponsors stays aligned unless it has an intentional documented exception.
+
 ## Gantry Tool Workflow
 
 Before changing outlines:
@@ -238,6 +251,9 @@ Useful low-level tools:
 - gantry_subsite_outline_setup: preferred for #<Subsite> Outline. It clones the
   entire layout locally and copies Page Settings locally in one operation.
 - gantry_subsite_child_outline_setup: preferred for #<Subsite> Home/Grid/Sponsors.
+- gantry_subsite_page_shared_sync: after any later Head Properties or Assets
+  change on #<Subsite> Outline, copy only those shared Page Settings fields to
+  #<Subsite> Home, #<Subsite> Grid, and #<Subsite> Sponsors.
   It first makes every standard section inherit from #<Subsite> Outline, then clones
   only the required exception sections, then copies Page Settings locally.
 - gantry_layout_section_inherit: point inherited sections to the correct parent outline.
