@@ -3058,126 +3058,127 @@
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/agent7",
-    "upload_path": "/forge/agent7/images/pub"
+    "upload_path": "/forge/agent7/pub",
+    "pub_url": "https://agent6.forge.solutiosoftware.com/images/pub"
   },
   "email-base.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/email-base",
-    "upload_path": "/forge/email-base/images/pub"
+    "upload_path": "/forge/email-base/pub"
   },
   "exodus3.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/exodus3",
-    "upload_path": "/forge/exodus3/images/pub"
+    "upload_path": "/forge/exodus3/pub"
   },
   "genesis3.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/genesis3",
-    "upload_path": "/forge/genesis3/images/pub"
+    "upload_path": "/forge/genesis3/pub"
   },
   "grids.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/grids",
-    "upload_path": "/forge/grids/images/pub"
+    "upload_path": "/forge/grids/pub"
   },
   "jacob.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/jacob",
-    "upload_path": "/forge/jacob/images/pub"
+    "upload_path": "/forge/jacob/pub"
   },
   "master.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/master",
-    "upload_path": "/forge/master/images/pub"
+    "upload_path": "/forge/master/pub"
   },
   "master-backup.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/master-backup",
-    "upload_path": "/forge/master-backup/images/pub"
+    "upload_path": "/forge/master-backup/pub"
   },
   "mockup-generator.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/mockup-generator",
-    "upload_path": "/forge/mockup-generator/images/pub"
+    "upload_path": "/forge/mockup-generator/pub"
   },
   "parish3.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/parish3",
-    "upload_path": "/forge/parish3/images/pub"
+    "upload_path": "/forge/parish3/pub"
   },
   "parish-spons3.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/parish-spons3",
-    "upload_path": "/forge/parish-spons3/images/pub"
+    "upload_path": "/forge/parish-spons3/pub"
   },
   "scrape.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/scrape",
-    "upload_path": "/forge/scrape/images/pub"
+    "upload_path": "/forge/scrape/pub"
   },
   "scrape2.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/scrape2",
-    "upload_path": "/forge/scrape2/images/pub"
+    "upload_path": "/forge/scrape2/pub"
   },
   "scrape3.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/scrape3",
-    "upload_path": "/forge/scrape3/images/pub"
+    "upload_path": "/forge/scrape3/pub"
   },
   "shannon.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/shannon",
-    "upload_path": "/forge/shannon/images/pub"
+    "upload_path": "/forge/shannon/pub"
   },
   "stpat-mockup-restore.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/stpat-mockup-restore",
-    "upload_path": "/forge/stpat-mockup-restore/images/pub"
+    "upload_path": "/forge/stpat-mockup-restore/pub"
   },
   "studius.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/studius",
-    "upload_path": "/forge/studius/images/pub"
+    "upload_path": "/forge/studius/pub"
   },
   "studius-backup.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/studius-backup",
-    "upload_path": "/forge/studius-backup/images/pub"
+    "upload_path": "/forge/studius-backup/pub"
   },
   "studius-import3.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/studius-import3",
-    "upload_path": "/forge/studius-import3/images/pub"
+    "upload_path": "/forge/studius-import3/pub"
   },
   "studius-importsample.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/studius-importsample",
-    "upload_path": "/forge/studius-importsample/images/pub"
+    "upload_path": "/forge/studius-importsample/pub"
   },
   "wheatland.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,
     "web_root": "/forge/wheatland",
-    "upload_path": "/forge/wheatland/images/pub"
+    "upload_path": "/forge/wheatland/pub"
   }
 }

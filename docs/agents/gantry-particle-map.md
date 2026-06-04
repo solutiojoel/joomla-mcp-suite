@@ -139,6 +139,12 @@ Live Forge sample:
 
 Use for hero sliders and image carousels. Standard Solutio homepage sliders usually use `source: joomla`.
 
+**Required conventions for the homepage swiper — always set both:**
+- **Block class** (`block[extra-class]`): `fullwidth-swiper`
+- **Particle ID** (set in particle settings as `id`): `rotate-addpic`
+
+These are used by the site's rotator JS and CSS across all Solutio sites. If either is missing or different, the rotator behavior and CSS targeting will break. Verify both whenever creating or editing the homepage swiper particle.
+
 Settings to account for:
 
 - Core: `enabled`, `class`, `source`, `image`, `height`, `heightMobile`

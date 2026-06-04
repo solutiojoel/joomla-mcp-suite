@@ -82,6 +82,7 @@ Only read these when explicitly performing that workflow — do not load them by
 | `docs/agents/custom-page-agent.md` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
 | `docs/agents/gantry-section-css.md` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |
 | `docs/agents/gantry-particle-map.md` | Gantry particle settings, rendered HTML anchors, and particle selection/CSS targeting map |
+| `docs/agents/gantry-visual-qa.md` | Visual QA loop after any layout or CSS work — screenshots, checklist, CSS iteration |
 
 Knowledge base articles for specific issue types live under `docs/agents/kb/`. When investigating a support ticket, check what files are in that folder and read any that match the issue type before starting your investigation.
 

@@ -211,6 +211,57 @@ Keep overlay pseudo-elements behind the `.g-container` by setting the section `p
 
 ---
 
+## Where to Put Custom CSS
+
+**Always write custom CSS to a file on the FTP server, then link it in the Base Outline.** Do not paste CSS into the Gantry admin Styles textarea — that field is for Gantry variable overrides only, not site CSS. Anything put there is harder to version-control, invisible to the next agent, and easy to accidentally overwrite.
+
+### File location
+
+The standard path for site-specific custom CSS on Solutio sites is:
+
+```
+/templates/g5_clarity/custom/css/custom.css
+```
+
+If the file doesn't exist yet, create it via FTP. If a site uses a different template folder name, check with `ftp_list_files` at `/templates/` to confirm the folder name.
+
+### Linking the file in the Base Outline
+
+After writing the file to FTP, register it so it loads on every page:
+
+1. Gantry admin → **Base Outline** → **Styles** tab → scroll to **CSS Files** section
+2. Add the path: `/templates/g5_clarity/custom/css/custom.css`
+3. Save the outline
+
+Because all other outlines (Home, Grid, Subpage, Sponsors, Error, etc.) inherit from Base, the file is automatically included everywhere — do not register it on individual outlines.
+
+### Check before registering
+
+Before adding the link, verify it isn't already there:
+
+```
+gantry_page_list(outlineId: "[base outline ID]")
+```
+
+Look for the CSS Files section in the returned page settings.
+
+### Full workflow
+
+```
+1. ftp_read_file("/templates/g5_clarity/custom/css/custom.css")
+   → read current CSS, or note if file doesn't exist yet
+
+2. Append new rules to the content
+
+3. ftp_upload_file("/templates/g5_clarity/custom/css/custom.css", content: "...")
+   → write updated file back to server
+
+4. Confirm the file path is registered in Base Outline → CSS Files
+   → add it if missing
+```
+
+---
+
 ## CSS Authoring Rules
 
 - Preserve the rendered hierarchy when choosing selectors: section ID, container/grid only when needed, block class, then particle-generated class.

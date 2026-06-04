@@ -50,7 +50,11 @@ Keep entries concise. This is a review queue, not a journal. One tight paragraph
 
 ## ⏳ Pending Review
 
-*(No entries yet — first entries will appear here after sessions where improvements are found)*
+### 2026-06-04 — Tool Behavior | Direct particle edit missed generated section-apply ID
+**Context:** Experimental #Home particle layout on agent7.forge.solutiosoftware.com.
+**Observation:** `gantry_particle_direct_edit` returned `Node "contentarray-6848" is type "undefined", not a particle` even though `gantry_layout_tree` and rendered particle HTML showed that generated contentarray ID existed immediately after `gantry_section_apply`.
+**Suggested fix:** Check whether direct-edit snapshots lag section-apply saves or require a different ID namespace/refresh step; document the required refresh sequence or update the tool to resolve freshly generated particle IDs consistently. Partial mitigation: always use `gantry_particle_html` to verify a particle ID is resolvable before attempting to edit it.
+**Status:** pending — tool-level fix needed; `gantry-visual-qa.md` added to address the broader workflow gap (CSS as an implementation step, not afterthought)
 
 ---
 
