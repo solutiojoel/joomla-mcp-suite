@@ -304,13 +304,13 @@ function buildServer() {
           'Call this at the start of any build or design task to ensure consistency with ' +
           'the established conventions across the client fleet. ' +
           'Use the "section" parameter to request a focused part of the guide, or omit it for the full reference. ' +
-          'Available sections: overview, outline_structure, inherit_rules, css, page_targeting, parish, school, checklist, naming.',
+          'Available sections: overview, outline_structure, inherit_rules, css, css_rendering, page_targeting, parish, school, checklist, naming.',
         inputSchema: {
           type: 'object',
           properties: {
             section: {
               type: 'string',
-              enum: ['full', 'overview', 'outline_structure', 'inherit_rules', 'css', 'page_targeting', 'parish', 'school', 'checklist', 'naming'],
+              enum: ['full', 'overview', 'outline_structure', 'inherit_rules', 'css', 'css_rendering', 'page_targeting', 'parish', 'school', 'checklist', 'naming'],
               description: 'Which part of the guide to return. Omit or use "full" for the complete reference.',
             },
           },

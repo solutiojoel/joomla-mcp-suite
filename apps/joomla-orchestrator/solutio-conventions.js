@@ -342,6 +342,69 @@ File always starts with:
 
 ---
 
+## GANTRY RENDERED SECTION HTML MODEL
+
+Gantry 5 renders frontend layout sections in this stable hierarchy:
+
+  #g-{section} > .g-container > .g-grid > .g-block
+
+Example:
+
+  <section id="g-above" class="g-flushed">
+    <div class="g-container">
+      <div class="g-grid">
+        <div class="g-block size-100 ql-title-overlay">
+          ...particle-generated HTML...
+        </div>
+      </div>
+    </div>
+  </section>
+
+Rules:
+- #g-{section} is the section wrapper. Put section background colors, background
+  images, overlays, and viewport-wide treatments here.
+- .g-container is the max-width content wrapper. On withmaxwidth sites it is capped
+  by --site-container-max-width, normally 1440px.
+- .g-grid is one row in the Gantry Layout screen. A section can render multiple
+  .g-grid children.
+- .g-block wraps a particle in that row. The particle's custom block class is on
+  this .g-block alongside size-*.
+- Particle-generated markup lives inside .g-block, usually under .g-content,
+  .g-particle, .g-blockcontent, .g-array-item, or particle-specific classes.
+
+When writing particle CSS, prefer:
+
+  html body.site-home #g-above .ql-title-overlay .g-blockcontent { ... }
+
+Use section ID + block class when that particle appears in more than one section.
+Use only the block class when the style is intentionally reusable.
+
+---
+
+## WITHMAXWIDTH AND SECTION PADDING MODEL
+
+Solutio sites use the withmaxwidth body class so the section can span the viewport
+while its immediate .g-container remains constrained.
+
+Wide-screen sections are centered at 90rem and their .g-container receives:
+
+  max-width: var(--site-container-max-width);
+
+The .g-container also needs position: relative so section overlays can sit behind
+content safely.
+
+Because sections normally use g-flushed, add section spacing on the immediate
+.g-container with !important:
+
+  html body.site-home #g-above > .g-container {
+    padding: min(4vw, 4rem) min(2vw, 2rem)!important;
+  }
+
+Do not put section spacing on the particle internals unless that spacing is truly
+part of the component.
+
+---
+
 ## PAGE TARGETING RULES — CRITICAL
 
 This is the most important scoping rule in override CSS. The wrong selector is the
@@ -430,6 +493,42 @@ Set in html body {} (all pages — navigation and footer appear everywhere):
   --section-navigation-bg  (if needed — usually handled in #g-navigation directly)
   --section-footer-bg      (if needed — usually handled in #g-footer directly)
   --section-copyright-bg   (if needed)
+
+---
+
+## SECTION BACKGROUND IMAGE + OVERLAY PATTERN
+
+Put background images on the section wrapper, not the .g-container. This lets the
+image span the viewport even when the content is max-width constrained.
+
+Desktop:
+
+  html body.site-home #g-expanded {
+    background: url('/images/template/bg-welcome.jpg') 50% 50% no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    position: relative;
+  }
+  html body.site-home #g-expanded:before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(var(--primary-color-rgb), .45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1;
+  }
+  html body.site-home #g-expanded > .g-container {
+    position: relative;
+    z-index: 2;
+    padding: min(4vw, 4rem) min(10vw, 10rem)!important;
+  }
+
+Mobile uses the same structure without background-attachment: fixed and usually:
+
+  html body.site-home.withmaxwidth #g-expanded > .g-container {
+    padding: 2rem 1rem!important;
+  }
 
 ---
 
@@ -574,6 +673,53 @@ Scoping it inside .site-home breaks the navigation and footer on every subpage.
 Section backgrounds for homepage: --section-{id}-bg in html body.site-home {}
 Section backgrounds for nav/footer: in html body {} or directly on #g-navigation/#g-footer
 Navigation background: bg-header.jpg with rgba primary color overlay + backdrop-filter blur
+`.trim(),
+
+  css_rendering: `
+## Gantry Rendered HTML and CSS Targeting
+
+Frontend hierarchy:
+  #g-{section} > .g-container > .g-grid > .g-block > particle-generated HTML
+
+Example:
+  <section id="g-above" class="g-flushed">
+    <div class="g-container">
+      <div class="g-grid">
+        <div class="g-block size-100 ql-title-overlay">...</div>
+      </div>
+    </div>
+  </section>
+
+Selector rule:
+  Use section ID + block class + particle class for specific overrides:
+  html body.site-home #g-above .ql-title-overlay .g-blockcontent { ... }
+
+Where to put CSS:
+  #g-{section}                         Section backgrounds/images/overlays
+  #g-{section} > .g-container          Section padding and max-width content spacing
+  #g-{section} .{block-class}          Particle wrapper layout and reusable variants
+  #g-{section} .{block-class} .g-*     Particle-generated internals
+
+withmaxwidth:
+  The section can be full viewport width while > .g-container is capped at
+  var(--site-container-max-width), normally 1440px, starting at 90rem.
+
+g-flushed:
+  Section padding must go on #g-{section} > .g-container with !important.
+
+Sizing:
+  Use min(Nvw, Nrem) with matching numbers, such as min(2vw, 2rem), so spacing
+  scales until the 1440px container cap and then stops.
+
+Background images:
+  Put image and overlay on #g-{section}; set #g-{section} { position: relative; },
+  #g-{section}:before { position: absolute; inset: 0; z-index: 1; }, and
+  #g-{section} > .g-container { position: relative; z-index: 2; }.
+
+Page scope:
+  Homepage-only sections use html body.site-home.
+  Subpage-only treatments use html body.site-sub.
+  Navigation, bottom, footer, copyright, and offcanvas are all-page shared sections.
 `.trim(),
 
   page_targeting: `

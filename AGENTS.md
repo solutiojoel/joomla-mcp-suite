@@ -59,6 +59,7 @@ Only read these when explicitly performing that workflow — do not load them by
 | `docs/agents/menu-agent.md` | Building menus, categories, and menu item structures |
 | `docs/agents/content-agent.md` | Standard article text, SEO, and publish state edits |
 | `docs/agents/custom-page-agent.md` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
+| `docs/agents/gantry-section-css.md` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |
 
 Knowledge base articles for specific issue types live under `docs/agents/kb/`. When investigating a support ticket, check what files are in that folder and read any that match the issue type before starting your investigation.
 

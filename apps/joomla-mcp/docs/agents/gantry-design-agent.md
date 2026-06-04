@@ -19,6 +19,16 @@ Do **not** use this guide for minor edits (changing a particle title, updating a
 
 Follow these steps in order. Do not skip ahead.
 
+### Step 0 — Understand rendered section HTML and CSS targeting
+
+Read:
+
+```
+docs/agents/gantry-section-css.md
+```
+
+Use this DOM model when writing or reviewing `override.css`: `#g-section > .g-container > .g-grid > .g-block`, where the particle's custom block class lives on `.g-block` and the particle-generated HTML lives inside it. Put section backgrounds on `#g-section`, put section padding on `#g-section > .g-container` with `!important`, and scope homepage-only section styles with `.site-home`.
+
 ### Step 1 — Understand the design pattern options
 
 ```
