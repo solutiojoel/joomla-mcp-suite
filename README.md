@@ -549,6 +549,10 @@ Always call `gantry_layout_sections` or `gantry_layout_tree` first to get valid 
 
 **`gantry_page_head_edit`** — Updates Head Properties without touching the rest of the page: custom head content plus add/edit/remove meta tags by key.
 
+By default, head edits preserve the managed Solutio site-default block on the Base Outline. Pass `siteDefaults` to update artwork-driven RGB values, color labels, font imports, and font families while keeping required variable names available.
+
+**`gantry_page_head_defaults_ensure`** — Adds or normalizes the Base Outline startup image, manifest, and `html body` CSS variable block in Head Properties while preserving existing custom content.
+
 **`gantry_page_asset_icons_edit`** — Updates just the favicon and touch icon paths.
 
 **`gantry_page_asset_files_edit`** — Adds, edits, or removes individual CSS and JavaScript asset rows. Use this for linked CSS/JS files instead of putting `<link>` or `<script>` tags in custom head content.

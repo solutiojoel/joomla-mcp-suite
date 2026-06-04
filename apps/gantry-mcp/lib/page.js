@@ -2,6 +2,32 @@
 
 const { sleep, snap, gantryUrl } = require('./util');
 
+const SITE_DEFAULTS_START = '<!-- SOLUTIO SITE DEFAULTS START -->';
+const SITE_DEFAULTS_END = '<!-- SOLUTIO SITE DEFAULTS END -->';
+
+const DEFAULT_SITE_DEFAULTS = {
+  startupImage: '/template/logo-icon.png',
+  manifest: '/content/pwa.webmanifest',
+  fontImport: "/*FONTS ex: @import url('... */",
+  primaryColorRgb: '0,13,63',
+  primaryColorLabel: 'Dark Navy Blue',
+  secondaryColorRgb: '198,147,56',
+  secondaryColorLabel: 'Goldenrod',
+  tertiaryColorRgb: '240,234,214',
+  tertiaryColorLabel: 'Ivory Taupe',
+  defaultWhiteRgb: '255,255,255',
+  defaultBlackRgb: '0,0,0',
+  titleFontFamily: "'EB Garamond', serif",
+  bodyFontFamily: "'Lato', sans-serif",
+  lastBreakPoint: '50.99rem',
+  siteMaxWidth: '1920px',
+  slideshowHeight: 'min(56.25vw, 810px)',
+  slideshowWidth: 'min(100vw, 1440px)',
+  slideshowHeightMobile: '56.25vw',
+  slideshowWidthMobile: '100vw',
+  qlNumBoxes: '5',
+};
+
 /**
  * Page Settings — works in both browser mode (dialog flow) and HTTP mode
  * (parse the form, POST the merged state).
@@ -295,6 +321,106 @@ async function savePage(arg1) {
   return parsed || res;
 }
 
+function pickDefined(...values) {
+  return values.find((value) => value !== undefined && value !== null && value !== '');
+}
+
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function extractCssVar(content, name) {
+  const re = new RegExp(`${escapeRegExp(name)}\\s*:\\s*([^;]+);`);
+  const match = String(content || '').match(re);
+  return match ? match[1].trim() : undefined;
+}
+
+function normalizeFontImport(value) {
+  if (!value) return DEFAULT_SITE_DEFAULTS.fontImport;
+  return String(value).trim();
+}
+
+function buildSiteDefaults(options = {}, existingContent = '') {
+  const o = {
+    ...DEFAULT_SITE_DEFAULTS,
+    primaryColorRgb: pickDefined(options.primaryColorRgb, extractCssVar(existingContent, '--primary-color-rgb'), DEFAULT_SITE_DEFAULTS.primaryColorRgb),
+    secondaryColorRgb: pickDefined(options.secondaryColorRgb, extractCssVar(existingContent, '--secondary-color-rgb'), DEFAULT_SITE_DEFAULTS.secondaryColorRgb),
+    tertiaryColorRgb: pickDefined(options.tertiaryColorRgb, extractCssVar(existingContent, '--tertiary-color-rgb'), DEFAULT_SITE_DEFAULTS.tertiaryColorRgb),
+    defaultWhiteRgb: pickDefined(options.defaultWhiteRgb, extractCssVar(existingContent, '--default-white-rgb'), DEFAULT_SITE_DEFAULTS.defaultWhiteRgb),
+    defaultBlackRgb: pickDefined(options.defaultBlackRgb, extractCssVar(existingContent, '--default-black-rgb'), DEFAULT_SITE_DEFAULTS.defaultBlackRgb),
+    titleFontFamily: pickDefined(options.titleFontFamily, extractCssVar(existingContent, '--title-font-family'), DEFAULT_SITE_DEFAULTS.titleFontFamily),
+    bodyFontFamily: pickDefined(options.bodyFontFamily, extractCssVar(existingContent, '--body-font-family'), DEFAULT_SITE_DEFAULTS.bodyFontFamily),
+    lastBreakPoint: pickDefined(options.lastBreakPoint, extractCssVar(existingContent, '--last-break-point'), DEFAULT_SITE_DEFAULTS.lastBreakPoint),
+    siteMaxWidth: pickDefined(options.siteMaxWidth, extractCssVar(existingContent, '--site-max-width'), DEFAULT_SITE_DEFAULTS.siteMaxWidth),
+    slideshowHeight: pickDefined(options.slideshowHeight, extractCssVar(existingContent, '--slideshow-height'), DEFAULT_SITE_DEFAULTS.slideshowHeight),
+    slideshowWidth: pickDefined(options.slideshowWidth, extractCssVar(existingContent, '--slideshow-width'), DEFAULT_SITE_DEFAULTS.slideshowWidth),
+    slideshowHeightMobile: pickDefined(options.slideshowHeightMobile, extractCssVar(existingContent, '--slideshow-height-mobile'), DEFAULT_SITE_DEFAULTS.slideshowHeightMobile),
+    slideshowWidthMobile: pickDefined(options.slideshowWidthMobile, extractCssVar(existingContent, '--slideshow-width-mobile'), DEFAULT_SITE_DEFAULTS.slideshowWidthMobile),
+    qlNumBoxes: pickDefined(options.qlNumBoxes, extractCssVar(existingContent, '--ql-num-boxes'), DEFAULT_SITE_DEFAULTS.qlNumBoxes),
+    startupImage: pickDefined(options.startupImage, DEFAULT_SITE_DEFAULTS.startupImage),
+    manifest: pickDefined(options.manifest, DEFAULT_SITE_DEFAULTS.manifest),
+    fontImport: normalizeFontImport(pickDefined(options.fontImport, DEFAULT_SITE_DEFAULTS.fontImport)),
+    primaryColorLabel: pickDefined(options.primaryColorLabel, DEFAULT_SITE_DEFAULTS.primaryColorLabel),
+    secondaryColorLabel: pickDefined(options.secondaryColorLabel, DEFAULT_SITE_DEFAULTS.secondaryColorLabel),
+    tertiaryColorLabel: pickDefined(options.tertiaryColorLabel, DEFAULT_SITE_DEFAULTS.tertiaryColorLabel),
+  };
+
+  return [
+    SITE_DEFAULTS_START,
+    `<link rel="apple-touch-startup-image" href="${o.startupImage}">`,
+    `<link rel="manifest" href="${o.manifest}">`,
+    '<style>',
+    o.fontImport,
+    '',
+    '/******* SITE DEFAULTS *************/',
+    'html body {',
+    `--primary-color-rgb: ${o.primaryColorRgb};   /* ${o.primaryColorLabel} */`,
+    `--secondary-color-rgb: ${o.secondaryColorRgb};   /* ${o.secondaryColorLabel} */`,
+    `--tertiary-color-rgb: ${o.tertiaryColorRgb};   /* ${o.tertiaryColorLabel} */`,
+    `--default-white-rgb: ${o.defaultWhiteRgb};`,
+    `--default-black-rgb: ${o.defaultBlackRgb};`,
+    '',
+    `--title-font-family: ${o.titleFontFamily};`,
+    `--body-font-family: ${o.bodyFontFamily};`,
+    '',
+    `--last-break-point: ${o.lastBreakPoint};`,
+    `--site-max-width: ${o.siteMaxWidth};`,
+    '',
+    `--slideshow-height: ${o.slideshowHeight};`,
+    `--slideshow-width: ${o.slideshowWidth};`,
+    '',
+    `--slideshow-height-mobile: ${o.slideshowHeightMobile};`,
+    `--slideshow-width-mobile: ${o.slideshowWidthMobile};`,
+    '',
+    `--ql-num-boxes: ${o.qlNumBoxes};`,
+    '',
+    '}',
+    '</style>',
+    SITE_DEFAULTS_END,
+  ].join('\n');
+}
+
+function stripManagedSiteDefaults(content) {
+  let next = String(content || '');
+  const managedRe = new RegExp(`${escapeRegExp(SITE_DEFAULTS_START)}[\\s\\S]*?${escapeRegExp(SITE_DEFAULTS_END)}\\s*`, 'g');
+  next = next.replace(managedRe, '');
+
+  next = next.replace(/<link\s+rel=["']apple-touch-startup-image["'][^>]*>\s*/gi, '');
+  next = next.replace(/<link\s+rel=["']manifest["'][^>]*>\s*/gi, '');
+  next = next.replace(/<style\b[^>]*>[\s\S]*?SITE DEFAULTS[\s\S]*?<\/style>\s*/gi, '');
+  return next.trim();
+}
+
+function ensureSiteDefaults(content, options = {}) {
+  const placement = options.placement === 'below' ? 'below' : 'above';
+  const custom = stripManagedSiteDefaults(content);
+  const defaults = buildSiteDefaults(options, content);
+  if (!custom) return defaults + '\n';
+  return placement === 'below'
+    ? `${custom}\n\n${defaults}\n`
+    : `${defaults}\n\n${custom}\n`;
+}
+
 function fieldsToMap(fields) {
   const map = {};
   for (const f of fields || []) map[f.name] = f.value;
@@ -420,8 +546,14 @@ async function editHead(arg1, args = {}) {
   const fields = await listPage(arg1, { all: true });
   const map = fieldsToMap(fields);
   const edits = {};
+  const currentCustomContent = map['page[head][head_bottom]'] || '';
   if (Object.prototype.hasOwnProperty.call(args, 'customContent')) {
-    edits['page[head][head_bottom]'] = args.customContent || '';
+    const nextContent = args.customContent || '';
+    edits['page[head][head_bottom]'] = args.preserveSiteDefaults === false
+      ? nextContent
+      : ensureSiteDefaults(nextContent, args.siteDefaults || {});
+  } else if (args.ensureSiteDefaults) {
+    edits['page[head][head_bottom]'] = ensureSiteDefaults(currentCustomContent, args.siteDefaults || {});
   }
   if (Array.isArray(args.metaActions) && args.metaActions.length) {
     edits['page[head][meta][_json]'] = JSON.stringify(
@@ -496,4 +628,6 @@ module.exports = {
   editAssetIcons,
   editAssetLists,
   editBody,
+  ensureSiteDefaults,
+  buildSiteDefaults,
 };

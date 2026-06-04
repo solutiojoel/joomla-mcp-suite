@@ -702,6 +702,42 @@ const TOOLS = [
         ...SITE_THEME_FIELDS,
         ...OUTLINE_FIELD,
         customContent: { type: 'string', description: 'Full custom content for the Head Properties custom content textarea.' },
+        ensureSiteDefaults: {
+          type: 'boolean',
+          description: 'Ensure the managed Solutio startup/manifest/site-default CSS variable block exists in custom head content.',
+        },
+        preserveSiteDefaults: {
+          type: 'boolean',
+          description: 'Defaults to true when customContent is supplied. Set false only for an intentional raw replacement.',
+        },
+        siteDefaults: {
+          type: 'object',
+          description: 'Optional artwork-note overrides for the managed defaults block: RGB values, color labels, font import, font families, dimensions.',
+          properties: {
+            fontImport: { type: 'string' },
+            primaryColorRgb: { type: 'string' },
+            primaryColorLabel: { type: 'string' },
+            secondaryColorRgb: { type: 'string' },
+            secondaryColorLabel: { type: 'string' },
+            tertiaryColorRgb: { type: 'string' },
+            tertiaryColorLabel: { type: 'string' },
+            defaultWhiteRgb: { type: 'string' },
+            defaultBlackRgb: { type: 'string' },
+            titleFontFamily: { type: 'string' },
+            bodyFontFamily: { type: 'string' },
+            lastBreakPoint: { type: 'string' },
+            siteMaxWidth: { type: 'string' },
+            slideshowHeight: { type: 'string' },
+            slideshowWidth: { type: 'string' },
+            slideshowHeightMobile: { type: 'string' },
+            slideshowWidthMobile: { type: 'string' },
+            qlNumBoxes: { type: 'string' },
+            startupImage: { type: 'string' },
+            manifest: { type: 'string' },
+            placement: { type: 'string', enum: ['above', 'below'] },
+          },
+          additionalProperties: true,
+        },
         metaActions: {
           type: 'array',
           description: 'Meta tag actions. set/add/edit upserts one key; remove deletes it.',
@@ -723,6 +759,37 @@ const TOOLS = [
       const ctx = await getCtx(args);
       await pageMod.openPage(ctx, args.outline || 'default');
       const edits = await pageMod.editHead(ctx, args);
+      if (args.dryRun) return { dryRun: true, edits };
+      await pageMod.editPage(ctx, edits);
+      await pageMod.savePage(ctx);
+      return { saved: Object.keys(edits) };
+    },
+  },
+  {
+    name: 'gantry_page_head_defaults_ensure',
+    description:
+      'Ensure the Base Outline Head Properties custom content contains the managed Solutio startup image, manifest, and site-default CSS variables block. Preserves existing custom content and existing color/font values unless siteDefaults overrides are provided.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        siteDefaults: {
+          type: 'object',
+          description: 'Optional artwork-note overrides for RGB colors, color labels, font import, font families, dimensions, startup image, or manifest path.',
+          additionalProperties: true,
+        },
+        dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+      },
+      required: ['site'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      await pageMod.openPage(ctx, args.outline || 'default');
+      const edits = await pageMod.editHead(ctx, {
+        ensureSiteDefaults: true,
+        siteDefaults: args.siteDefaults || {},
+      });
       if (args.dryRun) return { dryRun: true, edits };
       await pageMod.editPage(ctx, edits);
       await pageMod.savePage(ctx);
