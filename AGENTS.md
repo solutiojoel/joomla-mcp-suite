@@ -1,6 +1,6 @@
-# Joomla MCP Suite — Claude Code Instructions
+# Joomla MCP Suite — Agent Instructions
 
-> **Sync note:** This file is kept in sync with `AGENTS.md`. If you update one, run `scripts/sync-agent-docs.ps1` to update the other, or edit both manually.
+> **Sync note:** This file is kept in sync with `CLAUDE.md`. If you update one, run `scripts/sync-agent-docs.ps1` to update the other, or edit both manually.
 
 ---
 
