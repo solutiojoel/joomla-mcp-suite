@@ -121,16 +121,35 @@ const SUBSITE_CHILD_DEFAULTS = {
   home: {
     preset: 'subsite-home',
     cloneIds: ['top', 'slideshow', 'header', 'above', 'feature', 'showcase', 'utility', 'sidebar', 'mainbar', 'aside', 'expanded', 'extension'],
+    cloneContainers: [],
   },
   grid: {
     preset: 'subsite-grid',
     cloneIds: ['utility', 'mainbar', 'aside'],
+    cloneContainers: [],
   },
   sponsors: {
     preset: 'subsite-sponsors',
     cloneIds: ['aside'],
+    cloneContainers: [],
   },
 };
+
+async function resolveInheritedSourceNode(ctx, sourceLayout, nodeId, seen = new Set()) {
+  const found = layoutApi.findNode(sourceLayout, nodeId);
+  if (!found) throw new Error(`Source node "${nodeId}" not found`);
+  const inherit = found.node.inherit || {};
+  const inheritOutline = inherit.outline;
+  if (!inheritOutline || seen.has(inheritOutline + ':' + nodeId)) {
+    return found.node;
+  }
+  seen.add(inheritOutline + ':' + nodeId);
+  const resolved = /^\d+$/.test(String(inheritOutline)) || inheritOutline === 'default'
+    ? { id: inheritOutline }
+    : await outlines.resolveOutline(ctx, inheritOutline);
+  const inheritedLayout = await layoutApi.fetchSavedLayout(ctx, resolved.id);
+  return resolveInheritedSourceNode(ctx, inheritedLayout, nodeId, seen);
+}
 
 /* ─── outline normalisation helper ──────────────────────────────────────────
  * Accepts a numeric id ("33"), a named title ("#Home", "home"), or omitted.
@@ -674,13 +693,18 @@ const TOOLS = [
       const subsiteOutline = await outlines.resolveOutline(ctx, args.subsiteOutline);
       const target = await outlines.resolveOutline(ctx, args.target);
       const inheritIds = args.inheritIds || SUBSITE_CHILD_SECTION_IDS;
-      const cloneIds = args.cloneIds || defaults.cloneIds;
+      const cloneIds = args.cloneIds || [...(defaults.cloneContainers || []), ...defaults.cloneIds];
       const pagePreset = args.pagePreset || defaults.preset;
       const sourceLayout = await layoutApi.fetchSavedLayout(ctx, source.id);
 
       const inherited = [];
       const skippedInherit = [];
       const cloned = [];
+
+      const resolvedSourceMap = {};
+      for (const sectionId of cloneIds) {
+        resolvedSourceMap[sectionId] = await resolveInheritedSourceNode(ctx, sourceLayout, sectionId);
+      }
 
       const layoutResult = await layoutApi.mutateLayout(
         ctx,
@@ -699,7 +723,8 @@ const TOOLS = [
           }
 
           for (const sectionId of cloneIds) {
-            const node = layoutApi.cloneNodeFromStructure(structure, sourceLayout, sectionId);
+            const tempSource = [resolvedSourceMap[sectionId]];
+            const node = layoutApi.cloneNodeFromStructure(structure, tempSource, sectionId);
             cloned.push({ id: sectionId, type: node.type, title: node.title || '' });
           }
         },
