@@ -63,9 +63,9 @@ Add the class to the `<table>` tag, e.g. `<table class="fancytable">`.
 |----------|-------|
 | Title font | `'EB Garamond', serif` |
 | Body font | `'Lato', sans-serif` |
-| Primary color | `#3595be` / `rgba(53, 149, 190, 1)` |
-| Secondary color | `#c9b8a0` / `rgba(201, 184, 160, 1)` |
-| Tertiary color | `#f7d000` / `rgba(247, 208, 0, 1)` |
+| Primary color | var(--primary-color) | `#3595be` / `rgba(53, 149, 190, 1)` | ex: var(--primary-color-rgb) == 53,149,190 / var(--primary-color) == rgba(var(--primary-color-rgb),1)
+| Secondary color | var(--secondary-color) | `#c9b8a0` / `rgba(201, 184, 160, 1)` | ex: var(--secondary-color-rgb) == 201,184,160 / var(--secondary-color) == rgba(var(--secondary-color-rgb),1)
+| Tertiary color | var(--tertiary-color) | `#f7d000` / `rgba(247, 208, 0, 1)` | ex: var(--tertiary-color-rgb) == 247,208,0 / var(--tertiary-color) == rgba(var(--tertiary-color-rgb),1)
 
 ---
 
