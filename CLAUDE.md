@@ -58,6 +58,34 @@ Only read these when explicitly performing that workflow — do not load them by
 
 Knowledge base articles for specific issue types live under `docs/agents/kb/`. When investigating a support ticket, check what files are in that folder and read any that match the issue type before starting your investigation.
 
+**KB file index:**
+
+| File | Topic |
+|------|-------|
+| `staff-grid.md` | Staff/team grid using contentarray particle |
+| `staff-pages.md` | All staff page layouts (grid, teacherbox, table, contact form) |
+| `teacher-pages.md` | Teacher/classroom pages with sidebar nav and user groups |
+| `grid-layout.md` | Grid layout pages using Joomla Articles particle module |
+| `content-standards.md` | Formatting rules, images, links, tables — applies to all content work |
+| `css-table-classes.md` | CSS table classes, button classes, site fonts/colors |
+| `site-config.md` | Site title, meta, timezone, reCAPTCHA, GA4, Webmaster Verification |
+| `business-directory.md` | Business Directory & Sponsorship passcode setup |
+| `user-accounts.md` | User account creation, groups, and category permissions |
+| `quick-galleries.md` | QuickGallery setup and broken gallery link fix |
+| `ministry-platform-widget.md` | Ministry Platform event/opportunity widget integration |
+| `popup.md` | Homepage popup via category + Gantry JS |
+| `podcasting.md` | Podcast/homily feature setup |
+| `calendar-feed.md` | Calendar feed builder and RokMini Events API setup |
+| `elfsight.md` | Elfsight Instagram/Facebook widget connection |
+| `acymail.md` | AcyMail email newsletter template CSS and setup |
+| `dns-launching.md` | DNS records, new site launch checklist, email templates |
+| `redesign-launch.md` | Redesign launch checklist — menu migration, modules, subsites |
+| `pre-training-audit.md` | Pre-training audit checklist before client handoff |
+| `project-closeout.md` | SBS, Dropbox, and calendar steps to close a project |
+| `error-pages.md` | 404 error page content and Gantry outline setup |
+| `animate-on-scroll.md` | Scroll-triggered animations on article/grid sections |
+| `subpage-backgrounds.md` | Full-page background image on specific subpages via CSS |
+
 ---
 
 ## Key Orchestrator Tools
