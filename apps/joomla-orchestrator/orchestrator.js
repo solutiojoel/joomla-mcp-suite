@@ -329,7 +329,8 @@ function buildServer() {
             particle: {
               type: 'string',
               enum: ['all', 'contentarray', 'swiper', 'blockcontent', 'custom', 'logo',
-                     'menu', 'mobile-menu', 'social', 'timeline', 'position', 'system'],
+                     'menu', 'mobile-menu', 'social', 'timeline', 'position', 'spacer',
+                     'copyright', 'horizmenu', 'search', 'video', 'system'],
               description: 'Particle type to look up. Omit or "all" for the full reference.',
             },
           },

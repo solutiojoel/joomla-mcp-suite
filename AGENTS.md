@@ -27,6 +27,27 @@ After confirming the active site, read `docs/agents/editing-rules.md` — it con
 
 ---
 
+## Session End (Required)
+
+Before closing any session on a site, **always** complete both steps:
+
+**1. Update site history** — call `get_site_notes`, update any persistent facts that changed (new IDs, quirks, integrations), then call `write_site_notes` if updated.
+
+**2. Append a changelog entry** — call `append_site_note` with a structured entry:
+```
+### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]
+**Requested by:** [Name / email / 'internal'] | **Ticket:** [#XXXXX or 'none']
+**Changes:**
+- [specific change with IDs]
+**Notes:** [anything non-obvious, or 'No follow-up needed']
+```
+
+This applies to every session — support tickets, build work, audits, and investigation-only sessions alike. If nothing was changed, still log what was looked at and what was found. See `docs/agents/kb/site-history.md` for the full format spec and examples.
+
+**3. Review for process improvements** (when applicable — not required every session) — replay the session's steps and check: did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered mid-task? Did a tool behave unexpectedly? If yes, append an entry to `docs/agents/improvements.md`. This is a shared team queue — only log when something genuinely useful was found.
+
+---
+
 ## Switching Sites
 
 1. Call `set_active_site` with the new URL — this also auto-primes the Joomla session
@@ -60,6 +81,7 @@ Only read these when explicitly performing that workflow — do not load them by
 | `docs/agents/content-agent.md` | Standard article text, SEO, and publish state edits |
 | `docs/agents/custom-page-agent.md` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
 | `docs/agents/gantry-section-css.md` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |
+| `docs/agents/gantry-particle-map.md` | Gantry particle settings, rendered HTML anchors, and particle selection/CSS targeting map |
 
 Knowledge base articles for specific issue types live under `docs/agents/kb/`. When investigating a support ticket, check what files are in that folder and read any that match the issue type before starting your investigation.
 
@@ -90,6 +112,7 @@ Knowledge base articles for specific issue types live under `docs/agents/kb/`. W
 | `error-pages.md` | 404 error page content and Gantry outline setup |
 | `animate-on-scroll.md` | Scroll-triggered animations on article/grid sections |
 | `subpage-backgrounds.md` | Full-page background image on specific subpages via CSS |
+| `site-history.md` | Site history system — two-layer format spec, changelog entry format, examples |
 
 ---
 

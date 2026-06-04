@@ -84,7 +84,6 @@ function loadTemplate(name) {
 
 let _catalog = null;
 function loadCatalog() {
-  if (_catalog) return _catalog;
   _catalog = {};
   if (!fs.existsSync(PARTICLES_DIR)) return _catalog;
   for (const f of fs.readdirSync(PARTICLES_DIR)) {

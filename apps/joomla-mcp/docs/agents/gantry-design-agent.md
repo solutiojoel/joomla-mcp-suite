@@ -25,9 +25,12 @@ Read:
 
 ```
 docs/agents/gantry-section-css.md
+docs/agents/gantry-particle-map.md
 ```
 
 Use this DOM model when writing or reviewing `override.css`: `#g-section > .g-container > .g-grid > .g-block`, where the particle's custom block class lives on `.g-block` and the particle-generated HTML lives inside it. Put section backgrounds on `#g-section`, put section padding on `#g-section > .g-container` with `!important`, and scope homepage-only section styles with `.site-home`.
+
+Use the particle map to confirm every setting for the particle subtype before writing design YAML. After applying on a test outline, use `gantry_particle_html` to inspect the rendered block and write CSS from the actual DOM.
 
 ### Step 1 — Understand the design pattern options
 

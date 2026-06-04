@@ -25,6 +25,10 @@ attributes:
     type: integer
     default: 1
     description: 1 to show, 0 to hide.
+  menu:
+    type: string
+    default: ""
+    description: Joomla/Gantry menu alias. Empty uses the theme default menu.
 
 rendered_html:
   outer_wrapper: "div.g-block"

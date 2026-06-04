@@ -99,27 +99,49 @@ Once the user approves:
 
 ## Step 7 — Document and Close
 
-After all work is complete:
+After all work is complete, complete all four steps in order. Steps 1 and 2 are mandatory every time.
 
-**1. Site note** (if you discovered something non-obvious):
+---
+
+**1. Update site history** (always — no exceptions):
+
+First, if any new persistent facts were discovered (new IDs, new quirks, new integrations), update them:
 ```
-append_site_note(note: "...", category: "...")
+get_site_notes()
+→ update the relevant persistent section in context
+→ write_site_notes(notes: "[full updated file content]")
 ```
 
-**2. Freshdesk note** (always — document what was done):
+Then append a changelog entry for this ticket:
+```
+append_site_note(note: "### YYYY-MM-DD — Ticket #XXXXX | [Brief title of what was done]
+**Requested by:** [Requester name] ([email]) | **Ticket:** #XXXXX
+**Changes:**
+- [Specific change — article ID, module ID, menu item ID, field, old value → new value]
+- [Another specific change]
+**Notes:** [Anything non-obvious, quirks found, follow-up needed, or 'No follow-up needed']")
+```
+
+Rules:
+- Always include specific IDs — not just item names
+- If nothing was changed (investigation only), still log: what was investigated, what was found, what was ruled out
+- Vague entries ("updated some articles per client") are not acceptable
+
+---
+
+**2. Freshdesk internal note** (always — document what was done for the human agent):
 ```
 freshdesk_add_note(
   ticket_id: ...,
-  body: "<p><strong>Issue:</strong> ...</p><p><strong>Resolution:</strong> ...</p>"
+  body: "<p><strong>Issue:</strong> [root cause]</p>
+         <p><strong>Resolution:</strong> [what was changed, with specific IDs/paths]</p>
+         <p><strong>Follow-up:</strong> [any recommended next steps, or 'None']</p>"
 )
 ```
 
-The note should include:
-- What the issue was
-- What was changed (with specific IDs, titles, or paths)
-- Any follow-up recommended for the client
+---
 
-**3. Recommended reply note** (always — draft the reply for the human agent to send):
+**3. Recommended client reply** (always — draft for the human agent to send):
 ```
 freshdesk_add_note(
   ticket_id: ...,
@@ -127,9 +149,11 @@ freshdesk_add_note(
 )
 ```
 
-- Write the reply as the human agent would send it — no salutation, no signature (Freshdesk adds those automatically)
-- Keep it concise and client-friendly
-- If the ticket is waiting on the client (e.g. pending info), draft a follow-up nudge instead
+- Write as the human agent would send it — no salutation, no signature (Freshdesk adds those)
+- Keep it warm, concise, and client-friendly
+- If waiting on the client, draft a follow-up nudge instead
+
+---
 
 **4. Update ticket status** (only with user confirmation):
 ```

@@ -1,0 +1,95 @@
+name: video
+title: Video
+category: media
+
+description: >
+  Gantry video particle for local or remote videos. Rare in Solutio homepage
+  exports, but present in the fleet and useful for media-forward sections.
+
+when_to_use:
+  - A dedicated video section using local files or supported remote video sources
+
+when_not_to_use:
+  - Embedded video HTML stored in a Joomla article (use contentarray)
+  - Static image cards that link to videos (use blockcontent)
+
+common_block_classes:
+  "" : Usually no block class
+
+attributes:
+  enabled:
+    type: integer
+    default: 1
+  class:
+    type: string
+    default: ""
+  title:
+    type: string
+    default: ""
+  headertext:
+    type: string
+    default: ""
+  description:
+    type: string
+    default: ""
+  columns:
+    type: string
+    default: "1"
+  items:
+    type: repeater
+    item_schema:
+      title:
+        type: string
+        default: ""
+      source:
+        type: string
+        default: ""
+      video:
+        type: string
+        default: ""
+      posterimage:
+        type: string
+        default: ""
+      caption:
+        type: string
+        default: ""
+      info:
+        type: string
+        default: ""
+      autoplay:
+        type: string
+        default: disabled
+        options: [enabled, disabled]
+      controls:
+        type: string
+        default: enabled
+        options: [enabled, disabled]
+      loop:
+        type: string
+        default: disabled
+        options: [enabled, disabled]
+      muted:
+        type: string
+        default: disabled
+        options: [enabled, disabled]
+      related:
+        type: string
+        default: disabled
+        options: [enabled, disabled]
+      start:
+        type: string
+        default: ""
+      local:
+        type: repeater
+        item_schema:
+          title:
+            type: string
+            default: ""
+          file:
+            type: string
+            default: ""
+
+rendered_html:
+  outer_wrapper: "div.g-block.{blockClass}"
+  inner_wrapper: "div.g-content.g-particle"
+  particle_element: "video particle markup"

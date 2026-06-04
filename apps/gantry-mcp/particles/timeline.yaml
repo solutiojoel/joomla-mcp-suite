@@ -1,0 +1,52 @@
+name: timeline
+title: Timeline
+category: content
+
+description: >
+  Renders upcoming events from the Gantry/Joomla calendar integration. It is the
+  standard school-home calendar/events particle and occasionally appears on parish
+  homes with a specific calendar slug.
+
+when_to_use:
+  - School homepage upcoming events in mainbar
+  - Parish event widgets when a Gantry timeline list is preferred over an article embed
+
+when_not_to_use:
+  - Full calendar embeds stored in articles (use contentarray)
+  - Static event links (use blockcontent)
+
+common_block_classes:
+  ec-vert: Vertical school events column
+  calendar-widget-container widget-container: Widget-style event block
+
+attributes:
+  enabled:
+    type: integer
+    default: 1
+  calendar:
+    type: string
+    default: ""
+    description: Calendar slug. Empty means all calendars.
+  timeline:
+    type: string
+    default: ""
+    description: Timeline display mode. Fleet exports commonly use "arrows".
+  events_pane:
+    type: string
+    default: ""
+    description: Number of events visible per pane when set.
+
+rendered_html:
+  outer_wrapper: "div.g-block.{blockClass}"
+  inner_wrapper: "div.g-content.g-particle"
+  particle_element: "timeline/event markup from the Gantry calendar particle"
+
+examples:
+  school_events:
+    description: Standard school-home upcoming events list
+    blockClass: ec-vert
+    attributes:
+      enabled: 1
+      calendar: ""
+      timeline: arrows
+      events_pane: "3"

@@ -20,7 +20,11 @@ when_not_to_use:
 common_block_classes:
   "" : No block class needed for spacers
 
-attributes: {}
+attributes:
+  enabled:
+    type: integer
+    default: 1
+    description: Present in many exports even though spacer has no visible content.
 
 notes:
   - "Spacer type in design YAML: particle: spacer"

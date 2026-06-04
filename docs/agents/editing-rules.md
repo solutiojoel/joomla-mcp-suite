@@ -46,14 +46,13 @@ When searching for content:
 2. If a module search returns nothing, search articles next before exploring Gantry outlines
 3. Use `joomla_backend_inventory` for a broad overview when starting on an unfamiliar site
 
-## Site Notes
+## Site Notes (During Session)
 
-When you discover something non-obvious about the current site, save it immediately:
-- Call `append_site_note` with what you found and an optional `category` (e.g. Modules, Menus, Template, Content, Quirks)
-- Examples worth noting: unexpected module assignments, non-standard alias patterns, broken features, extension quirks, client preferences
+Every site has a dedicated history file at `docs/sites/[sitecode].md`. Call `get_site_notes` at session start and review it before making any changes — it contains known quirks, key IDs, active integrations, and change history.
 
-When existing notes become stale or incorrect:
-- Call `get_site_notes`, revise the content in context, then call `write_site_notes` with the full updated text
+When you discover something non-obvious mid-session, update the persistent facts section immediately:
+- Call `get_site_notes`, update the relevant section in context, then call `write_site_notes` with the full updated text
+- Examples worth adding to persistent facts: unexpected module behavior, non-standard alias patterns, quirks that would trip up a future agent, active integrations, key IDs discovered
 
 ## FTP Access Limitations
 
@@ -64,6 +63,48 @@ FTP credentials only provide access to user-content directories (`images/` and s
 - Template PHP/TWIG files
 
 Do not attempt to read or edit Gantry 5 configuration via FTP — those paths will return empty or not exist. Use the Joomla admin interface or MCP tools instead (e.g. `gantry-subtitle` is a menu item param, not a template file edit).
+
+## Session End (Required — every session)
+
+Before closing any session on a site, complete both steps in order:
+
+**Step 1 — Update persistent facts** (if anything changed or was newly discovered):
+- New IDs found → update the Key IDs table
+- New quirk discovered → add to Quirks & Warnings
+- New integration added → add to Active Integrations
+- Use `write_site_notes` with the full updated file content
+
+**Step 2 — Append a changelog entry** (always, no exceptions):
+
+```
+append_site_note(
+  note: "### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]\n**Requested by:** [Name / email / 'internal'] | **Ticket:** [#XXXXX or 'none']\n**Changes:**\n- [specific change with IDs]\n- [specific change with IDs]\n**Notes:** [anything non-obvious, quirks, follow-up needed]"
+)
+```
+
+Rules for changelog entries:
+- Always include specific IDs (article ID, module ID, menu item ID) — not just names
+- Always include who requested the change
+- If the session was investigation-only with no changes, still log: what was investigated, what was found, what was ruled out
+- Vague entries ("updated some articles") are worse than no entry — be specific
+
+After writing the entry, tell the user the site log has been updated.
+
+For the full format specification and examples, see `docs/agents/kb/site-history.md`.
+
+**Step 3 — Review for process improvements** (if applicable — not required every session):
+
+Briefly replay the session's steps. If any of the following apply, append an entry to `docs/agents/improvements.md`:
+- A task took more attempts than it should have
+- A KB article was missing, wrong, or didn't cover the actual case
+- A better approach was discovered mid-task
+- A tool behaved in an unexpected or undocumented way
+- A workflow step was in the wrong order or had a missing prerequisite
+- A pattern appeared that warrants documentation
+
+This is a shared queue reviewed by the team — not a per-session requirement. Only add an entry if something genuinely useful was found. See `docs/agents/improvements.md` for the format.
+
+---
 
 ## Available Workflow Guides
 

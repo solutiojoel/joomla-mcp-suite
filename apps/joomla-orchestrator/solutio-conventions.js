@@ -1288,6 +1288,69 @@ footer-a, footer-b, footer-c (footer section, all sites)
 
 ---
 
+## spacer
+
+### What it is
+An empty layout block used to reserve width inside a .g-grid. It has no meaningful
+frontend content and is most common in navigation rows between logo and toplinks.
+
+### Fields
+enabled: 1 is present in many exports, but visual size comes from the wrapper block size.
+
+### Rendered HTML
+Normally renders only the outer .g-block size-N wrapper, with no useful particle
+markup inside. Do not use spacer for vertical section spacing; use section/container
+padding in CSS.
+
+---
+
+## copyright
+
+### What it is
+Gantry's generated copyright particle. Rare in Solutio builds because the copyright
+section normally uses a custom particle for the admin lock/Solutio footer HTML.
+
+### Key fields
+owner, date.start, date.end, enabled.
+
+---
+
+## horizmenu
+
+### What it is
+A simple manually configured horizontal link list. Rare/legacy; main navigation
+should use menu, and styled quicklinks should use blockcontent.
+
+### Key fields
+items[].title, items[].link, items[].target, items[].icon, enabled.
+
+---
+
+## search
+
+### What it is
+Gantry's search particle. Rare in homepage exports; used for compact header or nav
+search UI when the design needs an actual search form instead of a search link.
+
+### Key fields
+title, placeholder, enabled.
+
+---
+
+## video
+
+### What it is
+Gantry's video particle for local or remote videos. Rare but available for media
+sections when the video itself should be managed as a particle rather than embedded
+inside a Joomla article.
+
+### Key fields
+class, title, headertext, description, columns, items[].source, items[].video,
+items[].posterimage, items[].caption, items[].autoplay, items[].controls,
+items[].loop, items[].muted, items[].related, items[].start, items[].local[].file.
+
+---
+
 ## system/messages
 
 ### What it is
