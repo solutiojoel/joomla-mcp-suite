@@ -97,6 +97,41 @@ const OUTLINE_FIELD = {
   outline: { type: 'string', description: 'Outline id (e.g. "default", "33", "75")', default: 'default' },
 };
 
+const SUBSITE_CHILD_SECTION_IDS = [
+  'top',
+  'navigation',
+  'slideshow',
+  'header',
+  'above',
+  'feature',
+  'showcase',
+  'utility',
+  'sidebar',
+  'mainbar',
+  'aside',
+  'expanded',
+  'extension',
+  'bottom',
+  'footer',
+  'copyright',
+  'offcanvas',
+];
+
+const SUBSITE_CHILD_DEFAULTS = {
+  home: {
+    preset: 'subsite-home',
+    cloneIds: ['top', 'slideshow', 'header', 'above', 'feature', 'showcase', 'utility', 'sidebar', 'mainbar', 'aside', 'expanded', 'extension'],
+  },
+  grid: {
+    preset: 'subsite-grid',
+    cloneIds: ['utility', 'mainbar', 'aside'],
+  },
+  sponsors: {
+    preset: 'subsite-sponsors',
+    cloneIds: ['aside'],
+  },
+};
+
 /* ─── outline normalisation helper ──────────────────────────────────────────
  * Accepts a numeric id ("33"), a named title ("#Home", "home"), or omitted.
  * Returns the canonical string id ("33", "default", …).
@@ -592,6 +627,212 @@ const TOOLS = [
         inheritanceCleared: true,
         cloneScope: 'entire layout',
         backupPath,
+      };
+    },
+  },
+  {
+    name: 'gantry_subsite_child_outline_setup',
+    description:
+      'Set up one subsite child outline end-to-end. First makes EVERY standard section inherit from #<Subsite> Outline, including empty sections. Then clones only the required exception sections from the matching source outline. Finally copies Page Settings locally from #<Subsite> Outline with the correct Home/Grid/Sponsors preset. Use this instead of manually sequencing section inherit/clone/page-copy calls for #<Subsite> Home, #<Subsite> Grid, and #<Subsite> Sponsors.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        kind: {
+          type: 'string',
+          enum: ['home', 'grid', 'sponsors'],
+          description: 'Child outline type. home clones non-shared homepage sections; grid clones Utility, Main/mainbar, and Aside; sponsors clones Aside.',
+        },
+        source: { type: 'string', description: 'Source outline id/title to clone exception sections from, e.g. "#Home", "#Grid", "#Sponsors".' },
+        subsiteOutline: { type: 'string', description: 'The parent subsite outline id/title, e.g. "#School Outline".' },
+        target: { type: 'string', description: 'Target child outline id/title, e.g. "#School Grid".' },
+        cloneIds: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional override for the exception sections to clone from source. Defaults by kind.',
+        },
+        inheritIds: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional override for sections that should inherit from subsiteOutline. Defaults to all standard sections.',
+        },
+        pagePreset: {
+          type: 'string',
+          enum: ['exact', 'subsite-home', 'subsite-grid', 'subsite-sponsors'],
+          description: 'Optional Page Settings copy preset. Defaults by kind.',
+        },
+        dryRun: { type: 'boolean' },
+      },
+      required: ['site', 'kind', 'source', 'subsiteOutline', 'target'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const defaults = SUBSITE_CHILD_DEFAULTS[args.kind];
+      if (!defaults) throw new Error(`Unsupported subsite child kind: ${args.kind}`);
+
+      const source = await outlines.resolveOutline(ctx, args.source);
+      const subsiteOutline = await outlines.resolveOutline(ctx, args.subsiteOutline);
+      const target = await outlines.resolveOutline(ctx, args.target);
+      const inheritIds = args.inheritIds || SUBSITE_CHILD_SECTION_IDS;
+      const cloneIds = args.cloneIds || defaults.cloneIds;
+      const pagePreset = args.pagePreset || defaults.preset;
+      const sourceLayout = await layoutApi.fetchSavedLayout(ctx, source.id);
+
+      const inherited = [];
+      const skippedInherit = [];
+      const cloned = [];
+
+      const layoutResult = await layoutApi.mutateLayout(
+        ctx,
+        target.id,
+        (structure) => {
+          for (const sectionId of inheritIds) {
+            if (!layoutApi.findNode(structure, sectionId)) {
+              skippedInherit.push(sectionId);
+              continue;
+            }
+            layoutApi.setNodeInherit(structure, sectionId, {
+              outline: subsiteOutline.id,
+              include: ['children', 'attributes', 'block'],
+            });
+            inherited.push(sectionId);
+          }
+
+          for (const sectionId of cloneIds) {
+            const node = layoutApi.cloneNodeFromStructure(structure, sourceLayout, sectionId);
+            cloned.push({ id: sectionId, type: node.type, title: node.title || '' });
+          }
+        },
+        { op: `subsite-${args.kind}-layout-setup`, dryRun: !!args.dryRun }
+      );
+
+      await pageMod.openPage(ctx, subsiteOutline.id);
+      const sourceFields = await pageMod.listPage(ctx, { all: true });
+      await pageMod.openPage(ctx, target.id);
+      const targetFields = await pageMod.listPage(ctx, { all: true });
+
+      const presetEdits = {};
+      if (pagePreset === 'subsite-home') {
+        presetEdits.bodyClasses = 'gantry site-home withmaxwidth';
+        presetEdits.bodyId = '';
+      } else if (pagePreset === 'subsite-grid') {
+        presetEdits.bodyId = 'site-grid';
+      }
+
+      const { edits: pageEdits, skipped: skippedPageFields } = pageMod.buildPageCopyEdits(sourceFields, targetFields, {
+        ...presetEdits,
+        forceLocal: true,
+      });
+
+      if (args.dryRun) {
+        return {
+          dryRun: true,
+          kind: args.kind,
+          source,
+          subsiteOutline,
+          target,
+          inherited,
+          skippedInherit,
+          cloned,
+          pagePreset,
+          pageEdits,
+          skippedPageFields,
+          layoutDiff: layoutResult.diff || null,
+        };
+      }
+
+      await pageMod.editPage(ctx, pageEdits);
+      await pageMod.savePage(ctx);
+
+      return {
+        saved: true,
+        kind: args.kind,
+        source,
+        subsiteOutline,
+        target,
+        inherited,
+        skippedInherit,
+        cloned,
+        pagePreset,
+        pageSaved: Object.keys(pageEdits),
+        skippedPageFields,
+        layoutBackupPath: layoutResult.backupPath || null,
+      };
+    },
+  },
+  {
+    name: 'gantry_subsite_outline_setup',
+    description:
+      'Set up the parent #<Subsite> Outline end-to-end. Clones the entire Base Outline layout locally into the subsite outline, clearing inherited state everywhere, then copies Page Settings locally from the chosen page settings source and applies default subsite subpage Body Classes. After this, edit the subsite #Outline Page Settings as the fresh subsite source.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        layoutSource: { type: 'string', description: 'Layout source outline id/title, usually "default" / Base Outline.' },
+        pageSource: { type: 'string', description: 'Page Settings source outline id/title, usually "default" / Base Outline.' },
+        target: { type: 'string', description: 'Target subsite outline id/title, e.g. "#School Outline".' },
+        bodyClasses: {
+          type: 'string',
+          description: 'Body Classes after copying Page Settings. Defaults to "gantry site-sub withmaxwidth".',
+        },
+        bodyId: {
+          type: 'string',
+          description: 'Body Id after copying Page Settings. Defaults to blank.',
+        },
+        dryRun: { type: 'boolean' },
+      },
+      required: ['site', 'layoutSource', 'pageSource', 'target'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const layoutSource = await outlines.resolveOutline(ctx, args.layoutSource);
+      const pageSource = await outlines.resolveOutline(ctx, args.pageSource);
+      const target = await outlines.resolveOutline(ctx, args.target);
+
+      const sourceLayout = await layoutApi.fetchSavedLayout(ctx, layoutSource.id);
+      if (!sourceLayout.length) throw new Error(`Source outline ${layoutSource.id} has no layout`);
+      const before = await layoutApi.fetchSavedLayout(ctx, target.id);
+      const clonedLayout = layoutApi.cloneStructureLocal(sourceLayout);
+      const layoutDiff = layoutApi.diffStructures(before, clonedLayout);
+
+      await pageMod.openPage(ctx, pageSource.id);
+      const sourceFields = await pageMod.listPage(ctx, { all: true });
+      await pageMod.openPage(ctx, target.id);
+      const targetFields = await pageMod.listPage(ctx, { all: true });
+
+      const { edits: pageEdits, skipped: skippedPageFields } = pageMod.buildPageCopyEdits(sourceFields, targetFields, {
+        bodyClasses: args.bodyClasses !== undefined ? args.bodyClasses : 'gantry site-sub withmaxwidth',
+        bodyId: args.bodyId !== undefined ? args.bodyId : '',
+        forceLocal: true,
+      });
+
+      if (args.dryRun) {
+        return {
+          dryRun: true,
+          layoutSource,
+          pageSource,
+          target,
+          inheritanceCleared: true,
+          layoutDiff,
+          pageEdits,
+          skippedPageFields,
+        };
+      }
+
+      const layoutBackupPath = backup.takeBackup(ctx, target.id, `subsite-outline-local-clone-from-${layoutSource.id}`, before);
+      await layoutApi.saveLayoutDirect(ctx, ctx, target.id, clonedLayout);
+      await pageMod.editPage(ctx, pageEdits);
+      await pageMod.savePage(ctx);
+
+      return {
+        saved: true,
+        layoutSource,
+        pageSource,
+        target,
+        inheritanceCleared: true,
+        layoutBackupPath,
+        pageSaved: Object.keys(pageEdits),
+        skippedPageFields,
       };
     },
   },

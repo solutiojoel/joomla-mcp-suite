@@ -51,11 +51,19 @@ Subsite outline family:
   Block Attributes, and Particles within Section are all checked.
 - #<Subsite> Outline Page Settings should be copied locally from the intended source
   with gantry_page_copy_from, then edited as a fresh subsite.
+- Preferred parent setup tool: gantry_subsite_outline_setup, which does the local
+  layout clone and local Page Settings copy together.
 - #<Subsite> Home/Grid/Sponsors do not use entangled Page Settings. They copy
   Page Settings locally from #<Subsite> Outline with origin blank, then apply only
   the expected Body Classes/Body Id tweak.
 - Head Properties and Assets on #<Subsite> Home/Grid/Sponsors must match
   #<Subsite> Outline.
+- Use gantry_subsite_child_outline_setup for child outlines. Home inherits only
+  Navigation, Bottom, Footer, Copyright, and Offcanvas from #<Subsite> Outline and
+  clones all other non-shared sections from #Home. Grid inherits every standard
+  section from #<Subsite> Outline except Utility, Main/mainbar, and Aside cloned
+  from #Grid. Sponsors inherits every standard section except Aside cloned from
+  #Sponsors.
 - #<Subsite> Home/Grid/Sponsors inherit shared layout sections from #<Subsite>
   Outline, not Base Outline.
 - #<Subsite> Home Body Classes: gantry site-home withmaxwidth.
@@ -525,7 +533,9 @@ Subsite outline family:
 - #<Subsite> Outline must locally clone the full Base Outline layout before other subsite outlines inherit from it; in tools, use gantry_layout_clone_all_from.
 - Manual section Clone means the Gantry Clone option with Section Attributes, Block Attributes, and Particles within Section all checked.
 - #<Subsite> Outline Page Settings should be copied locally with gantry_page_copy_from and then edited as a fresh subsite.
+- Preferred parent setup tool: gantry_subsite_outline_setup.
 - #<Subsite> Home/Grid/Sponsors copy Page Settings locally from #<Subsite> Outline without entanglement/origin; Head Properties and Assets must match #<Subsite> Outline.
+- Use gantry_subsite_child_outline_setup for child outlines: Home clones every non-shared section from #Home; Grid clones Utility, Main/mainbar, and Aside from #Grid and inherits everything else; Sponsors clones Aside from #Sponsors and inherits everything else.
 - #<Subsite> Home Body Classes are "gantry site-home withmaxwidth"; #<Subsite> Grid Body Id is "site-grid".
 - For full operational steps, call gantry_outline_conventions before duplicating or rewiring outlines.
 `.trim(),

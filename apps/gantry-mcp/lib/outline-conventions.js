@@ -154,6 +154,7 @@ Standard Layout screen node ids to consider for full subsite #Outline cloning:
 
 1. Create the subsite #Outline:
 - Duplicate the primary #Outline and rename it #<Subsite> Outline.
+- Preferred tool: gantry_subsite_outline_setup.
 - Before any other subsite outline inherits from it, clone the entire Base Outline
   layout into #<Subsite> Outline as local content using gantry_layout_clone_all_from.
 - This full clone must preserve the Base Outline layout content but clear all
@@ -173,6 +174,7 @@ Standard Layout screen node ids to consider for full subsite #Outline cloning:
 
 2. Create the subsite Home outline:
 - Duplicate #Home and rename it #<Subsite> Home.
+- Preferred tool: gantry_subsite_child_outline_setup with kind "home".
 - Layout: Navigation, Bottom, Footer, Copyright, and Offcanvas Section inherit from
   #<Subsite> Outline.
 - Layout: every other section is cloned from #Home using Section Attributes,
@@ -192,13 +194,13 @@ Standard Layout screen node ids to consider for full subsite #Outline cloning:
 
 3. Create the subsite Grid outline:
 - Duplicate #Grid and rename it #<Subsite> Grid.
-- Layout: inherit from #<Subsite> Outline except the same Utility and Main sections
-  that are custom on #Grid.
-- Utility and Main should be cloned from #Grid using Section Attributes,
+- Preferred tool: gantry_subsite_child_outline_setup with kind "grid".
+- Layout: every standard section first inherits from #<Subsite> Outline, even if
+  that section is empty.
+- Then clone Utility, Main/mainbar, and Aside from #Grid using Section Attributes,
   Block Attributes, and Particles within Section. They must be identical to #Grid
   behavior, but not inherited from Base Outline.
-- In practice, inherit shared sections from #<Subsite> Outline and clone utility
-  plus the Main section/mainbar structure from #Grid.
+- All other sections remain inherited from #<Subsite> Outline.
 - Main Content Bottom A block CSS ID remains grid-addpic.
 - Aside is empty at 5%, Sidebar is 5%, Main is 90%.
 - Page Settings: copy #<Subsite> Outline Page Settings.
@@ -208,10 +210,14 @@ Standard Layout screen node ids to consider for full subsite #Outline cloning:
 
 4. Create the subsite Sponsors outline:
 - Duplicate #Sponsors and rename it #<Subsite> Sponsors.
-- Layout: inherit every section from #<Subsite> Outline except Aside.
+- Preferred tool: gantry_subsite_child_outline_setup with kind "sponsors".
+- Layout: every standard section first inherits from #<Subsite> Outline, even if
+  that section is empty.
+- Then clone only Aside from #Sponsors.
 - Aside is cloned from #Sponsors using Section Attributes, Block Attributes, and
   Particles within Section. It matches #Sponsors: Side Menu removed/disabled;
   SideBar A module position kept.
+- All other sections remain inherited from #<Subsite> Outline.
 - Page Settings: exact copy of #<Subsite> Outline Page Settings.
 - Head Properties and Assets must match #<Subsite> Outline.
 - Do not entangle/inherit Page Settings.
@@ -229,6 +235,11 @@ Useful low-level tools:
 - gantry_layout_clone_all_from: clone the entire Base Outline layout locally into
   #<Subsite> Outline and clear all inherited state. Use this before any child
   subsite outline inherits from #<Subsite> Outline.
+- gantry_subsite_outline_setup: preferred for #<Subsite> Outline. It clones the
+  entire layout locally and copies Page Settings locally in one operation.
+- gantry_subsite_child_outline_setup: preferred for #<Subsite> Home/Grid/Sponsors.
+  It first makes every standard section inherit from #<Subsite> Outline, then clones
+  only the required exception sections, then copies Page Settings locally.
 - gantry_layout_section_inherit: point inherited sections to the correct parent outline.
 - gantry_layout_sections_clone_from: copy source section attributes, block attributes,
   and particles into the target; use this for the subsite clone process.
@@ -263,9 +274,11 @@ Subsite family:
 - #<Subsite> Home inherits Navigation, Bottom, Footer, Copyright, and Offcanvas from
   #<Subsite> Outline, not Base Outline.
 - #<Subsite> Home body class is gantry site-home withmaxwidth.
-- #<Subsite> Grid inherits from #<Subsite> Outline except Utility and Main.
+- #<Subsite> Grid inherits every standard section from #<Subsite> Outline except
+  Utility, Main/mainbar, and Aside, which are cloned from #Grid.
 - #<Subsite> Grid Body Id is site-grid.
-- #<Subsite> Sponsors inherits from #<Subsite> Outline except Aside.
+- #<Subsite> Sponsors inherits every standard section from #<Subsite> Outline except
+  Aside, which is cloned from #Sponsors.
 - #<Subsite> Home/Grid/Sponsors Page Settings are local copies, not entangled.
 - Head Properties and Assets on #<Subsite> Home/Grid/Sponsors match #<Subsite> Outline.
 - Subsite Custom Content colors/fonts on #<Subsite> Outline are copied across
@@ -319,19 +332,18 @@ Outline before #<Subsite> Home/Grid/Sponsors inherit from it. In tools, do this 
 gantry_layout_clone_all_from so inheritance is cleared everywhere. Home then inherits
 navigation, bottom, footer, copyright, and offcanvas from #<Subsite> Outline and clones
 the other homepage sections from #Home. Grid inherits from #<Subsite> Outline except
-Utility and Main/mainbar, which are cloned from #Grid. Sponsors inherits from #<Subsite>
-Outline except Aside, which is cloned from #Sponsors.
+Utility, Main/mainbar, and Aside, which are cloned from #Grid. Sponsors inherits from
+#<Subsite> Outline except Aside, which is cloned from #Sponsors.
 `.trim(),
 
   workflow: `
 Recommended workflow: gantry_outlines_list, resolve source/target ids, inspect with
 gantry_layout_tree and gantry_page_settings_breakdown, duplicate matching source
-outlines, use gantry_layout_clone_all_from for #<Subsite> Outline, copy Page Settings
-locally with gantry_page_copy_from, clone required independent child sections with
-gantry_layout_sections_clone_from (Section Attributes, Block Attributes, Particles
-within Section), redirect shared section inheritance with gantry_layout_section_inherit,
-edit Body Classes/Body Id with gantry_page_copy_from presets, and verify with the
-checklist. Never delete and recreate outlines to fix inheritance mistakes.
+outlines, use gantry_subsite_outline_setup for #<Subsite> Outline, then use
+gantry_subsite_child_outline_setup for #<Subsite> Home/Grid/Sponsors so every standard
+section inherits from #<Subsite> Outline before only the required exception sections
+are cloned and Page Settings are copied. Never delete and recreate outlines to fix
+inheritance mistakes.
 `.trim(),
 
   checklist: `
