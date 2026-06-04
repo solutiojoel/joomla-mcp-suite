@@ -435,7 +435,7 @@ function addSectionClasses(structure, sectionId, add = [], remove = []) {
 
 /**
  * Mark a node as inheriting from a parent outline.
- *   setNodeInherit(structure, "expanded", { outline: "default", include: ["children","attributes"] })
+ *   setNodeInherit(structure, "expanded", { outline: "default", include: ["children","attributes","block"] })
  *
  * `include` controls what to inherit (Gantry uses values like
  * "children", "attributes", "block").
@@ -456,6 +456,40 @@ function clearNodeInherit(structure, nodeId) {
   if (!found) throw new Error(`Node "${nodeId}" not found`);
   found.node.inherit = {};
   return found.node;
+}
+
+function cloneDeep(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function clearInheritDeep(node) {
+  if (!node || typeof node !== 'object') return node;
+  node.inherit = {};
+  if (Array.isArray(node.children)) {
+    node.children.forEach(clearInheritDeep);
+  }
+  return node;
+}
+
+/**
+ * Replace a target node with a local clone of the matching source node.
+ * Equivalent to Gantry's section Inheritance -> Clone flow with:
+ *   - Section Attributes checked
+ *   - Block Attributes checked
+ *   - Particles within Section checked
+ *
+ * The copied subtree has inheritance cleared so the target is independent.
+ */
+function cloneNodeFromStructure(targetStructure, sourceStructure, nodeId) {
+  const source = findNode(sourceStructure, nodeId);
+  if (!source) throw new Error(`Source node "${nodeId}" not found`);
+  const target = findNode(targetStructure, nodeId);
+  if (!target) throw new Error(`Target node "${nodeId}" not found`);
+
+  const cloned = clearInheritDeep(cloneDeep(source.node));
+  const siblings = target.parent ? target.parent.children : targetStructure;
+  siblings[target.index] = cloned;
+  return cloned;
 }
 
 /**
@@ -1465,6 +1499,7 @@ module.exports = {
   addSectionClasses,
   setNodeInherit,
   clearNodeInherit,
+  cloneNodeFromStructure,
   clearLayout,
   serializeLayout,
   getLayoutStructure,

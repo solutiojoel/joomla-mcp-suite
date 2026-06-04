@@ -121,7 +121,7 @@ const TOOLS = [
       properties: {
         section: {
           type: 'string',
-          enum: ['full', 'primary', 'subsite', 'workflow', 'checklist'],
+          enum: ['full', 'primary', 'subsite', 'clone', 'page_settings', 'workflow', 'checklist'],
           description: 'Focused part of the convention reference. Omit or use full for all rules.',
         },
       },
@@ -450,14 +450,14 @@ const TOOLS = [
         ...OUTLINE_FIELD,
         id: { type: 'string' },
         from: { type: 'string', description: 'Source outline (e.g. "default")' },
-        include: { type: 'array', items: { type: 'string' }, default: ['children', 'attributes'] },
+        include: { type: 'array', items: { type: 'string' }, default: ['children', 'attributes', 'block'] },
         dryRun: { type: 'boolean' },
       },
       required: ['site', 'id', 'from'],
     },
     handler: async (args) => {
       const ctx = await getCtx(args);
-      const inherit = { outline: args.from, include: args.include || ['children', 'attributes'] };
+      const inherit = { outline: args.from, include: args.include || ['children', 'attributes', 'block'] };
       const r = await layoutApi.mutateLayout(
         ctx,
         args.outline || 'default',
@@ -469,7 +469,11 @@ const TOOLS = [
   },
   {
     name: 'gantry_layout_section_clone',
-    description: 'Break inheritance on a section (clears the inherit field).',
+    description:
+      'Break inheritance on an already-local section (clears the inherit field only). ' +
+      'This does NOT copy source outline content. For Gantry\'s full Clone action with ' +
+      'Section Attributes, Block Attributes, and Particles within Section checked, use ' +
+      'gantry_layout_sections_clone_from.',
     schema: {
       type: 'object',
       properties: { ...SITE_THEME_FIELDS, ...OUTLINE_FIELD, id: { type: 'string' }, dryRun: { type: 'boolean' } },
@@ -484,6 +488,63 @@ const TOOLS = [
         { op: 'section-clone', dryRun: !!args.dryRun }
       );
       return { dryRun: !!r.dryRun, diff: r.diff || null };
+    },
+  },
+  {
+    name: 'gantry_layout_sections_clone_from',
+    description:
+      'Clone one or more sections/nodes from a source outline into a target outline. ' +
+      'This is the Gantry section Clone behavior agents should use for subsite outline setup: ' +
+      'it copies Section Attributes, Block Attributes, and Particles within Section, then clears ' +
+      'inheritance on the copied subtree so the target owns a local clone. Use this before making ' +
+      'a subsite #Outline the inheritance parent for #<Subsite> Home/Grid/Sponsors.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        from: { type: 'string', description: 'Source outline id/title, e.g. "default", "#Home", "#Grid".' },
+        to: { type: 'string', description: 'Target outline id/title to receive local clones.' },
+        ids: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Section/container/node ids to clone, e.g. ["container-top","top","navigation","container-main","mainbar"].',
+        },
+        id: { type: 'string', description: 'Single section/container/node id to clone.' },
+        dryRun: { type: 'boolean' },
+      },
+      required: ['site', 'from', 'to'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const from = await outlines.resolveOutline(ctx, args.from);
+      const to = await outlines.resolveOutline(ctx, args.to);
+      const ids = [...(args.ids || []), ...(args.id ? [args.id] : [])];
+      if (!ids.length) throw new Error('Pass `ids` or `id` with at least one section/container/node id to clone.');
+
+      const source = await layoutApi.fetchSavedLayout(ctx, from.id);
+      const cloned = [];
+      const r = await layoutApi.mutateLayout(
+        ctx,
+        to.id,
+        (structure) => {
+          for (const nodeId of ids) {
+            const node = layoutApi.cloneNodeFromStructure(structure, source, nodeId);
+            cloned.push({ id: nodeId, type: node.type, title: node.title || '' });
+          }
+        },
+        { op: 'sections-clone-from-' + from.id, dryRun: !!args.dryRun }
+      );
+
+      return {
+        from,
+        to,
+        cloned,
+        cloneOptions: ['Section Attributes', 'Block Attributes', 'Particles within Section'],
+        inheritanceCleared: true,
+        dryRun: !!r.dryRun,
+        diff: r.diff || null,
+        backupPath: r.backupPath || null,
+      };
     },
   },
   {
@@ -695,6 +756,83 @@ const TOOLS = [
       await pageMod.editPage(ctx, args.edits);
       await pageMod.savePage(ctx);
       return { saved: Object.keys(args.edits) };
+    },
+  },
+  {
+    name: 'gantry_page_copy_from',
+    description:
+      'Copy Page Settings values from one outline to another as local values, not entangled/inherited settings. ' +
+      'Use this for subsite child outlines after the subsite #Outline has fresh Page Settings: copy Head Properties, Assets, Body, and Font Awesome from #<Subsite> Outline, force page[origin] blank, then apply only the expected Body Classes/Body Id tweak. Presets: subsite-home => body class "gantry site-home withmaxwidth"; subsite-grid => body id "site-grid"; subsite-sponsors => exact copy.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        from: { type: 'string', description: 'Source outline id/title, usually #<Subsite> Outline.' },
+        to: { type: 'string', description: 'Target outline id/title, e.g. #<Subsite> Home/Grid/Sponsors.' },
+        preset: {
+          type: 'string',
+          enum: ['exact', 'subsite-home', 'subsite-grid', 'subsite-sponsors'],
+          description: 'Applies the known subsite child Page Settings body tweaks. Defaults to exact.',
+        },
+        bodyClasses: {
+          type: 'string',
+          description: 'Optional explicit Body Classes override after copying from source.',
+        },
+        bodyId: {
+          type: 'string',
+          description: 'Optional explicit Body Id override after copying from source.',
+        },
+        forceLocal: {
+          type: 'boolean',
+          description: 'When true/default, clears page[origin] on the target so Page Settings are local rather than entangled.',
+        },
+        dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+      },
+      required: ['site', 'from', 'to'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const from = await outlines.resolveOutline(ctx, args.from);
+      const to = await outlines.resolveOutline(ctx, args.to);
+
+      await pageMod.openPage(ctx, from.id);
+      const sourceFields = await pageMod.listPage(ctx, { all: true });
+      await pageMod.openPage(ctx, to.id);
+      const targetFields = await pageMod.listPage(ctx, { all: true });
+
+      const preset = args.preset || 'exact';
+      const presetEdits = {};
+      if (preset === 'subsite-home') {
+        presetEdits.bodyClasses = 'gantry site-home withmaxwidth';
+        presetEdits.bodyId = '';
+      } else if (preset === 'subsite-grid') {
+        presetEdits.bodyId = 'site-grid';
+      } else if (preset === 'subsite-sponsors') {
+        // Exact Page Settings copy from the subsite #Outline.
+      }
+
+      const { edits, skipped } = pageMod.buildPageCopyEdits(sourceFields, targetFields, {
+        ...presetEdits,
+        ...(args.bodyClasses !== undefined ? { bodyClasses: args.bodyClasses } : {}),
+        ...(args.bodyId !== undefined ? { bodyId: args.bodyId } : {}),
+        forceLocal: args.forceLocal !== false,
+      });
+
+      if (args.dryRun) {
+        return { dryRun: true, from, to, preset, forceLocal: args.forceLocal !== false, edits, skipped };
+      }
+
+      await pageMod.editPage(ctx, edits);
+      await pageMod.savePage(ctx);
+      return {
+        copied: true,
+        from,
+        to,
+        preset,
+        forceLocal: args.forceLocal !== false,
+        saved: Object.keys(edits),
+        skipped,
+      };
     },
   },
   {
