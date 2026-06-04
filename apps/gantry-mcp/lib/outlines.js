@@ -167,6 +167,71 @@ async function duplicateOutline(arg1, id, opts = {}) {
   throw new Error('duplicateOutline: first arg must be a Page or ctx');
 }
 
+/**
+ * Rename an outline by posting to Gantry's configurations/<id>/rename endpoint.
+ * HTTP mode only; browser flows can use the UI directly if needed.
+ */
+async function renameOutline(ctx, id, title) {
+  if (!id || id === 'default') {
+    throw new Error(`Cannot rename outline "${id}"`);
+  }
+  const nextTitle = String(title || '').trim();
+  if (!nextTitle) throw new Error('renameOutline: title must not be empty');
+
+  const url = configurationUrl(ctx, id, 'rename', true);
+  const res = await ctx.fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+    body: `title=${encodeURIComponent(nextTitle)}`,
+  });
+  if (res.status >= 400) {
+    throw new Error(`Rename ${res.status}: ${res.body.slice(0, 300)}`);
+  }
+  let parsed = null;
+  try { parsed = JSON.parse(res.body); } catch {}
+  if (parsed && parsed.success === false) {
+    throw new Error(`Rename failed: ${parsed.message || res.body.slice(0, 300)}`);
+  }
+  return parsed || { ok: true };
+}
+
+/**
+ * Sweep all outlines and remove a generated theme-name prefix from titles.
+ * Returns the changes it made or would make.
+ */
+async function stripOutlineTitlePrefix(ctx, opts = {}) {
+  const prefix = opts.prefix === undefined ? 'Studius - ' : String(opts.prefix);
+  await openOutlines(ctx);
+  const all = await listOutlines(ctx);
+  const changed = [];
+  const skipped = [];
+
+  for (const outline of all) {
+    if (outline.isDefault || outline.id === 'default') {
+      skipped.push({ id: outline.id, title: outline.title, reason: 'default outline' });
+      continue;
+    }
+    if (!String(outline.title || '').startsWith(prefix)) {
+      skipped.push({ id: outline.id, title: outline.title, reason: 'prefix not present' });
+      continue;
+    }
+
+    const title = outline.title.slice(prefix.length).trim();
+    const entry = { id: outline.id, from: outline.title, to: title };
+    if (!opts.dryRun) {
+      await renameOutline(ctx, outline.id, title);
+      entry.renamed = true;
+    }
+    changed.push(entry);
+  }
+
+  if (!opts.dryRun && changed.length) {
+    await openOutlines(ctx);
+  }
+
+  return { prefix, dryRun: !!opts.dryRun, changed, skipped };
+}
+
 async function _duplicateOutlineHttp(ctx, id, opts) {
   const url = configurationUrl(ctx, id, 'duplicate/new', true);
   const body =
@@ -357,6 +422,8 @@ module.exports = {
   listOutlines,
   createOutline,
   duplicateOutline,
+  renameOutline,
+  stripOutlineTitlePrefix,
   deleteOutline,
   openParticleDefaults,
   resolveOutline,

@@ -212,9 +212,32 @@ const TOOLS = [
     },
     handler: async (args) => {
       const ctx = await getCtx(args);
-      return outlines.duplicateOutline(ctx, args.sourceId, {
+      const result = await outlines.duplicateOutline(ctx, args.sourceId, {
         title: args.title,
         inherit: args.inherit,
+      });
+      const prefixCleanup = await outlines.stripOutlineTitlePrefix(ctx, { prefix: 'Studius - ' });
+      return { ...result, prefixCleanup };
+    },
+  },
+  {
+    name: 'gantry_outlines_strip_theme_prefix',
+    description:
+      'Rename any non-default outline whose title starts with a generated theme prefix, defaulting to "Studius - ". Use after cloning/duplicating outlines if Gantry prepends the theme name to titles.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        prefix: { type: 'string', description: 'Prefix to remove. Defaults to "Studius - ".' },
+        dryRun: { type: 'boolean', description: 'Preview title changes without saving.' },
+      },
+      required: ['site'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      return outlines.stripOutlineTitlePrefix(ctx, {
+        prefix: args.prefix === undefined ? 'Studius - ' : args.prefix,
+        dryRun: !!args.dryRun,
       });
     },
   },
@@ -768,6 +791,7 @@ const TOOLS = [
 
       await pageMod.editPage(ctx, pageEdits);
       await pageMod.savePage(ctx);
+      const prefixCleanup = await outlines.stripOutlineTitlePrefix(ctx, { prefix: 'Studius - ' });
 
       return {
         saved: true,
@@ -782,6 +806,7 @@ const TOOLS = [
         pageSaved: Object.keys(pageEdits),
         skippedPageFields,
         layoutBackupPath: layoutResult.backupPath || null,
+        prefixCleanup,
       };
     },
   },
@@ -848,6 +873,7 @@ const TOOLS = [
       await layoutApi.saveLayoutDirect(ctx, ctx, target.id, clonedLayout);
       await pageMod.editPage(ctx, pageEdits);
       await pageMod.savePage(ctx);
+      const prefixCleanup = await outlines.stripOutlineTitlePrefix(ctx, { prefix: 'Studius - ' });
 
       return {
         saved: true,
@@ -858,6 +884,7 @@ const TOOLS = [
         layoutBackupPath,
         pageSaved: Object.keys(pageEdits),
         skippedPageFields,
+        prefixCleanup,
       };
     },
   },
