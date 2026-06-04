@@ -1820,7 +1820,7 @@ export class JoomlaClient {
       return this.submitAdminForm(path, {
         overrides: {
           foldername: data.folderName,
-          folderbase: data.folderBase || "",
+          folder: data.folderBase || "",
         },
         task: "folder.create",
         dryRun: data.dryRun ?? !data.confirm,
@@ -1831,21 +1831,22 @@ export class JoomlaClient {
     const submitted = await this.submitAdminForm(path, {
       overrides: {
         foldername: data.folderName,
-        folderbase: data.folderBase || "",
+        folder: data.folderBase || "",
       },
       task: "folder.create",
       confirm: true,
     });
     if (!submitted.success) return submitted;
 
-    const listing = await this.mediaList(data.folderBase || "index.php?option=com_media");
+    const parentFolder = data.folderBase || "";
+    const listing = await this.mediaList(parentFolder || "index.php?option=com_media");
     const listingData = (listing.data || {}) as Record<string, unknown>;
-    const links = ((listingData.links || []) as Array<Record<string, string>>);
-    const folderMatch = links.some((link) =>
-      String(link.label || "") === data.folderName
-      || decodeURIComponent(String(link.href || "")).includes(`/${data.folderName}`)
-      || decodeURIComponent(String(link.href || "")).includes(`folder=${data.folderName}`)
-    ) || (listing.html || "").includes(data.folderName);
+    const subfolders = ((listingData.subfolders || []) as Array<Record<string, string>>);
+    const folderMatch = subfolders.some((sf) =>
+      String(sf.label || "") === data.folderName
+      || decodeURIComponent(String(sf.path || "")).endsWith(`/${data.folderName}`)
+      || decodeURIComponent(String(sf.path || "")) === data.folderName
+    );
 
     return {
       success: folderMatch,
@@ -5004,7 +5005,19 @@ export class JoomlaClient {
       const itemsResult = await this.listMenuItems(data.menuType);
       const items = Array.isArray(itemsResult.data) ? itemsResult.data as Array<Record<string, string>> : [];
       const exactMatches = items.filter((item) => item.title === data.title);
-      savedId = exactMatches[exactMatches.length - 1]?.id || "";
+      const listItem = exactMatches[exactMatches.length - 1];
+      savedId = listItem?.id || "";
+      // Joomla 4 renders the published field as a custom radio group, so extractFormFields
+      // never captures jform[published] and the form-save path cannot commit it. Fix by
+      // using the direct items.publish/items.unpublish list task, which writes to the DB
+      // without going through the form.
+      if (savedId && listItem) {
+        const expectedPublished = data.published ?? "1";
+        const actualPublished = listItem.state === "Published" ? "1" : "0";
+        if (actualPublished !== expectedPublished) {
+          await this.toggleMenuItem(savedId, expectedPublished, data.menuType);
+        }
+      }
     }
     const verify = savedId ? await this.getMenuItem(savedId) : null;
     const item = ((verify?.data || {}) as Record<string, unknown>);
