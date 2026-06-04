@@ -674,6 +674,199 @@ const TOOLS = [
       return { saved: Object.keys(args.edits) };
     },
   },
+  {
+    name: 'gantry_page_settings_breakdown',
+    description:
+      'Return Page Settings broken into Head Properties, Assets, Body Attributes, and Font Awesome sections with parsed meta/CSS/JS/tag-attribute rows.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+      },
+      required: ['site'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      await pageMod.openPage(ctx, args.outline || 'default');
+      return pageMod.getPageBreakdown(ctx);
+    },
+  },
+  {
+    name: 'gantry_page_head_edit',
+    description:
+      'Edit Head Properties on Page Settings: custom head content (page[head][head_bottom]) and individual meta tags by key. Use Assets tools for CSS/JS files.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        customContent: { type: 'string', description: 'Full custom content for the Head Properties custom content textarea.' },
+        metaActions: {
+          type: 'array',
+          description: 'Meta tag actions. set/add/edit upserts one key; remove deletes it.',
+          items: {
+            type: 'object',
+            properties: {
+              action: { type: 'string', enum: ['set', 'add', 'edit', 'remove'] },
+              key: { type: 'string', description: 'Meta key, e.g. og:title, theme-color.' },
+              value: { type: 'string', description: 'Meta value. Not needed for remove.' },
+            },
+            required: ['key'],
+          },
+        },
+        dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+      },
+      required: ['site'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      await pageMod.openPage(ctx, args.outline || 'default');
+      const edits = await pageMod.editHead(ctx, args);
+      if (args.dryRun) return { dryRun: true, edits };
+      await pageMod.editPage(ctx, edits);
+      await pageMod.savePage(ctx);
+      return { saved: Object.keys(edits) };
+    },
+  },
+  {
+    name: 'gantry_page_asset_icons_edit',
+    description:
+      'Edit Page Settings asset icon paths only: favicon and touch icon. Normal Studius paths are gantry-media://template/favicon.png and gantry-media://template/apple-touch-icon.png.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        favicon: { type: 'string', description: 'Favicon path.' },
+        touchicon: { type: 'string', description: 'Touch icon path.' },
+        dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+      },
+      required: ['site'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      await pageMod.openPage(ctx, args.outline || 'default');
+      const edits = await pageMod.editAssetIcons(ctx, args);
+      if (args.dryRun) return { dryRun: true, edits };
+      await pageMod.editPage(ctx, edits);
+      await pageMod.savePage(ctx);
+      return { saved: Object.keys(edits) };
+    },
+  },
+  {
+    name: 'gantry_page_asset_files_edit',
+    description:
+      'Add, remove, or edit individual CSS and JavaScript asset rows in Page Settings Assets. This is the right place to link CSS/JS files instead of injecting tags into custom head content.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        cssActions: {
+          type: 'array',
+          description: 'CSS row actions. Select an existing row with index, name, or location. item can include name, location, inline, priority, extra.',
+          items: {
+            type: 'object',
+            properties: {
+              action: { type: 'string', enum: ['add', 'edit', 'remove'] },
+              index: { type: 'number' },
+              name: { type: 'string' },
+              location: { type: 'string' },
+              item: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  location: { type: 'string' },
+                  inline: { type: 'string' },
+                  priority: { type: 'string' },
+                  extra: { type: 'array', items: { type: 'object' } },
+                },
+                additionalProperties: true,
+              },
+            },
+          },
+        },
+        javascriptActions: {
+          type: 'array',
+          description: 'JavaScript row actions. Select an existing row with index, name, or location. item can include name, location, inline, in_footer, priority, extra.',
+          items: {
+            type: 'object',
+            properties: {
+              action: { type: 'string', enum: ['add', 'edit', 'remove'] },
+              index: { type: 'number' },
+              name: { type: 'string' },
+              location: { type: 'string' },
+              item: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  location: { type: 'string' },
+                  inline: { type: 'string' },
+                  in_footer: { type: 'string' },
+                  priority: { type: 'string' },
+                  extra: { type: 'array', items: { type: 'object' } },
+                },
+                additionalProperties: true,
+              },
+            },
+          },
+        },
+        dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+      },
+      required: ['site'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      await pageMod.openPage(ctx, args.outline || 'default');
+      const edits = await pageMod.editAssetLists(ctx, args);
+      if (args.dryRun) return { dryRun: true, edits };
+      await pageMod.editPage(ctx, edits);
+      await pageMod.savePage(ctx);
+      return { saved: Object.keys(edits) };
+    },
+  },
+  {
+    name: 'gantry_page_body_edit',
+    description:
+      'Edit Body Attributes on Page Settings: Body Id, Body Classes, tag attributes, Sections Layout, After <body>, and Before </body>.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        bodyId: { type: 'string' },
+        bodyClasses: { type: 'string' },
+        sectionsLayout: { type: 'string', description: 'Sections Layout select value, e.g. 2.' },
+        afterBody: { type: 'string', description: 'Full After <body> textarea content.' },
+        beforeBody: { type: 'string', description: 'Full Before </body> textarea content.' },
+        tagAttributeActions: {
+          type: 'array',
+          description: 'Body tag attribute actions. set/add/edit upserts one attribute; remove deletes it. Empty placeholder rows are ignored.',
+          items: {
+            type: 'object',
+            properties: {
+              action: { type: 'string', enum: ['set', 'add', 'edit', 'remove'] },
+              key: { type: 'string', description: 'Attribute name, e.g. data-site-passcode.' },
+              value: { type: 'string', description: 'Attribute value. Not needed for remove.' },
+            },
+            required: ['key'],
+          },
+        },
+        dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+      },
+      required: ['site'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      await pageMod.openPage(ctx, args.outline || 'default');
+      const edits = await pageMod.editBody(ctx, args);
+      if (args.dryRun) return { dryRun: true, edits };
+      await pageMod.editPage(ctx, edits);
+      await pageMod.savePage(ctx);
+      return { saved: Object.keys(edits) };
+    },
+  },
 
   /* Export / Import */
   {

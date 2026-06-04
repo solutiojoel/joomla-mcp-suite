@@ -545,6 +545,16 @@ Always call `gantry_layout_sections` or `gantry_layout_tree` first to get valid 
 
 **`gantry_page_edit`** — Updates page settings: `page[body][attribs][class]="gantry site-sub withmaxwidth"`. Useful for adding body classes that control layout behavior.
 
+**`gantry_page_settings_breakdown`** — Returns Page Settings grouped like the Gantry UI: Head Properties, Assets, Body Attributes, and Font Awesome, with meta tags, CSS rows, JavaScript rows, and tag attributes parsed from their JSON fields.
+
+**`gantry_page_head_edit`** — Updates Head Properties without touching the rest of the page: custom head content plus add/edit/remove meta tags by key.
+
+**`gantry_page_asset_icons_edit`** — Updates just the favicon and touch icon paths.
+
+**`gantry_page_asset_files_edit`** — Adds, edits, or removes individual CSS and JavaScript asset rows. Use this for linked CSS/JS files instead of putting `<link>` or `<script>` tags in custom head content.
+
+**`gantry_page_body_edit`** — Updates Body Id, Body Classes, tag attributes, Sections Layout, After `<body>`, and Before `</body>`.
+
 ---
 
 ## 🤖 Agent Instructions

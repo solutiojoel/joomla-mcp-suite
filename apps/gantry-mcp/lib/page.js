@@ -109,6 +109,9 @@ function _norm(arg1, arg2) {
  */
 async function openPage(arg1, arg2, outline = 'default') {
   const { page, ctx } = _norm(arg1, arg2);
+  if (typeof arg2 === 'string' && arg1 && (arg1.mode || typeof arg1.fetch === 'function')) {
+    outline = arg2;
+  }
   if (page && ctx?.mode !== 'http') {
     await page.goto(gantryUrl(ctx, `configurations/${outline}/page`), {
       waitUntil: 'networkidle2',
@@ -292,4 +295,205 @@ async function savePage(arg1) {
   return parsed || res;
 }
 
-module.exports = { openPage, listPage, editPage, savePage, parsePageFormFields };
+function fieldsToMap(fields) {
+  const map = {};
+  for (const f of fields || []) map[f.name] = f.value;
+  return map;
+}
+
+function readJsonField(map, name, fallback) {
+  const raw = map[name];
+  if (!raw) return Array.isArray(fallback) ? [...fallback] : fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed == null ? fallback : parsed;
+  } catch (err) {
+    throw new Error(`Invalid JSON in ${name}: ${err.message}`);
+  }
+}
+
+function findRowIndex(rows, selector = {}) {
+  if (selector.index !== undefined && selector.index !== null) {
+    const index = Number(selector.index);
+    if (!Number.isInteger(index) || index < 0 || index >= rows.length) {
+      throw new Error(`Row index ${selector.index} is out of range.`);
+    }
+    return index;
+  }
+  if (selector.name) {
+    const i = rows.findIndex((row) => String(row.name || '').toLowerCase() === String(selector.name).toLowerCase());
+    if (i !== -1) return i;
+  }
+  if (selector.location) {
+    const i = rows.findIndex((row) => String(row.location || '') === String(selector.location));
+    if (i !== -1) return i;
+  }
+  throw new Error('Could not find matching row. Provide index, name, or location.');
+}
+
+function applyListActions(rows, actions = [], defaults = {}) {
+  const next = Array.isArray(rows) ? rows.map((row) => ({ ...row })) : [];
+  for (const action of actions || []) {
+    const type = action.action || 'edit';
+    if (type === 'add') {
+      next.push({ ...defaults, ...(action.item || {}) });
+      continue;
+    }
+    const index = findRowIndex(next, action);
+    if (type === 'remove') {
+      next.splice(index, 1);
+    } else if (type === 'edit') {
+      next[index] = { ...next[index], ...(action.item || {}) };
+    } else {
+      throw new Error(`Unsupported list action: ${type}`);
+    }
+  }
+  return next;
+}
+
+function metaKey(row) {
+  if (!row || typeof row !== 'object' || Array.isArray(row)) return null;
+  return Object.keys(row)[0] || null;
+}
+
+function applyMetaActions(rows, actions = []) {
+  const next = Array.isArray(rows) ? rows.map((row) => ({ ...row })) : [];
+  for (const action of actions || []) {
+    const type = action.action || 'set';
+    const key = action.key;
+    if (!key) throw new Error('Meta actions require key.');
+    const index = next.findIndex((row) => metaKey(row) === key);
+    if (type === 'remove') {
+      if (index !== -1) next.splice(index, 1);
+    } else if (type === 'set' || type === 'add' || type === 'edit') {
+      const row = { [key]: action.value ?? '' };
+      if (index === -1) next.push(row);
+      else next[index] = row;
+    } else {
+      throw new Error(`Unsupported meta action: ${type}`);
+    }
+  }
+  return next;
+}
+
+function applyTagAttributeActions(rows, actions = []) {
+  const normalized = Array.isArray(rows) ? rows.filter((row) => row && typeof row === 'object' && !Array.isArray(row)) : [];
+  return applyMetaActions(normalized, actions);
+}
+
+async function getPageBreakdown(arg1) {
+  const fields = await listPage(arg1, { all: true });
+  const map = fieldsToMap(fields);
+  return {
+    head: {
+      customContent: map['page[head][head_bottom]'] || '',
+      metaTags: readJsonField(map, 'page[head][meta][_json]', []),
+      atoms: readJsonField(map, 'page[head][atoms][_json]', []),
+    },
+    assets: {
+      favicon: map['page[assets][favicon]'] || '',
+      touchicon: map['page[assets][touchicon]'] || '',
+      css: readJsonField(map, 'page[assets][css][_json]', []),
+      javascript: readJsonField(map, 'page[assets][javascript][_json]', []),
+    },
+    body: {
+      id: map['page[body][attribs][id]'] || '',
+      class: map['page[body][attribs][class]'] || '',
+      tagAttributes: readJsonField(map, 'page[body][attribs][extra][_json]', []),
+      sectionsLayout: map['page[body][layout][sections]'] || '',
+      afterBody: map['page[body][body_top]'] || '',
+      beforeBody: map['page[body][body_bottom]'] || '',
+    },
+    fontawesome: {
+      enable: map['page[fontawesome][enable]'] || '',
+      version: map['page[fontawesome][version]'] || '',
+      fa4Compatibility: map['page[fontawesome][fa4_compatibility]'] || '',
+      contentCompatibility: map['page[fontawesome][content_compatibility]'] || '',
+      htmlCssImport: map['page[fontawesome][html_css_import]'] || '',
+      htmlJsImport: map['page[fontawesome][html_js_import]'] || '',
+    },
+    fields,
+  };
+}
+
+async function editHead(arg1, args = {}) {
+  const fields = await listPage(arg1, { all: true });
+  const map = fieldsToMap(fields);
+  const edits = {};
+  if (Object.prototype.hasOwnProperty.call(args, 'customContent')) {
+    edits['page[head][head_bottom]'] = args.customContent || '';
+  }
+  if (Array.isArray(args.metaActions) && args.metaActions.length) {
+    edits['page[head][meta][_json]'] = JSON.stringify(
+      applyMetaActions(readJsonField(map, 'page[head][meta][_json]', []), args.metaActions)
+    );
+  }
+  return edits;
+}
+
+async function editAssetIcons(_arg1, args = {}) {
+  const edits = {};
+  if (Object.prototype.hasOwnProperty.call(args, 'favicon')) edits['page[assets][favicon]'] = args.favicon || '';
+  if (Object.prototype.hasOwnProperty.call(args, 'touchicon')) edits['page[assets][touchicon]'] = args.touchicon || '';
+  return edits;
+}
+
+async function editAssetLists(arg1, args = {}) {
+  const fields = await listPage(arg1, { all: true });
+  const map = fieldsToMap(fields);
+  const edits = {};
+  if (Array.isArray(args.cssActions) && args.cssActions.length) {
+    edits['page[assets][css][_json]'] = JSON.stringify(
+      applyListActions(readJsonField(map, 'page[assets][css][_json]', []), args.cssActions, {
+        location: '',
+        inline: '',
+        extra: [],
+        priority: '0',
+        name: '',
+      })
+    );
+  }
+  if (Array.isArray(args.javascriptActions) && args.javascriptActions.length) {
+    edits['page[assets][javascript][_json]'] = JSON.stringify(
+      applyListActions(readJsonField(map, 'page[assets][javascript][_json]', []), args.javascriptActions, {
+        location: '',
+        inline: '',
+        in_footer: '0',
+        extra: [],
+        priority: '0',
+        name: '',
+      })
+    );
+  }
+  return edits;
+}
+
+async function editBody(arg1, args = {}) {
+  const fields = await listPage(arg1, { all: true });
+  const map = fieldsToMap(fields);
+  const edits = {};
+  if (Object.prototype.hasOwnProperty.call(args, 'bodyId')) edits['page[body][attribs][id]'] = args.bodyId || '';
+  if (Object.prototype.hasOwnProperty.call(args, 'bodyClasses')) edits['page[body][attribs][class]'] = args.bodyClasses || '';
+  if (Object.prototype.hasOwnProperty.call(args, 'sectionsLayout')) edits['page[body][layout][sections]'] = String(args.sectionsLayout || '');
+  if (Object.prototype.hasOwnProperty.call(args, 'afterBody')) edits['page[body][body_top]'] = args.afterBody || '';
+  if (Object.prototype.hasOwnProperty.call(args, 'beforeBody')) edits['page[body][body_bottom]'] = args.beforeBody || '';
+  if (Array.isArray(args.tagAttributeActions) && args.tagAttributeActions.length) {
+    edits['page[body][attribs][extra][_json]'] = JSON.stringify(
+      applyTagAttributeActions(readJsonField(map, 'page[body][attribs][extra][_json]', []), args.tagAttributeActions)
+    );
+  }
+  return edits;
+}
+
+module.exports = {
+  openPage,
+  listPage,
+  editPage,
+  savePage,
+  parsePageFormFields,
+  getPageBreakdown,
+  editHead,
+  editAssetIcons,
+  editAssetLists,
+  editBody,
+};
