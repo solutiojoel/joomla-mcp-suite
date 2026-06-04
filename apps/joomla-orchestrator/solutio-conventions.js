@@ -29,6 +29,27 @@ Standard outline IDs:
 
 Naming: title-case, e.g. "Parish Home", "School Home", "About", "Staff Directory"
 
+Primary site outline family:
+- Base Outline owns primary site Page Settings and cannot be assigned directly.
+- #Outline is the assignable subpage outline and should fully inherit layout and
+  Page Settings from Base Outline.
+- #Home inherits Navigation, Bottom, Footer, Copyright, and Offcanvas from Base
+  Outline; all other sections are homepage design sections. Body Classes:
+  gantry site-home withmaxwidth.
+- #Grid inherits from Base Outline except Utility and Main. Body Id: site-grid.
+  Main/Sidebar/Aside widths are 90/5/5 and Content Bottom A uses CSS ID grid-addpic.
+- #Sponsors inherits from Base Outline except Aside, where Side Menu is removed or
+  disabled and only the SideBar A module position remains.
+
+Subsite outline family:
+- Use #<Subsite> Outline, #<Subsite> Home, #<Subsite> Grid, and #<Subsite> Sponsors.
+- #<Subsite> Outline replaces Base Outline for that subsite and must not inherit
+  Page Settings from the primary Base Outline.
+- #<Subsite> Home/Grid/Sponsors copy Page Settings from #<Subsite> Outline and
+  inherit shared layout sections from #<Subsite> Outline, not Base Outline.
+- #<Subsite> Home Body Classes: gantry site-home withmaxwidth.
+- #<Subsite> Grid Body Id: site-grid.
+
 ---
 
 ## UNIVERSAL SECTION SEQUENCE
@@ -477,6 +498,22 @@ const SECTIONS = {
 Solutio builds Joomla sites using the rt_studius Gantry 5 theme.
 All sites follow an identical section structure and inherit rules.
 Parish (outline 33) and School Home (outline 72) are the two standard homepage types.
+`.trim(),
+
+  outline_structure: `
+Primary site outline family:
+- Base Outline owns primary Page Settings and cannot be assigned directly.
+- #Outline is the assignable subpage outline and fully inherits layout/Page Settings from Base Outline.
+- #Home inherits Navigation, Bottom, Footer, Copyright, and Offcanvas from Base Outline; Body Classes are "gantry site-home withmaxwidth".
+- #Grid inherits from Base Outline except Utility and Main; Body Id is "site-grid"; Main/Sidebar/Aside widths are 90/5/5; Content Bottom A uses CSS ID "grid-addpic".
+- #Sponsors inherits from Base Outline except Aside, where Side Menu is removed/disabled and SideBar A module position remains.
+
+Subsite outline family:
+- Use #<Subsite> Outline, #<Subsite> Home, #<Subsite> Grid, #<Subsite> Sponsors.
+- #<Subsite> Outline replaces Base Outline for that subsite and must not inherit Page Settings from primary Base Outline.
+- #<Subsite> Home/Grid/Sponsors copy Page Settings from #<Subsite> Outline and inherit shared sections from #<Subsite> Outline, not Base Outline.
+- #<Subsite> Home Body Classes are "gantry site-home withmaxwidth"; #<Subsite> Grid Body Id is "site-grid".
+- For full operational steps, call gantry_outline_conventions before duplicating or rewiring outlines.
 `.trim(),
 
   inherit_rules: `

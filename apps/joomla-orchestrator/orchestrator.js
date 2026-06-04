@@ -179,12 +179,13 @@ function buildServer() {
                 '',
                 '**Design workflow - required tool call order:**',
                 '1. `solutio_design_workflow` - load the full design process guide (do this now)',
-                '2. `gantry_design_patterns` - load the pattern knowledge base (why each particle+CSS choice is made)',
-                '3. `gantry_design_plan_from_brief(brief: "...")` - generate a plan with required IDs and guardrails before writing any YAML',
-                '4. `gantry_homepage_examples` - find a similar site and decompile it as a starting point',
-                '5. Resolve all content IDs via `joomla_list_categories` / `joomla_list_articles`',
-                '6. `gantry_validate_design_contract` - validate design YAML before applying',
-                '7. `gantry_layout_design(dryRun: true)` - dry run, then apply',
+                '2. `gantry_outline_conventions` - load outline/subsite inheritance rules before creating or rewiring outlines',
+                '3. `gantry_design_patterns` - load the pattern knowledge base (why each particle+CSS choice is made)',
+                '4. `gantry_design_plan_from_brief(brief: "...")` - generate a plan with required IDs and guardrails before writing any YAML',
+                '5. `gantry_homepage_examples` - find a similar site and decompile it as a starting point',
+                '6. Resolve all content IDs via `joomla_list_categories` / `joomla_list_articles`',
+                '7. `gantry_validate_design_contract` - validate design YAML before applying',
+                '8. `gantry_layout_design(dryRun: true)` - dry run, then apply',
                 '',
                 'Call `solutio_style_guide` for structural conventions, `solutio_particles` for particle field schemas.',
                 '',
@@ -303,13 +304,13 @@ function buildServer() {
           'Call this at the start of any build or design task to ensure consistency with ' +
           'the established conventions across the client fleet. ' +
           'Use the "section" parameter to request a focused part of the guide, or omit it for the full reference. ' +
-          'Available sections: overview, inherit_rules, css, parish, school, checklist, naming.',
+          'Available sections: overview, outline_structure, inherit_rules, css, page_targeting, parish, school, checklist, naming.',
         inputSchema: {
           type: 'object',
           properties: {
             section: {
               type: 'string',
-              enum: ['full', 'overview', 'inherit_rules', 'css', 'page_targeting', 'parish', 'school', 'checklist', 'naming'],
+              enum: ['full', 'overview', 'outline_structure', 'inherit_rules', 'css', 'page_targeting', 'parish', 'school', 'checklist', 'naming'],
               description: 'Which part of the guide to return. Omit or use "full" for the complete reference.',
             },
           },

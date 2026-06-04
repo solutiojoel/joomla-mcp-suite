@@ -100,6 +100,7 @@ Knowledge base articles for specific issue types live under `docs/agents/kb/`. W
 | `get_active_site` | Confirm the current active site |
 | `solutio_style_guide` | Load Solutio house conventions for Gantry 5 builds |
 | `solutio_particles` | Load Solutio particle reference before adding/editing particles |
+| `gantry_outline_conventions` | Load Base/#Outline/#Home/#Grid/#Sponsors and subsite outline inheritance rules before creating or rewiring outlines |
 | `reload_tools` | Reload tool lists if a downstream server was restarted |
 | `gantry_reconnect` | Force Gantry re-auth if layout tools are failing |
 

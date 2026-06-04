@@ -35,6 +35,7 @@ const styles = require('./lib/styles');
 const pageMod = require('./lib/page');
 const backup = require('./lib/backup');
 const compiler = require('./lib/design-compiler');
+const outlineConventions = require('./lib/outline-conventions');
 
 /* ---------------------------- session cache --------------------------- */
 
@@ -108,6 +109,28 @@ async function resolveOutlineArg(ctx, args) {
 
 const TOOLS = [
   /* Outlines */
+  {
+    name: 'gantry_outline_conventions',
+    description:
+      'Return the Solutio Gantry 5 outline and subsite outline conventions. ' +
+      'Call this before creating, duplicating, inheriting, cloning, or assigning ' +
+      'Base/#Outline/#Home/#Grid/#Sponsors or subsite outline families such as ' +
+      '#School Outline, #School Home, #School Grid, and #School Sponsors.',
+    schema: {
+      type: 'object',
+      properties: {
+        section: {
+          type: 'string',
+          enum: ['full', 'primary', 'subsite', 'workflow', 'checklist'],
+          description: 'Focused part of the convention reference. Omit or use full for all rules.',
+        },
+      },
+    },
+    handler: async (args) => ({
+      section: args.section || 'full',
+      content: outlineConventions.getOutlineConventions(args.section || 'full'),
+    }),
+  },
   {
     name: 'gantry_outlines_list',
     description:
