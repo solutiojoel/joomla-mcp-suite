@@ -493,6 +493,17 @@ function cloneNodeFromStructure(targetStructure, sourceStructure, nodeId) {
 }
 
 /**
+ * Return a full local clone of a layout structure with inheritance cleared on
+ * every node. Use for the subsite #Outline "clone the whole Base Outline"
+ * operation where the target must stop inheriting from Base Outline entirely.
+ */
+function cloneStructureLocal(sourceStructure) {
+  const cloned = cloneDeep(sourceStructure);
+  cloned.forEach(clearInheritDeep);
+  return cloned;
+}
+
+/**
  * Wipe the entire layout structure.
  *   mode = "full"              → empty array (will fall back to base outline)
  *   mode = "keep-inheritance"  → keep top-level sections that are inheriting,
@@ -1500,6 +1511,7 @@ module.exports = {
   setNodeInherit,
   clearNodeInherit,
   cloneNodeFromStructure,
+  cloneStructureLocal,
   clearLayout,
   serializeLayout,
   getLayoutStructure,

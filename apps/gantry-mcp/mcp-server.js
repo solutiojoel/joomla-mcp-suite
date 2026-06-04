@@ -548,6 +548,54 @@ const TOOLS = [
     },
   },
   {
+    name: 'gantry_layout_clone_all_from',
+    description:
+      'Copy an entire layout from a source outline into a target outline as a fully local clone. ' +
+      'This clears inheritance on every copied container, section, grid, block, and particle. ' +
+      'Use this for the subsite #Outline setup: clone Base Outline into #<Subsite> Outline first, ' +
+      'so the subsite #Outline no longer inherits Base Outline anywhere.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        from: { type: 'string', description: 'Source outline id/title, usually "default" / Base Outline.' },
+        to: { type: 'string', description: 'Target outline id/title, usually #<Subsite> Outline.' },
+        dryRun: { type: 'boolean' },
+      },
+      required: ['site', 'from', 'to'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const from = await outlines.resolveOutline(ctx, args.from);
+      const to = await outlines.resolveOutline(ctx, args.to);
+      const source = await layoutApi.fetchSavedLayout(ctx, from.id);
+      if (!source.length) throw new Error(`Source outline ${from.id} has no layout`);
+      const before = await layoutApi.fetchSavedLayout(ctx, to.id);
+      const cloned = layoutApi.cloneStructureLocal(source);
+      const diff = layoutApi.diffStructures(before, cloned);
+      if (args.dryRun) {
+        return {
+          dryRun: true,
+          from,
+          to,
+          inheritanceCleared: true,
+          cloneScope: 'entire layout',
+          diff,
+        };
+      }
+      const backupPath = backup.takeBackup(ctx, to.id, `local-clone-all-from-${from.id}`, before);
+      await layoutApi.saveLayoutDirect(ctx, ctx, to.id, cloned);
+      return {
+        cloned: true,
+        from,
+        to,
+        inheritanceCleared: true,
+        cloneScope: 'entire layout',
+        backupPath,
+      };
+    },
+  },
+  {
     name: 'gantry_layout_clear',
     description: 'Wipe an outline\'s layout. mode "full" empties everything; "keep-inheritance" preserves nodes that have an inherit set.',
     schema: {

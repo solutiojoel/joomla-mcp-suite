@@ -45,9 +45,12 @@ Subsite outline family:
 - Use #<Subsite> Outline, #<Subsite> Home, #<Subsite> Grid, and #<Subsite> Sponsors.
 - #<Subsite> Outline replaces Base Outline for that subsite and must not inherit
   Page Settings from the primary Base Outline.
-- #<Subsite> Outline must have every Layout screen section locally cloned before
-  #<Subsite> Home/Grid/Sponsors inherit from it. Clone means Section Attributes,
+- #<Subsite> Outline must receive a full local clone of Base Outline layout before
+  #<Subsite> Home/Grid/Sponsors inherit from it. In tools, use
+  gantry_layout_clone_all_from. If done manually, Clone means Section Attributes,
   Block Attributes, and Particles within Section are all checked.
+- #<Subsite> Outline Page Settings should be copied locally from the intended source
+  with gantry_page_copy_from, then edited as a fresh subsite.
 - #<Subsite> Home/Grid/Sponsors do not use entangled Page Settings. They copy
   Page Settings locally from #<Subsite> Outline with origin blank, then apply only
   the expected Body Classes/Body Id tweak.
@@ -519,8 +522,9 @@ Primary site outline family:
 Subsite outline family:
 - Use #<Subsite> Outline, #<Subsite> Home, #<Subsite> Grid, #<Subsite> Sponsors.
 - #<Subsite> Outline replaces Base Outline for that subsite and must not inherit Page Settings from primary Base Outline.
-- #<Subsite> Outline must locally clone every Layout screen section before other subsite outlines inherit from it.
-- Clone means the Gantry Clone option with Section Attributes, Block Attributes, and Particles within Section all checked; in tools, use gantry_layout_sections_clone_from.
+- #<Subsite> Outline must locally clone the full Base Outline layout before other subsite outlines inherit from it; in tools, use gantry_layout_clone_all_from.
+- Manual section Clone means the Gantry Clone option with Section Attributes, Block Attributes, and Particles within Section all checked.
+- #<Subsite> Outline Page Settings should be copied locally with gantry_page_copy_from and then edited as a fresh subsite.
 - #<Subsite> Home/Grid/Sponsors copy Page Settings locally from #<Subsite> Outline without entanglement/origin; Head Properties and Assets must match #<Subsite> Outline.
 - #<Subsite> Home Body Classes are "gantry site-home withmaxwidth"; #<Subsite> Grid Body Id is "site-grid".
 - For full operational steps, call gantry_outline_conventions before duplicating or rewiring outlines.
