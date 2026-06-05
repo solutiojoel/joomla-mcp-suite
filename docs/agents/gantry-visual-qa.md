@@ -203,25 +203,36 @@ CSS then targets `.quicklinks-bar`, which survives layout rebuilds. The generate
 
 ## Writing and Deploying CSS
 
-**CSS always goes in the site's custom CSS file on the FTP server, linked from the Base Outline.** Do not use the Gantry admin Styles textarea for site CSS — see `docs/agents/gantry-section-css.md` for the full explanation and correct file path.
+CSS goes in the Base Outline's **Page Settings CSS asset rows** — not the Gantry Styles textarea. Three approaches depending on FTP access; see `docs/agents/gantry-section-css.md` for the full reference.
 
-### The CSS deployment workflow
+**Quick decision:**
+
+| FTP access | Use |
+|-----------|-----|
+| Can write to `/templates/` | FTP `custom.css` → register in Base Outline CSS rows |
+| Locked to `/pub` | FTP to `content/override.css` (already registered on most sites) |
+| No FTP / fast iteration | Inline CSS directly in a Page Settings asset row via `gantry_page_edit` |
+
+### Inline approach (fastest — no file upload)
+
+Read the current CSS rows first, then append to the inline field of an existing row (or add a new one):
 
 ```
-1. ftp_read_file("/templates/g5_clarity/custom/css/custom.css")
-   → read the current file content (or create if it doesn't exist)
+1. gantry_page_list(site: "...", outline: "default", all: true)
+   → find page[assets][css][_json] — note the existing rows array
 
-2. Append new rules for this section
+2. Modify the inline field of the target row (e.g. "To Merge" or "Override")
+   → or add a new row: {"location": "", "inline": "/* css */", "priority": "1", "name": "Agent Custom"}
 
-3. ftp_upload_file("/templates/g5_clarity/custom/css/custom.css", content: "...")
-   → write the updated file back
+3. gantry_page_edit(site: "...", outline: "default", edits: {
+     "page[assets][css][_json]": "[...complete updated array...]"
+   })
+   → always write the full array, not just the changed row
 
-4. Hard-refresh the frontend page (or wait a moment for cache)
-
-5. Screenshot the section → verify the fix
+4. Screenshot the section → verify the fix
 ```
 
-Confirm the file is linked in **Base Outline → Styles → CSS Files** before expecting it to take effect. If it's not there, add it — this only needs to be done once per site.
+Always pass the **complete array** back — `gantry_page_edit` replaces the whole field. Read first, modify, write all rows.
 
 ### CSS patterns
 

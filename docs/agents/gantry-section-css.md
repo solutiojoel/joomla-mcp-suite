@@ -213,52 +213,105 @@ Keep overlay pseudo-elements behind the `.g-container` by setting the section `p
 
 ## Where to Put Custom CSS
 
-**Always write custom CSS to a file on the FTP server, then link it in the Base Outline.** Do not paste CSS into the Gantry admin Styles textarea — that field is for Gantry variable overrides only, not site CSS. Anything put there is harder to version-control, invisible to the next agent, and easy to accidentally overwrite.
+Custom CSS belongs in the Base Outline's **Page Settings → CSS asset rows** (`page[assets][css][_json]`), not the Gantry Styles textarea (which is for variable overrides only). The CSS asset rows support both file references and inline CSS — which approach to use depends on what the FTP server allows.
 
-### File location
-
-The standard path for site-specific custom CSS on Solutio sites is:
+Start by reading the current asset rows to see what already exists:
 
 ```
-/templates/g5_clarity/custom/css/custom.css
+gantry_page_list(site: "...", outline: "default", all: true)
 ```
 
-If the file doesn't exist yet, create it via FTP. If a site uses a different template folder name, check with `ftp_list_files` at `/templates/` to confirm the folder name.
+Look at `page[assets][css][_json]`. It contains an array of rows, each with:
+- `name` — display label (e.g. "Override", "To Merge")
+- `location` — file path or URL (can be empty)
+- `inline` — CSS written directly into the page (no file needed)
+- `priority` — load order (lower loads first)
 
-### Linking the file in the Base Outline
+---
 
-After writing the file to FTP, register it so it loads on every page:
+### Approach 1 — FTP to template directory (full FTP access)
 
-1. Gantry admin → **Base Outline** → **Styles** tab → scroll to **CSS Files** section
-2. Add the path: `/templates/g5_clarity/custom/css/custom.css`
-3. Save the outline
-
-Because all other outlines (Home, Grid, Subpage, Sponsors, Error, etc.) inherit from Base, the file is automatically included everywhere — do not register it on individual outlines.
-
-### Check before registering
-
-Before adding the link, verify it isn't already there:
-
-```
-gantry_page_list(outlineId: "[base outline ID]")
-```
-
-Look for the CSS Files section in the returned page settings.
-
-### Full workflow
+Use when the FTP account can write to `/templates/`.
 
 ```
 1. ftp_read_file("/templates/g5_clarity/custom/css/custom.css")
-   → read current CSS, or note if file doesn't exist yet
+   → read existing CSS (or note it doesn't exist yet)
 
-2. Append new rules to the content
+2. Append new rules
 
 3. ftp_upload_file("/templates/g5_clarity/custom/css/custom.css", content: "...")
-   → write updated file back to server
+   → write updated file to server
 
-4. Confirm the file path is registered in Base Outline → CSS Files
-   → add it if missing
+4. If the file isn't already in the CSS asset rows, add it:
+   gantry_page_edit(site: "...", outline: "default", edits: {
+     "page[assets][css][_json]": "[...existing rows..., {\"location\": \"/templates/g5_clarity/custom/css/custom.css\", \"inline\": \"\", \"extra\": [], \"priority\": \"1\", \"name\": \"Custom\"}]"
+   })
 ```
+
+---
+
+### Approach 2 — FTP to content directory (FTP locked to /pub)
+
+When FTP write access is restricted to `/pub`, the `/templates/` path is blocked but `content/` files (which live inside `/pub/content/`) are still writable. Sites often already have a `content/override.css` or `content/to-merge.css` row in the asset list.
+
+```
+1. ftp_read_file("content/override.css")
+   → read current CSS (path resolves to /pub/content/override.css on server)
+
+2. Append new rules
+
+3. ftp_upload_file("content/override.css", content: "...")
+   → write back to server
+
+4. Verify this file is registered in the CSS asset rows
+   → it usually already is; add it if missing (location: "content/override.css")
+```
+
+---
+
+### Approach 3 — Inline CSS in a Page Settings asset row (no file upload needed)
+
+When FTP is not available or you want to iterate quickly without touching files. CSS goes directly in the `inline` field of a CSS asset row — Gantry injects it as a `<style>` block on every page. No file required.
+
+Read the current rows first, then add/update an inline row via `gantry_page_edit`:
+
+```python
+# Build the updated JSON — keep ALL existing rows, modify or add one inline row
+existing_rows = [...]   # from gantry_page_list page[assets][css][_json]
+
+# Option A: add a new inline row
+existing_rows.append({
+    "location": "",
+    "inline": "/* your CSS here */",
+    "extra": [],
+    "priority": "1",
+    "name": "Agent Custom"
+})
+
+# Option B: update the inline field of an existing row (e.g. "To Merge")
+for row in existing_rows:
+    if row["name"] == "To Merge":
+        row["inline"] += "\n/* new rules */\n.my-section { ... }"
+
+gantry_page_edit(site: "...", outline: "default", edits: {
+    "page[assets][css][_json]": json.dumps(existing_rows)
+})
+```
+
+**Important:** Always pass the complete array — `gantry_page_edit` replaces the entire field. Read first, modify in context, write the full updated array back.
+
+---
+
+### Which approach to use
+
+| Situation | Use |
+|-----------|-----|
+| FTP unrestricted | Approach 1 — template directory file |
+| FTP locked to /pub | Approach 2 — content/ directory file |
+| FTP unavailable / quick iteration | Approach 3 — inline in page settings row |
+| Experimenting on a sandbox | Approach 3 — easy to clear without touching files |
+
+All approaches target the **Base Outline** (`default`) so CSS loads on every page through outline inheritance. Do not add CSS rows to individual outlines (Home, Grid, etc.) unless the CSS must be scoped to only those pages.
 
 ---
 

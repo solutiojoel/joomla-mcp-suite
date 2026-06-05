@@ -254,19 +254,29 @@ function buildServer() {
       {
         name: 'get_site_notes',
         description:
-          'Read the notes file for the active site. Call after switching sites to review known quirks, conventions, and history.',
+          'REQUIRED at session start — read the active site\'s history file before making any changes. ' +
+          'Contains persistent site facts (key IDs, quirks, integrations) and a full changelog of past changes. ' +
+          'Call immediately after set_active_site is confirmed.',
         inputSchema: { type: 'object', properties: {} },
       },
       {
         name: 'append_site_note',
         description:
-          'Append a timestamped note to the active site\'s notes file when you discover something non-obvious. ' +
-          'Use this whenever you learn a site quirk, client preference, or non-standard configuration.',
+          'REQUIRED after every session that makes changes to a site. ' +
+          'Appends a structured changelog entry to the active site\'s history file in docs/sites/. ' +
+          'Call this immediately after completing work — do not wait until the end of the conversation. ' +
+          'Format the note as a structured markdown entry:\n' +
+          '### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]\n' +
+          '**Requested by:** [Name / email / \'internal\'] | **Ticket:** [#XXXXX or \'none\']\n' +
+          '**Changes:**\n' +
+          '- [specific change with IDs]\n' +
+          '**Notes:** [anything non-obvious, or \'No follow-up needed\']\n\n' +
+          'Also call this when you discover a persistent site fact (quirk, key ID, integration) — ' +
+          'use a plain paragraph instead of the ### header for those entries.',
         inputSchema: {
           type: 'object',
           properties: {
-            note: { type: 'string', description: 'What you discovered, where, and why it matters.' },
-            category: { type: 'string', description: 'Category heading, e.g. Modules, Menus, Content, Quirks, Template.' },
+            note: { type: 'string', description: 'The full changelog entry or discovery note to append.' },
           },
           required: ['note'],
         },
@@ -430,15 +440,19 @@ function buildServer() {
       if (name === 'append_site_note') {
         const note = args.note;
         if (!note) return { isError: true, content: [{ type: 'text', text: 'note is required' }] };
-        const category = args.category || 'General';
-        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16) + ' UTC';
-        const entry = `\n**[${timestamp}] ${category}** - ${note}\n`;
+        // If the note is a structured changelog entry (starts with ###), append it
+        // directly — it already has its own date header. Otherwise wrap it with a
+        // legacy timestamp for backwards compatibility with plain discovery notes.
+        const isStructured = note.trimStart().startsWith('###');
+        const entry = isStructured
+          ? `\n${note.trim()}\n`
+          : `\n**[${new Date().toISOString().replace('T', ' ').substring(0, 16)} UTC]** ${note.trim()}\n`;
         if (!fs.existsSync(notesPath)) {
           fs.mkdirSync(path.dirname(notesPath), { recursive: true });
-          fs.writeFileSync(notesPath, `# Site Notes: ${hostname}\n\nNotes logged by AI agents as they discover site-specific quirks and conventions.\n`);
+          fs.writeFileSync(notesPath, `# Site Notes: ${hostname}\n\nNotes logged by AI agents.\n`);
         }
         fs.appendFileSync(notesPath, entry);
-        return { content: [{ type: 'text', text: `Note appended to ${hostname}` }] };
+        return { content: [{ type: 'text', text: `Changelog entry appended to ${hostname}` }] };
       }
 
       if (name === 'write_site_notes') {

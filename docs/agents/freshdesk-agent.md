@@ -97,22 +97,10 @@ Once the user approves:
 
 ---
 
-## Step 7 — Document and Close
+## Step 6b — Log the Change (do this before Step 7)
 
-After all work is complete, complete all four steps in order. Steps 1 and 2 are mandatory every time.
+**Call `append_site_note` immediately after executing changes** — before drafting Freshdesk notes, before updating ticket status. Do not batch this to the end; the conversation may close early.
 
----
-
-**1. Update site history** (always — no exceptions):
-
-First, if any new persistent facts were discovered (new IDs, new quirks, new integrations), update them:
-```
-get_site_notes()
-→ update the relevant persistent section in context
-→ write_site_notes(notes: "[full updated file content]")
-```
-
-Then append a changelog entry for this ticket:
 ```
 append_site_note(note: "### YYYY-MM-DD — Ticket #XXXXX | [Brief title of what was done]
 **Requested by:** [Requester name] ([email]) | **Ticket:** #XXXXX
@@ -124,8 +112,21 @@ append_site_note(note: "### YYYY-MM-DD — Ticket #XXXXX | [Brief title of what 
 
 Rules:
 - Always include specific IDs — not just item names
-- If nothing was changed (investigation only), still log: what was investigated, what was found, what was ruled out
+- If investigation only (no changes), still log what was checked and what was found
 - Vague entries ("updated some articles per client") are not acceptable
+
+If any new persistent facts were discovered (new IDs, new quirks, new integrations), also update the persistent section:
+```
+get_site_notes()
+→ update the relevant section
+→ write_site_notes(content: "[full updated file]")
+```
+
+---
+
+## Step 7 — Freshdesk Documentation and Close
+
+After logging the site change, complete the remaining Freshdesk steps:
 
 ---
 

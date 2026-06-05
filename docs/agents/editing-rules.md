@@ -64,9 +64,31 @@ FTP credentials only provide access to user-content directories (`images/` and s
 
 Do not attempt to read or edit Gantry 5 configuration via FTP — those paths will return empty or not exist. Use the Joomla admin interface or MCP tools instead (e.g. `gantry-subtitle` is a menu item param, not a template file edit).
 
-## Session End (Required — every session)
+## Changelog — Write Immediately After Every Change
 
-Before closing any session on a site, complete both steps in order:
+**Do not batch to session end.** Call `append_site_note` right after completing any change. Conversations can end abruptly — the note must be written while the work is still being done.
+
+```
+append_site_note(
+  note: "### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]
+**Requested by:** [Name / email / 'internal'] | **Ticket:** [#XXXXX or 'none']
+**Changes:**
+- [specific change with IDs]
+**Notes:** [anything non-obvious, or 'No follow-up needed']"
+)
+```
+
+Rules:
+- Always include specific IDs (article ID, module ID, menu item ID) — not just names
+- Always include who requested the change
+- Investigation-only session: still log what was checked, what was found, what was ruled out before responding to the user
+- Vague entries ("updated some articles") are worse than no entry — be specific
+
+For the full format specification and examples, see `docs/agents/kb/site-history.md`.
+
+## Session End (Also Required)
+
+At session end, handle any persistent-fact updates that weren't done inline:
 
 **Step 1 — Update persistent facts** (if anything changed or was newly discovered):
 - New IDs found → update the Key IDs table
@@ -74,25 +96,7 @@ Before closing any session on a site, complete both steps in order:
 - New integration added → add to Active Integrations
 - Use `write_site_notes` with the full updated file content
 
-**Step 2 — Append a changelog entry** (always, no exceptions):
-
-```
-append_site_note(
-  note: "### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]\n**Requested by:** [Name / email / 'internal'] | **Ticket:** [#XXXXX or 'none']\n**Changes:**\n- [specific change with IDs]\n- [specific change with IDs]\n**Notes:** [anything non-obvious, quirks, follow-up needed]"
-)
-```
-
-Rules for changelog entries:
-- Always include specific IDs (article ID, module ID, menu item ID) — not just names
-- Always include who requested the change
-- If the session was investigation-only with no changes, still log: what was investigated, what was found, what was ruled out
-- Vague entries ("updated some articles") are worse than no entry — be specific
-
-After writing the entry, tell the user the site log has been updated.
-
-For the full format specification and examples, see `docs/agents/kb/site-history.md`.
-
-**Step 3 — Review for process improvements** (if applicable — not required every session):
+**Step 2 — Review for process improvements** (if applicable — not required every session):
 
 Briefly replay the session's steps. If any of the following apply, append an entry to `docs/agents/improvements.md`:
 - A task took more attempts than it should have
@@ -100,7 +104,6 @@ Briefly replay the session's steps. If any of the following apply, append an ent
 - A better approach was discovered mid-task
 - A tool behaved in an unexpected or undocumented way
 - A workflow step was in the wrong order or had a missing prerequisite
-- A pattern appeared that warrants documentation
 
 This is a shared queue reviewed by the team — not a per-session requirement. Only add an entry if something genuinely useful was found. See `docs/agents/improvements.md` for the format.
 

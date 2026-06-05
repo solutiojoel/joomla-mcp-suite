@@ -27,24 +27,31 @@ After confirming the active site, read `docs/agents/editing-rules.md` — it con
 
 ---
 
-## Session End (Required)
+## Changelog — Write Immediately After Every Change
 
-Before closing any session on a site, **always** complete both steps:
+**Do not wait until the end of the session.** Call `append_site_note` immediately after completing any change — the conversation may end before a "session close" step happens.
 
-**1. Update site history** — call `get_site_notes`, update any persistent facts that changed (new IDs, quirks, integrations), then call `write_site_notes` if updated.
+After every meaningful action (article updated, module created, menu item changed, CSS deployed, config updated, ticket resolved), call:
 
-**2. Append a changelog entry** — call `append_site_note` with a structured entry:
 ```
-### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]
+append_site_note(note: "### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]
 **Requested by:** [Name / email / 'internal'] | **Ticket:** [#XXXXX or 'none']
 **Changes:**
 - [specific change with IDs]
-**Notes:** [anything non-obvious, or 'No follow-up needed']
+**Notes:** [anything non-obvious, or 'No follow-up needed']")
 ```
 
-This applies to every session — support tickets, build work, audits, and investigation-only sessions alike. If nothing was changed, still log what was looked at and what was found. See `docs/agents/kb/site-history.md` for the full format spec and examples.
+If the session was investigation-only (no changes), still log what was looked at and what was found before responding to the user.
 
-**3. Review for process improvements** (when applicable — not required every session) — replay the session's steps and check: did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered mid-task? Did a tool behave unexpectedly? If yes, append an entry to `docs/agents/improvements.md`. This is a shared team queue — only log when something genuinely useful was found.
+See `docs/agents/kb/site-history.md` for the full format spec and examples.
+
+## Session End (Also Required)
+
+At the end of any session where persistent facts changed (new key IDs discovered, new quirk found, new integration added):
+
+**1. Update persistent facts** — call `get_site_notes`, update the relevant section, call `write_site_notes` with the full updated content.
+
+**2. Review for process improvements** (when applicable — not required every session) — replay the session's steps and check: did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered mid-task? Did a tool behave unexpectedly? If yes, append an entry to `docs/agents/improvements.md`. This is a shared team queue — only log when something genuinely useful was found.
 
 ---
 
