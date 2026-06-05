@@ -50,14 +50,27 @@ Keep entries concise. This is a review queue, not a journal. One tight paragraph
 
 ## ⏳ Pending Review
 
-### 2026-06-04 — Tool Behavior | Direct particle edit missed generated section-apply ID
-**Context:** Experimental #Home particle layout on agent7.forge.solutiosoftware.com.
-**Observation:** `gantry_particle_direct_edit` returned `Node "contentarray-6848" is type "undefined", not a particle` even though `gantry_layout_tree` and rendered particle HTML showed that generated contentarray ID existed immediately after `gantry_section_apply`.
-**Suggested fix:** Check whether direct-edit snapshots lag section-apply saves or require a different ID namespace/refresh step; document the required refresh sequence or update the tool to resolve freshly generated particle IDs consistently. Partial mitigation: always use `gantry_particle_html` to verify a particle ID is resolvable before attempting to edit it.
-**Status:** pending — tool-level fix needed; `gantry-visual-qa.md` added to address the broader workflow gap (CSS as an implementation step, not afterthought)
+*(No entries — all prior items resolved)*
 
 ---
 
 ## ✅ Implemented
 
-*(Entries are moved here after being acted on, with a note on what was changed)*
+### 2026-06-05 — Bug 1 | `gantry_layout_add` crashes on empty sections
+**Fixed:** `apps/gantry-mcp/lib/layout-api.js` — `addParticleToSection()`
+
+Empty sections export with no `children` key at all, causing `.push()` to throw `Cannot read properties of undefined`. Fixed by adding `if (!Array.isArray(target.node.children)) target.node.children = [];` before both `newGrid` and `firstGrid` push paths. Also simplified `firstGrid` to use `target.node.children.find()` directly since children is now guaranteed to be an array.
+
+---
+
+### 2026-06-05 — Bug 2 | `gantry_layout_edit` returns "not found" for inherited particle IDs
+**Resolved (by design — behavior clarified, not changed):** `apps/gantry-mcp/lib/layout-api.js` — `editParticleFromForm()`
+
+Inherited particles have runtime-generated IDs not saved in the outline's YAML — they cannot be edited on this outline by design. Added an explanatory code comment to `editParticleFromForm` listing both failure reasons (inherited particle / stale ID) so future developers don't try to "fix" correct behavior. Mitigation documented in `gantry-particle-map.md`: always verify IDs via `gantry_layout_list(editable: true)` before calling edit, and edit inherited particles on their source outline.
+
+---
+
+### 2026-06-05 — Bug 3 | Backup directory resolves to system32 on Windows
+**Already fixed in source — needs redeployment:** `apps/gantry-mcp/lib/backup.js` — `backupRoot()`
+
+The current source already uses `path.resolve(__dirname, '..', raw)` to anchor the backup path to the gantry-mcp app directory regardless of `process.cwd()`. The EPERM error on agent7 was from a prior build that used `path.resolve(raw)` (CWD-relative). Restarting the gantry-mcp server on agent7 with the current code will resolve this.

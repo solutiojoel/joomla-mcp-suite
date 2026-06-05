@@ -154,13 +154,16 @@ function addParticleToSection(structure, sectionId, blocktype, subtype, opts = {
     );
   }
   const node = makeParticleNode(blocktype, subtype, title, attrs);
+  // Empty sections have no `children` key at all in the exported JSON.
+  // Initialize it so both modes can safely push into it.
+  if (!Array.isArray(target.node.children)) target.node.children = [];
   if (mode === 'newGrid') {
     const block = makeBlockNode(node, 100);
     const grid = makeGridNode(block);
     target.node.children.push(grid);
   } else if (mode === 'firstGrid') {
     // Append as a new sibling block in the first grid (auto-resize-on-render)
-    const grid = (target.node.children || []).find((c) => c.type === 'grid');
+    const grid = target.node.children.find((c) => c.type === 'grid');
     if (!grid) {
       const block = makeBlockNode(node, 100);
       target.node.children.push(makeGridNode(block));
@@ -214,7 +217,20 @@ function setDeep(obj, pathKeys, value) {
  */
 function editParticleFromForm(structure, particleId, edits) {
   const found = findNode(structure, particleId);
-  if (!found) throw new Error(`Particle "${particleId}" not found`);
+  if (!found) {
+    // Two known reasons a particle ID is not found:
+    //
+    // 1. INHERITED PARTICLES — Particles inherited from a parent outline (e.g. Base)
+    //    are present in the layout tree but their IDs are generated at runtime and are
+    //    NOT saved in this outline's YAML. They cannot be edited here; edit them on
+    //    the source outline (usually "default"/Base Outline) instead.
+    //
+    // 2. STALE ID — If a layout-modifying operation (add, import) was called, all
+    //    structural IDs (grids, blocks) and some particle IDs are regenerated on the
+    //    next save. Always call gantry_layout_list(editable:true) after any mutation
+    //    and use the IDs it returns — never rely on IDs from a prior tree/list call.
+    throw new Error(`Particle "${particleId}" not found`);
+  }
   const blockEntry = findNode(structure, (n) =>
     Array.isArray(n.children) && n.children.includes(found.node)
   );

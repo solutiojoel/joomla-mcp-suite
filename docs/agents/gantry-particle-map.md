@@ -24,6 +24,100 @@ Fleet inventory sources checked:
 
 ---
 
+## ⚠️ Known Tool Limitations & Workarounds
+
+### Adding Particles to Empty Sections (Bug — needs dev fix)
+
+`gantry_layout_add` crashes with `Cannot read properties of undefined (reading 'push')` when targeting any section that has no existing particles. Empty sections have no `children` key in the layout JSON, and the tool tries to call `.push()` on `undefined`.
+
+**Affected sections:** `above`, `feature`, `showcase`, `sidebar`, `mainbar`, `aside`, `expanded`, `extension` — any section with zero particles on a fresh or cleared outline.
+
+**Workaround — export → patch → import:**
+
+1. Export the current layout:
+   ```
+   gantry_layout_export(site: "...", outline: "33")
+   ```
+
+2. In the exported JSON, find the empty section node. It will look like:
+   ```json
+   {
+     "type": "section",
+     "id": "above",
+     "layout": true,
+     "subtype": "section",
+     "title": "Above",
+     "attributes": { ... }
+   }
+   ```
+   Note: no `children` key at all.
+
+3. Add a `children` array with the full `grid → block → particle` structure. Use IDs in the format `grid-NNNN`, `block-NNNN`, `subtype-NNNN` with 4-digit numbers not already in the layout:
+   ```json
+   {
+     "type": "section",
+     "id": "above",
+     "layout": true,
+     "subtype": "section",
+     "title": "Above",
+     "attributes": { ... },
+     "children": [
+       {
+         "id": "grid-7701",
+         "type": "grid",
+         "subtype": "grid",
+         "layout": true,
+         "attributes": {},
+         "children": [
+           {
+             "id": "block-7702",
+             "type": "block",
+             "subtype": "block",
+             "layout": true,
+             "attributes": { "size": 100, "class": "your-block-class" },
+             "children": [
+               {
+                 "id": "custom-7703",
+                 "type": "particle",
+                 "subtype": "custom",
+                 "title": "Particle Title",
+                 "attributes": { "html": "<p>content</p>", "enabled": 1 }
+               }
+             ]
+           }
+         ]
+       }
+     ]
+   }
+   ```
+
+4. **Critical:** Keep every other section and particle exactly as exported — do not truncate or simplify any particle attributes or you will overwrite live content.
+
+5. Import the full modified layout:
+   ```
+   gantry_layout_import(site: "...", outline: "33", layout: [...full patched array...], dryRun: true)
+   ```
+   Verify the diff shows only your new particle as added and nothing else changed. Then remove `dryRun` to save.
+
+6. After import, verify the particle is visible:
+   ```
+   gantry_layout_list(site: "...", outline: "33", editable: true)
+   ```
+   Your new particle ID should appear. Use that confirmed ID for any subsequent `gantry_layout_edit` calls.
+
+---
+
+### Editing Particles — ID Resolution Rules
+
+`gantry_layout_edit` only resolves particles from the **editable (non-inherited) set**. Two things cause "Particle X not found":
+
+1. **The particle is inherited** from a parent outline — edit it on the source outline instead (usually Base Outline `default`).
+2. **The particle was just created** and the layout state hasn't refreshed — call `gantry_layout_list(editable: true)` first, confirm the ID appears, then call `gantry_layout_edit`.
+
+Always use IDs returned by `gantry_layout_list(editable: true)` as the source of truth before editing. Never assume an ID is resolvable just because it appears in `gantry_layout_tree` — inherited particles appear in the tree but not in the editable list.
+
+---
+
 ## Rendered Targeting Rule
 
 Most particles render inside:
