@@ -458,6 +458,21 @@ function buildServer() {
       if (name === 'write_site_notes') {
         const content = args.content;
         if (!content) return { isError: true, content: [{ type: 'text', text: 'content is required' }] };
+        // Guard against stale-write: if the file already exists, verify the incoming
+        // content contains every ### changelog entry header that is currently on disk.
+        // This catches the pattern where an agent reads early, appends mid-session via
+        // append_site_note, then calls write_site_notes with the stale pre-append read.
+        if (fs.existsSync(notesPath)) {
+          const existing = fs.readFileSync(notesPath, 'utf8');
+          const existingHeaders = existing.match(/^### .+$/gm) || [];
+          const missingHeaders = existingHeaders.filter(h => !content.includes(h));
+          if (missingHeaders.length > 0) {
+            return {
+              isError: true,
+              content: [{ type: 'text', text: `write_site_notes rejected: incoming content is missing ${missingHeaders.length} changelog entry(s) already on disk. Re-read the file with get_site_notes, merge your changes into the current content, then call write_site_notes again.\n\nMissing entries:\n${missingHeaders.join('\n')}` }]
+            };
+          }
+        }
         fs.mkdirSync(path.dirname(notesPath), { recursive: true });
         fs.writeFileSync(notesPath, content, 'utf8');
         return { content: [{ type: 'text', text: `Site notes updated for ${hostname}` }] };

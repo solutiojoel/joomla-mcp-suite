@@ -203,7 +203,9 @@ CSS then targets `.quicklinks-bar`, which survives layout rebuilds. The generate
 
 ## Writing and Deploying CSS
 
-CSS goes in the Base Outline's **Page Settings CSS asset rows** — not the Gantry Styles textarea. Three approaches depending on FTP access; see `docs/agents/gantry-section-css.md` for the full reference.
+> **Before touching Page Settings assets:** run `gantry_get_outline_for_page` on the target page first. The live page may be served by a child outline (e.g., outline `33`) that has its own local Assets — changes to Base Outline will have no effect there. Always edit the outline that is actually serving the page.
+
+CSS goes in the **active outline's Page Settings CSS asset rows** — not the Gantry Styles textarea. Three approaches depending on FTP access; see `docs/agents/gantry-section-css.md` for the full reference.
 
 **Quick decision:**
 

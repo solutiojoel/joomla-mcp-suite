@@ -50,7 +50,11 @@ Keep entries concise. This is a review queue, not a journal. One tight paragraph
 
 ## ⏳ Pending Review
 
-*(No entries — all prior items resolved)*
+### 2026-06-05 — Tooling Request | FTP-to-Gantry CSS smoke test should be one workflow
+**Context:** agent7.forge.solutiosoftware.com, quick validation that a CSS file could be written via FTP and linked in Base Outline Page Settings
+**Observation:** The task required too much hunting across tools: first confirm FTP config, then find the right FTP upload tool, then find the right Gantry Page Settings Assets tool, then separately discover that the live homepage was served by outline `33` with local Assets so the Base Outline change would not appear there. The current workflow proves pieces independently, but not the end-to-end question the user actually asked.
+**Suggested fix:** Add either a KB/workflow note or a new tool such as `gantry_css_asset_smoke_test` that does four things in one pass: uploads a small CSS file to the allowed FTP path, links it into the chosen outline's Assets, detects which outline serves a target page, and verifies whether the stylesheet is emitted on that page. At minimum, document a short standard sequence: `ftp_site_config` -> `ftp_upload_file` -> `gantry_get_outline_for_page` -> `gantry_page_asset_files_edit` -> frontend verification.
+**Status:** implemented — workflow doc at `docs/agents/ftp-css-smoke-test.md`; outline-detect warning in `gantry-visual-qa.md`; `gantry_css_asset_smoke_test` tool + aliases (`gantry_add_css_asset`, `gantry_link_css_file`, `gantry_page_assets_edit`) added to `apps/gantry-mcp/mcp-server.js`; stale-write guard added to `write_site_notes` in `apps/joomla-orchestrator/orchestrator.js`
 
 ---
 
