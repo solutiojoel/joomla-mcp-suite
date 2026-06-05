@@ -63,6 +63,41 @@ function extractSiteUrlFromArgs(args) {
   return null;
 }
 
+// ─── Agent doc discovery ──────────────────────────────────────────────────────
+// Scans docs/agents/ (workflow guides + kb/) and apps/joomla-mcp/docs/agents/
+// (gantry-design-agent and any future additions there) and returns an array of
+// doc names — the keys accepted by read_agent_doc.
+// Called on every ListTools request so new files appear immediately without a
+// server restart.
+
+const DOCS_AGENTS_DIR  = path.join(__dirname, '..', '..', 'docs', 'agents');
+const JOOMLA_AGENTS_DIR = path.join(__dirname, '..', 'joomla-mcp', 'docs', 'agents');
+// Allowed base dirs for path-traversal guard in the handler
+const ALLOWED_DOC_DIRS = [DOCS_AGENTS_DIR, JOOMLA_AGENTS_DIR];
+
+function buildDocList() {
+  const docs = [];
+
+  function scanDir(dir, prefix) {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        scanDir(path.join(dir, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name);
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        const docName = (prefix ? `${prefix}/` : '') + entry.name.slice(0, -3);
+        docs.push(docName);
+      }
+    }
+  }
+
+  scanDir(DOCS_AGENTS_DIR, '');
+  // Merge joomla-mcp agents dir — skip anything already found in the primary tree
+  scanDir(JOOMLA_AGENTS_DIR, '');
+  // Deduplicate (same name in both trees — primary wins, duplicate dropped)
+  const seen = new Set();
+  return docs.filter(d => { if (seen.has(d)) return false; seen.add(d); return true; }).sort();
+}
+
 // ─── Downstream clients ───────────────────────────────────────────────────────
 // We create a fresh MCP client per call rather than holding a persistent
 // connection. Persistent StreamableHTTP connections time out after inactivity
@@ -346,6 +381,39 @@ function buildServer() {
           },
         },
       },
+      (() => {
+        const availableDocs = buildDocList();
+        return {
+          name: 'read_agent_doc',
+          description:
+            'Read any workflow guide or KB article referenced in AGENTS.md. ' +
+            'Use this whenever the session protocol says to read a doc — it works for agents ' +
+            'that do not have the repository mounted locally. ' +
+            'Pass the doc name exactly as listed (e.g. "editing-rules", "kb/staff-grid"). ' +
+            `Available docs: ${availableDocs.join(', ')}.`,
+          inputSchema: {
+            type: 'object',
+            properties: {
+              doc: {
+                type: 'string',
+                enum: availableDocs,
+                description: 'Doc name to read',
+              },
+            },
+            required: ['doc'],
+          },
+        };
+      })(),
+      {
+        name: 'get_agent_instructions',
+        description:
+          'REQUIRED — call this immediately after get_active_site confirms the active site. ' +
+          'Returns the full AGENTS.md file: the master session protocol, workflow guide index, ' +
+          'KB article index, tool reference, and all mandatory conventions. ' +
+          'Any agent that does not have this repository mounted locally MUST call this tool ' +
+          'to obtain the complete operating instructions before doing any work.',
+        inputSchema: { type: 'object', properties: {} },
+      },
       {
         name: 'solutio_design_workflow',
         description:
@@ -407,7 +475,7 @@ function buildServer() {
       return {
         content: [{
           type: 'text',
-          text: `Active site set to: ${activeSiteUrl}${loginNote}\n\nYou can now use content tools (articles, categories, menus, modules) or design tools (Gantry layouts, outlines, styles).`,
+          text: `Active site set to: ${activeSiteUrl}${loginNote}\n\nNEXT STEP (required): Call get_agent_instructions to load the full session protocol and workflow guide index. Then call get_site_notes to review site history before making any changes.`,
         }],
       };
     }
@@ -541,6 +609,37 @@ function buildServer() {
         }
       }
       return { content: [{ type: 'text', text: out }] };
+    }
+
+    if (name === 'read_agent_doc') {
+      const doc = args.doc;
+      if (!doc) {
+        return { isError: true, content: [{ type: 'text', text: 'doc is required' }] };
+      }
+
+      // Resolve doc name → file path, searching allowed directories in order.
+      // Path-traversal guard: resolved path must stay inside an allowed dir.
+      let docPath = null;
+      for (const base of ALLOWED_DOC_DIRS) {
+        const candidate = path.resolve(base, `${doc}.md`);
+        // Guard: path.relative will start with '..' if candidate escapes base
+        if (path.relative(base, candidate).startsWith('..')) continue;
+        if (fs.existsSync(candidate)) { docPath = candidate; break; }
+      }
+
+      if (!docPath) {
+        const available = buildDocList().join(', ');
+        return { isError: true, content: [{ type: 'text', text: `Doc not found: "${doc}". Available docs: ${available}` }] };
+      }
+      return { content: [{ type: 'text', text: fs.readFileSync(docPath, 'utf8') }] };
+    }
+
+    if (name === 'get_agent_instructions') {
+      const agentsPath = path.join(__dirname, '..', '..', 'AGENTS.md');
+      if (!fs.existsSync(agentsPath)) {
+        return { isError: true, content: [{ type: 'text', text: `AGENTS.md not found at ${agentsPath}` }] };
+      }
+      return { content: [{ type: 'text', text: fs.readFileSync(agentsPath, 'utf8') }] };
     }
 
     if (name === 'solutio_design_workflow') {
