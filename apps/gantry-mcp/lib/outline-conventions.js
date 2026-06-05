@@ -94,6 +94,42 @@ Critical rule:
   checked Page Settings copied from #<Subsite> Outline, then only the documented Body
   Classes or Body Id tweak is applied.
 
+## Primary Site Page Settings — What "Inherit" Means
+
+CRITICAL: Primary site outlines (#Outline, #Home, #Grid, #Sponsors) use Gantry's
+native inheritance. "Inherit" means the override checkbox for that Page Settings
+section is UNCHECKED — Gantry reads the value from Base Outline automatically.
+Do NOT check all override boxes on a primary site outline. That is the subsite
+pattern and breaks inheritance from Base Outline entirely.
+
+The exact correct Body Attributes state for each primary outline:
+
+  Base Outline:  Body Classes = "gantry site-sub withmaxwidth",  Body Id = ""
+  #Outline:      Body Classes = inherited (= "gantry site-sub withmaxwidth"), Body Id = ""
+  #Home:         Body Classes = "gantry site-home withmaxwidth" (local override), Body Id = ""
+  #Grid:         Body Classes = inherited (= "gantry site-sub withmaxwidth"), Body Id = "site-grid" (local override)
+  #Sponsors:     Body Classes = inherited (= "gantry site-sub withmaxwidth"), Body Id = ""
+
+Everything else (Head Properties, Assets, Font Awesome, body_top, body_bottom) on
+#Outline, #Home, #Grid, and #Sponsors should inherit from Base Outline — those
+checkboxes must remain unchecked.
+
+When an agent accidentally checks all override boxes (e.g. by running gantry_page_copy_from
+with forceLocal true on a primary outline), the practical breakage is:
+- The wrong body class appears on pages (site-sub on homepage, site-home on grid/subpages)
+- Future Base Outline Page Settings changes (CSS assets, head_bottom, etc.) no longer
+  propagate to the affected outline automatically
+- The Gantry admin will show all section checkboxes checked instead of unchecked
+
+To restore: use gantry_page_edit to set the correct Body Classes/Body Id values (listed
+above), then manually uncheck the section override boxes in the Gantry admin UI for
+Head Properties, Assets, Font Awesome, and Body (except Body Classes on #Home and
+Body Id on #Grid which must stay checked as the only local overrides).
+
+Never run gantry_page_copy_from or gantry_subsite_child_outline_setup on a primary
+site outline (#Outline, #Home, #Grid, #Sponsors). Those tools are for subsite families
+only and will force all Page Settings local, breaking Base Outline inheritance.
+
 ## Page Settings Copy Semantics
 
 Do not use Gantry's entangled Page Settings behavior for subsite child outlines.
@@ -274,13 +310,16 @@ existing references and assignments stay intact.
 ## Verification Checklist
 
 Primary family:
-- Base Outline owns primary Page Settings.
-- #Outline layout and Page Settings inherit from Base Outline.
-- #Home body class is gantry site-home withmaxwidth.
+- Base Outline owns primary Page Settings. Body Classes = "gantry site-sub withmaxwidth".
+- #Outline layout and Page Settings inherit from Base Outline. Body Classes inherited = "gantry site-sub withmaxwidth". Body Id empty.
+- #Home Body Classes = "gantry site-home withmaxwidth" (local override — the only Body override on #Home). Does NOT contain site-sub.
 - #Home inherits Navigation, Bottom, Footer, Copyright, and Offcanvas from Base Outline.
-- #Grid Body Id is site-grid and Main/Sidebar/Aside widths are 90/5/5.
+- #Grid Body Id = "site-grid" (local override). Body Classes inherited from Base Outline = "gantry site-sub withmaxwidth".
+- #Grid Main/Sidebar/Aside widths are 90/5/5.
 - #Grid Content Bottom A block CSS ID is grid-addpic.
+- #Sponsors Body Classes inherited from Base Outline = "gantry site-sub withmaxwidth". Body Id empty.
 - #Sponsors Aside has no Side Menu and keeps SideBar A module position.
+- #Outline, #Home, #Grid, #Sponsors all have Head Properties, Assets, Font Awesome, body_top, body_bottom inheriting from Base Outline (section override checkboxes unchecked).
 
 Subsite family:
 - #<Subsite> Outline does not inherit Page Settings from Base Outline.

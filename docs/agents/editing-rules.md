@@ -30,6 +30,23 @@ Always use `joomla_update_*` tools to modify existing items. Never delete an ite
 - Use `joomla_update_module` not delete + create
 - Use `joomla_update_menu_item` not delete + create
 
+## Primary Site Outline Page Settings — Do Not Break Inheritance
+
+**Never check all Page Settings override boxes on a primary site outline (#Outline, #Home, #Grid, #Sponsors).** That is the subsite setup pattern and will break inheritance from Base Outline for the entire outline.
+
+Primary site outlines inherit Page Settings from Base Outline via Gantry's native mechanism (section override checkboxes unchecked). The ONLY local overrides allowed are:
+
+| Outline | Local override | Value |
+|---------|---------------|-------|
+| `#Outline` | none — full inherit | — |
+| `#Home` | Body Classes only | `gantry site-home withmaxwidth` |
+| `#Grid` | Body Id only | `site-grid` |
+| `#Sponsors` | none — full inherit | — |
+
+Do NOT use `gantry_page_copy_from` or `gantry_subsite_child_outline_setup` on any primary site outline. Those tools are for subsite families only and will force all Page Settings local.
+
+If inheritance has been accidentally broken, use `gantry_primary_page_settings_restore` to reset the outline. It stores only the specified `localFields` and clears everything else.
+
 ## Destructive Actions
 
 Always confirm with the user before executing any destructive action:

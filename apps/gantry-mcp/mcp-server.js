@@ -1221,6 +1221,37 @@ const TOOLS = [
     },
   },
   {
+    name: 'gantry_primary_page_settings_restore',
+    description:
+      'Restore proper Page Settings inheritance on a primary site outline (#Outline, #Home, #Grid, or #Sponsors). ' +
+      'Posts a minimal form storing ONLY the explicitly supplied localFields as local overrides; ' +
+      'all other fields are cleared so they inherit from Base Outline. ' +
+      '#Outline/#Sponsors: no localFields. ' +
+      '#Home: { "page[body][attribs][class]": "gantry site-home withmaxwidth" }. ' +
+      '#Grid: { "page[body][attribs][id]": "site-grid" }. ' +
+      'Do NOT use on subsite outlines.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        localFields: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Fields to store locally. Omit anything that should inherit from Base Outline.',
+        },
+      },
+      required: ['site', 'outline'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const outline = String(args.outline || 'default');
+      const localFields = args.localFields || {};
+      const result = await pageMod.savePageMinimal(ctx, outline, localFields);
+      return { restored: true, localFieldsStored: Object.keys(localFields), outline, result };
+    },
+  },
+  {
     name: 'gantry_page_copy_from',
     description:
       'Copy Page Settings values from one outline to another as local values, not entangled/inherited settings. ' +
@@ -3198,6 +3229,8 @@ TOOLS.push({
     return { pass, steps };
   },
 });
+
+
 
 /* --------------------------- server bootstrap ------------------------- */
 

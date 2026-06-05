@@ -667,11 +667,48 @@ async function editBody(arg1, args = {}) {
   return edits;
 }
 
+
+/**
+ * Save Page Settings with ONLY the explicitly supplied fields stored as local
+ * overrides. Every other field is omitted, so Gantry removes those overrides
+ * and falls back to inheriting from Base Outline.
+ * Use for restoring primary site outline inheritance.
+ */
+async function savePageMinimal(ctx, outline, localFields) {
+  if (!ctx) throw new Error('savePageMinimal: no ctx');
+  localFields = localFields || {};
+  const html = (await ctx.fetch(pageUrl(ctx, outline), { method: 'GET' })).body;
+  const allFields = parsePageFormFields(html);
+  const parts = [];
+  for (const f of allFields) {
+    if (f.name === 'page[current_outline]') {
+      parts.push(encodeURIComponent(f.name) + '=' + encodeURIComponent(f.value || ''));
+    }
+  }
+  if (ctx.token) {
+    parts.push(encodeURIComponent(ctx.token) + '=1');
+  }
+  for (const k of Object.keys(localFields)) {
+    parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(localFields[k] || ''));
+  }
+  const res = await ctx.fetch(pageUrl(ctx, outline, true), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+    body: parts.join('&'),
+  });
+  if (res.status >= 400) throw new Error('savePageMinimal ' + res.status + ': ' + res.body.slice(0, 300));
+  let parsed = null;
+  try { parsed = JSON.parse(res.body); } catch (_) {}
+  if (parsed && parsed.success === false) throw new Error('savePageMinimal failure: ' + (parsed.message || res.body.slice(0, 300)));
+  return parsed || res;
+}
+
 module.exports = {
   openPage,
   listPage,
   editPage,
   savePage,
+  savePageMinimal,
   parsePageFormFields,
   getPageBreakdown,
   editHead,

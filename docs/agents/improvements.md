@@ -50,6 +50,12 @@ Keep entries concise. This is a review queue, not a journal. One tight paragraph
 
 ## ⏳ Pending Review
 
+### 2026-06-05 — Bug/Quirk | Primary site outline Page Settings inheritance broken by prior session
+**Context:** agent7.forge.solutiosoftware.com, #Home/#Outline/#Grid/#Sponsors primary outlines
+**Observation:** A prior agent applied subsite-pattern Page Settings (all section override checkboxes checked, all values copied locally) to all four primary site outlines. This is wrong — primary site outlines must inherit from Base Outline with only Body Classes (#Home) and Body Id (#Grid) as local overrides. Body Classes were also set to `gantry site-home withmaxwidth` on all outlines instead of the correct values. The Gantry HTTP form API cannot uncheck section-level override boxes because they have no `name` attribute and Vue's state isn't updated by DOM events.
+**Suggested fix:** New tool `gantry_primary_page_settings_restore` added to `apps/gantry-mcp/mcp-server.js` — posts a minimal form that stores only the specified `localFields` and clears all other overrides. Restart gantry-mcp server, then call this tool on outlines 32, 33, 34, 35 with correct localFields per outline. Body Classes/Id values were already corrected via `gantry_page_edit` as an interim fix.
+**Status:** pending — awaiting gantry-mcp server restart to activate the new tool
+
 ### 2026-06-05 — Tooling Request | FTP-to-Gantry CSS smoke test should be one workflow
 **Context:** agent7.forge.solutiosoftware.com, quick validation that a CSS file could be written via FTP and linked in Base Outline Page Settings
 **Observation:** The task required too much hunting across tools: first confirm FTP config, then find the right FTP upload tool, then find the right Gantry Page Settings Assets tool, then separately discover that the live homepage was served by outline `33` with local Assets so the Base Outline change would not appear there. The current workflow proves pieces independently, but not the end-to-end question the user actually asked.
