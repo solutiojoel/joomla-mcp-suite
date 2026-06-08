@@ -63,6 +63,41 @@ function extractSiteUrlFromArgs(args) {
   return null;
 }
 
+// ─── Agent doc discovery ──────────────────────────────────────────────────────
+// Scans docs/agents/ (workflow guides + kb/) and apps/joomla-mcp/docs/agents/
+// (gantry-design-agent and any future additions there) and returns an array of
+// doc names — the keys accepted by read_agent_doc.
+// Called on every ListTools request so new files appear immediately without a
+// server restart.
+
+const DOCS_AGENTS_DIR  = path.join(__dirname, '..', '..', 'docs', 'agents');
+const JOOMLA_AGENTS_DIR = path.join(__dirname, '..', 'joomla-mcp', 'docs', 'agents');
+// Allowed base dirs for path-traversal guard in the handler
+const ALLOWED_DOC_DIRS = [DOCS_AGENTS_DIR, JOOMLA_AGENTS_DIR];
+
+function buildDocList() {
+  const docs = [];
+
+  function scanDir(dir, prefix) {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        scanDir(path.join(dir, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name);
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        const docName = (prefix ? `${prefix}/` : '') + entry.name.slice(0, -3);
+        docs.push(docName);
+      }
+    }
+  }
+
+  scanDir(DOCS_AGENTS_DIR, '');
+  // Merge joomla-mcp agents dir — skip anything already found in the primary tree
+  scanDir(JOOMLA_AGENTS_DIR, '');
+  // Deduplicate (same name in both trees — primary wins, duplicate dropped)
+  const seen = new Set();
+  return docs.filter(d => { if (seen.has(d)) return false; seen.add(d); return true; }).sort();
+}
+
 // ─── Downstream clients ───────────────────────────────────────────────────────
 // We create a fresh MCP client per call rather than holding a persistent
 // connection. Persistent StreamableHTTP connections time out after inactivity
@@ -254,19 +289,29 @@ function buildServer() {
       {
         name: 'get_site_notes',
         description:
-          'Read the notes file for the active site. Call after switching sites to review known quirks, conventions, and history.',
+          'REQUIRED at session start — read the active site\'s history file before making any changes. ' +
+          'Contains persistent site facts (key IDs, quirks, integrations) and a full changelog of past changes. ' +
+          'Call immediately after set_active_site is confirmed.',
         inputSchema: { type: 'object', properties: {} },
       },
       {
         name: 'append_site_note',
         description:
-          'Append a timestamped note to the active site\'s notes file when you discover something non-obvious. ' +
-          'Use this whenever you learn a site quirk, client preference, or non-standard configuration.',
+          'REQUIRED after every session that makes changes to a site. ' +
+          'Appends a structured changelog entry to the active site\'s history file in docs/sites/. ' +
+          'Call this immediately after completing work — do not wait until the end of the conversation. ' +
+          'Format the note as a structured markdown entry:\n' +
+          '### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]\n' +
+          '**Requested by:** [Name / email / \'internal\'] | **Ticket:** [#XXXXX or \'none\']\n' +
+          '**Changes:**\n' +
+          '- [specific change with IDs]\n' +
+          '**Notes:** [anything non-obvious, or \'No follow-up needed\']\n\n' +
+          'Also call this when you discover a persistent site fact (quirk, key ID, integration) — ' +
+          'use a plain paragraph instead of the ### header for those entries.',
         inputSchema: {
           type: 'object',
           properties: {
-            note: { type: 'string', description: 'What you discovered, where, and why it matters.' },
-            category: { type: 'string', description: 'Category heading, e.g. Modules, Menus, Content, Quirks, Template.' },
+            note: { type: 'string', description: 'The full changelog entry or discovery note to append.' },
           },
           required: ['note'],
         },
@@ -304,13 +349,13 @@ function buildServer() {
           'Call this at the start of any build or design task to ensure consistency with ' +
           'the established conventions across the client fleet. ' +
           'Use the "section" parameter to request a focused part of the guide, or omit it for the full reference. ' +
-          'Available sections: overview, outline_structure, inherit_rules, css, page_targeting, parish, school, checklist, naming.',
+          'Available sections: overview, outline_structure, inherit_rules, css, css_rendering, page_targeting, parish, school, checklist, naming.',
         inputSchema: {
           type: 'object',
           properties: {
             section: {
               type: 'string',
-              enum: ['full', 'overview', 'outline_structure', 'inherit_rules', 'css', 'page_targeting', 'parish', 'school', 'checklist', 'naming'],
+              enum: ['full', 'overview', 'outline_structure', 'inherit_rules', 'css', 'css_rendering', 'page_targeting', 'parish', 'school', 'checklist', 'naming'],
               description: 'Which part of the guide to return. Omit or use "full" for the complete reference.',
             },
           },
@@ -329,11 +374,45 @@ function buildServer() {
             particle: {
               type: 'string',
               enum: ['all', 'contentarray', 'swiper', 'blockcontent', 'custom', 'logo',
-                     'menu', 'mobile-menu', 'social', 'timeline', 'position', 'system'],
+                     'menu', 'mobile-menu', 'social', 'timeline', 'position', 'spacer',
+                     'copyright', 'horizmenu', 'search', 'video', 'system'],
               description: 'Particle type to look up. Omit or "all" for the full reference.',
             },
           },
         },
+      },
+      (() => {
+        const availableDocs = buildDocList();
+        return {
+          name: 'read_agent_doc',
+          description:
+            'Read any workflow guide or KB article referenced in AGENTS.md. ' +
+            'Use this whenever the session protocol says to read a doc — it works for agents ' +
+            'that do not have the repository mounted locally. ' +
+            'Pass the doc name exactly as listed (e.g. "editing-rules", "kb/staff-grid"). ' +
+            `Available docs: ${availableDocs.join(', ')}.`,
+          inputSchema: {
+            type: 'object',
+            properties: {
+              doc: {
+                type: 'string',
+                enum: availableDocs,
+                description: 'Doc name to read',
+              },
+            },
+            required: ['doc'],
+          },
+        };
+      })(),
+      {
+        name: 'get_agent_instructions',
+        description:
+          'REQUIRED — call this immediately after get_active_site confirms the active site. ' +
+          'Returns the full AGENTS.md file: the master session protocol, workflow guide index, ' +
+          'KB article index, tool reference, and all mandatory conventions. ' +
+          'Any agent that does not have this repository mounted locally MUST call this tool ' +
+          'to obtain the complete operating instructions before doing any work.',
+        inputSchema: { type: 'object', properties: {} },
       },
       {
         name: 'solutio_design_workflow',
@@ -396,7 +475,7 @@ function buildServer() {
       return {
         content: [{
           type: 'text',
-          text: `Active site set to: ${activeSiteUrl}${loginNote}\n\nYou can now use content tools (articles, categories, menus, modules) or design tools (Gantry layouts, outlines, styles).`,
+          text: `Active site set to: ${activeSiteUrl}${loginNote}\n\nNEXT STEP (required): Call get_agent_instructions to load the full session protocol and workflow guide index. Then call get_site_notes to review site history before making any changes.`,
         }],
       };
     }
@@ -429,20 +508,39 @@ function buildServer() {
       if (name === 'append_site_note') {
         const note = args.note;
         if (!note) return { isError: true, content: [{ type: 'text', text: 'note is required' }] };
-        const category = args.category || 'General';
-        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16) + ' UTC';
-        const entry = `\n**[${timestamp}] ${category}** - ${note}\n`;
+        // If the note is a structured changelog entry (starts with ###), append it
+        // directly — it already has its own date header. Otherwise wrap it with a
+        // legacy timestamp for backwards compatibility with plain discovery notes.
+        const isStructured = note.trimStart().startsWith('###');
+        const entry = isStructured
+          ? `\n${note.trim()}\n`
+          : `\n**[${new Date().toISOString().replace('T', ' ').substring(0, 16)} UTC]** ${note.trim()}\n`;
         if (!fs.existsSync(notesPath)) {
           fs.mkdirSync(path.dirname(notesPath), { recursive: true });
-          fs.writeFileSync(notesPath, `# Site Notes: ${hostname}\n\nNotes logged by AI agents as they discover site-specific quirks and conventions.\n`);
+          fs.writeFileSync(notesPath, `# Site Notes: ${hostname}\n\nNotes logged by AI agents.\n`);
         }
         fs.appendFileSync(notesPath, entry);
-        return { content: [{ type: 'text', text: `Note appended to ${hostname}` }] };
+        return { content: [{ type: 'text', text: `Changelog entry appended to ${hostname}` }] };
       }
 
       if (name === 'write_site_notes') {
         const content = args.content;
         if (!content) return { isError: true, content: [{ type: 'text', text: 'content is required' }] };
+        // Guard against stale-write: if the file already exists, verify the incoming
+        // content contains every ### changelog entry header that is currently on disk.
+        // This catches the pattern where an agent reads early, appends mid-session via
+        // append_site_note, then calls write_site_notes with the stale pre-append read.
+        if (fs.existsSync(notesPath)) {
+          const existing = fs.readFileSync(notesPath, 'utf8');
+          const existingHeaders = existing.match(/^### .+$/gm) || [];
+          const missingHeaders = existingHeaders.filter(h => !content.includes(h));
+          if (missingHeaders.length > 0) {
+            return {
+              isError: true,
+              content: [{ type: 'text', text: `write_site_notes rejected: incoming content is missing ${missingHeaders.length} changelog entry(s) already on disk. Re-read the file with get_site_notes, merge your changes into the current content, then call write_site_notes again.\n\nMissing entries:\n${missingHeaders.join('\n')}` }]
+            };
+          }
+        }
         fs.mkdirSync(path.dirname(notesPath), { recursive: true });
         fs.writeFileSync(notesPath, content, 'utf8');
         return { content: [{ type: 'text', text: `Site notes updated for ${hostname}` }] };
@@ -511,6 +609,37 @@ function buildServer() {
         }
       }
       return { content: [{ type: 'text', text: out }] };
+    }
+
+    if (name === 'read_agent_doc') {
+      const doc = args.doc;
+      if (!doc) {
+        return { isError: true, content: [{ type: 'text', text: 'doc is required' }] };
+      }
+
+      // Resolve doc name → file path, searching allowed directories in order.
+      // Path-traversal guard: resolved path must stay inside an allowed dir.
+      let docPath = null;
+      for (const base of ALLOWED_DOC_DIRS) {
+        const candidate = path.resolve(base, `${doc}.md`);
+        // Guard: path.relative will start with '..' if candidate escapes base
+        if (path.relative(base, candidate).startsWith('..')) continue;
+        if (fs.existsSync(candidate)) { docPath = candidate; break; }
+      }
+
+      if (!docPath) {
+        const available = buildDocList().join(', ');
+        return { isError: true, content: [{ type: 'text', text: `Doc not found: "${doc}". Available docs: ${available}` }] };
+      }
+      return { content: [{ type: 'text', text: fs.readFileSync(docPath, 'utf8') }] };
+    }
+
+    if (name === 'get_agent_instructions') {
+      const agentsPath = path.join(__dirname, '..', '..', 'AGENTS.md');
+      if (!fs.existsSync(agentsPath)) {
+        return { isError: true, content: [{ type: 'text', text: `AGENTS.md not found at ${agentsPath}` }] };
+      }
+      return { content: [{ type: 'text', text: fs.readFileSync(agentsPath, 'utf8') }] };
     }
 
     if (name === 'solutio_design_workflow') {

@@ -44,6 +44,12 @@ attributes:
   enabled:
     type: integer
     default: 1
+  module_id:
+    type: string
+    default: ""
+    description: >
+      Specific Joomla module ID for subtype: module exports when Gantry stores
+      a direct module reference.
 
 notes:
   - >

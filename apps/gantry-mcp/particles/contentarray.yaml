@@ -25,10 +25,25 @@ when_not_to_use:
 
 common_block_classes:
   ph-sideway-stack: News/events stack in the sidebar
+  ph-sidenews: Compact side news layout
+  ph-rounded-square: Rounded-square photo header/card layout
+  ph-wide: Wide photo header layout
+  ph-imgcard: Image-card article layout
+  ph-shadowbox2: Shadowed article-card layout
+  ph-side-circles: Circular side image layout
+  ph-titlestack: Stacked title/photo layout
+  ph-accordian-list: Accordion/list-style article layout
   mass-times-block: Mass times sidebar block in slideshow section
   facebook-widget-container widget-container: Social widget block
   calendar-container: Calendar section block
+  calendar-widget-container widget-container: Calendar widget block
   instagram-container: Instagram/social section block
+  instagram-widget-container: Instagram widget block
+  formed-widget-container widget-container: Formed widget block
+  daily-readings-widget-container widget-container: Daily readings widget block
+  bulletin-widget-container: Bulletin shell article block
+  homily-widget-container: Homily/podcast shell article block
+  hallow-widget-container: Hallow shell article block
   modern-alert: Alert banner at top of page
   news-button: Container for "View All" button below news feed
 
@@ -42,6 +57,26 @@ attributes:
     type: integer
     default: 1
     description: 1 to show, 0 to hide.
+
+  css:
+    type: object
+    description: Particle-level CSS settings emitted by some exports.
+    properties:
+      class:
+        type: string
+        default: ""
+        description: Extra class on the particle output. Prefer blockClass on the wrapper for targeting.
+
+  extra:
+    type: repeater
+    description: Extra HTML attributes emitted on some sites, most often animation attributes.
+    item_schema:
+      data-aos:
+        type: string
+        default: ""
+      data-aos-once:
+        type: string
+        default: ""
 
   article:
     type: object
@@ -128,6 +163,10 @@ attributes:
                 type: string
                 default: ""
                 options: ["", "text", "html"]
+              prepare:
+                type: string
+                default: ""
+                description: Whether to run Joomla content/plugin preparation on article text when present.
           read_more:
             type: object
             properties:
@@ -136,6 +175,10 @@ attributes:
                 default: ""
                 options: ["", "show", "hide"]
                 description: Show "Read More" link.
+              label:
+                type: string
+                default: ""
+                description: Optional label override for the read-more link.
           date:
             type: object
             properties:
@@ -150,7 +193,7 @@ attributes:
           orderby:
             type: string
             default: "ordering"
-            options: [ordering, date, title, hits]
+            options: [ordering, publish_up, date, title, hits, random]
           ordering:
             type: string
             default: "ASC"

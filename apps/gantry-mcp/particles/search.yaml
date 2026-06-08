@@ -1,0 +1,32 @@
+name: search
+title: Search
+category: navigation
+
+description: >
+  Gantry search particle. Rare in Solutio homepage exports, but appears on a few
+  templates as a compact search field or search trigger.
+
+when_to_use:
+  - Header or navigation search UI when the design calls for a built-in Gantry search particle
+
+when_not_to_use:
+  - Search links inside a quicklink icon group (use social or blockcontent)
+
+common_block_classes:
+  "" : Usually no block class
+
+attributes:
+  enabled:
+    type: integer
+    default: 1
+  title:
+    type: string
+    default: ""
+  placeholder:
+    type: string
+    default: "Search..."
+
+rendered_html:
+  outer_wrapper: "div.g-block.{blockClass}"
+  inner_wrapper: "div.g-content.g-particle"
+  particle_element: "search form/input markup"

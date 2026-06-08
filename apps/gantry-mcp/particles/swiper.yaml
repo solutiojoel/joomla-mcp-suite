@@ -22,6 +22,11 @@ common_block_classes:
   fullwidth-swiper rotate-wide: Standard hero slider block — full-bleed with rotation effect
 
 attributes:
+  enabled:
+    type: integer
+    default: 1
+    description: 1 to show, 0 to hide.
+
   class:
     type: string
     default: ""
@@ -121,12 +126,169 @@ attributes:
   largedesktopslides:
     type: string
     default: "1"
+  largedesktopgroup:
+    type: string
+    default: "1"
+  largedesktopspace:
+    type: string
+    default: "0"
   desktopslides:
     type: string
     default: "1"
+  desktopgroup:
+    type: string
+    default: "1"
+  desktopspace:
+    type: string
+    default: "0"
   tabletslides:
     type: string
     default: "1"
+  tabletgroup:
+    type: string
+    default: "1"
+  tabletspace:
+    type: string
+    default: "0"
+  mobileslides:
+    type: string
+    default: "1"
+  mobilegroup:
+    type: string
+    default: "1"
+  mobilespace:
+    type: string
+    default: "0"
+
+  # --- Thumbnail settings ---
+  thumbs:
+    type: string
+    default: disabled
+    options: [enabled, disabled]
+  thumbslayout:
+    type: string
+    default: horizontal
+    options: [horizontal, vertical]
+  thumbsnav:
+    type: string
+    default: enabled
+    options: [enabled, disabled]
+  thumbsHeight:
+    type: string
+    default: ""
+  thumbsMobileHeight:
+    type: string
+    default: ""
+  largedesktopthumbs:
+    type: string
+    default: "5"
+  largedesktopthumbspace:
+    type: string
+    default: "50"
+  desktopthumbs:
+    type: string
+    default: "4"
+  desktopthumbspace:
+    type: string
+    default: "40"
+  tabletthumbs:
+    type: string
+    default: "3"
+  tabletthumbspace:
+    type: string
+    default: "30"
+  mobilethumbs:
+    type: string
+    default: "2"
+  mobilethumbspace:
+    type: string
+    default: "20"
+
+  article:
+    type: object
+    description: Joomla article source settings used when source is "joomla".
+    properties:
+      filter:
+        type: object
+        properties:
+          categories:
+            type: string
+            default: ""
+          articles:
+            type: string
+            default: ""
+          featured:
+            type: string
+            default: include
+            options: [include, exclude, only]
+      limit:
+        type: object
+        properties:
+          total:
+            type: string
+            default: ""
+          start:
+            type: string
+            default: "0"
+      sort:
+        type: object
+        properties:
+          orderby:
+            type: string
+            default: ordering
+            options: [ordering, publish_up, date, title, hits, random]
+          ordering:
+            type: string
+            default: ASC
+            options: [ASC, DESC]
+      display:
+        type: object
+        properties:
+          image:
+            type: object
+            properties:
+              enabled:
+                type: string
+                default: full
+                options: ["", intro, full]
+          title:
+            type: object
+            properties:
+              enabled:
+                type: string
+                default: ""
+                options: ["", show, hide]
+              limit:
+                type: string
+                default: ""
+          text:
+            type: object
+            properties:
+              type:
+                type: string
+                default: ""
+                options: ["", intro, full]
+              limit:
+                type: string
+                default: ""
+          link:
+            type: object
+            properties:
+              enabled:
+                type: string
+                default: ""
+                options: ["", show, hide]
+              label:
+                type: string
+                default: ""
+              target:
+                type: string
+                default: _self
+                options: [_self, _blank, _top]
+          render_html_tags:
+            type: string
+            default: ""
+            description: Set to "1" when slide text should render HTML from Joomla articles.
 
   # --- Manual slides (used when source: particle) ---
   items:
@@ -135,6 +297,22 @@ attributes:
     description: >
       Manual slide definitions. Only used when source is "particle".
       Each item: { image, title, description, link, linktext }
+    item_schema:
+      image:
+        type: string
+        default: ""
+      title:
+        type: string
+        default: ""
+      description:
+        type: string
+        default: ""
+      link:
+        type: string
+        default: ""
+      linktext:
+        type: string
+        default: ""
 
 rendered_html:
   outer_wrapper: "div.g-block.{blockClass}"

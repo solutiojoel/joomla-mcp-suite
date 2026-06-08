@@ -30,6 +30,23 @@ Always use `joomla_update_*` tools to modify existing items. Never delete an ite
 - Use `joomla_update_module` not delete + create
 - Use `joomla_update_menu_item` not delete + create
 
+## Primary Site Outline Page Settings — Do Not Break Inheritance
+
+**Never check all Page Settings override boxes on a primary site outline (#Outline, #Home, #Grid, #Sponsors).** That is the subsite setup pattern and will break inheritance from Base Outline for the entire outline.
+
+Primary site outlines inherit Page Settings from Base Outline via Gantry's native mechanism (section override checkboxes unchecked). The ONLY local overrides allowed are:
+
+| Outline | Local override | Value |
+|---------|---------------|-------|
+| `#Outline` | none — full inherit | — |
+| `#Home` | Body Classes only | `gantry site-home withmaxwidth` |
+| `#Grid` | Body Id only | `site-grid` |
+| `#Sponsors` | none — full inherit | — |
+
+Do NOT use `gantry_page_copy_from` or `gantry_subsite_child_outline_setup` on any primary site outline. Those tools are for subsite families only and will force all Page Settings local.
+
+If inheritance has been accidentally broken, use `gantry_primary_page_settings_restore` to reset the outline. It stores only the specified `localFields` and clears everything else.
+
 ## Destructive Actions
 
 Always confirm with the user before executing any destructive action:
@@ -46,14 +63,13 @@ When searching for content:
 2. If a module search returns nothing, search articles next before exploring Gantry outlines
 3. Use `joomla_backend_inventory` for a broad overview when starting on an unfamiliar site
 
-## Site Notes
+## Site Notes (During Session)
 
-When you discover something non-obvious about the current site, save it immediately:
-- Call `append_site_note` with what you found and an optional `category` (e.g. Modules, Menus, Template, Content, Quirks)
-- Examples worth noting: unexpected module assignments, non-standard alias patterns, broken features, extension quirks, client preferences
+Every site has a dedicated history file at `docs/sites/[sitecode].md`. Call `get_site_notes` at session start and review it before making any changes — it contains known quirks, key IDs, active integrations, and change history.
 
-When existing notes become stale or incorrect:
-- Call `get_site_notes`, revise the content in context, then call `write_site_notes` with the full updated text
+When you discover something non-obvious mid-session, update the persistent facts section immediately:
+- Call `get_site_notes`, update the relevant section in context, then call `write_site_notes` with the full updated text
+- Examples worth adding to persistent facts: unexpected module behavior, non-standard alias patterns, quirks that would trip up a future agent, active integrations, key IDs discovered
 
 ## FTP Access Limitations
 
@@ -64,6 +80,51 @@ FTP credentials only provide access to user-content directories (`images/` and s
 - Template PHP/TWIG files
 
 Do not attempt to read or edit Gantry 5 configuration via FTP — those paths will return empty or not exist. Use the Joomla admin interface or MCP tools instead (e.g. `gantry-subtitle` is a menu item param, not a template file edit).
+
+## Changelog — Write Immediately After Every Change
+
+**Do not batch to session end.** Call `append_site_note` right after completing any change. Conversations can end abruptly — the note must be written while the work is still being done.
+
+```
+append_site_note(
+  note: "### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]
+**Requested by:** [Name / email / 'internal'] | **Ticket:** [#XXXXX or 'none']
+**Changes:**
+- [specific change with IDs]
+**Notes:** [anything non-obvious, or 'No follow-up needed']"
+)
+```
+
+Rules:
+- Always include specific IDs (article ID, module ID, menu item ID) — not just names
+- Always include who requested the change
+- Investigation-only session: still log what was checked, what was found, what was ruled out before responding to the user
+- Vague entries ("updated some articles") are worse than no entry — be specific
+
+For the full format specification and examples, see `docs/agents/kb/site-history.md`.
+
+## Session End (Also Required)
+
+At session end, handle any persistent-fact updates that weren't done inline:
+
+**Step 1 — Update persistent facts** (if anything changed or was newly discovered):
+- New IDs found → update the Key IDs table
+- New quirk discovered → add to Quirks & Warnings
+- New integration added → add to Active Integrations
+- Use `write_site_notes` with the full updated file content
+
+**Step 2 — Review for process improvements** (if applicable — not required every session):
+
+Briefly replay the session's steps. If any of the following apply, append an entry to `docs/agents/improvements.md`:
+- A task took more attempts than it should have
+- A KB article was missing, wrong, or didn't cover the actual case
+- A better approach was discovered mid-task
+- A tool behaved in an unexpected or undocumented way
+- A workflow step was in the wrong order or had a missing prerequisite
+
+This is a shared queue reviewed by the team — not a per-session requirement. Only add an entry if something genuinely useful was found. See `docs/agents/improvements.md` for the format.
+
+---
 
 ## Available Workflow Guides
 

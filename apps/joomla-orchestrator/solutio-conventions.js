@@ -45,8 +45,31 @@ Subsite outline family:
 - Use #<Subsite> Outline, #<Subsite> Home, #<Subsite> Grid, and #<Subsite> Sponsors.
 - #<Subsite> Outline replaces Base Outline for that subsite and must not inherit
   Page Settings from the primary Base Outline.
-- #<Subsite> Home/Grid/Sponsors copy Page Settings from #<Subsite> Outline and
-  inherit shared layout sections from #<Subsite> Outline, not Base Outline.
+- #<Subsite> Outline must receive a full local clone of Base Outline layout before
+  #<Subsite> Home/Grid/Sponsors inherit from it. In tools, use
+  gantry_layout_clone_all_from. If done manually, Clone means Section Attributes,
+  Block Attributes, and Particles within Section are all checked.
+- #<Subsite> Outline Page Settings should be copied locally from the intended source
+  with gantry_page_copy_from, then edited as a fresh subsite.
+- Preferred parent setup tool: gantry_subsite_outline_setup, which does the local
+  layout clone and local Page Settings copy together.
+- #<Subsite> Home/Grid/Sponsors do not use entangled Page Settings. They copy
+  Page Settings locally from #<Subsite> Outline with origin blank, then apply only
+  the expected Body Classes/Body Id tweak.
+- Head Properties and Assets on #<Subsite> Home/Grid/Sponsors must match
+  #<Subsite> Outline.
+- Later changes to #<Subsite> Outline Page Settings > Head Properties or Assets
+  must be synced to #<Subsite> Home/Grid/Sponsors because Page Settings are local,
+  not entangled. Use gantry_subsite_page_shared_sync, or rely on the Head/Assets
+  edit tools' automatic sync.
+- Use gantry_subsite_child_outline_setup for child outlines. Home inherits only
+  Navigation, Bottom, Footer, Copyright, and Offcanvas from #<Subsite> Outline and
+  clones all other non-shared sections from #Home. Grid inherits every standard
+  section from #<Subsite> Outline except Utility, Main/mainbar, and Aside cloned
+  from #Grid. Sponsors inherits every standard section except Aside cloned from
+  #Sponsors.
+- #<Subsite> Home/Grid/Sponsors inherit shared layout sections from #<Subsite>
+  Outline, not Base Outline.
 - #<Subsite> Home Body Classes: gantry site-home withmaxwidth.
 - #<Subsite> Grid Body Id: site-grid.
 
@@ -319,6 +342,69 @@ File always starts with:
 
 ---
 
+## GANTRY RENDERED SECTION HTML MODEL
+
+Gantry 5 renders frontend layout sections in this stable hierarchy:
+
+  #g-{section} > .g-container > .g-grid > .g-block
+
+Example:
+
+  <section id="g-above" class="g-flushed">
+    <div class="g-container">
+      <div class="g-grid">
+        <div class="g-block size-100 ql-title-overlay">
+          ...particle-generated HTML...
+        </div>
+      </div>
+    </div>
+  </section>
+
+Rules:
+- #g-{section} is the section wrapper. Put section background colors, background
+  images, overlays, and viewport-wide treatments here.
+- .g-container is the max-width content wrapper. On withmaxwidth sites it is capped
+  by --site-container-max-width, normally 1440px.
+- .g-grid is one row in the Gantry Layout screen. A section can render multiple
+  .g-grid children.
+- .g-block wraps a particle in that row. The particle's custom block class is on
+  this .g-block alongside size-*.
+- Particle-generated markup lives inside .g-block, usually under .g-content,
+  .g-particle, .g-blockcontent, .g-array-item, or particle-specific classes.
+
+When writing particle CSS, prefer:
+
+  html body.site-home #g-above .ql-title-overlay .g-blockcontent { ... }
+
+Use section ID + block class when that particle appears in more than one section.
+Use only the block class when the style is intentionally reusable.
+
+---
+
+## WITHMAXWIDTH AND SECTION PADDING MODEL
+
+Solutio sites use the withmaxwidth body class so the section can span the viewport
+while its immediate .g-container remains constrained.
+
+Wide-screen sections are centered at 90rem and their .g-container receives:
+
+  max-width: var(--site-container-max-width);
+
+The .g-container also needs position: relative so section overlays can sit behind
+content safely.
+
+Because sections normally use g-flushed, add section spacing on the immediate
+.g-container with !important:
+
+  html body.site-home #g-above > .g-container {
+    padding: min(4vw, 4rem) min(2vw, 2rem)!important;
+  }
+
+Do not put section spacing on the particle internals unless that spacing is truly
+part of the component.
+
+---
+
 ## PAGE TARGETING RULES — CRITICAL
 
 This is the most important scoping rule in override CSS. The wrong selector is the
@@ -407,6 +493,42 @@ Set in html body {} (all pages — navigation and footer appear everywhere):
   --section-navigation-bg  (if needed — usually handled in #g-navigation directly)
   --section-footer-bg      (if needed — usually handled in #g-footer directly)
   --section-copyright-bg   (if needed)
+
+---
+
+## SECTION BACKGROUND IMAGE + OVERLAY PATTERN
+
+Put background images on the section wrapper, not the .g-container. This lets the
+image span the viewport even when the content is max-width constrained.
+
+Desktop:
+
+  html body.site-home #g-expanded {
+    background: url('/images/template/bg-welcome.jpg') 50% 50% no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    position: relative;
+  }
+  html body.site-home #g-expanded:before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(var(--primary-color-rgb), .45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1;
+  }
+  html body.site-home #g-expanded > .g-container {
+    position: relative;
+    z-index: 2;
+    padding: min(4vw, 4rem) min(10vw, 10rem)!important;
+  }
+
+Mobile uses the same structure without background-attachment: fixed and usually:
+
+  html body.site-home.withmaxwidth #g-expanded > .g-container {
+    padding: 2rem 1rem!important;
+  }
 
 ---
 
@@ -511,7 +633,13 @@ Primary site outline family:
 Subsite outline family:
 - Use #<Subsite> Outline, #<Subsite> Home, #<Subsite> Grid, #<Subsite> Sponsors.
 - #<Subsite> Outline replaces Base Outline for that subsite and must not inherit Page Settings from primary Base Outline.
-- #<Subsite> Home/Grid/Sponsors copy Page Settings from #<Subsite> Outline and inherit shared sections from #<Subsite> Outline, not Base Outline.
+- #<Subsite> Outline must locally clone the full Base Outline layout before other subsite outlines inherit from it; in tools, use gantry_layout_clone_all_from.
+- Manual section Clone means the Gantry Clone option with Section Attributes, Block Attributes, and Particles within Section all checked.
+- #<Subsite> Outline Page Settings should be copied locally with gantry_page_copy_from and then edited as a fresh subsite.
+- Preferred parent setup tool: gantry_subsite_outline_setup.
+- #<Subsite> Home/Grid/Sponsors copy Page Settings locally from #<Subsite> Outline without entanglement/origin; Head Properties and Assets must match #<Subsite> Outline.
+- Later Head Properties or Assets edits on #<Subsite> Outline must be synced to #<Subsite> Home/Grid/Sponsors with gantry_subsite_page_shared_sync because local Page Settings do not inherit automatically.
+- Use gantry_subsite_child_outline_setup for child outlines: Home clones every non-shared section from #Home; Grid clones Utility, Main/mainbar, and Aside from #Grid and inherits everything else; Sponsors clones Aside from #Sponsors and inherits everything else.
 - #<Subsite> Home Body Classes are "gantry site-home withmaxwidth"; #<Subsite> Grid Body Id is "site-grid".
 - For full operational steps, call gantry_outline_conventions before duplicating or rewiring outlines.
 `.trim(),
@@ -545,6 +673,53 @@ Scoping it inside .site-home breaks the navigation and footer on every subpage.
 Section backgrounds for homepage: --section-{id}-bg in html body.site-home {}
 Section backgrounds for nav/footer: in html body {} or directly on #g-navigation/#g-footer
 Navigation background: bg-header.jpg with rgba primary color overlay + backdrop-filter blur
+`.trim(),
+
+  css_rendering: `
+## Gantry Rendered HTML and CSS Targeting
+
+Frontend hierarchy:
+  #g-{section} > .g-container > .g-grid > .g-block > particle-generated HTML
+
+Example:
+  <section id="g-above" class="g-flushed">
+    <div class="g-container">
+      <div class="g-grid">
+        <div class="g-block size-100 ql-title-overlay">...</div>
+      </div>
+    </div>
+  </section>
+
+Selector rule:
+  Use section ID + block class + particle class for specific overrides:
+  html body.site-home #g-above .ql-title-overlay .g-blockcontent { ... }
+
+Where to put CSS:
+  #g-{section}                         Section backgrounds/images/overlays
+  #g-{section} > .g-container          Section padding and max-width content spacing
+  #g-{section} .{block-class}          Particle wrapper layout and reusable variants
+  #g-{section} .{block-class} .g-*     Particle-generated internals
+
+withmaxwidth:
+  The section can be full viewport width while > .g-container is capped at
+  var(--site-container-max-width), normally 1440px, starting at 90rem.
+
+g-flushed:
+  Section padding must go on #g-{section} > .g-container with !important.
+
+Sizing:
+  Use min(Nvw, Nrem) with matching numbers, such as min(2vw, 2rem), so spacing
+  scales until the 1440px container cap and then stops.
+
+Background images:
+  Put image and overlay on #g-{section}; set #g-{section} { position: relative; },
+  #g-{section}:before { position: absolute; inset: 0; z-index: 1; }, and
+  #g-{section} > .g-container { position: relative; z-index: 2; }.
+
+Page scope:
+  Homepage-only sections use html body.site-home.
+  Subpage-only treatments use html body.site-sub.
+  Navigation, bottom, footer, copyright, and offcanvas are all-page shared sections.
 `.trim(),
 
   page_targeting: `
@@ -1110,6 +1285,69 @@ footer-a, footer-b, footer-c (footer section, all sites)
   Config: three position particles at 33.3% each in footer row 1
   Note: These are module positions, not particles with content — content comes from
         Joomla modules assigned to these positions in the module manager.
+
+---
+
+## spacer
+
+### What it is
+An empty layout block used to reserve width inside a .g-grid. It has no meaningful
+frontend content and is most common in navigation rows between logo and toplinks.
+
+### Fields
+enabled: 1 is present in many exports, but visual size comes from the wrapper block size.
+
+### Rendered HTML
+Normally renders only the outer .g-block size-N wrapper, with no useful particle
+markup inside. Do not use spacer for vertical section spacing; use section/container
+padding in CSS.
+
+---
+
+## copyright
+
+### What it is
+Gantry's generated copyright particle. Rare in Solutio builds because the copyright
+section normally uses a custom particle for the admin lock/Solutio footer HTML.
+
+### Key fields
+owner, date.start, date.end, enabled.
+
+---
+
+## horizmenu
+
+### What it is
+A simple manually configured horizontal link list. Rare/legacy; main navigation
+should use menu, and styled quicklinks should use blockcontent.
+
+### Key fields
+items[].title, items[].link, items[].target, items[].icon, enabled.
+
+---
+
+## search
+
+### What it is
+Gantry's search particle. Rare in homepage exports; used for compact header or nav
+search UI when the design needs an actual search form instead of a search link.
+
+### Key fields
+title, placeholder, enabled.
+
+---
+
+## video
+
+### What it is
+Gantry's video particle for local or remote videos. Rare but available for media
+sections when the video itself should be managed as a particle rather than embedded
+inside a Joomla article.
+
+### Key fields
+class, title, headertext, description, columns, items[].source, items[].video,
+items[].posterimage, items[].caption, items[].autoplay, items[].controls,
+items[].loop, items[].muted, items[].related, items[].start, items[].local[].file.
 
 ---
 

@@ -1,0 +1,43 @@
+name: horizmenu
+title: Horizontal Menu
+category: navigation
+
+description: >
+  Simple horizontal list of manually configured links. Rare in current Solutio
+  builds; use blockcontent for styled quicklinks and menu for Joomla-managed nav.
+
+when_to_use:
+  - Small legacy/manual link rows where no Joomla menu is needed
+
+when_not_to_use:
+  - Main navigation (use menu)
+  - Image/icon/card quicklinks (use blockcontent)
+
+common_block_classes:
+  "" : Usually no block class
+
+attributes:
+  enabled:
+    type: integer
+    default: 1
+  items:
+    type: repeater
+    item_schema:
+      title:
+        type: string
+        default: ""
+      link:
+        type: string
+        default: ""
+      target:
+        type: string
+        default: _self
+        options: [_self, _blank, _top]
+      icon:
+        type: string
+        default: ""
+
+rendered_html:
+  outer_wrapper: "div.g-block.{blockClass}"
+  inner_wrapper: "div.g-content.g-particle"
+  particle_element: "horizontal menu link list"

@@ -24,6 +24,18 @@ when_not_to_use:
 common_block_classes:
   ql-window-title: Standard utility quicklinks bar — 4 to 6 items with images
   ql-united: Full-width unified quicklinks strip across the entire utility section
+  ql-title-overlay: Image quicklinks with title/button overlay treatment
+  ql-sbound: Secondary quicklinks style
+  ql-ilinks: Icon-link quicklinks style
+  ql-dm: Direct-message/directory quicklinks style
+  ql-square-1: Square quicklinks card style
+  ql-height-13vw: Fixed-ratio quicklinks helper
+  ql-portraitbox: Portrait image quicklinks style
+  ql-boxtitle: Box-title quicklinks style
+  ql-circle-row: Circular quicklinks row
+  ql-windowsill: Windowsill quicklinks style
+  ql-buttons: Button-only quicklinks style
+  ql-icon-links: Icon-link quicklinks style
   link-boxes: Card-style link grid in the expanded section
   welcome-title: Decorative title/heading block placed before a quicklinks row
   ql-toplinks-studius: Small top-of-header navigation links
@@ -143,6 +155,99 @@ attributes:
         type: string
         default: "none"
         options: [none, "1", "2", "3"]
+
+  article:
+    type: object
+    description: >
+      Article-source settings that appear when source is not "particle".
+      Solutio quicklinks normally use source: particle.
+    properties:
+      filter:
+        type: object
+        properties:
+          categories:
+            type: string
+            default: ""
+          articles:
+            type: string
+            default: ""
+          featured:
+            type: string
+            default: include
+            options: [include, exclude, only]
+      limit:
+        type: object
+        properties:
+          total:
+            type: string
+            default: "5"
+          start:
+            type: string
+            default: "0"
+      sort:
+        type: object
+        properties:
+          orderby:
+            type: string
+            default: publish_up
+            options: [ordering, publish_up, date, title, hits, random]
+          ordering:
+            type: string
+            default: ASC
+            options: [ASC, DESC]
+      display:
+        type: object
+        properties:
+          image:
+            type: object
+            properties:
+              enabled:
+                type: string
+                default: intro
+                options: ["", intro, full]
+          title:
+            type: object
+            properties:
+              enabled:
+                type: string
+                default: show
+                options: ["", show, hide]
+              limit:
+                type: string
+                default: ""
+          text:
+            type: object
+            properties:
+              type:
+                type: string
+                default: intro
+                options: ["", intro, full]
+              limit:
+                type: string
+                default: ""
+              formatting:
+                type: string
+                default: text
+                options: ["", text, html]
+          link:
+            type: object
+            properties:
+              enabled:
+                type: string
+                default: show
+                options: ["", show, hide]
+              label:
+                type: string
+                default: ""
+              target:
+                type: string
+                default: _self
+                options: [_self, _blank, _top]
+
+  enabled:
+    type: integer
+    default: 1
+    description: 1 to show, 0 to hide.
 
 rendered_html:
   outer_wrapper: "div.g-block.{blockClass}"

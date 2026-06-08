@@ -37,6 +37,23 @@ const backup = require('./lib/backup');
 const compiler = require('./lib/design-compiler');
 const outlineConventions = require('./lib/outline-conventions');
 
+/* Joomla MCP client helpers — used by gantry_css_asset_smoke_test to call ftp_* tools */
+const { Client: McpClient } = require('@modelcontextprotocol/sdk/client/index.js');
+const { StreamableHTTPClientTransport } = require('@modelcontextprotocol/sdk/client/streamableHttp.js');
+const JOOMLA_MCP_URL = process.env.JOOMLA_MCP_URL || 'http://127.0.0.1:9300/mcp';
+
+async function joomlaMcpClient() {
+  const client = new McpClient({ name: 'gantry-mcp', version: '1.0.0' }, { capabilities: {} });
+  await client.connect(new StreamableHTTPClientTransport(new URL(JOOMLA_MCP_URL)));
+  return client;
+}
+
+async function callJoomlaTool(client, name, args) {
+  const result = await client.callTool({ name, arguments: args });
+  const text = result && result.content && result.content[0] ? result.content[0].text : '';
+  try { return JSON.parse(text); } catch (_) { return text; }
+}
+
 /* ---------------------------- session cache --------------------------- */
 
 const ctxCache = new Map(); // siteUrl -> { ctx, lastUsed }
@@ -97,6 +114,60 @@ const OUTLINE_FIELD = {
   outline: { type: 'string', description: 'Outline id (e.g. "default", "33", "75")', default: 'default' },
 };
 
+const SUBSITE_CHILD_SECTION_IDS = [
+  'top',
+  'navigation',
+  'slideshow',
+  'header',
+  'above',
+  'feature',
+  'showcase',
+  'utility',
+  'sidebar',
+  'mainbar',
+  'aside',
+  'expanded',
+  'extension',
+  'bottom',
+  'footer',
+  'copyright',
+  'offcanvas',
+];
+
+const SUBSITE_CHILD_DEFAULTS = {
+  home: {
+    preset: 'subsite-home',
+    cloneIds: ['top', 'slideshow', 'header', 'above', 'feature', 'showcase', 'utility', 'sidebar', 'mainbar', 'aside', 'expanded', 'extension'],
+    cloneContainers: [],
+  },
+  grid: {
+    preset: 'subsite-grid',
+    cloneIds: ['utility', 'mainbar', 'aside'],
+    cloneContainers: [],
+  },
+  sponsors: {
+    preset: 'subsite-sponsors',
+    cloneIds: ['aside'],
+    cloneContainers: [],
+  },
+};
+
+async function resolveInheritedSourceNode(ctx, sourceLayout, nodeId, seen = new Set()) {
+  const found = layoutApi.findNode(sourceLayout, nodeId);
+  if (!found) throw new Error(`Source node "${nodeId}" not found`);
+  const inherit = found.node.inherit || {};
+  const inheritOutline = inherit.outline;
+  if (!inheritOutline || seen.has(inheritOutline + ':' + nodeId)) {
+    return found.node;
+  }
+  seen.add(inheritOutline + ':' + nodeId);
+  const resolved = /^\d+$/.test(String(inheritOutline)) || inheritOutline === 'default'
+    ? { id: inheritOutline }
+    : await outlines.resolveOutline(ctx, inheritOutline);
+  const inheritedLayout = await layoutApi.fetchSavedLayout(ctx, resolved.id);
+  return resolveInheritedSourceNode(ctx, inheritedLayout, nodeId, seen);
+}
+
 /* ─── outline normalisation helper ──────────────────────────────────────────
  * Accepts a numeric id ("33"), a named title ("#Home", "home"), or omitted.
  * Returns the canonical string id ("33", "default", …).
@@ -105,6 +176,103 @@ async function resolveOutlineArg(ctx, args) {
   const raw = args.outline;
   if (!raw || /^\d+$/.test(String(raw)) || raw === 'default') return raw || 'default';
   return (await outlines.resolveOutline(ctx, raw)).id;
+}
+
+async function resolveOutlineWithTitle(ctx, ref) {
+  const raw = String(ref || '').trim();
+  await outlines.openOutlines(ctx);
+  const all = await outlines.listOutlines(ctx);
+  if (!raw || raw === 'default') {
+    return all.find((outline) => outline.id === 'default') || { id: 'default', title: 'Base Outline' };
+  }
+  if (/^\d+$/.test(raw)) {
+    return all.find((outline) => outline.id === raw) || { id: raw, title: raw };
+  }
+  return outlines.resolveOutline(ctx, raw);
+}
+
+function normalizeOutlineTitle(title) {
+  return String(title || '').replace(/^Studius -\s*/, '').trim();
+}
+
+function isSubsiteParentOutline(outline) {
+  const title = normalizeOutlineTitle(outline && outline.title);
+  if (!/\sOutline$/i.test(title)) return false;
+  return !['Base Outline', '#Outline', 'Outline'].includes(title);
+}
+
+function inferSubsiteChildTitles(parentTitle) {
+  const title = normalizeOutlineTitle(parentTitle);
+  if (!/\sOutline$/i.test(title)) return [];
+  const base = title.replace(/\sOutline$/i, '');
+  return [`${base} Home`, `${base} Grid`, `${base} Sponsors`];
+}
+
+async function syncSubsiteSharedPageSettings(ctx, sourceRef, options = {}) {
+  const source = await resolveOutlineWithTitle(ctx, sourceRef);
+  if (!isSubsiteParentOutline(source) && !options.force) {
+    return {
+      synced: false,
+      skipped: true,
+      reason: `Outline "${source.title}" does not look like a subsite parent #Outline.`,
+      source,
+      targets: [],
+    };
+  }
+
+  const targetRefs = options.targets && options.targets.length
+    ? options.targets
+    : inferSubsiteChildTitles(source.title);
+  const targets = [];
+  const missing = [];
+
+  for (const ref of targetRefs) {
+    try {
+      targets.push(await resolveOutlineWithTitle(ctx, ref));
+    } catch (err) {
+      missing.push({ ref, error: err.message });
+    }
+  }
+
+  await pageMod.openPage(ctx, source.id);
+  const sourceFields = await pageMod.listPage(ctx, { all: true });
+
+  const results = [];
+  for (const target of targets) {
+    await pageMod.openPage(ctx, target.id);
+    const targetFields = await pageMod.listPage(ctx, { all: true });
+    const { edits, skipped } = pageMod.buildPageSharedHeadAssetEdits(sourceFields, targetFields, {
+      forceLocal: options.forceLocal !== false,
+    });
+
+    const result = {
+      target,
+      saved: false,
+      fields: Object.keys(edits),
+      skipped,
+    };
+
+    if (!options.dryRun) {
+      await pageMod.editPage(ctx, edits);
+      await pageMod.savePage(ctx);
+      result.saved = true;
+    }
+
+    results.push(result);
+  }
+
+  return {
+    synced: !options.dryRun,
+    dryRun: !!options.dryRun,
+    source,
+    targets: results,
+    missing,
+  };
+}
+
+function shouldSyncSharedPageSettings(args, edits) {
+  if (args.syncSubsiteChildren === false) return false;
+  return Object.keys(edits || {}).some((name) => name.startsWith('page[head]') || name.startsWith('page[assets]'));
 }
 
 const TOOLS = [
@@ -121,7 +289,7 @@ const TOOLS = [
       properties: {
         section: {
           type: 'string',
-          enum: ['full', 'primary', 'subsite', 'workflow', 'checklist'],
+          enum: ['full', 'primary', 'subsite', 'clone', 'page_settings', 'workflow', 'checklist'],
           description: 'Focused part of the convention reference. Omit or use full for all rules.',
         },
       },
@@ -158,9 +326,32 @@ const TOOLS = [
     },
     handler: async (args) => {
       const ctx = await getCtx(args);
-      return outlines.duplicateOutline(ctx, args.sourceId, {
+      const result = await outlines.duplicateOutline(ctx, args.sourceId, {
         title: args.title,
         inherit: args.inherit,
+      });
+      const prefixCleanup = await outlines.stripOutlineTitlePrefix(ctx, { prefix: 'Studius - ' });
+      return { ...result, prefixCleanup };
+    },
+  },
+  {
+    name: 'gantry_outlines_strip_theme_prefix',
+    description:
+      'Rename any non-default outline whose title starts with a generated theme prefix, defaulting to "Studius - ". Use after cloning/duplicating outlines if Gantry prepends the theme name to titles.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        prefix: { type: 'string', description: 'Prefix to remove. Defaults to "Studius - ".' },
+        dryRun: { type: 'boolean', description: 'Preview title changes without saving.' },
+      },
+      required: ['site'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      return outlines.stripOutlineTitlePrefix(ctx, {
+        prefix: args.prefix === undefined ? 'Studius - ' : args.prefix,
+        dryRun: !!args.dryRun,
       });
     },
   },
@@ -450,14 +641,14 @@ const TOOLS = [
         ...OUTLINE_FIELD,
         id: { type: 'string' },
         from: { type: 'string', description: 'Source outline (e.g. "default")' },
-        include: { type: 'array', items: { type: 'string' }, default: ['children', 'attributes'] },
+        include: { type: 'array', items: { type: 'string' }, default: ['children', 'attributes', 'block'] },
         dryRun: { type: 'boolean' },
       },
       required: ['site', 'id', 'from'],
     },
     handler: async (args) => {
       const ctx = await getCtx(args);
-      const inherit = { outline: args.from, include: args.include || ['children', 'attributes'] };
+      const inherit = { outline: args.from, include: args.include || ['children', 'attributes', 'block'] };
       const r = await layoutApi.mutateLayout(
         ctx,
         args.outline || 'default',
@@ -469,7 +660,11 @@ const TOOLS = [
   },
   {
     name: 'gantry_layout_section_clone',
-    description: 'Break inheritance on a section (clears the inherit field).',
+    description:
+      'Break inheritance on an already-local section (clears the inherit field only). ' +
+      'This does NOT copy source outline content. For Gantry\'s full Clone action with ' +
+      'Section Attributes, Block Attributes, and Particles within Section checked, use ' +
+      'gantry_layout_sections_clone_from.',
     schema: {
       type: 'object',
       properties: { ...SITE_THEME_FIELDS, ...OUTLINE_FIELD, id: { type: 'string' }, dryRun: { type: 'boolean' } },
@@ -484,6 +679,327 @@ const TOOLS = [
         { op: 'section-clone', dryRun: !!args.dryRun }
       );
       return { dryRun: !!r.dryRun, diff: r.diff || null };
+    },
+  },
+  {
+    name: 'gantry_layout_sections_clone_from',
+    description:
+      'Clone one or more sections/nodes from a source outline into a target outline. ' +
+      'This is the Gantry section Clone behavior agents should use for subsite outline setup: ' +
+      'it copies Section Attributes, Block Attributes, and Particles within Section, then clears ' +
+      'inheritance on the copied subtree so the target owns a local clone. Use this before making ' +
+      'a subsite #Outline the inheritance parent for #<Subsite> Home/Grid/Sponsors.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        from: { type: 'string', description: 'Source outline id/title, e.g. "default", "#Home", "#Grid".' },
+        to: { type: 'string', description: 'Target outline id/title to receive local clones.' },
+        ids: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Section/container/node ids to clone, e.g. ["container-top","top","navigation","container-main","mainbar"].',
+        },
+        id: { type: 'string', description: 'Single section/container/node id to clone.' },
+        dryRun: { type: 'boolean' },
+      },
+      required: ['site', 'from', 'to'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const from = await outlines.resolveOutline(ctx, args.from);
+      const to = await outlines.resolveOutline(ctx, args.to);
+      const ids = [...(args.ids || []), ...(args.id ? [args.id] : [])];
+      if (!ids.length) throw new Error('Pass `ids` or `id` with at least one section/container/node id to clone.');
+
+      const source = await layoutApi.fetchSavedLayout(ctx, from.id);
+      const cloned = [];
+      const r = await layoutApi.mutateLayout(
+        ctx,
+        to.id,
+        (structure) => {
+          for (const nodeId of ids) {
+            const node = layoutApi.cloneNodeFromStructure(structure, source, nodeId);
+            cloned.push({ id: nodeId, type: node.type, title: node.title || '' });
+          }
+        },
+        { op: 'sections-clone-from-' + from.id, dryRun: !!args.dryRun }
+      );
+
+      return {
+        from,
+        to,
+        cloned,
+        cloneOptions: ['Section Attributes', 'Block Attributes', 'Particles within Section'],
+        inheritanceCleared: true,
+        dryRun: !!r.dryRun,
+        diff: r.diff || null,
+        backupPath: r.backupPath || null,
+      };
+    },
+  },
+  {
+    name: 'gantry_layout_clone_all_from',
+    description:
+      'Copy an entire layout from a source outline into a target outline as a fully local clone. ' +
+      'This clears inheritance on every copied container, section, grid, block, and particle. ' +
+      'Use this for the subsite #Outline setup: clone Base Outline into #<Subsite> Outline first, ' +
+      'so the subsite #Outline no longer inherits Base Outline anywhere.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        from: { type: 'string', description: 'Source outline id/title, usually "default" / Base Outline.' },
+        to: { type: 'string', description: 'Target outline id/title, usually #<Subsite> Outline.' },
+        dryRun: { type: 'boolean' },
+      },
+      required: ['site', 'from', 'to'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const from = await outlines.resolveOutline(ctx, args.from);
+      const to = await outlines.resolveOutline(ctx, args.to);
+      const source = await layoutApi.fetchSavedLayout(ctx, from.id);
+      if (!source.length) throw new Error(`Source outline ${from.id} has no layout`);
+      const before = await layoutApi.fetchSavedLayout(ctx, to.id);
+      const cloned = layoutApi.cloneStructureLocal(source);
+      const diff = layoutApi.diffStructures(before, cloned);
+      if (args.dryRun) {
+        return {
+          dryRun: true,
+          from,
+          to,
+          inheritanceCleared: true,
+          cloneScope: 'entire layout',
+          diff,
+        };
+      }
+      const backupPath = backup.takeBackup(ctx, to.id, `local-clone-all-from-${from.id}`, before);
+      await layoutApi.saveLayoutDirect(ctx, ctx, to.id, cloned);
+      return {
+        cloned: true,
+        from,
+        to,
+        inheritanceCleared: true,
+        cloneScope: 'entire layout',
+        backupPath,
+      };
+    },
+  },
+  {
+    name: 'gantry_subsite_child_outline_setup',
+    description:
+      'Set up one subsite child outline end-to-end. First makes EVERY standard section inherit from #<Subsite> Outline, including empty sections. Then clones only the required exception sections from the matching source outline. Finally copies Page Settings locally from #<Subsite> Outline with the correct Home/Grid/Sponsors preset. Use this instead of manually sequencing section inherit/clone/page-copy calls for #<Subsite> Home, #<Subsite> Grid, and #<Subsite> Sponsors.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        kind: {
+          type: 'string',
+          enum: ['home', 'grid', 'sponsors'],
+          description: 'Child outline type. home clones non-shared homepage sections; grid clones Utility, Main/mainbar, and Aside; sponsors clones Aside.',
+        },
+        source: { type: 'string', description: 'Source outline id/title to clone exception sections from, e.g. "#Home", "#Grid", "#Sponsors".' },
+        subsiteOutline: { type: 'string', description: 'The parent subsite outline id/title, e.g. "#School Outline".' },
+        target: { type: 'string', description: 'Target child outline id/title, e.g. "#School Grid".' },
+        cloneIds: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional override for the exception sections to clone from source. Defaults by kind.',
+        },
+        inheritIds: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional override for sections that should inherit from subsiteOutline. Defaults to all standard sections.',
+        },
+        pagePreset: {
+          type: 'string',
+          enum: ['exact', 'subsite-home', 'subsite-grid', 'subsite-sponsors'],
+          description: 'Optional Page Settings copy preset. Defaults by kind.',
+        },
+        dryRun: { type: 'boolean' },
+      },
+      required: ['site', 'kind', 'source', 'subsiteOutline', 'target'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const defaults = SUBSITE_CHILD_DEFAULTS[args.kind];
+      if (!defaults) throw new Error(`Unsupported subsite child kind: ${args.kind}`);
+
+      const source = await outlines.resolveOutline(ctx, args.source);
+      const subsiteOutline = await outlines.resolveOutline(ctx, args.subsiteOutline);
+      const target = await outlines.resolveOutline(ctx, args.target);
+      const inheritIds = args.inheritIds || SUBSITE_CHILD_SECTION_IDS;
+      const cloneIds = args.cloneIds || [...(defaults.cloneContainers || []), ...defaults.cloneIds];
+      const pagePreset = args.pagePreset || defaults.preset;
+      const sourceLayout = await layoutApi.fetchSavedLayout(ctx, source.id);
+
+      const inherited = [];
+      const skippedInherit = [];
+      const cloned = [];
+
+      const resolvedSourceMap = {};
+      for (const sectionId of cloneIds) {
+        resolvedSourceMap[sectionId] = await resolveInheritedSourceNode(ctx, sourceLayout, sectionId);
+      }
+
+      const layoutResult = await layoutApi.mutateLayout(
+        ctx,
+        target.id,
+        (structure) => {
+          for (const sectionId of inheritIds) {
+            if (!layoutApi.findNode(structure, sectionId)) {
+              skippedInherit.push(sectionId);
+              continue;
+            }
+            layoutApi.setNodeInherit(structure, sectionId, {
+              outline: subsiteOutline.id,
+              include: ['children', 'attributes', 'block'],
+            });
+            inherited.push(sectionId);
+          }
+
+          for (const sectionId of cloneIds) {
+            const tempSource = [resolvedSourceMap[sectionId]];
+            const node = layoutApi.cloneNodeFromStructure(structure, tempSource, sectionId);
+            cloned.push({ id: sectionId, type: node.type, title: node.title || '' });
+          }
+        },
+        { op: `subsite-${args.kind}-layout-setup`, dryRun: !!args.dryRun }
+      );
+
+      await pageMod.openPage(ctx, subsiteOutline.id);
+      const sourceFields = await pageMod.listPage(ctx, { all: true });
+      await pageMod.openPage(ctx, target.id);
+      const targetFields = await pageMod.listPage(ctx, { all: true });
+
+      const presetEdits = {};
+      if (pagePreset === 'subsite-home') {
+        presetEdits.bodyClasses = 'gantry site-home withmaxwidth';
+        presetEdits.bodyId = '';
+      } else if (pagePreset === 'subsite-grid') {
+        presetEdits.bodyId = 'site-grid';
+      }
+
+      const { edits: pageEdits, skipped: skippedPageFields } = pageMod.buildPageCopyEdits(sourceFields, targetFields, {
+        ...presetEdits,
+        forceLocal: true,
+      });
+
+      if (args.dryRun) {
+        return {
+          dryRun: true,
+          kind: args.kind,
+          source,
+          subsiteOutline,
+          target,
+          inherited,
+          skippedInherit,
+          cloned,
+          pagePreset,
+          pageEdits,
+          skippedPageFields,
+          layoutDiff: layoutResult.diff || null,
+        };
+      }
+
+      await pageMod.editPage(ctx, pageEdits);
+      await pageMod.savePage(ctx);
+      const prefixCleanup = await outlines.stripOutlineTitlePrefix(ctx, { prefix: 'Studius - ' });
+
+      return {
+        saved: true,
+        kind: args.kind,
+        source,
+        subsiteOutline,
+        target,
+        inherited,
+        skippedInherit,
+        cloned,
+        pagePreset,
+        pageSaved: Object.keys(pageEdits),
+        skippedPageFields,
+        layoutBackupPath: layoutResult.backupPath || null,
+        prefixCleanup,
+      };
+    },
+  },
+  {
+    name: 'gantry_subsite_outline_setup',
+    description:
+      'Set up the parent #<Subsite> Outline end-to-end. Clones the entire Base Outline layout locally into the subsite outline, clearing inherited state everywhere, then copies Page Settings locally from the chosen page settings source and applies default subsite subpage Body Classes. After this, edit the subsite #Outline Page Settings as the fresh subsite source.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        layoutSource: { type: 'string', description: 'Layout source outline id/title, usually "default" / Base Outline.' },
+        pageSource: { type: 'string', description: 'Page Settings source outline id/title, usually "default" / Base Outline.' },
+        target: { type: 'string', description: 'Target subsite outline id/title, e.g. "#School Outline".' },
+        bodyClasses: {
+          type: 'string',
+          description: 'Body Classes after copying Page Settings. Defaults to "gantry site-sub withmaxwidth".',
+        },
+        bodyId: {
+          type: 'string',
+          description: 'Body Id after copying Page Settings. Defaults to blank.',
+        },
+        dryRun: { type: 'boolean' },
+      },
+      required: ['site', 'layoutSource', 'pageSource', 'target'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const layoutSource = await outlines.resolveOutline(ctx, args.layoutSource);
+      const pageSource = await outlines.resolveOutline(ctx, args.pageSource);
+      const target = await outlines.resolveOutline(ctx, args.target);
+
+      const sourceLayout = await layoutApi.fetchSavedLayout(ctx, layoutSource.id);
+      if (!sourceLayout.length) throw new Error(`Source outline ${layoutSource.id} has no layout`);
+      const before = await layoutApi.fetchSavedLayout(ctx, target.id);
+      const clonedLayout = layoutApi.cloneStructureLocal(sourceLayout);
+      const layoutDiff = layoutApi.diffStructures(before, clonedLayout);
+
+      await pageMod.openPage(ctx, pageSource.id);
+      const sourceFields = await pageMod.listPage(ctx, { all: true });
+      await pageMod.openPage(ctx, target.id);
+      const targetFields = await pageMod.listPage(ctx, { all: true });
+
+      const { edits: pageEdits, skipped: skippedPageFields } = pageMod.buildPageCopyEdits(sourceFields, targetFields, {
+        bodyClasses: args.bodyClasses !== undefined ? args.bodyClasses : 'gantry site-sub withmaxwidth',
+        bodyId: args.bodyId !== undefined ? args.bodyId : '',
+        forceLocal: true,
+      });
+
+      if (args.dryRun) {
+        return {
+          dryRun: true,
+          layoutSource,
+          pageSource,
+          target,
+          inheritanceCleared: true,
+          layoutDiff,
+          pageEdits,
+          skippedPageFields,
+        };
+      }
+
+      const layoutBackupPath = backup.takeBackup(ctx, target.id, `subsite-outline-local-clone-from-${layoutSource.id}`, before);
+      await layoutApi.saveLayoutDirect(ctx, ctx, target.id, clonedLayout);
+      await pageMod.editPage(ctx, pageEdits);
+      await pageMod.savePage(ctx);
+      const prefixCleanup = await outlines.stripOutlineTitlePrefix(ctx, { prefix: 'Studius - ' });
+
+      return {
+        saved: true,
+        layoutSource,
+        pageSource,
+        target,
+        inheritanceCleared: true,
+        layoutBackupPath,
+        pageSaved: Object.keys(pageEdits),
+        skippedPageFields,
+        prefixCleanup,
+      };
     },
   },
   {
@@ -647,6 +1163,10 @@ const TOOLS = [
         ...SITE_THEME_FIELDS,
         ...OUTLINE_FIELD,
         edits: { type: 'object', additionalProperties: true },
+        syncSubsiteChildren: {
+          type: 'boolean',
+          description: 'Defaults to true. If editing Head Properties or Assets on a subsite #Outline, also sync those fields to Home/Grid/Sponsors.',
+        },
       },
       required: ['site', 'edits'],
     },
@@ -694,7 +1214,154 @@ const TOOLS = [
       await pageMod.openPage(ctx, args.outline || 'default');
       await pageMod.editPage(ctx, args.edits);
       await pageMod.savePage(ctx);
-      return { saved: Object.keys(args.edits) };
+      const subsiteSync = shouldSyncSharedPageSettings(args, args.edits)
+        ? await syncSubsiteSharedPageSettings(ctx, args.outline || 'default')
+        : null;
+      return { saved: Object.keys(args.edits), subsiteSync };
+    },
+  },
+  {
+    name: 'gantry_primary_page_settings_restore',
+    description:
+      'Restore proper Page Settings inheritance on a primary site outline (#Outline, #Home, #Grid, or #Sponsors). ' +
+      'Posts a minimal form storing ONLY the explicitly supplied localFields as local overrides; ' +
+      'all other fields are cleared so they inherit from Base Outline. ' +
+      '#Outline/#Sponsors: no localFields. ' +
+      '#Home: { "page[body][attribs][class]": "gantry site-home withmaxwidth" }. ' +
+      '#Grid: { "page[body][attribs][id]": "site-grid" }. ' +
+      'Do NOT use on subsite outlines.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        localFields: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Fields to store locally. Omit anything that should inherit from Base Outline.',
+        },
+      },
+      required: ['site', 'outline'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const outline = String(args.outline || 'default');
+      const localFields = args.localFields || {};
+      const result = await pageMod.savePageMinimal(ctx, outline, localFields);
+      return { restored: true, localFieldsStored: Object.keys(localFields), outline, result };
+    },
+  },
+  {
+    name: 'gantry_page_copy_from',
+    description:
+      'Copy Page Settings values from one outline to another as local values, not entangled/inherited settings. ' +
+      'Use this for subsite child outlines after the subsite #Outline has fresh Page Settings: copy Head Properties, Assets, Body, and Font Awesome from #<Subsite> Outline, force page[origin] blank, then apply only the expected Body Classes/Body Id tweak. Presets: subsite-home => body class "gantry site-home withmaxwidth"; subsite-grid => body id "site-grid"; subsite-sponsors => exact copy.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        from: { type: 'string', description: 'Source outline id/title, usually #<Subsite> Outline.' },
+        to: { type: 'string', description: 'Target outline id/title, e.g. #<Subsite> Home/Grid/Sponsors.' },
+        preset: {
+          type: 'string',
+          enum: ['exact', 'subsite-home', 'subsite-grid', 'subsite-sponsors'],
+          description: 'Applies the known subsite child Page Settings body tweaks. Defaults to exact.',
+        },
+        bodyClasses: {
+          type: 'string',
+          description: 'Optional explicit Body Classes override after copying from source.',
+        },
+        bodyId: {
+          type: 'string',
+          description: 'Optional explicit Body Id override after copying from source.',
+        },
+        forceLocal: {
+          type: 'boolean',
+          description: 'When true/default, clears page[origin] on the target so Page Settings are local rather than entangled.',
+        },
+        dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+      },
+      required: ['site', 'from', 'to'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      const from = await outlines.resolveOutline(ctx, args.from);
+      const to = await outlines.resolveOutline(ctx, args.to);
+
+      await pageMod.openPage(ctx, from.id);
+      const sourceFields = await pageMod.listPage(ctx, { all: true });
+      await pageMod.openPage(ctx, to.id);
+      const targetFields = await pageMod.listPage(ctx, { all: true });
+
+      const preset = args.preset || 'exact';
+      const presetEdits = {};
+      if (preset === 'subsite-home') {
+        presetEdits.bodyClasses = 'gantry site-home withmaxwidth';
+        presetEdits.bodyId = '';
+      } else if (preset === 'subsite-grid') {
+        presetEdits.bodyId = 'site-grid';
+      } else if (preset === 'subsite-sponsors') {
+        // Exact Page Settings copy from the subsite #Outline.
+      }
+
+      const { edits, skipped } = pageMod.buildPageCopyEdits(sourceFields, targetFields, {
+        ...presetEdits,
+        ...(args.bodyClasses !== undefined ? { bodyClasses: args.bodyClasses } : {}),
+        ...(args.bodyId !== undefined ? { bodyId: args.bodyId } : {}),
+        forceLocal: args.forceLocal !== false,
+      });
+
+      if (args.dryRun) {
+        return { dryRun: true, from, to, preset, forceLocal: args.forceLocal !== false, edits, skipped };
+      }
+
+      await pageMod.editPage(ctx, edits);
+      await pageMod.savePage(ctx);
+      return {
+        copied: true,
+        from,
+        to,
+        preset,
+        forceLocal: args.forceLocal !== false,
+        saved: Object.keys(edits),
+        skipped,
+      };
+    },
+  },
+  {
+    name: 'gantry_subsite_page_shared_sync',
+    description:
+      'Copy only Page Settings > Head Properties and Assets from a subsite #<Subsite> Outline to its #<Subsite> Home, #<Subsite> Grid, and #<Subsite> Sponsors outlines. Does not touch Body settings, so child Body Classes/Body Id remain intact.',
+    schema: {
+      type: 'object',
+      properties: {
+        ...SITE_THEME_FIELDS,
+        source: { type: 'string', description: 'Subsite parent outline id/title, e.g. "#School Outline".' },
+        targets: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional explicit child outline ids/titles. Defaults to inferred Home, Grid, and Sponsors.',
+        },
+        forceLocal: {
+          type: 'boolean',
+          description: 'When true/default, clears page[origin] on target outlines so Page Settings stay local.',
+        },
+        force: {
+          type: 'boolean',
+          description: 'Allow syncing from a source title that does not look like a subsite parent #Outline.',
+        },
+        dryRun: { type: 'boolean', description: 'Preview target edits without saving.' },
+      },
+      required: ['site', 'source'],
+    },
+    handler: async (args) => {
+      const ctx = await getCtx(args);
+      return syncSubsiteSharedPageSettings(ctx, args.source, {
+        targets: args.targets || [],
+        forceLocal: args.forceLocal !== false,
+        force: !!args.force,
+        dryRun: !!args.dryRun,
+      });
     },
   },
   {
@@ -775,6 +1442,10 @@ const TOOLS = [
           },
         },
         dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+        syncSubsiteChildren: {
+          type: 'boolean',
+          description: 'Defaults to true. If editing a subsite #Outline, also sync Head Properties to Home/Grid/Sponsors.',
+        },
       },
       required: ['site'],
     },
@@ -785,7 +1456,10 @@ const TOOLS = [
       if (args.dryRun) return { dryRun: true, edits };
       await pageMod.editPage(ctx, edits);
       await pageMod.savePage(ctx);
-      return { saved: Object.keys(edits) };
+      const subsiteSync = shouldSyncSharedPageSettings(args, edits)
+        ? await syncSubsiteSharedPageSettings(ctx, args.outline || 'default')
+        : null;
+      return { saved: Object.keys(edits), subsiteSync };
     },
   },
   {
@@ -803,6 +1477,10 @@ const TOOLS = [
           additionalProperties: true,
         },
         dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+        syncSubsiteChildren: {
+          type: 'boolean',
+          description: 'Defaults to true. If editing a subsite #Outline, also sync Head Properties to Home/Grid/Sponsors.',
+        },
       },
       required: ['site'],
     },
@@ -816,7 +1494,10 @@ const TOOLS = [
       if (args.dryRun) return { dryRun: true, edits };
       await pageMod.editPage(ctx, edits);
       await pageMod.savePage(ctx);
-      return { saved: Object.keys(edits) };
+      const subsiteSync = shouldSyncSharedPageSettings(args, edits)
+        ? await syncSubsiteSharedPageSettings(ctx, args.outline || 'default')
+        : null;
+      return { saved: Object.keys(edits), subsiteSync };
     },
   },
   {
@@ -831,6 +1512,10 @@ const TOOLS = [
         favicon: { type: 'string', description: 'Favicon path.' },
         touchicon: { type: 'string', description: 'Touch icon path.' },
         dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+        syncSubsiteChildren: {
+          type: 'boolean',
+          description: 'Defaults to true. If editing a subsite #Outline, also sync Assets to Home/Grid/Sponsors.',
+        },
       },
       required: ['site'],
     },
@@ -841,7 +1526,10 @@ const TOOLS = [
       if (args.dryRun) return { dryRun: true, edits };
       await pageMod.editPage(ctx, edits);
       await pageMod.savePage(ctx);
-      return { saved: Object.keys(edits) };
+      const subsiteSync = shouldSyncSharedPageSettings(args, edits)
+        ? await syncSubsiteSharedPageSettings(ctx, args.outline || 'default')
+        : null;
+      return { saved: Object.keys(edits), subsiteSync };
     },
   },
   {
@@ -903,6 +1591,10 @@ const TOOLS = [
           },
         },
         dryRun: { type: 'boolean', description: 'Return the exact flat Page Settings edits without saving.' },
+        syncSubsiteChildren: {
+          type: 'boolean',
+          description: 'Defaults to true. If editing a subsite #Outline, also sync Assets to Home/Grid/Sponsors.',
+        },
       },
       required: ['site'],
     },
@@ -913,7 +1605,10 @@ const TOOLS = [
       if (args.dryRun) return { dryRun: true, edits };
       await pageMod.editPage(ctx, edits);
       await pageMod.savePage(ctx);
-      return { saved: Object.keys(edits) };
+      const subsiteSync = shouldSyncSharedPageSettings(args, edits)
+        ? await syncSubsiteSharedPageSettings(ctx, args.outline || 'default')
+        : null;
+      return { saved: Object.keys(edits), subsiteSync };
     },
   },
   {
@@ -2374,6 +3069,168 @@ const TOOLS = [
 
 
 ];
+
+
+/* Tool aliases for gantry_page_asset_files_edit.
+ * Agents often guess names like gantry_add_css_asset or gantry_link_css_file.
+ * These aliases forward to the same handler so either name works.
+ */
+['gantry_add_css_asset', 'gantry_link_css_file', 'gantry_page_assets_edit'].forEach((alias) => {
+  TOOLS.push({
+    name: alias,
+    description: "Alias for gantry_page_asset_files_edit. Add, remove, or edit CSS/JS asset rows in a Gantry outline's Page Settings. Accepts the same arguments as gantry_page_asset_files_edit.",
+    schema: TOOLS.find((t) => t.name === 'gantry_page_asset_files_edit').schema,
+    handler: TOOLS.find((t) => t.name === 'gantry_page_asset_files_edit').handler,
+  });
+});
+
+/* Combined FTP + Gantry CSS smoke test.
+ * Runs the full end-to-end validation in one call:
+ *   1. ftp_site_config       - resolve upload_path and public URL
+ *   2. ftp_upload_file       - write a sentinel CSS file
+ *   3. detect active outline - parse outline-N from live page body class
+ *   4. link asset            - add the file to that outline's Page Settings
+ *   5. frontend fetch        - confirm the link tag is emitted on the page
+ *   6. cleanup (optional)    - remove the asset row when cleanup=true
+ */
+TOOLS.push({
+  name: 'gantry_css_asset_smoke_test',
+  description:
+    "End-to-end smoke test for the FTP to Gantry CSS pipeline. Uploads a sentinel CSS file via FTP, " +
+    "detects which outline is serving the target page, links the file into that outline's Page Settings, " +
+    "and verifies the stylesheet is emitted on the live page. Returns a structured pass/fail result for " +
+    "each step. Use before any custom page build or after a server migration to confirm the pipeline works.",
+  schema: {
+    type: 'object',
+    properties: {
+      ...SITE_THEME_FIELDS,
+      targetPath: {
+        type: 'string',
+        description: 'Frontend path to test against, e.g. "/" or "/about-us".',
+      },
+      remoteFilename: {
+        type: 'string',
+        description: 'Filename for the sentinel CSS file, e.g. "smoke-test.css". Defaults to "smoke-test.css".',
+      },
+      cleanup: {
+        type: 'boolean',
+        description: 'If true, remove the asset row from Page Settings after a successful test. The FTP file is left in place. Defaults to false.',
+      },
+    },
+    required: ['site', 'targetPath'],
+  },
+  handler: async (args) => {
+    const site = (args.site || '').replace(/\/+$/, '');
+    const targetPath = args.targetPath || '/';
+    const filename = args.remoteFilename || 'smoke-test.css';
+    const cleanup = !!args.cleanup;
+    const steps = [];
+
+    // Step 1: FTP config
+    let joomla;
+    let uploadPath = null;
+    let publicUrl = null;
+    try {
+      joomla = await joomlaMcpClient();
+      const domain = (() => { try { return new URL(site).hostname; } catch (_) { return site; } })();
+      const ftpConf = await callJoomlaTool(joomla, 'ftp_site_config', { domain });
+      const d = (ftpConf && ftpConf.data && typeof ftpConf.data === 'object') ? ftpConf.data : ftpConf;
+      uploadPath = (d && d.upload_path) ? d.upload_path : null;
+      const pubUrl = ((d && d.pub_url) ? d.pub_url : '').replace(/\/$/, '');
+      publicUrl = pubUrl ? (pubUrl + '/' + filename) : (site + '/images/pub/' + filename);
+      steps.push({ step: 'ftp_config', ok: !!uploadPath, uploadPath, publicUrl });
+    } catch (e) {
+      steps.push({ step: 'ftp_config', ok: false, error: e.message });
+      return { pass: false, steps };
+    }
+
+    // Step 2: Upload sentinel file
+    try {
+      const remotePath = uploadPath.replace(/\/$/, '') + '/' + filename;
+      const domain = (() => { try { return new URL(site).hostname; } catch (_) { return site; } })();
+      await callJoomlaTool(joomla, 'ftp_upload_file', {
+        domain,
+        path: remotePath,
+        content: '/* gantry css smoke test -- safe to delete */\n',
+      });
+      steps.push({ step: 'ftp_upload', ok: true, remotePath });
+    } catch (e) {
+      steps.push({ step: 'ftp_upload', ok: false, error: e.message });
+      return { pass: false, steps };
+    }
+
+    // Step 3: Detect active outline
+    let outlineId = null;
+    let outlineTitle = null;
+    try {
+      const ctx = await getCtx(args);
+      const slash = targetPath.startsWith('/') ? '' : '/';
+      const url = targetPath.startsWith('http') ? targetPath : (site + slash + targetPath);
+      const res = await ctx.fetch(url, { method: 'GET' });
+      const html = res.body;
+      const m = html.match(/\boutline-(\d+)\b/);
+      outlineId = m ? m[1] : null;
+      if (!outlineId) throw new Error('No outline-N class found in page body -- is this a Gantry 5 page?');
+      try {
+        const resolved = await outlines.resolveOutline(ctx, outlineId);
+        outlineTitle = resolved.title;
+      } catch (_) {}
+      steps.push({ step: 'detect_outline', ok: true, outlineId, outlineTitle });
+    } catch (e) {
+      steps.push({ step: 'detect_outline', ok: false, error: e.message });
+      return { pass: false, steps };
+    }
+
+    // Step 4: Link file into outline Page Settings
+    try {
+      const ctx = await getCtx(args);
+      await pageMod.openPage(ctx, outlineId);
+      const edits = await pageMod.editAssetLists(ctx, {
+        cssActions: [{ action: 'add', item: { name: 'smoke-test', location: publicUrl, priority: '0' } }],
+      });
+      await pageMod.editPage(ctx, edits);
+      await pageMod.savePage(ctx);
+      steps.push({ step: 'link_asset', ok: true, outline: outlineId, assetUrl: publicUrl });
+    } catch (e) {
+      steps.push({ step: 'link_asset', ok: false, error: e.message });
+      return { pass: false, steps };
+    }
+
+    // Step 5: Verify emission on live page
+    let emitted = false;
+    try {
+      const ctx = await getCtx(args);
+      const slash = targetPath.startsWith('/') ? '' : '/';
+      const url = targetPath.startsWith('http') ? targetPath : (site + slash + targetPath);
+      const res = await ctx.fetch(url, { method: 'GET' });
+      emitted = res.body.includes(filename);
+      steps.push({ step: 'verify_emission', ok: emitted, searched: filename, emitted });
+    } catch (e) {
+      steps.push({ step: 'verify_emission', ok: false, error: e.message });
+    }
+
+    // Step 6: Cleanup (optional)
+    if (cleanup && emitted) {
+      try {
+        const ctx = await getCtx(args);
+        await pageMod.openPage(ctx, outlineId);
+        const edits = await pageMod.editAssetLists(ctx, {
+          cssActions: [{ action: 'remove', location: publicUrl }],
+        });
+        await pageMod.editPage(ctx, edits);
+        await pageMod.savePage(ctx);
+        steps.push({ step: 'cleanup', ok: true });
+      } catch (e) {
+        steps.push({ step: 'cleanup', ok: false, error: e.message });
+      }
+    }
+
+    const pass = steps.every((s) => s.ok);
+    return { pass, steps };
+  },
+});
+
+
 
 /* --------------------------- server bootstrap ------------------------- */
 

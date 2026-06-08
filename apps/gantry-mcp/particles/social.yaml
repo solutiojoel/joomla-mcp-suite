@@ -1,0 +1,66 @@
+name: social
+title: Social
+category: navigation
+
+description: >
+  Renders a row of social/media/contact icon links. Most often used in the
+  navigation section on school homes or parish headers, usually beside toplinks.
+
+when_to_use:
+  - Social media icon links in navigation or header rows
+  - Small contact/search icon groups where each item is an external or internal URL
+
+when_not_to_use:
+  - Embedded social feeds (use contentarray pointing to a Joomla article)
+  - Text-heavy quicklinks (use blockcontent)
+
+common_block_classes:
+  nav-social-icons: Header/navigation social icon group
+  align-right nav-social-icons: Right-aligned navigation social icons
+
+attributes:
+  enabled:
+    type: integer
+    default: 1
+    description: 1 to show, 0 to hide.
+  items:
+    type: repeater
+    description: Social link items rendered as anchors with icon spans.
+    item_schema:
+      name:
+        type: string
+        default: ""
+        description: Internal/admin item label.
+      text:
+        type: string
+        default: ""
+        description: Optional visible or accessible text.
+      icon:
+        type: string
+        default: ""
+        description: Font Awesome icon class, e.g. fab fa-facebook-square.
+      link:
+        type: string
+        default: ""
+        description: Target URL. Use full URLs for social profiles.
+
+rendered_html:
+  outer_wrapper: "div.g-block.{blockClass}"
+  inner_wrapper: "div.g-content.g-particle"
+  particle_element: "div.g-social"
+  items_wrapper: "div.g-social-items"
+  item_element: "a[target] > span.{icon}"
+
+examples:
+  nav_social:
+    description: Facebook and Instagram icons in the navigation row
+    blockClass: nav-social-icons
+    attributes:
+      enabled: 1
+      items:
+        - name: Facebook
+          icon: fab fa-facebook-square
+          link: "https://www.facebook.com/"
+        - name: Instagram
+          icon: fab fa-instagram
+          link: "https://www.instagram.com/"

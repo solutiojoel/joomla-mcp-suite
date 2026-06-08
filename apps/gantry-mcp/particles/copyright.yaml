@@ -1,0 +1,38 @@
+name: copyright
+title: Copyright
+category: system
+
+description: >
+  Gantry copyright particle. Rare in the Solutio fleet because most sites use a
+  custom admin footer instead, but legacy/template exports include it.
+
+when_to_use:
+  - Legacy copyright rows where Gantry's generated owner/year text is desired
+
+when_not_to_use:
+  - Solutio admin footer lock/credit HTML (use custom)
+
+common_block_classes:
+  "" : Usually no block class
+
+attributes:
+  enabled:
+    type: integer
+    default: 1
+  owner:
+    type: string
+    default: ""
+  date:
+    type: object
+    properties:
+      start:
+        type: string
+        default: ""
+      end:
+        type: string
+        default: ""
+
+rendered_html:
+  outer_wrapper: "div.g-block"
+  inner_wrapper: "div.g-content.g-particle"
+  particle_element: "div.g-copyright"

@@ -26,6 +26,34 @@ attributes:
     type: integer
     default: 1
     description: 1 to show, 0 to hide. Always 1 for logo.
+  image:
+    type: string
+    default: ""
+    description: Optional particle-level logo image override. Most sites use Gantry style settings instead.
+  url:
+    type: string
+    default: "/"
+    description: Logo link URL.
+  link:
+    type: string
+    default: ""
+    description: Alternate link field present in some exports.
+  target:
+    type: string
+    default: _self
+    options: [_self, _blank, _top]
+  text:
+    type: string
+    default: ""
+    description: Text label emitted beside or instead of the image when configured.
+  title:
+    type: string
+    default: ""
+    description: Title/alt text label.
+  svg:
+    type: string
+    default: ""
+    description: Inline SVG logo content or flag used by some Gantry exports.
 
 rendered_html:
   outer_wrapper: "div.g-block.{blockClass}"
