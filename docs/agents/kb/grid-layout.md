@@ -14,7 +14,7 @@ A grid layout has two parts:
 - Use **Joomla Articles** particle when the grid pulls from a category of articles.
 - Use **Block Content** particle when the grid links to specific menu items instead of articles.
 
-Every category used in a grid must also have a display menu item in either `secondary-menu` or `hidden-menu` so articles have a landing page.
+**Grid items do not need their own menu items.** The Joomla Articles particle generates links directly to the article URL — no menu item is required for routing. Do not create menu items for individual grid cards; keep them as articles only in the appropriate category.
 
 ---
 

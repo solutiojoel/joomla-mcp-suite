@@ -136,6 +136,8 @@ export class JoomlaClient {
   private gantryOutlineLayoutUrls: Map<string, string> = new Map();
   /** Per-outline layout root+preset cache. Populated on fetch; used to skip re-fetch in liveBefore check. Cleared on login and after successful save. */
   private gantryLayoutRootCache: Map<string, { root: GantryLayoutNode[]; preset: unknown }> = new Map();
+  // Joomla's nested set (lft/rgt) corrupts under concurrent INSERTs — serialize all creates within a session
+  private _menuCreateQueue: Promise<void> = Promise.resolve();
 
   constructor(config: JoomlaConfig) {
     this.config = config;
@@ -4922,6 +4924,47 @@ export class JoomlaClient {
   }
 
   async createMenuItem(data: {
+    title: string;
+    menuType: string;
+    itemType: string;
+    alias?: string;
+    link?: string;
+    parentId?: string;
+    published?: string;
+    access?: string;
+    language?: string;
+    browserNav?: string;
+    home?: string;
+    note?: string;
+    templateStyleId?: string;
+    request?: Record<string, string>;
+    params?: Record<string, string>;
+    fieldOverrides?: Record<string, string>;
+  }): Promise<JoomlaResponse> {
+    // Serialize via queue: Joomla nested set (lft/rgt) corrupts under concurrent INSERTs
+    const prev = this._menuCreateQueue;
+    let release!: () => void;
+    this._menuCreateQueue = new Promise<void>((r) => { release = r; });
+    try {
+      await prev;
+      const result = await this._doCreateMenuItem(data);
+      // Self-heal: if nested set placed this item under the wrong parent, fix it now
+      const rd = result.data as Record<string, unknown> | undefined;
+      const verification = rd?.["verification"] as Record<string, unknown> | undefined;
+      if (rd && !verification?.["parentMatches"]) {
+        const savedId = String(rd["id"] ?? "");
+        const expectedParent = data.parentId || "1";
+        if (savedId) {
+          await this.updateMenuItem(savedId, { parentId: expectedParent, menuType: data.menuType });
+        }
+      }
+      return result;
+    } finally {
+      release();
+    }
+  }
+
+  private async _doCreateMenuItem(data: {
     title: string;
     menuType: string;
     itemType: string;
