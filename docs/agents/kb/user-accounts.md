@@ -11,6 +11,8 @@ https://docs.google.com/spreadsheets/d/1xoP6LY6g8wRJZHgEGrNaa_CwJ4WGmQP0ybQ2Ptvo
 
 The same spreadsheet generates a CSV for email list import.
 
+**Username convention:** Always set the username to the user's full email address (e.g., `lkuchinskas@magdalenwichita.com`). Do not use short usernames like `lkuchinskas`.
+
 **User groups at creation:** Assign users to one of:
 - **Basic Editor** (or Manager) + a user group specific to their category(ies)
 - **Admin** — for full backend access

@@ -62,3 +62,17 @@ Notes logged by AI agents.
 - school-sub-cl #191: "MS LA - Laura Hocker" → unpublished
 - User accounts completed: Lisa Kuchinskas ID #1017 (groups: Manager, Lisa Kuchinskas - Kindergarten #123, Kindergarten #93), Cody Fox ID #1018 (groups: Manager, Cody Fox - MS Science #125)
 **Notes:** school-menu-cl item #636 "Terry Bolinger" has parentId 616 (now "Macy Bartel") — pre-existing menu structure quirk, not changed. No menu item exists for William Allen/Tom Angelo (principal, not in teacher nav).
+
+### 2026-06-09 — Ticket #35153 | Claassen → Sherwood (Specials/Spanish)
+**Requested by:** Tom Angelo (via wallen@magdalenwichita.com) | **Ticket:** #35153
+**Changes:**
+- Contact #78: Mrs. Nancy Claassen → Ms. Alexandra Sherwood, Spanish Teacher, asherwood@magdalenwichita.com
+- User #970 (nclaassen): blocked
+- Category #97: "Nancy Claassen - Spanish" → "Alexandra Sherwood - Spanish"
+- Category #11103: "Claassen Side Menu Items" → "Sherwood Side Menu Items"
+- Article #36658: renamed to "Sherwood Contact Side Info", updated to Alexandra Sherwood/asherwood email
+- school-menu-cl #603: "Nancy Claassen" → "Alexandra Sherwood"
+- school-sub-cl #272: "Spanish - Nancy Claassen" → "Spanish - Alexandra Sherwood"
+- User group #126 "Alexandra Sherwood - Spanish" created; full permissions on cat #97
+- User #1019 Alexandra Sherwood created (asherwood, Manager + #126 + Specials #100, requireReset=true)
+**Notes:** No follow-up needed beyond MailChimp spreadsheet update.
