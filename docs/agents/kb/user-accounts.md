@@ -17,6 +17,8 @@ The same spreadsheet generates a CSV for email list import.
 
 Note: `Registered` is the default Joomla group but does **not** grant backend access. Do not assign clients to Registered.
 
+**Require password reset:** Always set `jform[requireReset]` to `1` when creating a new user account. This forces the user to choose their own password on first login. Use `joomla_submit_admin_form` with `confirm: true` on the user edit form to set it after creation if the tool did not set it automatically.
+
 **After creating users:** Add them to the Email Lists Spreadsheet so Lori can add them to MailChimp.
 
 ---

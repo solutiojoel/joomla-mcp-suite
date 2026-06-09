@@ -5970,6 +5970,7 @@ export class JoomlaClient {
     password: string;
     groups: string[];
     block?: boolean;
+    requireReset?: boolean;
   }): Promise<JoomlaResponse> {
     const newUserUrl = this.getAdminUrl("index.php?option=com_users&view=user&layout=edit");
     const { html } = await this.getPage(newUserUrl);
@@ -5988,6 +5989,7 @@ export class JoomlaClient {
       "jform[password]": data.password,
       "jform[password2]": data.password,
       "jform[block]": data.block ? "1" : "0",
+      "jform[requireReset]": data.requireReset === false ? "0" : "1",
       "jform[groups][]": data.groups,
       [token.name]: token.value,
     };
@@ -6022,6 +6024,7 @@ export class JoomlaClient {
       password?: string;
       block?: boolean;
       groups?: string[];
+      requireReset?: boolean;
     }
   ): Promise<JoomlaResponse> {
     const editUrl = this.getAdminUrl(`index.php?option=com_users&task=user.edit&id=${id}`);
@@ -6055,6 +6058,7 @@ export class JoomlaClient {
       formData["jform[password2]"] = data.password;
     }
     if (data.block !== undefined) formData["jform[block]"] = data.block ? "1" : "0";
+    if (data.requireReset !== undefined) formData["jform[requireReset]"] = data.requireReset ? "1" : "0";
 
     const result = await this.postPage(editUrl, formData);
     const saved = result.html.includes("User saved") || result.html.includes("has been saved");
@@ -6066,6 +6070,27 @@ export class JoomlaClient {
       success: verify.success,
       message: verify.success ? "User updated" : "User form submitted but readback failed",
       data: verify.data,
+    };
+  }
+
+  async sendUserResetEmail(id: string): Promise<JoomlaResponse> {
+    const listUrl = this.getAdminUrl("index.php?option=com_users&view=users");
+    const { html } = await this.getPage(listUrl);
+    const token = this.extractCsrfToken(html);
+    if (!token) return { success: false, message: "Failed to extract CSRF token" };
+
+    const formData: FormDataMap = {
+      task: "users.remind",
+      "cid[]": id,
+      boxchecked: "1",
+      [token.name]: token.value,
+    };
+
+    const result = await this.postPage(listUrl, formData);
+    const success = result.html.includes("reset link") || result.html.includes("mail") || result.status === 303 || result.html.includes("message");
+    return {
+      success,
+      message: success ? `Password reset email sent to user ID ${id}` : "Reset email may not have sent — check admin backend",
     };
   }
 
