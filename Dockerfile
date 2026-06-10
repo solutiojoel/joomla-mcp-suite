@@ -28,10 +28,12 @@ RUN sed -i 's/\r$//' ./scripts/start-all.sh && chmod +x ./scripts/start-all.sh
 RUN cd apps/gantry-mcp && npm ci
 RUN cd apps/joomla-mcp && npm ci && npm run build
 RUN cd apps/joomla-orchestrator && npm ci
+RUN cd apps/dashboard && npm ci
 
-# Orchestrator (MCP/HTTP), site-builder webapp, and mockup brief webapp
+# Orchestrator (MCP/HTTP), site-builder webapp, mockup brief webapp, dashboard
 EXPOSE 9302
 EXPOSE 18303
 EXPOSE 18304
+EXPOSE 18305
 
 CMD ["bash", "scripts/start-all.sh"]
