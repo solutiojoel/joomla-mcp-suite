@@ -105,6 +105,8 @@ Fetch `joomla-docs://agents/kb/staff-grid.md` for the full module config, articl
 | Article creation returns unverified but no error | Search by title with `joomla_article(action: "list", search: "...")` to confirm; article usually created but landed in wrong category — update category ID |
 | Staff articles land in wrong category | Create them, confirm IDs via search, then `joomla_article(action: "update", ...)` to correct the category |
 | Top-level articles appearing in particle grid | Move them to the Page Content category so the section "Items" category only contains sub-articles |
+| Menu items land at wrong parent or come back unpublished | Joomla's nested set (`lft`/`rgt`) corrupts under concurrent INSERTs. The tool now serializes creates automatically and self-heals wrong parents, but if you still see this: (1) finish ALL creates before any manual fix attempts, (2) then run `joomla_menu_item(action: "update")` on each affected item to set the correct `parentId` — Joomla recomputes the tree on save. Never mix parallel creates with parent-fix updates in the same pass. |
+| Alias conflict on create | Joomla aliases are globally unique across all menus. If a create fails silently or lands with a mangled alias, check if the alias is already taken by an item in another menu — use a site-specific suffix (e.g., `sponsors-htl`) to avoid the conflict. |
 
 ---
 

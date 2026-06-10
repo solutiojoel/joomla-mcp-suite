@@ -136,6 +136,8 @@ export class JoomlaClient {
   private gantryOutlineLayoutUrls: Map<string, string> = new Map();
   /** Per-outline layout root+preset cache. Populated on fetch; used to skip re-fetch in liveBefore check. Cleared on login and after successful save. */
   private gantryLayoutRootCache: Map<string, { root: GantryLayoutNode[]; preset: unknown }> = new Map();
+  // Joomla's nested set (lft/rgt) corrupts under concurrent INSERTs — serialize all creates within a session
+  private _menuCreateQueue: Promise<void> = Promise.resolve();
 
   constructor(config: JoomlaConfig) {
     this.config = config;
@@ -4939,6 +4941,47 @@ export class JoomlaClient {
     params?: Record<string, string>;
     fieldOverrides?: Record<string, string>;
   }): Promise<JoomlaResponse> {
+    // Serialize via queue: Joomla nested set (lft/rgt) corrupts under concurrent INSERTs
+    const prev = this._menuCreateQueue;
+    let release!: () => void;
+    this._menuCreateQueue = new Promise<void>((r) => { release = r; });
+    try {
+      await prev;
+      const result = await this._doCreateMenuItem(data);
+      // Self-heal: if nested set placed this item under the wrong parent, fix it now
+      const rd = result.data as Record<string, unknown> | undefined;
+      const verification = rd?.["verification"] as Record<string, unknown> | undefined;
+      if (rd && !verification?.["parentMatches"]) {
+        const savedId = String(rd["id"] ?? "");
+        const expectedParent = data.parentId || "1";
+        if (savedId) {
+          await this.updateMenuItem(savedId, { parentId: expectedParent, menuType: data.menuType });
+        }
+      }
+      return result;
+    } finally {
+      release();
+    }
+  }
+
+  private async _doCreateMenuItem(data: {
+    title: string;
+    menuType: string;
+    itemType: string;
+    alias?: string;
+    link?: string;
+    parentId?: string;
+    published?: string;
+    access?: string;
+    language?: string;
+    browserNav?: string;
+    home?: string;
+    note?: string;
+    templateStyleId?: string;
+    request?: Record<string, string>;
+    params?: Record<string, string>;
+    fieldOverrides?: Record<string, string>;
+  }): Promise<JoomlaResponse> {
     const typesResult = await this.listMenuItemTypes();
     const types = (typesResult.data || []) as MenuItemType[];
     const type = this.findMenuItemType(types, data.itemType);
@@ -5927,6 +5970,7 @@ export class JoomlaClient {
     password: string;
     groups: string[];
     block?: boolean;
+    requireReset?: boolean;
   }): Promise<JoomlaResponse> {
     const newUserUrl = this.getAdminUrl("index.php?option=com_users&view=user&layout=edit");
     const { html } = await this.getPage(newUserUrl);
@@ -5945,6 +5989,7 @@ export class JoomlaClient {
       "jform[password]": data.password,
       "jform[password2]": data.password,
       "jform[block]": data.block ? "1" : "0",
+      "jform[requireReset]": data.requireReset === false ? "0" : "1",
       "jform[groups][]": data.groups,
       [token.name]: token.value,
     };
@@ -5979,6 +6024,7 @@ export class JoomlaClient {
       password?: string;
       block?: boolean;
       groups?: string[];
+      requireReset?: boolean;
     }
   ): Promise<JoomlaResponse> {
     const editUrl = this.getAdminUrl(`index.php?option=com_users&task=user.edit&id=${id}`);
@@ -6012,6 +6058,7 @@ export class JoomlaClient {
       formData["jform[password2]"] = data.password;
     }
     if (data.block !== undefined) formData["jform[block]"] = data.block ? "1" : "0";
+    if (data.requireReset !== undefined) formData["jform[requireReset]"] = data.requireReset ? "1" : "0";
 
     const result = await this.postPage(editUrl, formData);
     const saved = result.html.includes("User saved") || result.html.includes("has been saved");
@@ -6023,6 +6070,27 @@ export class JoomlaClient {
       success: verify.success,
       message: verify.success ? "User updated" : "User form submitted but readback failed",
       data: verify.data,
+    };
+  }
+
+  async sendUserResetEmail(id: string): Promise<JoomlaResponse> {
+    const listUrl = this.getAdminUrl("index.php?option=com_users&view=users");
+    const { html } = await this.getPage(listUrl);
+    const token = this.extractCsrfToken(html);
+    if (!token) return { success: false, message: "Failed to extract CSRF token" };
+
+    const formData: FormDataMap = {
+      task: "users.remind",
+      "cid[]": id,
+      boxchecked: "1",
+      [token.name]: token.value,
+    };
+
+    const result = await this.postPage(listUrl, formData);
+    const success = result.html.includes("reset link") || result.html.includes("mail") || result.status === 303 || result.html.includes("message");
+    return {
+      success,
+      message: success ? `Password reset email sent to user ID ${id}` : "Reset email may not have sent — check admin backend",
     };
   }
 

@@ -709,8 +709,8 @@ const tools = [
     inputSchema: {
       type: "object",
       properties: {
-        action: { type: "string", enum: ["list", "get", "create", "update"], description: "Operation to perform." },
-        id: { type: "string", description: "User ID (required for get/update)." },
+        action: { type: "string", enum: ["list", "get", "create", "update", "send_reset_email"], description: "Operation to perform. send_reset_email: sends Joomla password reset email to the user (requires id)." },
+        id: { type: "string", description: "User ID (required for get/update/send_reset_email)." },
         name: { type: "string", description: "Full display name. Required for create." },
         username: { type: "string", description: "Login username (typically email). Required for create." },
         email: { type: "string", description: "Required for create." },
@@ -721,6 +721,7 @@ const tools = [
           description: "Group IDs. Required for create; replaces all groups on update. Grade groups: 15=1st, 16=2nd, 17=3rd, 18=4th, 19=5th, 20=6th, 33=7th, 23=8th, 14=Kinder, 26=Pre-K, 12=Basic Editor.",
         },
         block: { type: "boolean", description: "true=block/create-blocked, false=enable." },
+        requireReset: { type: "boolean", description: "Require password reset on next login. Defaults to true on create. Pass false to disable." },
         search: { type: "string", description: "Filter by name or email (list only)." },
         group_id: { type: "string", description: "Filter by group ID (list only)." },
         state: { type: "string", enum: ["0", "1"], description: "list: 0=enabled, 1=blocked." },
@@ -1809,7 +1810,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
             const groups = args?.groups as string[];
             if (!name || !username || !email || !password || !groups?.length)
               return { content: [{ type: "text", text: "Error: name, username, email, password, and groups are required for create" }], isError: true };
-            result = await joomla.createUser({ name, username, email, password, groups, block: args?.block as boolean | undefined });
+            result = await joomla.createUser({ name, username, email, password, groups, block: args?.block as boolean | undefined, requireReset: args?.requireReset as boolean | undefined });
             break;
           }
           case "update": {
@@ -1822,11 +1823,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
               password: args?.password as string | undefined,
               block: args?.block as boolean | undefined,
               groups: args?.groups as string[] | undefined,
+              requireReset: args?.requireReset as boolean | undefined,
             });
             break;
           }
+          case "send_reset_email": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for send_reset_email" }], isError: true };
+            result = await joomla.sendUserResetEmail(id);
+            break;
+          }
           default:
-            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|get|create|update` }], isError: true };
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|get|create|update|send_reset_email` }], isError: true };
         }
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }

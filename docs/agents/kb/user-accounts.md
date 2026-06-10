@@ -11,11 +11,15 @@ https://docs.google.com/spreadsheets/d/1xoP6LY6g8wRJZHgEGrNaa_CwJ4WGmQP0ybQ2Ptvo
 
 The same spreadsheet generates a CSV for email list import.
 
+**Username convention:** Always set the username to the user's full email address (e.g., `lkuchinskas@magdalenwichita.com`). Do not use short usernames like `lkuchinskas`.
+
 **User groups at creation:** Assign users to one of:
 - **Basic Editor** (or Manager) + a user group specific to their category(ies)
 - **Admin** — for full backend access
 
 Note: `Registered` is the default Joomla group but does **not** grant backend access. Do not assign clients to Registered.
+
+**Require password reset:** Always set `jform[requireReset]` to `1` when creating a new user account. This forces the user to choose their own password on first login. Use `joomla_submit_admin_form` with `confirm: true` on the user edit form to set it after creation if the tool did not set it automatically.
 
 **After creating users:** Add them to the Email Lists Spreadsheet so Lori can add them to MailChimp.
 
