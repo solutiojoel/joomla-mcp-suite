@@ -1,0 +1,7 @@
+{
+  "name": "admin",
+  "description": "Super agent — all tools, all docs, no restrictions",
+  "instructions": "admin.md",
+  "tools": { "allow": ["*"] },
+  "docs":  { "allow": ["*"] }
+}

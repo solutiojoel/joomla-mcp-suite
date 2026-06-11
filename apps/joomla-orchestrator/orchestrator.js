@@ -36,67 +36,92 @@ const http = require('http');
 const { randomUUID } = require('crypto');
 const fs   = require('fs');
 const path = require('path');
+const kb   = require('./kb.js');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const JOOMLA_MCP_URL   = process.env.JOOMLA_MCP_URL   || 'http://host.docker.internal:9300/mcp';
-const JOOMLA_MCP_TOKEN = process.env.JOOMLA_MCP_TOKEN || '';
-const GANTRY_MCP_URL   = process.env.GANTRY_MCP_URL   || 'http://host.docker.internal:9301/mcp';
-const GANTRY_MCP_TOKEN = process.env.GANTRY_MCP_TOKEN || '';
+const JOOMLA_MCP_URL     = process.env.JOOMLA_MCP_URL   || 'http://host.docker.internal:9300/mcp';
+const JOOMLA_MCP_TOKEN   = process.env.JOOMLA_MCP_TOKEN || '';
+const GANTRY_MCP_URL     = process.env.GANTRY_MCP_URL   || 'http://host.docker.internal:9301/mcp';
+const GANTRY_MCP_TOKEN   = process.env.GANTRY_MCP_TOKEN || '';
+const ORCHESTRATOR_TOKEN = process.env.ORCHESTRATOR_TOKEN || '';
+
+// ─── User registry ────────────────────────────────────────────────────────────
+// config/users.json maps bearer tokens → { user, agent }.
+// If the file is absent, falls back to the single ORCHESTRATOR_TOKEN env var.
+
+const USERS_JSON_PATH = path.join(__dirname, '..', '..', 'config', 'users.json');
+
+function loadUsersRegistry() {
+  if (!fs.existsSync(USERS_JSON_PATH)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(USERS_JSON_PATH, 'utf8'));
+  } catch (err) {
+    log(`WARNING: failed to parse config/users.json - ${err.message}`);
+    return null;
+  }
+}
+
+let usersRegistry = loadUsersRegistry();
+
+// Resolve an inbound Authorization header → session context { user, agent }.
+// Returns null if the token is invalid (caller should 401).
+function resolveSessionContext(authHeader) {
+  const provided = (authHeader || '').startsWith('Bearer ') ? authHeader.slice(7) : '';
+
+  if (usersRegistry) {
+    const entry = usersRegistry[provided];
+    if (!entry) return null;
+    return { user: entry.user, agent: entry.agent || 'admin' };
+  }
+
+  // Fallback: single-token mode (no users.json)
+  if (ORCHESTRATOR_TOKEN && provided !== ORCHESTRATOR_TOKEN) return null;
+  return { user: 'local', agent: 'admin' };
+}
 
 // ─── Session state ────────────────────────────────────────────────────────────
-// TODO: move into per-session scope when multi-tenant support is needed
+// activeSiteUrl lives inside buildServer() — each HTTP session gets its own.
 
-let activeSiteUrl = null;
+// ─── Agent definitions ────────────────────────────────────────────────────────
+// config/agents/<name>.json bundles tool allow/deny + doc allow + instruction path.
+// Falls back to unrestricted admin scope when the file is missing.
 
-// ─── Auto-URL extraction ──────────────────────────────────────────────────────
-// If activeSiteUrl is not set but a tool argument looks like a site URL, use it.
+const AGENTS_CONFIG_DIR = path.join(__dirname, '..', '..', 'config', 'agents');
 
-function extractSiteUrlFromArgs(args) {
-  if (!args || typeof args !== 'object') return null;
-  for (const val of Object.values(args)) {
-    if (typeof val === 'string' && /^https?:\/\//.test(val)) {
-      // Return the origin (scheme + host) only
-      try { return new URL(val).origin; } catch {}
+function loadAgentDef(agentName) {
+  const defPath = path.join(AGENTS_CONFIG_DIR, `${agentName}.json`);
+  if (!fs.existsSync(defPath)) {
+    if (agentName !== 'admin') {
+      log(`WARNING: no agent definition found for '${agentName}', defaulting to admin scope`);
     }
+    return { name: agentName, tools: { allow: ['*'] }, docs: { allow: ['*'] } };
   }
-  return null;
+  try {
+    return JSON.parse(fs.readFileSync(defPath, 'utf8'));
+  } catch (err) {
+    log(`WARNING: failed to parse config/agents/${agentName}.json - ${err.message}`);
+    return { name: agentName, tools: { allow: ['*'] }, docs: { allow: ['*'] } };
+  }
 }
 
-// ─── Agent doc discovery ──────────────────────────────────────────────────────
-// Scans docs/agents/ (workflow guides + kb/) and apps/joomla-mcp/docs/agents/
-// (gantry-design-agent and any future additions there) and returns an array of
-// doc names — the keys accepted by read_agent_doc.
-// Called on every ListTools request so new files appear immediately without a
-// server restart.
+// ─── Hidden tools ─────────────────────────────────────────────────────────────
+// joomla_login is internal plumbing — the orchestrator calls it automatically
+// via set_active_site and on auth error recovery. Hiding it prevents the AI
+// from calling it directly, which would bypass activeSiteUrl tracking.
+// Enforced in both ListTools (filtered from the list) and CallTool (blocked by name).
 
-const DOCS_AGENTS_DIR  = path.join(__dirname, '..', '..', 'docs', 'agents');
-const JOOMLA_AGENTS_DIR = path.join(__dirname, '..', 'joomla-mcp', 'docs', 'agents');
-// Allowed base dirs for path-traversal guard in the handler
-const ALLOWED_DOC_DIRS = [DOCS_AGENTS_DIR, JOOMLA_AGENTS_DIR];
+const HIDDEN_JOOMLA_TOOLS = new Set(['joomla_login']);
 
-function buildDocList() {
-  const docs = [];
-
-  function scanDir(dir, prefix) {
-    if (!fs.existsSync(dir)) return;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        scanDir(path.join(dir, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name);
-      } else if (entry.isFile() && entry.name.endsWith('.md')) {
-        const docName = (prefix ? `${prefix}/` : '') + entry.name.slice(0, -3);
-        docs.push(docName);
-      }
-    }
-  }
-
-  scanDir(DOCS_AGENTS_DIR, '');
-  // Merge joomla-mcp agents dir — skip anything already found in the primary tree
-  scanDir(JOOMLA_AGENTS_DIR, '');
-  // Deduplicate (same name in both trees — primary wins, duplicate dropped)
-  const seen = new Set();
-  return docs.filter(d => { if (seen.has(d)) return false; seen.add(d); return true; }).sort();
-}
+// Own tools that every agent can call regardless of agent definition.
+// These implement the session protocol and changelog discipline; they are not
+// configurable via agent JSON. Everything else goes through scope enforcement.
+const MANDATORY_OWN_TOOLS = new Set([
+  'set_active_site', 'get_active_site',
+  'get_site_notes', 'append_site_note', 'write_site_notes',
+  'gantry_reconnect', 'reload_tools',
+  'get_agent_instructions', 'read_agent_doc',
+]);
 
 // ─── Downstream clients ───────────────────────────────────────────────────────
 // We create a fresh MCP client per call rather than holding a persistent
@@ -160,7 +185,11 @@ async function loadDownstreamTools() {
 
 // ─── Server builder ───────────────────────────────────────────────────────────
 
-function buildServer() {
+function buildServer(sessionCtx) {
+  const { user = 'local', agent = 'admin' } = sessionCtx || {};
+  const agentDef = loadAgentDef(agent);
+  let activeSiteUrl = null;
+
   const server = new Server(
     { name: 'joomla-orchestrator', version: '1.0.0' },
     { capabilities: { tools: {}, prompts: {} } }
@@ -382,11 +411,11 @@ function buildServer() {
         },
       },
       (() => {
-        const availableDocs = buildDocList();
+        const availableDocs = kb.listDocs(agentDef);
         return {
           name: 'read_agent_doc',
           description:
-            'Read any workflow guide or KB article referenced in AGENTS.md. ' +
+            'Read any workflow guide or KB article referenced in the agent instructions. ' +
             'Use this whenever the session protocol says to read a doc — it works for agents ' +
             'that do not have the repository mounted locally. ' +
             'Pass the doc name exactly as listed (e.g. "editing-rules", "kb/staff-grid"). ' +
@@ -429,16 +458,18 @@ function buildServer() {
       },
     ];
 
-    // joomla_login is internal plumbing - the orchestrator calls it automatically
-    // via set_active_site and on auth error recovery. Hiding it prevents the AI
-    // from calling it directly, which would bypass activeSiteUrl tracking.
-    const HIDDEN_JOOMLA_TOOLS = new Set(['joomla_login']);
+    // Filter own tools: mandatory tools always included; others checked against agent scope
+    const filteredOwnTools = ownTools.filter(
+      t => MANDATORY_OWN_TOOLS.has(t.name) || kb.isToolAllowed(agentDef, t.name)
+    );
 
     return {
       tools: [
-        ...ownTools,
-        ...Array.from(joomlaToolMap.values()).filter(t => !HIDDEN_JOOMLA_TOOLS.has(t.name)),
-        ...Array.from(gantryToolMap.values()),
+        ...filteredOwnTools,
+        ...Array.from(joomlaToolMap.values()).filter(
+          t => !HIDDEN_JOOMLA_TOOLS.has(t.name) && kb.isToolAllowed(agentDef, t.name)
+        ),
+        ...Array.from(gantryToolMap.values()).filter(t => kb.isToolAllowed(agentDef, t.name)),
       ],
     };
   });
@@ -513,8 +544,8 @@ function buildServer() {
         // legacy timestamp for backwards compatibility with plain discovery notes.
         const isStructured = note.trimStart().startsWith('###');
         const entry = isStructured
-          ? `\n${note.trim()}\n`
-          : `\n**[${new Date().toISOString().replace('T', ' ').substring(0, 16)} UTC]** ${note.trim()}\n`;
+          ? `\n${note.trim()}\n_Logged by: ${user}_\n`
+          : `\n**[${new Date().toISOString().replace('T', ' ').substring(0, 16)} UTC | ${user}]** ${note.trim()}\n`;
         if (!fs.existsSync(notesPath)) {
           fs.mkdirSync(path.dirname(notesPath), { recursive: true });
           fs.writeFileSync(notesPath, `# Site Notes: ${hostname}\n\nNotes logged by AI agents.\n`);
@@ -578,23 +609,57 @@ function buildServer() {
 
     if (name === 'reload_tools') {
       await loadDownstreamTools();
+      usersRegistry = loadUsersRegistry();
       return {
         content: [{
           type: 'text',
-          text: `Tools reloaded - joomla-mcp: ${joomlaToolMap.size} tools, gantry-mcp: ${gantryToolMap.size} tools.`,
+          text: `Tools reloaded - joomla-mcp: ${joomlaToolMap.size} tools, gantry-mcp: ${gantryToolMap.size} tools. User registry: ${usersRegistry ? Object.keys(usersRegistry).length + ' token(s)' : 'not found (single-token fallback)'}.`,
         }],
+      };
+    }
+
+    if (name === 'read_agent_doc') {
+      const doc = args.doc;
+      if (!doc) {
+        return { isError: true, content: [{ type: 'text', text: 'doc is required' }] };
+      }
+      try {
+        return { content: [{ type: 'text', text: kb.readDoc(agentDef, doc) }] };
+      } catch (err) {
+        if (err.code === 'PERMISSION_DENIED') {
+          return { isError: true, content: [{ type: 'text', text: err.message }] };
+        }
+        if (err.code === 'NOT_FOUND') {
+          const available = kb.listDocs(agentDef).join(', ');
+          return { isError: true, content: [{ type: 'text', text: `${err.message}. Available docs: ${available}` }] };
+        }
+        throw err;
+      }
+    }
+
+    if (name === 'get_agent_instructions') {
+      try {
+        return { content: [{ type: 'text', text: kb.readInstructions(agentDef) }] };
+      } catch (err) {
+        return { isError: true, content: [{ type: 'text', text: err.message }] };
+      }
+    }
+
+    // ── Agent scope enforcement ───────────────────────────────────────────────
+    // Mandatory own tools (handled above) always pass. All remaining tool calls —
+    // own scoped tools (solutio_*) and all downstream tools — are checked against
+    // the session's agent definition before routing.
+    if (!kb.isToolAllowed(agentDef, name)) {
+      return {
+        isError: true,
+        content: [{ type: 'text', text: `Tool '${name}' is not available to the '${agent}' agent.` }],
       };
     }
 
     if (name === 'solutio_style_guide') {
       const section = args.section || 'full';
       const content = section === 'full' ? STYLE_GUIDE : (SECTIONS[section] || STYLE_GUIDE);
-      return {
-        content: [{
-          type: 'text',
-          text: content,
-        }],
-      };
+      return { content: [{ type: 'text', text: content }] };
     }
 
     if (name === 'solutio_particles') {
@@ -609,37 +674,6 @@ function buildServer() {
         }
       }
       return { content: [{ type: 'text', text: out }] };
-    }
-
-    if (name === 'read_agent_doc') {
-      const doc = args.doc;
-      if (!doc) {
-        return { isError: true, content: [{ type: 'text', text: 'doc is required' }] };
-      }
-
-      // Resolve doc name → file path, searching allowed directories in order.
-      // Path-traversal guard: resolved path must stay inside an allowed dir.
-      let docPath = null;
-      for (const base of ALLOWED_DOC_DIRS) {
-        const candidate = path.resolve(base, `${doc}.md`);
-        // Guard: path.relative will start with '..' if candidate escapes base
-        if (path.relative(base, candidate).startsWith('..')) continue;
-        if (fs.existsSync(candidate)) { docPath = candidate; break; }
-      }
-
-      if (!docPath) {
-        const available = buildDocList().join(', ');
-        return { isError: true, content: [{ type: 'text', text: `Doc not found: "${doc}". Available docs: ${available}` }] };
-      }
-      return { content: [{ type: 'text', text: fs.readFileSync(docPath, 'utf8') }] };
-    }
-
-    if (name === 'get_agent_instructions') {
-      const agentsPath = path.join(__dirname, '..', '..', 'AGENTS.md');
-      if (!fs.existsSync(agentsPath)) {
-        return { isError: true, content: [{ type: 'text', text: `AGENTS.md not found at ${agentsPath}` }] };
-      }
-      return { content: [{ type: 'text', text: fs.readFileSync(agentsPath, 'utf8') }] };
     }
 
     if (name === 'solutio_design_workflow') {
@@ -663,23 +697,23 @@ function buildServer() {
       }
     }
 
-    // ── Guard: site must be set before routing downstream ──
-    // Auto-detect site URL from tool arguments if not yet set.
+    // ── Guard: hidden tools cannot be called by name ──
+    if (HIDDEN_JOOMLA_TOOLS.has(name)) {
+      return {
+        isError: true,
+        content: [{ type: 'text', text: `Tool '${name}' is internal and cannot be called directly.` }],
+      };
+    }
 
+    // ── Guard: site must be set before routing downstream ──
     if (!activeSiteUrl) {
-      const detected = extractSiteUrlFromArgs(args);
-      if (detected) {
-        activeSiteUrl = detected;
-        log(`auto-detected site URL from tool args: ${activeSiteUrl}`);
-      } else {
-        return {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: 'No active site is set. Please call set_active_site with the site URL before using any tools.',
-          }],
-        };
-      }
+      return {
+        isError: true,
+        content: [{
+          type: 'text',
+          text: 'No active site is set. Please call set_active_site with the site URL before using any tools.',
+        }],
+      };
     }
 
     // ── Route to joomla-mcp (content tools) ──
@@ -763,7 +797,7 @@ async function startHttp(port) {
 
   const httpServer = http.createServer(async (req, res) => {
     // ── CORS - must be set on every response including errors ─────────────────
-    res.setHeader('Access-Control-Allow-Origin',  process.env.CORS_ORIGIN || '*');
+    res.setHeader('Access-Control-Allow-Origin',  process.env.CORS_ORIGIN || 'http://localhost');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
     // Reflect whatever headers the client asks for - handles mcp-protocol-version
     // and any future MCP headers without needing further changes here.
@@ -778,6 +812,15 @@ async function startHttp(port) {
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
     // ── end CORS ──────────────────────────────────────────────────────────────
 
+    // ── Auth: resolve session context from bearer token ───────────────────────
+    const sessionCtx = resolveSessionContext(req.headers['authorization'] || '');
+    if (sessionCtx === null) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+    // ── end auth ──────────────────────────────────────────────────────────────
+
     const urlPath = new URL(req.url, `http://localhost:${port}`).pathname;
     if (urlPath !== '/mcp') { res.writeHead(404); res.end(); return; }
 
@@ -786,7 +829,7 @@ async function startHttp(port) {
     if (req.method === 'POST') {
       let transport = sessions.get(sessionId);
       if (!transport) {
-        const server = buildServer();
+        const server = buildServer(sessionCtx);
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (id) => sessions.set(id, transport),
@@ -829,7 +872,7 @@ function log(msg) {
   if (httpPort) {
     await startHttp(httpPort);
   } else {
-    const server    = buildServer();
+    const server    = buildServer({ user: 'local', agent: 'admin' });
     const transport = new StdioServerTransport();
     await server.connect(transport);
     log('stdio ready');

@@ -53,6 +53,42 @@ const config = {
   ),
 };
 
+// ─── Site-keyed session cache ─────────────────────────────────────────────────
+// Mirrors gantry-mcp's ctxCache pattern. Each site URL gets its own
+// JoomlaClient with independent cookies and login state. TTL is set slightly
+// under Joomla's 15-minute admin session so we re-login before it expires.
+
+interface SiteSession {
+  client: JoomlaClient;
+  isLoggedIn: boolean;
+  lastUsed: number;
+}
+
+const siteCache = new Map<string, SiteSession>();
+const SESSION_TTL_MS = 12 * 60 * 1000;
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [url, sess] of siteCache) {
+    if (now - sess.lastUsed > SESSION_TTL_MS) siteCache.delete(url);
+  }
+}, 60_000).unref();
+
+function getOrCreateSiteSession(normalizedUrl: string): SiteSession {
+  let sess = siteCache.get(normalizedUrl);
+  if (!sess || Date.now() - sess.lastUsed > SESSION_TTL_MS) {
+    sess = {
+      client: new JoomlaClient({ ...config, baseUrl: normalizedUrl }),
+      isLoggedIn: false,
+      lastUsed: Date.now(),
+    };
+    siteCache.set(normalizedUrl, sess);
+  } else {
+    sess.lastUsed = Date.now();
+  }
+  return sess;
+}
+
 // Format response for LLM consumption
 function formatResult(response: JoomlaResponse): string {
   const result: Record<string, unknown> = {
@@ -77,30 +113,8 @@ function normalizeUrl(url: string): string {
 }
 
 
-function buildServer(joomla: JoomlaClient): Server {
-  let isLoggedIn = false;
+function buildServer(): Server {
   const ftpClient = new FtpClient();
-
-  async function ensureLoggedIn(): Promise<JoomlaResponse> {
-    if (isLoggedIn) {
-      const stillLoggedIn = await joomla.isLoggedIn();
-      if (stillLoggedIn) return { success: true, message: "Already logged in" };
-      isLoggedIn = false;
-    }
-
-    if (!config.username || !config.password) {
-      return {
-        success: false,
-        message: "Joomla credentials not configured. Set JOOMLA_USERNAME and JOOMLA_PASSWORD in .env file.",
-      };
-    }
-
-    const result = await joomla.login();
-    if (result.success) {
-      isLoggedIn = true;
-    }
-    return result;
-  }
 
   // Create MCP server
   const server = new Server(
@@ -799,14 +813,36 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
     return { content: [{ type: "text", text: JSON.stringify({ success: false, message: `Tool "${name}" is currently disabled.` }) }] };
   }
 
+  // Resolve site-keyed Joomla session from cache.
+  // The orchestrator injects site_url on every call; fall back to JOOMLA_BASE_URL
+  // for direct (non-orchestrated) calls.
+  const siteUrl = (args?.site_url as string | undefined) ?? config.baseUrl;
+  const sess = getOrCreateSiteSession(normalizeUrl(siteUrl));
+  const joomla = sess.client;
+
+  async function ensureLoggedIn(): Promise<JoomlaResponse> {
+    if (sess.isLoggedIn) {
+      const stillLoggedIn = await joomla.isLoggedIn();
+      if (stillLoggedIn) return { success: true, message: "Already logged in" };
+      sess.isLoggedIn = false;
+    }
+    if (!config.username || !config.password) {
+      return {
+        success: false,
+        message: "Joomla credentials not configured. Set JOOMLA_USERNAME and JOOMLA_PASSWORD in .env file.",
+      };
+    }
+    const result = await joomla.login();
+    if (result.success) sess.isLoggedIn = true;
+    return result;
+  }
+
   try {
     switch (name) {
       case "joomla_login": {
-        const siteUrl = args?.site_url as string | undefined;
-        if (siteUrl) {
-          joomla.switchSite(siteUrl);
-          isLoggedIn = false;
-        }
+        // Site already resolved from site_url arg at top of handler.
+        // Force re-auth so an explicit joomla_login always re-authenticates.
+        sess.isLoggedIn = false;
         const result = await ensureLoggedIn();
         const cfg = joomla.getConfig();
         if (result.success) {
@@ -1988,8 +2024,7 @@ async function startHttp(port: number): Promise<void> {
     let transport = sessionId ? sessions.get(sessionId) : undefined;
 
     if (!transport) {
-      const joomlaClient = new JoomlaClient(config);
-      const mcpServer = buildServer(joomlaClient);
+      const mcpServer = buildServer();
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
         onsessioninitialized: (id) => {
@@ -2030,8 +2065,7 @@ async function main() {
   if (httpPort) {
     await startHttp(httpPort);
   } else {
-    const joomlaClient = new JoomlaClient(config);
-    const mcpServer = buildServer(joomlaClient);
+    const mcpServer = buildServer();
     const transport = new StdioServerTransport();
     await mcpServer.connect(transport);
     console.error("Joomla MCP Server running on stdio");

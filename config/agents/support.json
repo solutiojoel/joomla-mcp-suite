@@ -1,0 +1,35 @@
+{
+  "name": "support",
+  "description": "Freshdesk ticket resolution — diagnose, fix, close",
+  "instructions": "support.md",
+  "tools": {
+    "allow": [
+      "set_active_site", "get_active_site", "get_agent_instructions",
+      "get_site_notes", "append_site_note", "write_site_notes",
+      "read_agent_doc", "reload_tools",
+      "joomla_article", "joomla_category", "joomla_menu*", "joomla_module*",
+      "joomla_media", "joomla_bulk_checkin",
+      "joomla_get_frontend_*", "joomla_verify_frontend_content",
+      "joomla_redirects_list", "joomla_site_config_inspect",
+      "joomla_backend_inventory",
+      "freshdesk_*"
+    ],
+    "deny": [
+      "joomla_submit_admin_form", "joomla_permissions",
+      "joomla_user*", "joomla_group*",
+      "joomla_docman_*", "joomla_fileman_*",
+      "joomla_workspace_write", "joomla_component_inspect",
+      "joomla_inspect_admin_form", "joomla_inspect_admin_list"
+    ]
+  },
+  "docs": {
+    "allow": [
+      "editing-rules", "improvements", "kb/site-history", "kb/content-standards",
+      "kb/css-table-classes", "kb/site-config",
+      "freshdesk-agent",
+      "kb/user-accounts", "kb/quick-galleries", "kb/ministry-platform-widget",
+      "kb/popup", "kb/podcasting", "kb/calendar-feed", "kb/elfsight",
+      "kb/acymail", "kb/business-directory", "kb/error-pages"
+    ]
+  }
+}
