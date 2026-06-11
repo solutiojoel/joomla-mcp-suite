@@ -105,6 +105,20 @@ function loadAgentDef(agentName) {
   }
 }
 
+function listAvailableAgents() {
+  if (!fs.existsSync(AGENTS_CONFIG_DIR)) return [];
+  return fs.readdirSync(AGENTS_CONFIG_DIR)
+    .filter(f => f.endsWith('.json'))
+    .map(f => {
+      try {
+        const def = JSON.parse(fs.readFileSync(path.join(AGENTS_CONFIG_DIR, f), 'utf8'));
+        return { name: def.name || f.slice(0, -5), description: def.description || '' };
+      } catch { return null; }
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 // ─── Hidden tools ─────────────────────────────────────────────────────────────
 // joomla_login is internal plumbing — the orchestrator calls it automatically
 // via set_active_site and on auth error recovery. Hiding it prevents the AI
@@ -121,6 +135,7 @@ const MANDATORY_OWN_TOOLS = new Set([
   'get_site_notes', 'append_site_note', 'write_site_notes',
   'gantry_reconnect', 'reload_tools',
   'get_agent_instructions', 'read_agent_doc',
+  'get_current_agent', 'switch_agent',
 ]);
 
 // ─── Downstream clients ───────────────────────────────────────────────────────
@@ -187,7 +202,8 @@ async function loadDownstreamTools() {
 
 function buildServer(sessionCtx) {
   const { user = 'local', agent = 'admin' } = sessionCtx || {};
-  const agentDef = loadAgentDef(agent);
+  let currentAgent = agent;
+  let agentDef = loadAgentDef(agent);
   let activeSiteUrl = null;
 
   const server = new Server(
@@ -444,6 +460,36 @@ function buildServer(sessionCtx) {
         inputSchema: { type: 'object', properties: {} },
       },
       {
+        name: 'get_current_agent',
+        description:
+          'Return the current agent scope name, its description, and all available agents ' +
+          'that can be switched to with switch_agent.',
+        inputSchema: { type: 'object', properties: {} },
+      },
+      (() => {
+        const agents = listAvailableAgents();
+        const agentNames = agents.map(a => a.name);
+        return {
+          name: 'switch_agent',
+          description:
+            'Switch to a different agent scope for this session. ' +
+            'Changes which tools and docs are available without reconnecting. ' +
+            `Current agent: ${currentAgent}. ` +
+            `Available: ${agentNames.join(', ')}.`,
+          inputSchema: {
+            type: 'object',
+            properties: {
+              agent: {
+                type: 'string',
+                enum: agentNames,
+                description: 'Agent name to switch to',
+              },
+            },
+            required: ['agent'],
+          },
+        };
+      })(),
+      {
         name: 'solutio_design_workflow',
         description:
           'Return the Solutio Gantry design workflow guide - the step-by-step process for ' +
@@ -645,6 +691,43 @@ function buildServer(sessionCtx) {
       }
     }
 
+    if (name === 'get_current_agent') {
+      const agents = listAvailableAgents();
+      const lines = agents.map(a =>
+        `- **${a.name}**${a.name === currentAgent ? ' ← current' : ''}: ${a.description}`
+      );
+      return {
+        content: [{
+          type: 'text',
+          text: `Current agent: **${currentAgent}**\n\n**Available agents:**\n${lines.join('\n')}`,
+        }],
+      };
+    }
+
+    if (name === 'switch_agent') {
+      const targetAgent = args.agent;
+      if (!targetAgent) {
+        return { isError: true, content: [{ type: 'text', text: 'agent is required' }] };
+      }
+      const defPath = path.join(AGENTS_CONFIG_DIR, `${targetAgent}.json`);
+      if (!fs.existsSync(defPath)) {
+        const available = listAvailableAgents().map(a => a.name).join(', ');
+        return {
+          isError: true,
+          content: [{ type: 'text', text: `Unknown agent: '${targetAgent}'. Available: ${available}` }],
+        };
+      }
+      currentAgent = targetAgent;
+      agentDef = loadAgentDef(targetAgent);
+      log(`session switched agent: ${user} → ${currentAgent}`);
+      return {
+        content: [{
+          type: 'text',
+          text: `Switched to agent: **${currentAgent}**\n${agentDef.description || ''}\n\nCall ListTools to see the updated tool and doc set.`,
+        }],
+      };
+    }
+
     // ── Agent scope enforcement ───────────────────────────────────────────────
     // Mandatory own tools (handled above) always pass. All remaining tool calls —
     // own scoped tools (solutio_*) and all downstream tools — are checked against
@@ -652,7 +735,7 @@ function buildServer(sessionCtx) {
     if (!kb.isToolAllowed(agentDef, name)) {
       return {
         isError: true,
-        content: [{ type: 'text', text: `Tool '${name}' is not available to the '${agent}' agent.` }],
+        content: [{ type: 'text', text: `Tool '${name}' is not available to the '${currentAgent}' agent.` }],
       };
     }
 
