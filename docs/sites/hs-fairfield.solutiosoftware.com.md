@@ -18,3 +18,14 @@ Notes logged by AI agents.
 - Scoped `.v1-mass-sub` to `.v1-mass-card .v1-mass-sub` to prevent global leakage; converted all hardcoded hex colors to CSS variables; replaced `'Cormorant Garamond'` references with `var(--title-font-family)`
 - Key fix: `.j-slideshow .g-grid:has(.j-mass-times)` uses `height: 0 !important` to collapse the grid row — base CSS assigns it a computed fixed height (~447px) that must be beaten; `.g-container` is already `position: relative` so no additional anchor needed
 **Notes:** `contentarray-2192` was manually enabled by user in Gantry layout editor before this session. Overlays hidden on mobile via `@media (max-width: 50.99rem)`.
+
+### 2026-06-11 — Footer article link corrections
+**Requested by:** internal | **Ticket:** none
+**Changes:**
+- Updated article ID 36 ("Footer") — fixed all internal footer links:
+  - Mailing address / physical address links → `/about-us/contact-us` (added leading slash)
+  - Parish Registration → `/about-us/parish-registration` (added leading slash)
+  - Parish Office → `/about-us/contact-us` (added leading slash)
+  - Get Directions → `/about-us/contact-us` (was Google Maps external URL)
+  - Staff Directory → `/about-us/staff` (was `about-us/staff-directory`, wrong path + missing slash)
+**Notes:** All internal links now use root-relative paths with leading slash.
