@@ -40,11 +40,52 @@ const kb   = require('./kb.js');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const JOOMLA_MCP_URL     = process.env.JOOMLA_MCP_URL   || 'http://host.docker.internal:9300/mcp';
-const JOOMLA_MCP_TOKEN   = process.env.JOOMLA_MCP_TOKEN || '';
-const GANTRY_MCP_URL     = process.env.GANTRY_MCP_URL   || 'http://host.docker.internal:9301/mcp';
-const GANTRY_MCP_TOKEN   = process.env.GANTRY_MCP_TOKEN || '';
 const ORCHESTRATOR_TOKEN = process.env.ORCHESTRATOR_TOKEN || '';
+
+// ─── Downstream registry ──────────────────────────────────────────────────────
+// Routing is config-driven: config/downstreams.json (optional) overrides these
+// defaults. `inject` names the argument that carries the active site on every
+// call — 'site_url' (joomla-mcp, ftp-mcp), 'site' (gantry-mcp), or null for
+// servers that need no site context (freshdesk-mcp).
+// Order matters: the first server whose tool map contains a tool name wins, so
+// the single-purpose servers come before joomla-mcp during migration overlap.
+// Per-server URL/token env vars (e.g. FTP_MCP_URL, FTP_MCP_TOKEN — label
+// uppercased, dashes → underscores) override both defaults and the JSON file.
+
+const DEFAULT_DOWNSTREAMS = [
+  { label: 'freshdesk-mcp', url: 'http://host.docker.internal:9303/mcp', inject: null },
+  { label: 'ftp-mcp',       url: 'http://host.docker.internal:9304/mcp', inject: 'site_url' },
+  { label: 'joomla-mcp',    url: 'http://host.docker.internal:9300/mcp', inject: 'site_url' },
+  { label: 'gantry-mcp',    url: 'http://host.docker.internal:9301/mcp', inject: 'site' },
+];
+
+function loadDownstreams() {
+  const cfgPath = path.join(__dirname, '..', '..', 'config', 'downstreams.json');
+  let defs = DEFAULT_DOWNSTREAMS;
+  if (fs.existsSync(cfgPath)) {
+    try {
+      defs = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+    } catch (err) {
+      log(`WARNING: failed to parse config/downstreams.json, using defaults - ${err.message}`);
+    }
+  }
+  return defs.map(d => {
+    const envPrefix = d.label.toUpperCase().replace(/-/g, '_');
+    return {
+      label:  d.label,
+      url:    process.env[`${envPrefix}_URL`]   || d.url,
+      token:  process.env[`${envPrefix}_TOKEN`] || d.token || '',
+      inject: d.inject !== undefined ? d.inject : 'site_url',
+      toolMap: new Map(), // tool name → tool definition
+    };
+  });
+}
+
+const DOWNSTREAMS = loadDownstreams();
+
+function getDownstream(label) {
+  return DOWNSTREAMS.find(d => d.label === label);
+}
 
 // ─── User registry ────────────────────────────────────────────────────────────
 // config/users.json maps bearer tokens → { user, agent }.

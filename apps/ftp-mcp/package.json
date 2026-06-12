@@ -1,0 +1,23 @@
+{
+  "name": "ftp-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for per-site FTP file tools (owns ftp-sites.json)",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "start:http": "cross-env HTTP_PORT=9304 tsx src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "basic-ftp": "^6.0.1",
+    "dotenv": "^17.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "cross-env": "^7.0.3",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  }
+}
