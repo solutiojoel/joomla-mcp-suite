@@ -101,7 +101,7 @@ Rules:
 - Investigation-only session: still log what was checked, what was found, what was ruled out before responding to the user
 - Vague entries ("updated some articles") are worse than no entry — be specific
 
-For the full format specification and examples, see `docs/agents/kb/site-history.md`.
+For the full format specification and examples, see `read_agent_doc(doc: "kb/site-history")`.
 
 ## Session End (Also Required)
 
@@ -115,14 +115,14 @@ At session end, handle any persistent-fact updates that weren't done inline:
 
 **Step 2 — Review for process improvements** (if applicable — not required every session):
 
-Briefly replay the session's steps. If any of the following apply, append an entry to `docs/agents/improvements.md`:
+Briefly replay the session's steps. If any of the following apply, read `read_agent_doc(doc: "improvements")` and append an entry:
 - A task took more attempts than it should have
 - A KB article was missing, wrong, or didn't cover the actual case
 - A better approach was discovered mid-task
 - A tool behaved in an unexpected or undocumented way
 - A workflow step was in the wrong order or had a missing prerequisite
 
-This is a shared queue reviewed by the team — not a per-session requirement. Only add an entry if something genuinely useful was found. See `docs/agents/improvements.md` for the format.
+This is a shared queue reviewed by the team — not a per-session requirement. Only add an entry if something genuinely useful was found. See `read_agent_doc(doc: "improvements")` for the format.
 
 ---
 

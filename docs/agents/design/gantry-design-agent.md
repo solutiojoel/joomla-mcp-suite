@@ -24,8 +24,8 @@ Follow these steps in order. Do not skip ahead.
 Read:
 
 ```
-docs/agents/gantry-section-css.md
-docs/agents/gantry-particle-map.md
+read_agent_doc(doc: "gantry-section-css")
+read_agent_doc(doc: "gantry-particle-map")
 ```
 
 Use this DOM model when writing or reviewing `override.css`: `#g-section > .g-container > .g-grid > .g-block`, where the particle's custom block class lives on `.g-block` and the particle-generated HTML lives inside it. Put section backgrounds on `#g-section`, put section padding on `#g-section > .g-container` with `!important`, and scope homepage-only section styles with `.site-home`.
