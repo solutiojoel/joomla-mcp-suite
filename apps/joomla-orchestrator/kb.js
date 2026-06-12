@@ -3,8 +3,20 @@
 /**
  * KB accessor module — the only place that touches the docs filesystem.
  *
+ * Docs live under docs/agents/<scope>/, where <scope> is one of SCOPE_DIRS
+ * (global, support, menu-content, design, launch). A doc has two names:
+ *
+ *   canonical — its path relative to docs/agents (e.g. "support/kb/user-accounts")
+ *   public    — the canonical name with the scope segment stripped
+ *               (e.g. "kb/user-accounts") — this is the name agents use and
+ *               the name all pre-reorg references (CLAUDE.md, instruction
+ *               files) were written against. Both names resolve.
+ *
+ * Agent docs.allow patterns are matched against BOTH names, so scope globs
+ * ("global/*", "support/*") and legacy explicit names ("editing-rules") work.
+ *
  * Exports:
- *   listDocs(agentDef)          → string[]        doc names visible to the agent
+ *   listDocs(agentDef)          → string[]        public doc names visible to the agent
  *   readDoc(agentDef, name)     → string           throws with .code on error
  *   readInstructions(agentDef)  → string           agent instruction file
  *   isToolAllowed(agentDef, toolName) → boolean
@@ -19,14 +31,34 @@ const fs   = require('fs');
 const path = require('path');
 
 const DOCS_AGENTS_DIR   = path.join(__dirname, '..', '..', 'docs', 'agents');
-const JOOMLA_AGENTS_DIR = path.join(__dirname, '..', 'joomla-mcp', 'docs', 'agents');
 const AGENTS_CONFIG_DIR = path.join(__dirname, '..', '..', 'config', 'agents');
-const ALLOWED_DOC_DIRS  = [DOCS_AGENTS_DIR, JOOMLA_AGENTS_DIR];
+
+// Top-level dirs under docs/agents that act as permission scopes. A doc's
+// public name strips this segment; anything outside these dirs keeps its
+// full relative path as both canonical and public name.
+const SCOPE_DIRS = new Set(['global', 'support', 'menu-content', 'design', 'launch']);
 
 // ─── Doc discovery ────────────────────────────────────────────────────────────
 
-function buildAllDocs() {
-  const docs = [];
+/**
+ * Scan docs/agents and build the doc index.
+ * Returns Map<lookupName, { canonical, publicName, file }> where lookupName
+ * covers both the canonical and public spellings of every doc.
+ * Re-scanned on every call so new files appear without a restart.
+ */
+function buildDocIndex() {
+  const index = new Map();
+
+  function register(lookupName, entry) {
+    if (index.has(lookupName) && index.get(lookupName).file !== entry.file) {
+      console.error(
+        `[kb] WARNING: doc name collision on '${lookupName}': ` +
+        `keeping ${index.get(lookupName).canonical}, ignoring ${entry.canonical}`
+      );
+      return;
+    }
+    index.set(lookupName, entry);
+  }
 
   function scanDir(dir, prefix) {
     if (!fs.existsSync(dir)) return;
@@ -34,16 +66,20 @@ function buildAllDocs() {
       if (entry.isDirectory()) {
         scanDir(path.join(dir, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name);
       } else if (entry.isFile() && entry.name.endsWith('.md')) {
-        docs.push((prefix ? `${prefix}/` : '') + entry.name.slice(0, -3));
+        const canonical = (prefix ? `${prefix}/` : '') + entry.name.slice(0, -3);
+        const firstSeg  = canonical.split('/')[0];
+        const publicName = SCOPE_DIRS.has(firstSeg)
+          ? canonical.slice(firstSeg.length + 1)
+          : canonical;
+        const doc = { canonical, publicName, file: path.join(dir, entry.name) };
+        register(canonical, doc);
+        if (publicName !== canonical) register(publicName, doc);
       }
     }
   }
 
   scanDir(DOCS_AGENTS_DIR, '');
-  scanDir(JOOMLA_AGENTS_DIR, '');
-
-  const seen = new Set();
-  return docs.filter(d => { if (seen.has(d)) return false; seen.add(d); return true; }).sort();
+  return index;
 }
 
 // ─── Pattern matching ─────────────────────────────────────────────────────────
@@ -57,10 +93,22 @@ function matchesPattern(name, pattern) {
 
 // ─── Access checks ────────────────────────────────────────────────────────────
 
+function docMatchesAllow(doc, allow) {
+  return allow.some(p => matchesPattern(doc.canonical, p) || matchesPattern(doc.publicName, p));
+}
+
+/**
+ * Returns true if the agent definition permits reading the named doc.
+ * Accepts either the canonical or public name; unknown names are checked
+ * against the patterns directly (so NOT_FOUND, not PERMISSION_DENIED, is
+ * reported for files that simply don't exist in an allowed scope).
+ */
 function isDocAllowed(agentDef, docName) {
   if (!agentDef || !agentDef.docs) return true;
   const { allow = ['*'] } = agentDef.docs;
   if (allow.includes('*')) return true;
+  const doc = buildDocIndex().get(docName);
+  if (doc) return docMatchesAllow(doc, allow);
   return allow.some(p => matchesPattern(docName, p));
 }
 
@@ -78,18 +126,31 @@ function isToolAllowed(agentDef, toolName) {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
- * List doc names available to the agent (filtered by docs.allow).
+ * List public doc names available to the agent (filtered by docs.allow).
  * Called on every ListTools request so new files appear without a restart.
  */
 function listDocs(agentDef) {
-  return buildAllDocs().filter(d => isDocAllowed(agentDef, d));
+  const allow = (agentDef && agentDef.docs && agentDef.docs.allow) || ['*'];
+  const names = new Set();
+  for (const doc of buildDocIndex().values()) {
+    if (allow.includes('*') || docMatchesAllow(doc, allow)) names.add(doc.publicName);
+  }
+  return Array.from(names).sort();
 }
 
 /**
- * Read a doc by name.
+ * Read a doc by canonical or public name.
  * Throws Error with .code === 'PERMISSION_DENIED' or 'NOT_FOUND'.
  */
 function readDoc(agentDef, docName) {
+  const doc = buildDocIndex().get(docName);
+
+  if (!doc) {
+    const err = new Error(`Doc not found: "${docName}"`);
+    err.code = 'NOT_FOUND';
+    throw err;
+  }
+
   if (!isDocAllowed(agentDef, docName)) {
     const err = new Error(
       `Doc '${docName}' is not available to the ${agentDef?.name || 'current'} agent.`
@@ -98,16 +159,7 @@ function readDoc(agentDef, docName) {
     throw err;
   }
 
-  for (const base of ALLOWED_DOC_DIRS) {
-    const candidate = path.resolve(base, `${docName}.md`);
-    // Path-traversal guard: relative path must not escape the base dir
-    if (path.relative(base, candidate).startsWith('..')) continue;
-    if (fs.existsSync(candidate)) return fs.readFileSync(candidate, 'utf8');
-  }
-
-  const err = new Error(`Doc not found: "${docName}"`);
-  err.code = 'NOT_FOUND';
-  throw err;
+  return fs.readFileSync(doc.file, 'utf8');
 }
 
 /**

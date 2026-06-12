@@ -23,12 +23,6 @@
     ]
   },
   "docs": {
-    "allow": [
-      "editing-rules", "improvements", "kb/site-history", "kb/content-standards",
-      "kb/css-table-classes", "kb/site-config",
-      "content-agent", "menu-agent", "custom-page-agent",
-      "kb/staff-grid", "kb/staff-pages", "kb/teacher-pages", "kb/grid-layout",
-      "kb/animate-on-scroll", "kb/subpage-backgrounds"
-    ]
+    "allow": ["global/*", "menu-content/*"]
   }
 }

@@ -3,7 +3,6 @@
 > **Sync note:** This file is kept in sync with `CLAUDE.md`. If you update one, run `scripts/sync-agent-docs.ps1` to update the other, or edit both manually.
 
 ---
-
 ## Platform Overview
 
 All tools in this project are exposed through a single orchestrator MCP endpoint. You will see them as `mcp__joomla-orchestrator__*`. There is no separate joomla-mcp or gantry-mcp connection — the orchestrator aggregates everything.
@@ -46,7 +45,7 @@ append_site_note(note: "### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]
 
 If the session was investigation-only (no changes), still log what was looked at and what was found before responding to the user.
 
-See `docs/agents/kb/site-history.md` for the full format spec and examples.
+See `read_agent_doc(doc: "kb/site-history")` for the full format spec and examples.
 
 ## Session End (Also Required)
 
@@ -54,7 +53,7 @@ At the end of any session where persistent facts changed (new key IDs discovered
 
 **1. Update persistent facts** — call `get_site_notes`, update the relevant section, call `write_site_notes` with the full updated content.
 
-**2. Review for process improvements** (when applicable — not required every session) — replay the session's steps and check: did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered mid-task? Did a tool behave unexpectedly? If yes, append an entry to `docs/agents/improvements.md`. This is a shared team queue — only log when something genuinely useful was found.
+**2. Review for process improvements** (when applicable — not required every session) — replay the session's steps and check: did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered mid-task? Did a tool behave unexpectedly? If yes, call `read_agent_doc(doc: "improvements")` and append an entry. This is a shared team queue — only log when something genuinely useful was found.
 
 ---
 
@@ -71,10 +70,10 @@ At the end of any session where persistent facts changed (new key IDs discovered
 
 If the user sends a standalone 5-digit number (e.g. `35118`), treat it as a Freshdesk ticket ID.
 
-Read this guide before doing anything else:
+Call this before doing anything else:
 
 ```
-docs/agents/freshdesk-agent.md
+read_agent_doc(doc: "freshdesk-agent")
 ```
 
 ---
@@ -95,7 +94,7 @@ Call `read_agent_doc(doc: "<name>")` with the name from the first column:
 | `gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |
 | `gantry-particle-map` | Gantry particle settings, rendered HTML anchors, and particle selection/CSS targeting map |
 | `gantry-visual-qa` | Visual QA loop after any layout or CSS work — screenshots, checklist, CSS iteration |
-| `ftp-css-smoke-test` | End-to-end validation that FTP upload → Gantry Page Settings → live page emission works |
+| `ftp-css-smoke-test` | End-to-end validation that FTP upload → Gantry Page Settings → live page emission works; use before custom page builds or after server migrations |
 | `gantry-design-agent` | Solutio Gantry design workflow — step-by-step process for building or rebuilding a homepage layout |
 | `improvements` | Shared team queue for process improvement notes |
 
@@ -159,4 +158,4 @@ All credentials come from the server's environment variables. Do not ask the use
 
 ## Adding New Workflow Guides
 
-Create a new `.md` file in `docs/agents/` and add a row to the doc name index in both AGENTS.md and CLAUDE.md. No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears in the enum immediately.
+Create a new `.md` file under the matching scope directory in `docs/agents/` — `global/` (all agents), `support/`, `menu-content/`, `design/` (admin only), or `launch/` (admin only) — and add a row to the doc name index in both AGENTS.md and CLAUDE.md. KB articles go in the scope's `kb/` subfolder. The scope directory controls which agents can read the doc; the doc is still referenced by its short name (e.g. `kb/staff-grid`, not `menu-content/kb/staff-grid`). When in doubt, use `global/` — an agent missing a house convention is worse than an agent seeing an extra doc. No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears in the enum immediately.

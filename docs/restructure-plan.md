@@ -235,13 +235,12 @@ failure mode of this design. Joel's Gantry design work runs as `admin`.
 
 **Files to create as part of Phase 2:**
 - `config/agents/support.json`, `config/agents/menu-content.json`, `config/agents/admin.json` (definitions above)
-- `config/agents/support.example.json`, etc. — checked-in examples with placeholder tokens
 - `config/users.json` (gitignored) — real token registry
 - `config/users.example.json` — checked-in example
-- `docs/agents/agents/support.md` — support agent instruction file (adapted from AGENTS.md, freshdesk-workflow focus)
-- `docs/agents/agents/menu-content.md` — menu-content agent instruction file (adapted from AGENTS.md, build-workflow focus)
-- `docs/agents/agents/admin.md` — admin agent instruction file (current AGENTS.md, largely unchanged)
-- Add `config/users.json` and `config/agents/*.json` to `.gitignore`
+- `config/agents/support.md` — support agent instruction file (adapted from AGENTS.md, freshdesk-workflow focus)
+- `config/agents/menu-content.md` — menu-content agent instruction file (adapted from AGENTS.md, build-workflow focus)
+- admin instructions: falls back to the project-root AGENTS.md (no separate file)
+- Add `config/users.json` to `.gitignore`. **Decided 2026-06-12:** `config/agents/*.json` stay checked in — they contain scope rules, not secrets, and reviewing scope changes in git history is a feature.
 
 > **Terminology note:** an *agent definition* is the JSON scope bundle; the
 > LLM session "runs as" that agent. Distinct from `docs/agents/` (workflow

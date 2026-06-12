@@ -23,13 +23,6 @@
     ]
   },
   "docs": {
-    "allow": [
-      "editing-rules", "improvements", "kb/site-history", "kb/content-standards",
-      "kb/css-table-classes", "kb/site-config",
-      "freshdesk-agent",
-      "kb/user-accounts", "kb/quick-galleries", "kb/ministry-platform-widget",
-      "kb/popup", "kb/podcasting", "kb/calendar-feed", "kb/elfsight",
-      "kb/acymail", "kb/business-directory", "kb/error-pages"
-    ]
+    "allow": ["global/*", "support/*"]
   }
 }

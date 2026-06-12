@@ -760,11 +760,11 @@ function buildServer(sessionCtx) {
     }
 
     if (name === 'solutio_design_workflow') {
-      const docPath = path.join(__dirname, '..', 'joomla-mcp', 'docs', 'agents', 'gantry-design-agent.md');
-      if (!fs.existsSync(docPath)) {
-        return { isError: true, content: [{ type: 'text', text: `Design workflow guide not found at ${docPath}` }] };
+      try {
+        return { content: [{ type: 'text', text: kb.readDoc(agentDef, 'gantry-design-agent') }] };
+      } catch (err) {
+        return { isError: true, content: [{ type: 'text', text: `Design workflow guide unavailable: ${err.message}` }] };
       }
-      return { content: [{ type: 'text', text: fs.readFileSync(docPath, 'utf8') }] };
     }
 
     // ── Freshdesk tools - no active site required ──

@@ -159,4 +159,4 @@ All credentials come from the server's environment variables. Do not ask the use
 
 ## Adding New Workflow Guides
 
-Create a new `.md` file in `docs/agents/` and add a row to the doc name index in both AGENTS.md and CLAUDE.md. No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears in the enum immediately.
+Create a new `.md` file under the matching scope directory in `docs/agents/` — `global/` (all agents), `support/`, `menu-content/`, `design/` (admin only), or `launch/` (admin only) — and add a row to the doc name index in both AGENTS.md and CLAUDE.md. KB articles go in the scope's `kb/` subfolder. The scope directory controls which agents can read the doc; the doc is still referenced by its short name (e.g. `kb/staff-grid`, not `menu-content/kb/staff-grid`). When in doubt, use `global/` — an agent missing a house convention is worse than an agent seeing an extra doc. No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears in the enum immediately.
