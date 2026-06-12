@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "joomla-orchestrator": {
+    "orchestrator": {
       "command": "node",
-      "args": ["c:\\Users\\Jeremy\\code-projects\\joomla-mcp-suite\\apps\\joomla-orchestrator\\orchestrator.js"]
+      "args": ["c:\\Users\\Jeremy\\code-projects\\joomla-mcp-suite\\apps\\orchestrator\\orchestrator.js"]
     }
   }
 }

@@ -8,15 +8,13 @@ services:
       ORCHESTRATOR_PORT: "18302"
       JOOMLA_MCP_PORT: "18300"
       GANTRY_MCP_PORT: "18301"
+      FRESHDESK_MCP_PORT: "18306"
+      FTP_MCP_PORT: "18307"
       HTTP_PORT: "18302"
       SITE_BUILDER_PORT: "18303"
-      MOCKUP_BUILDER_PORT: "18304"
-      DASBHBOARD_PORT: "18305"
     ports:
       - "18302:18302"
       - "18303:18303"
-      - "18304:18304"
-      - "18305:18305"
     volumes:
       - ./apps/gantry-mcp/exports:/workspace/apps/gantry-mcp/exports
     restart: unless-stopped

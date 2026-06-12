@@ -185,9 +185,6 @@ const MANDATORY_OWN_TOOLS = new Set([
 // and don't auto-reconnect, which makes the proxy flaky. Fresh-per-call is
 // slightly slower (one extra round-trip for initialize) but always reliable.
 
-const joomlaToolMap = new Map(); // tool name → tool definition
-const gantryToolMap = new Map();
-
 async function createClient(label, url, token) {
   const client = new Client(
     { name: `orchestrator→${label}`, version: '1.0.0' },
@@ -201,42 +198,159 @@ async function createClient(label, url, token) {
 }
 
 /**
- * Call a tool on a downstream server.
+ * Call a tool on a downstream server (registry entry).
  * Creates a fresh client, calls the tool, then closes cleanly.
  * Retries once automatically on any transport/connection error.
  */
-async function callDownstream(label, url, token, toolName, toolArgs) {
+async function callDownstream(ds, toolName, toolArgs) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     let client;
     try {
-      client = await createClient(label, url, token);
+      client = await createClient(ds.label, ds.url, ds.token);
       const result = await client.callTool({ name: toolName, arguments: toolArgs });
       client.close().catch(() => {});
       return result;
     } catch (err) {
       if (client) client.close().catch(() => {});
       if (attempt === 2) throw err;
-      log(`${label} call failed (attempt ${attempt}), retrying - ${err.message}`);
+      log(`${ds.label} call failed (attempt ${attempt}), retrying - ${err.message}`);
     }
   }
 }
 
+/** Refresh one downstream's tool map. Throws on connection failure. */
+async function loadToolMap(ds) {
+  const client = await createClient(ds.label, ds.url, ds.token);
+  const { tools = [] } = await client.listTools();
+  client.close().catch(() => {});
+  ds.toolMap.clear();
+  tools.forEach(t => ds.toolMap.set(t.name, t));
+  log(`loaded ${ds.toolMap.size} tools from ${ds.label}`);
+}
+
 async function loadDownstreamTools() {
-  for (const [label, url, token, toolMap] of [
-    ['joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN, joomlaToolMap],
-    ['gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN, gantryToolMap],
-  ]) {
+  await Promise.all(DOWNSTREAMS.map(ds =>
+    loadToolMap(ds).catch(err => log(`WARNING: could not load ${ds.label} tools - ${err.message}`))
+  ));
+}
+
+/** Find the registry entry that owns a tool name (first match wins). */
+function findToolDownstream(name) {
+  return DOWNSTREAMS.find(d => d.toolMap.has(name));
+}
+
+/**
+ * Call a downstream tool and parse its text payload.
+ * Throws when the downstream reports isError; returns parsed JSON (or the raw
+ * text when not JSON) otherwise.
+ */
+async function callDownstreamParsed(ds, toolName, toolArgs) {
+  const result = await callDownstream(ds, toolName, toolArgs);
+  const text = result?.content?.[0]?.text || '';
+  if (result?.isError) throw new Error(text || `${toolName} failed`);
+  try { return JSON.parse(text); } catch { return text; }
+}
+
+// ─── Composite tool: FTP → Gantry CSS smoke test ─────────────────────────────
+// Validates the full pipeline: FTP upload → Gantry Page Settings link → live
+// page emission. Spans ftp-mcp and gantry-mcp, so it lives in the orchestrator
+// rather than in either downstream server (replaces the old gantry-mcp tool
+// that opened its own MCP client to joomla-mcp for ftp_* calls).
+
+async function runCssAssetSmokeTest(site, args) {
+  site = (site || '').replace(/\/+$/, '');
+  const targetPath = args.targetPath || '/';
+  const filename = args.remoteFilename || 'smoke-test.css';
+  const cleanup = !!args.cleanup;
+  const steps = [];
+  const ftp = getDownstream('ftp-mcp');
+  const gantry = getDownstream('gantry-mcp');
+
+  // Step 1: FTP config — resolve upload_path and public URL
+  let uploadPath = null;
+  let publicUrl = null;
+  try {
+    const conf = await callDownstreamParsed(ftp, 'ftp_site_config', { site_url: site });
+    const d = (conf && conf.data && typeof conf.data === 'object') ? conf.data : conf;
+    uploadPath = (d && d.upload_path) ? d.upload_path : null;
+    const pubUrl = ((d && d.pub_url) ? d.pub_url : '').replace(/\/$/, '');
+    publicUrl = pubUrl ? `${pubUrl}/${filename}` : `${site}/images/pub/${filename}`;
+    steps.push({ step: 'ftp_config', ok: !!uploadPath, uploadPath, publicUrl });
+    if (!uploadPath) return { pass: false, steps };
+  } catch (e) {
+    steps.push({ step: 'ftp_config', ok: false, error: e.message });
+    return { pass: false, steps };
+  }
+
+  // Step 2: upload sentinel CSS file
+  try {
+    const remotePath = uploadPath.replace(/\/$/, '') + '/' + filename;
+    const up = await callDownstreamParsed(ftp, 'ftp_upload_file', {
+      site_url: site,
+      path: remotePath,
+      content: '/* gantry css smoke test -- safe to delete */\n',
+    });
+    if (up && up.success === false) throw new Error(up.message || 'upload failed');
+    steps.push({ step: 'ftp_upload', ok: true, remotePath });
+  } catch (e) {
+    steps.push({ step: 'ftp_upload', ok: false, error: e.message });
+    return { pass: false, steps };
+  }
+
+  // Step 3: detect which outline serves the target page
+  let outlineId = null;
+  try {
+    const det = await callDownstreamParsed(gantry, 'gantry_get_outline_for_page', { site, path: targetPath });
+    outlineId = det && det.outlineId;
+    if (!outlineId) throw new Error('No outline-N class found in page body -- is this a Gantry 5 page?');
+    steps.push({ step: 'detect_outline', ok: true, outlineId, outlineTitle: (det && det.title) || null });
+  } catch (e) {
+    steps.push({ step: 'detect_outline', ok: false, error: e.message });
+    return { pass: false, steps };
+  }
+
+  // Step 4: link the file into that outline's Page Settings
+  try {
+    await callDownstreamParsed(gantry, 'gantry_page_asset_files_edit', {
+      site,
+      outline: String(outlineId),
+      cssActions: [{ action: 'add', item: { name: 'smoke-test', location: publicUrl, priority: '0' } }],
+    });
+    steps.push({ step: 'link_asset', ok: true, outline: outlineId, assetUrl: publicUrl });
+  } catch (e) {
+    steps.push({ step: 'link_asset', ok: false, error: e.message });
+    return { pass: false, steps };
+  }
+
+  // Step 5: verify the stylesheet is emitted on the live page
+  let emitted = false;
+  try {
+    const url = targetPath.startsWith('http')
+      ? targetPath
+      : site + (targetPath.startsWith('/') ? '' : '/') + targetPath;
+    const res = await fetch(url, { redirect: 'follow' });
+    const html = await res.text();
+    emitted = html.includes(filename);
+    steps.push({ step: 'verify_emission', ok: emitted, searched: filename, emitted });
+  } catch (e) {
+    steps.push({ step: 'verify_emission', ok: false, error: e.message });
+  }
+
+  // Step 6: cleanup (optional) — remove the asset row; FTP file is left in place
+  if (cleanup && emitted) {
     try {
-      const client = await createClient(label, url, token);
-      const { tools = [] } = await client.listTools();
-      client.close().catch(() => {});
-      toolMap.clear();
-      tools.forEach(t => toolMap.set(t.name, t));
-      log(`loaded ${toolMap.size} tools from ${label}`);
-    } catch (err) {
-      log(`WARNING: could not load ${label} tools - ${err.message}`);
+      await callDownstreamParsed(gantry, 'gantry_page_asset_files_edit', {
+        site,
+        outline: String(outlineId),
+        cssActions: [{ action: 'remove', location: publicUrl }],
+      });
+      steps.push({ step: 'cleanup', ok: true, removed: publicUrl });
+    } catch (e) {
+      steps.push({ step: 'cleanup', ok: false, error: e.message });
     }
   }
+
+  return { pass: emitted && steps.every(s => s.ok !== false), steps };
 }
 
 // ─── Server builder ───────────────────────────────────────────────────────────
@@ -248,7 +362,7 @@ function buildServer(sessionCtx) {
   let activeSiteUrl = null;
 
   const server = new Server(
-    { name: 'joomla-orchestrator', version: '1.0.0' },
+    { name: 'orchestrator', version: '1.0.0' },
     { capabilities: { tools: {}, prompts: {} } }
   );
 
@@ -543,6 +657,33 @@ function buildServer(sessionCtx) {
           '(per-section design knowledge).',
         inputSchema: { type: 'object', properties: {} },
       },
+      {
+        name: 'gantry_css_asset_smoke_test',
+        description:
+          'End-to-end smoke test for the FTP to Gantry CSS pipeline. Uploads a sentinel CSS file via FTP, ' +
+          "detects which outline is serving the target page, links the file into that outline's Page Settings, " +
+          'and verifies the stylesheet is emitted on the live page. Returns a structured pass/fail result for ' +
+          'each step. Use before any custom page build or after a server migration to confirm the pipeline works. ' +
+          'Runs against the active site.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            targetPath: {
+              type: 'string',
+              description: 'Frontend path to test against, e.g. "/" or "/about-us".',
+            },
+            remoteFilename: {
+              type: 'string',
+              description: 'Filename for the sentinel CSS file, e.g. "smoke-test.css". Defaults to "smoke-test.css".',
+            },
+            cleanup: {
+              type: 'boolean',
+              description: 'If true, remove the asset row from Page Settings after a successful test. The FTP file is left in place. Defaults to false.',
+            },
+          },
+          required: ['targetPath'],
+        },
+      },
     ];
 
     // Filter own tools: mandatory tools always included; others checked against agent scope
@@ -550,15 +691,20 @@ function buildServer(sessionCtx) {
       t => MANDATORY_OWN_TOOLS.has(t.name) || kb.isToolAllowed(agentDef, t.name)
     );
 
-    return {
-      tools: [
-        ...filteredOwnTools,
-        ...Array.from(joomlaToolMap.values()).filter(
-          t => !HIDDEN_JOOMLA_TOOLS.has(t.name) && kb.isToolAllowed(agentDef, t.name)
-        ),
-        ...Array.from(gantryToolMap.values()).filter(t => kb.isToolAllowed(agentDef, t.name)),
-      ],
-    };
+    // Aggregate downstream tools in registry order; first server to expose a
+    // name wins (handles freshdesk/ftp overlap with joomla-mcp during migration).
+    const seen = new Set(filteredOwnTools.map(t => t.name));
+    const downstreamTools = [];
+    for (const ds of DOWNSTREAMS) {
+      for (const t of ds.toolMap.values()) {
+        if (HIDDEN_JOOMLA_TOOLS.has(t.name) || seen.has(t.name)) continue;
+        if (!kb.isToolAllowed(agentDef, t.name)) continue;
+        seen.add(t.name);
+        downstreamTools.push(t);
+      }
+    }
+
+    return { tools: [...filteredOwnTools, ...downstreamTools] };
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -575,7 +721,7 @@ function buildServer(sessionCtx) {
       let loginNote = '';
       try {
         const loginResult = await callDownstream(
-          'joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN,
+          getDownstream('joomla-mcp'),
           'joomla_login', { site_url: activeSiteUrl }
         );
         const loginText = loginResult?.content?.[0]?.text || '';
@@ -671,23 +817,19 @@ function buildServer(sessionCtx) {
       }
       // Ask gantry-mcp to drop its cached ctx by calling a lightweight tool
       // that will fail gracefully, then reload the tool map to confirm connectivity.
+      const gantry = getDownstream('gantry-mcp');
       let msg = '';
       try {
         // Pass a force-refresh hint via a no-op style tool call
-        await callDownstream('gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN,
-          'gantry_outlines_list', { site: activeSiteUrl });
+        await callDownstream(gantry, 'gantry_outlines_list', { site: activeSiteUrl });
         msg = 'Gantry session is alive and responding.';
       } catch (e) {
         msg = `Gantry session appears stale (${e.message}). Reloading tool map…`;
       }
       // Always reload the tool map on reconnect
       try {
-        const c = await createClient('gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN);
-        const { tools = [] } = await c.listTools();
-        c.close().catch(() => {});
-        gantryToolMap.clear();
-        tools.forEach(t => gantryToolMap.set(t.name, t));
-        msg += ` Tool map reloaded (${gantryToolMap.size} tools).`;
+        await loadToolMap(gantry);
+        msg += ` Tool map reloaded (${gantry.toolMap.size} tools).`;
       } catch (e) {
         msg += ` Tool map reload failed: ${e.message}`;
       }
@@ -697,10 +839,11 @@ function buildServer(sessionCtx) {
     if (name === 'reload_tools') {
       await loadDownstreamTools();
       usersRegistry = loadUsersRegistry();
+      const counts = DOWNSTREAMS.map(d => `${d.label}: ${d.toolMap.size} tools`).join(', ');
       return {
         content: [{
           type: 'text',
-          text: `Tools reloaded - joomla-mcp: ${joomlaToolMap.size} tools, gantry-mcp: ${gantryToolMap.size} tools. User registry: ${usersRegistry ? Object.keys(usersRegistry).length + ' token(s)' : 'not found (single-token fallback)'}.`,
+          text: `Tools reloaded - ${counts}. User registry: ${usersRegistry ? Object.keys(usersRegistry).length + ' token(s)' : 'not found (single-token fallback)'}.`,
         }],
       };
     }
@@ -808,17 +951,17 @@ function buildServer(sessionCtx) {
       }
     }
 
-    // ── Freshdesk tools - no active site required ──
-    // These tools only need Freshdesk API credentials; they never touch Joomla.
-    if (name.startsWith('freshdesk_')) {
-      if (!joomlaToolMap.has(name)) {
-        return { isError: true, content: [{ type: 'text', text: `Unknown tool: ${name}` }] };
+    // ── Composite: FTP → Gantry CSS smoke test ──
+    // Lives in the orchestrator because it spans two downstream servers
+    // (ftp-mcp for upload, gantry-mcp for outline/asset work). This replaces
+    // the old gantry-mcp tool that opened its own MCP client to joomla-mcp —
+    // the suite's one tool-to-tool dependency.
+    if (name === 'gantry_css_asset_smoke_test') {
+      if (!activeSiteUrl) {
+        return { isError: true, content: [{ type: 'text', text: 'No active site is set. Please call set_active_site with the site URL before using any tools.' }] };
       }
-      try {
-        return await callDownstream('joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN, name, args);
-      } catch (err) {
-        return { isError: true, content: [{ type: 'text', text: `freshdesk error: ${err.message}` }] };
-      }
+      const result = await runCssAssetSmokeTest(activeSiteUrl, args);
+      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }], isError: !result.pass };
     }
 
     // ── Guard: hidden tools cannot be called by name ──
@@ -829,7 +972,34 @@ function buildServer(sessionCtx) {
       };
     }
 
-    // ── Guard: site must be set before routing downstream ──
+    // ── Route downstream via the registry ──
+    let ds = findToolDownstream(name);
+
+    // Lazy reload: a downstream may have started after us (startup race) or
+    // been restarted with new tools. If the name is unknown and any tool map
+    // is empty, refresh those maps once and re-check.
+    if (!ds && DOWNSTREAMS.some(d => d.toolMap.size === 0)) {
+      log(`tool ${name} unknown and some tool maps empty — lazy reloading…`);
+      await Promise.all(DOWNSTREAMS.filter(d => d.toolMap.size === 0).map(d =>
+        loadToolMap(d).catch(err => log(`lazy reload of ${d.label} failed: ${err.message}`))
+      ));
+      ds = findToolDownstream(name);
+    }
+
+    if (!ds) {
+      return { isError: true, content: [{ type: 'text', text: `Unknown tool: ${name}` }] };
+    }
+
+    // ── Servers with inject: null need no active site (e.g. freshdesk-mcp) ──
+    if (ds.inject === null) {
+      try {
+        return await callDownstream(ds, name, args);
+      } catch (err) {
+        return { isError: true, content: [{ type: 'text', text: `${ds.label} error: ${err.message}` }] };
+      }
+    }
+
+    // ── Guard: site must be set before routing site-scoped tools ──
     if (!activeSiteUrl) {
       return {
         isError: true,
@@ -840,75 +1010,26 @@ function buildServer(sessionCtx) {
       };
     }
 
-    // ── Route to joomla-mcp (content tools) ──
-    // Inject site_url so joomla-mcp switches to the active site before each call.
-    // joomla-mcp handles site_url at the top of its CallTool handler.
-
-    if (joomlaToolMap.has(name)) {
-      try {
-        return await callDownstream('joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN, name, { ...args, site_url: activeSiteUrl });
-      } catch (err) {
-        // Auth error → re-login and retry once
-        if (/401|403|login|csrf|cookie|session/i.test(err.message)) {
-          log(`joomla-mcp auth error, re-logging in and retrying: ${err.message}`);
-          try { await callDownstream('joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN, 'joomla_login', { site_url: activeSiteUrl }); } catch {}
-          try {
-            return await callDownstream('joomla-mcp', JOOMLA_MCP_URL, JOOMLA_MCP_TOKEN, name, { ...args, site_url: activeSiteUrl });
-          } catch (err2) {
-            return { isError: true, content: [{ type: 'text', text: `joomla-mcp error (after re-login): ${err2.message}` }] };
-          }
-        }
-        return { isError: true, content: [{ type: 'text', text: `joomla-mcp error: ${err.message}` }] };
-      }
-    }
-
-    // ── Route to gantry-mcp (design tools) ──
-    // gantry-mcp expects a `site` argument on every call, so we inject it.
-    // If the tool map is empty (startup race) or the tool isn't found, attempt
-    // a lazy reload once before giving up.
-
-    if (gantryToolMap.has(name) || gantryToolMap.size === 0) {
-      // Lazy reload if tool map is empty - gantry-mcp may have started after us
-      if (gantryToolMap.size === 0) {
-        log(`gantryToolMap empty, attempting lazy reload before routing ${name}…`);
+    const dsArgs = { ...args, [ds.inject]: activeSiteUrl };
+    try {
+      return await callDownstream(ds, name, dsArgs);
+    } catch (err) {
+      // joomla-mcp auth error → re-login and retry once
+      if (ds.label === 'joomla-mcp' && /401|403|login|csrf|cookie|session/i.test(err.message)) {
+        log(`joomla-mcp auth error, re-logging in and retrying: ${err.message}`);
+        try { await callDownstream(ds, 'joomla_login', { site_url: activeSiteUrl }); } catch {}
         try {
-          const c = await createClient('gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN);
-          const { tools = [] } = await c.listTools();
-          c.close().catch(() => {});
-          gantryToolMap.clear();
-          tools.forEach(t => gantryToolMap.set(t.name, t));
-          log(`lazy reload: ${gantryToolMap.size} gantry tools loaded`);
-        } catch (reloadErr) {
-          log(`lazy reload failed: ${reloadErr.message}`);
+          return await callDownstream(ds, name, dsArgs);
+        } catch (err2) {
+          return { isError: true, content: [{ type: 'text', text: `joomla-mcp error (after re-login): ${err2.message}` }] };
         }
       }
-
-      if (!gantryToolMap.has(name)) {
-        return { isError: true, content: [{ type: 'text', text: `Unknown tool: ${name} (gantry-mcp tool map has ${gantryToolMap.size} entries)` }] };
-      }
-
-      const gantryArgs = { ...args, site: activeSiteUrl };
-      try {
-        return await callDownstream('gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN, name, gantryArgs);
-      } catch (err) {
-        // Transport/connection error - callDownstream already retried once.
-        // Force a tool-map reload so next call gets fresh session data.
-        log(`gantry-mcp transport error on ${name}, will reload tool map: ${err.message}`);
-        try {
-          const c = await createClient('gantry-mcp', GANTRY_MCP_URL, GANTRY_MCP_TOKEN);
-          const { tools = [] } = await c.listTools();
-          c.close().catch(() => {});
-          gantryToolMap.clear();
-          tools.forEach(t => gantryToolMap.set(t.name, t));
-        } catch {}
-        return { isError: true, content: [{ type: 'text', text: `gantry-mcp error: ${err.message}` }] };
-      }
+      // Transport/connection error - callDownstream already retried once.
+      // Refresh this server's tool map so the next call sees fresh data.
+      log(`${ds.label} transport error on ${name}, reloading tool map: ${err.message}`);
+      loadToolMap(ds).catch(() => {});
+      return { isError: true, content: [{ type: 'text', text: `${ds.label} error: ${err.message}` }] };
     }
-
-    return {
-      isError: true,
-      content: [{ type: 'text', text: `Unknown tool: ${name}` }],
-    };
   });
 
   return server;

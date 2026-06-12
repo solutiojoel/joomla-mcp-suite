@@ -5,7 +5,7 @@
 ---
 ## Platform Overview
 
-All tools in this project are exposed through a single orchestrator MCP endpoint. You will see them as `mcp__joomla-orchestrator__*`. There is no separate joomla-mcp or gantry-mcp connection — the orchestrator aggregates everything.
+All tools in this project are exposed through a single orchestrator MCP endpoint. You will see them as `mcp__orchestrator__*`. There is no separate joomla-mcp or gantry-mcp connection — the orchestrator aggregates everything.
 
 Workflow guides and KB articles are accessible via the `read_agent_doc` orchestrator tool — use it instead of the local Read tool so that agents without this repository mounted can access them.
 

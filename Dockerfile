@@ -17,6 +17,7 @@ WORKDIR /workspace
 
 COPY apps ./apps
 COPY docs ./docs
+COPY config ./config
 COPY scripts ./scripts
 COPY .env.example ./
 COPY README.md ./
@@ -27,13 +28,12 @@ RUN sed -i 's/\r$//' ./scripts/start-all.sh && chmod +x ./scripts/start-all.sh
 # Install dependencies for each app.
 RUN cd apps/gantry-mcp && npm ci
 RUN cd apps/joomla-mcp && npm ci && npm run build
-RUN cd apps/joomla-orchestrator && npm ci
-RUN cd apps/dashboard && npm ci
+RUN cd apps/freshdesk-mcp && npm ci && npm run build
+RUN cd apps/ftp-mcp && npm ci && npm run build
+RUN cd apps/orchestrator && npm ci
 
-# Orchestrator (MCP/HTTP), site-builder webapp, mockup brief webapp, dashboard
+# Orchestrator (MCP/HTTP) and site-builder webapp
 EXPOSE 9302
 EXPOSE 18303
-EXPOSE 18304
-EXPOSE 18305
 
 CMD ["bash", "scripts/start-all.sh"]

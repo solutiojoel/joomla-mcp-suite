@@ -12,21 +12,9 @@ import {
 import fs from "fs";
 import path from "path";
 import { JoomlaClient, JoomlaResponse } from "./joomla-client.js";
-import { FtpClient } from "./ftp-client.js";
-import { FreshdeskClient } from "./freshdesk-client.js";
 import http from "node:http";
 import { randomUUID } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-
-// Freshdesk client (optional — tools fail gracefully if not configured)
-const freshdeskConfig = {
-  domain: process.env.FRESHDESK_DOMAIN ?? "",
-  apiKey: process.env.FRESHDESK_API_KEY ?? "",
-};
-const freshdesk =
-  freshdeskConfig.domain && freshdeskConfig.apiKey
-    ? new FreshdeskClient(freshdeskConfig)
-    : null;
 
 // Load config from environment
 const config = {
@@ -114,8 +102,6 @@ function normalizeUrl(url: string): string {
 
 
 function buildServer(): Server {
-  const ftpClient = new FtpClient();
-
   // Create MCP server
   const server = new Server(
   {
@@ -551,171 +537,6 @@ const tools = [
       required: ["path"],
     },
   },
-  {
-    name: "ftp_list_files",
-    description: "List files on the FTP server at a path. Start at '/' to explore.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Absolute remote path (e.g. '/' or '/wichita/cathedral')" },
-        domain: { type: "string", description: "Site domain. Defaults to active site's domain." },
-      },
-      required: ["path"],
-    },
-  },
-  {
-    name: "ftp_read_file",
-    description: "Read a text file via FTP (max 200 KB). Use grep, head, or offset/limit to avoid bloating context.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Absolute remote file path" },
-        domain: { type: "string", description: "Site domain. Defaults to active site's domain." },
-        grep: { type: "string", description: "Regex to search for. Returns matching lines + context instead of full file." },
-        context_lines: { type: "number", description: "Lines of context around each grep match (default: 2)" },
-        head: { type: "number", description: "Return first N lines only" },
-        offset: { type: "number", description: "Zero-based start line for pagination" },
-        limit: { type: "number", description: "Lines to return from offset" },
-      },
-      required: ["path"],
-    },
-  },
-  {
-    name: "ftp_upload_file",
-    description: "Upload text content to a file on the FTP server. Target path must be within upload_path if configured.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Absolute remote destination path" },
-        content: { type: "string", description: "Text content to write" },
-        domain: { type: "string", description: "Site domain. Defaults to active site's domain." },
-      },
-      required: ["path", "content"],
-    },
-  },
-  {
-    name: "ftp_delete_file",
-    description: "Delete a file via FTP. Target path must be within upload_path if configured.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Absolute remote file path to delete" },
-        domain: { type: "string", description: "Site domain. Defaults to active site's domain." },
-      },
-      required: ["path"],
-    },
-  },
-  {
-    name: "ftp_upload_local_file",
-    description: "Upload a local file to the FTP server. Supports any file type including images and PDFs.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        local_path: { type: "string", description: "Absolute local file path (e.g. C:/Users/Jeremy/Desktop/photo.png)" },
-        path: { type: "string", description: "Absolute remote destination path" },
-        domain: { type: "string", description: "Site domain. Defaults to active site's domain." },
-      },
-      required: ["local_path", "path"],
-    },
-  },
-  {
-    name: "ftp_mkdir",
-    description: "Create a directory on the FTP server (including intermediate directories).",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Remote directory path to create" },
-        domain: { type: "string", description: "Site domain. Defaults to active site's domain." },
-      },
-      required: ["path"],
-    },
-  },
-  {
-    name: "ftp_site_config",
-    description: "Show FTP config for a site: host, web_root, upload_path, pub_path, pub_url. Call before other FTP tools to verify the site is configured.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        domain: { type: "string", description: "Site domain. Defaults to active site's domain." },
-      },
-      required: [],
-    },
-  },
-
-  // --- Freshdesk tools ---
-  {
-    name: "freshdesk_get_ticket",
-    description: "Fetch a Freshdesk ticket. Returns subject, description, status, priority, tags, requester_id, company_id.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        ticket_id: { type: "number" },
-      },
-      required: ["ticket_id"],
-    },
-  },
-  {
-    name: "freshdesk_get_contact",
-    description: "Fetch a Freshdesk contact by ID. Returns name, email, phone, company_id.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        contact_id: { type: "number", description: "Use requester_id from ticket" },
-      },
-      required: ["contact_id"],
-    },
-  },
-  {
-    name: "freshdesk_get_company",
-    description: "Fetch a Freshdesk company by ID. Returns name, domains, and derived site_url for joomla_login.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        company_id: { type: "number" },
-      },
-      required: ["company_id"],
-    },
-  },
-  {
-    name: "freshdesk_get_conversations",
-    description: "Fetch all replies and notes for a ticket in chronological order.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        ticket_id: { type: "number" },
-      },
-      required: ["ticket_id"],
-    },
-  },
-  {
-    name: "freshdesk_add_note",
-    description: "Add a private internal note to a ticket. Server prepends '— Shannon (AI Assistant)' automatically.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        ticket_id: { type: "number" },
-        body: { type: "string", description: "Note body (HTML supported). Describe what was checked and changed." },
-      },
-      required: ["ticket_id", "body"],
-    },
-  },
-  {
-    name: "freshdesk_list_tickets",
-    description: "List tickets by status. Default: unresolved (open+pending+waiting). Returns 30/page.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        status: {
-          type: "string",
-          enum: ["open", "pending", "waiting", "resolved", "closed", "unresolved", "all"],
-          description: "open=2, pending=3, waiting=6+7, resolved=4, closed=5, unresolved=default",
-        },
-        company_id: { type: "number" },
-        page: { type: "number", description: "Default: 1, 30 per page" },
-      },
-      required: [],
-    },
-  },
   // ==================== USER MANAGEMENT ====================
   {
     name: "joomla_user",
@@ -781,20 +602,6 @@ const tools = [
         extension: { type: "string", description: "Component extension for category permissions (default: com_content)." },
       },
       required: ["action", "resource", "id"],
-    },
-  },
-  {
-    name: "freshdesk_update_ticket",
-    description: "Update ticket status, priority, or tags. Confirm with user before changing status.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        ticket_id: { type: "number" },
-        status: { type: "number", enum: [2, 3, 4, 5], description: "2=Open, 3=Pending, 4=Resolved, 5=Closed" },
-        priority: { type: "number", enum: [1, 2, 3, 4], description: "1=Low, 2=Medium, 3=High, 4=Urgent" },
-        tags: { type: "array", items: { type: "string" }, description: "Replaces full tag list" },
-      },
-      required: ["ticket_id"],
     },
   },
 ];
@@ -1690,127 +1497,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
           }],
           isError: false,
         };
-      }
-
-      case "ftp_list_files": {
-        const ftpPath = (args?.path as string) || "/";
-        const domain = (args?.domain as string) || FtpClient.domainFromUrl(joomla.getConfig().baseUrl);
-        const result = await ftpClient.listFiles(ftpPath, domain);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "ftp_read_file": {
-        const ftpPath = args?.path as string;
-        const domain = (args?.domain as string) || FtpClient.domainFromUrl(joomla.getConfig().baseUrl);
-        const result = await ftpClient.readTextFile(ftpPath, domain, {
-          grep: args?.grep as string | undefined,
-          contextLines: args?.context_lines as number | undefined,
-          head: args?.head as number | undefined,
-          offset: args?.offset as number | undefined,
-          limit: args?.limit as number | undefined,
-        });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "ftp_upload_file": {
-        const ftpPath = args?.path as string;
-        const content = (args?.content as string) || "";
-        const domain = (args?.domain as string) || FtpClient.domainFromUrl(joomla.getConfig().baseUrl);
-        const result = await ftpClient.uploadFile(ftpPath, content, domain);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "ftp_delete_file": {
-        const ftpPath = args?.path as string;
-        const domain = (args?.domain as string) || FtpClient.domainFromUrl(joomla.getConfig().baseUrl);
-        const result = await ftpClient.deleteFile(ftpPath, domain);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "ftp_upload_local_file": {
-        const localPath = args?.local_path as string;
-        const ftpPath = args?.path as string;
-        const domain = (args?.domain as string) || FtpClient.domainFromUrl(joomla.getConfig().baseUrl);
-        const result = await ftpClient.uploadLocalFile(localPath, ftpPath, domain);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "ftp_mkdir": {
-        const ftpPath = args?.path as string;
-        const domain = (args?.domain as string) || FtpClient.domainFromUrl(joomla.getConfig().baseUrl);
-        const result = await ftpClient.makeDirectory(ftpPath, domain);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "ftp_site_config": {
-        const domain = (args?.domain as string) || FtpClient.domainFromUrl(joomla.getConfig().baseUrl);
-        const result = ftpClient.getSiteInfo(domain);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      // --- Freshdesk cases ---
-      case "freshdesk_get_ticket": {
-        if (!freshdesk) return { content: [{ type: "text", text: JSON.stringify({ success: false, message: "Freshdesk not configured: set FRESHDESK_DOMAIN and FRESHDESK_API_KEY in .env" }) }], isError: true };
-        const ticketId = args?.ticket_id as number | undefined;
-        if (!ticketId) return { content: [{ type: "text", text: "Error: ticket_id is required" }], isError: true };
-        const result = await freshdesk.getTicket(ticketId);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "freshdesk_get_contact": {
-        if (!freshdesk) return { content: [{ type: "text", text: JSON.stringify({ success: false, message: "Freshdesk not configured: set FRESHDESK_DOMAIN and FRESHDESK_API_KEY in .env" }) }], isError: true };
-        const contactId = args?.contact_id as number | undefined;
-        if (!contactId) return { content: [{ type: "text", text: "Error: contact_id is required" }], isError: true };
-        const result = await freshdesk.getContact(contactId);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "freshdesk_get_company": {
-        if (!freshdesk) return { content: [{ type: "text", text: JSON.stringify({ success: false, message: "Freshdesk not configured: set FRESHDESK_DOMAIN and FRESHDESK_API_KEY in .env" }) }], isError: true };
-        const companyId = args?.company_id as number | undefined;
-        if (!companyId) return { content: [{ type: "text", text: "Error: company_id is required" }], isError: true };
-        const result = await freshdesk.getCompany(companyId);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "freshdesk_get_conversations": {
-        if (!freshdesk) return { content: [{ type: "text", text: JSON.stringify({ success: false, message: "Freshdesk not configured: set FRESHDESK_DOMAIN and FRESHDESK_API_KEY in .env" }) }], isError: true };
-        const ticketId = args?.ticket_id as number | undefined;
-        if (!ticketId) return { content: [{ type: "text", text: "Error: ticket_id is required" }], isError: true };
-        const result = await freshdesk.getConversations(ticketId);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "freshdesk_add_note": {
-        if (!freshdesk) return { content: [{ type: "text", text: JSON.stringify({ success: false, message: "Freshdesk not configured: set FRESHDESK_DOMAIN and FRESHDESK_API_KEY in .env" }) }], isError: true };
-        const ticketId = args?.ticket_id as number | undefined;
-        const body = args?.body as string | undefined;
-        if (!ticketId || !body) return { content: [{ type: "text", text: "Error: ticket_id and body are required" }], isError: true };
-        const taggedBody = `<p>— Shannon (AI Assistant)</p>${body}`;
-        const result = await freshdesk.addNote(ticketId, taggedBody, true);
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "freshdesk_list_tickets": {
-        if (!freshdesk) return { content: [{ type: "text", text: JSON.stringify({ success: false, message: "Freshdesk not configured: set FRESHDESK_DOMAIN and FRESHDESK_API_KEY in .env" }) }], isError: true };
-        const result = await freshdesk.listTickets({
-          status: args?.status as "open" | "pending" | "waiting" | "resolved" | "closed" | "unresolved" | "all" | undefined,
-          company_id: args?.company_id as number | undefined,
-          page: args?.page as number | undefined,
-        });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
-      }
-
-      case "freshdesk_update_ticket": {
-        if (!freshdesk) return { content: [{ type: "text", text: JSON.stringify({ success: false, message: "Freshdesk not configured: set FRESHDESK_DOMAIN and FRESHDESK_API_KEY in .env" }) }], isError: true };
-        const ticketId = args?.ticket_id as number | undefined;
-        if (!ticketId) return { content: [{ type: "text", text: "Error: ticket_id is required" }], isError: true };
-        const result = await freshdesk.updateTicket(ticketId, {
-          status: args?.status as number | undefined,
-          priority: args?.priority as number | undefined,
-          tags: args?.tags as string[] | undefined,
-        });
-        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 
       // ==================== USER MANAGEMENT ====================

@@ -1,7 +1,7 @@
 'use strict';
 
 // Phase 2.5 acceptance test — doc reorganization + agent scoping.
-// Run: node apps/joomla-orchestrator/test-kb-scoping.cjs
+// Run: node apps/orchestrator/test-kb-scoping.cjs
 
 const fs   = require('fs');
 const path = require('path');

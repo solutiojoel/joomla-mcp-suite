@@ -1,5 +1,5 @@
 {
-  "name": "joomla-orchestrator",
+  "name": "orchestrator",
   "version": "1.0.0",
   "description": "MCP orchestrator that routes content requests to joomla-mcp and design requests to gantry-mcp",
   "main": "orchestrator.js",

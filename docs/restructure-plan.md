@@ -12,13 +12,13 @@
 
 | File | Size | What to know |
 |------|------|--------------|
-| `apps/joomla-orchestrator/orchestrator.js` | 837 lines | The only file changed in Phases 0–2. Single `activeSiteUrl` global at line 50 (Phase 1.2 target). HTTP handler at line 764 (Phase 0.1 target). `buildServer()` at line 163 — a fresh Server is created per HTTP session; session state goes inside here. `HIDDEN_JOOMLA_TOOLS` set at line 435 is checked in ListTools only — also needs enforcing in CallTool (Phase 0.2). Silent URL auto-detect at lines 669–683 (Phase 0.3 delete). |
+| `apps/orchestrator/orchestrator.js` | 837 lines | The only file changed in Phases 0–2. Single `activeSiteUrl` global at line 50 (Phase 1.2 target). HTTP handler at line 764 (Phase 0.1 target). `buildServer()` at line 163 — a fresh Server is created per HTTP session; session state goes inside here. `HIDDEN_JOOMLA_TOOLS` set at line 435 is checked in ListTools only — also needs enforcing in CallTool (Phase 0.2). Silent URL auto-detect at lines 669–683 (Phase 0.3 delete). |
 | `apps/joomla-mcp/src/index.ts` | 2,044 lines | Tool registration + CallTool handler. One `JoomlaClient` + `isLoggedIn` flag per process (Phase 1.3 target: replace with `Map<siteUrl, {client, lastUsed}>`). |
 | `apps/joomla-mcp/src/joomla-client.ts` | 6,331 lines | All Joomla HTTP/form automation. Not changed until Phase 4. |
 | `apps/joomla-mcp/src/freshdesk-client.ts` | 415 lines | Moves verbatim to `apps/freshdesk-mcp/` in Phase 3. |
 | `apps/joomla-mcp/src/ftp-client.ts` | 393 lines | Moves verbatim to `apps/ftp-mcp/` in Phase 3. `ftp-sites.json` moves with it. |
 | `apps/gantry-mcp/mcp-server.js` | 3,354 lines | Already site-keyed (`ctxCache` Map at line ~59) — model for Phase 1.3. Has one cross-server call at lines 40–55 (`joomlaMcpClient`) — eliminated in Phase 3.4. |
-| `apps/joomla-orchestrator/solutio-conventions.js` | 1,391 lines | Style guide + particle reference data. Not changed. |
+| `apps/orchestrator/solutio-conventions.js` | 1,391 lines | Style guide + particle reference data. Not changed. |
 | `docs/agents/` | flat dir | All workflow guides currently live at one level. Phase 2.5 reorganizes into `global/`, `support/`, `menu-content/`, `design/`, `launch/` subdirs. Doc names must keep resolving (KB accessor handles the mapping). |
 
 ---
@@ -28,7 +28,7 @@
 ```
 joomla-mcp-suite/
   apps/
-    joomla-orchestrator/   auth, per-session state, agent definitions, KB accessor, routing
+    orchestrator/   auth, per-session state, agent definitions, KB accessor, routing
     joomla-mcp/            Joomla admin automation (site-keyed sessions)
     gantry-mcp/            Gantry 5 layout/theming (already site-keyed)
     freshdesk-mcp/         NEW — Freshdesk API tools
@@ -257,7 +257,7 @@ In the orchestrator, both directions:
 
 ### 2.3 KB accessor module
 
-New `apps/joomla-orchestrator/kb.js` (or `packages/kb` later), the **only**
+New `apps/orchestrator/kb.js` (or `packages/kb` later), the **only**
 place that touches the docs filesystem:
 
 ```

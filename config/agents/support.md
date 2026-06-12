@@ -7,7 +7,7 @@
 
 ## Platform Overview
 
-All tools are exposed through a single orchestrator endpoint (`mcp__joomla-orchestrator__*`).
+All tools are exposed through a single orchestrator endpoint (`mcp__orchestrator__*`).
 There is no direct joomla-mcp or gantry-mcp connection — the orchestrator routes everything.
 
 Docs and KB articles are read via `read_agent_doc` — your access is limited to support-scope docs listed below.

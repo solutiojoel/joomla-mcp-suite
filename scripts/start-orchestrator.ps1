@@ -5,7 +5,7 @@
 $root = Split-Path -Parent $PSScriptRoot
 $port = 9302
 
-$pArgs = @("-NoExit", "-Command", "& { `$host.UI.RawUI.WindowTitle = 'orchestrator :$port'; Set-Location '$root\apps\joomla-orchestrator'; `$env:HTTP_PORT='$port'; node orchestrator.js }")
+$pArgs = @("-NoExit", "-Command", "& { `$host.UI.RawUI.WindowTitle = 'orchestrator :$port'; Set-Location '$root\apps\orchestrator'; `$env:HTTP_PORT='$port'; node orchestrator.js }")
 Start-Process powershell -ArgumentList $pArgs
 
 Write-Host "Started orchestrator on port $port."

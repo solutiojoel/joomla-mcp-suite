@@ -1,5 +1,5 @@
 services:
-  joomla-orchestrator:
+  orchestrator:
     build: .
     ports:
       - "18302:18302"

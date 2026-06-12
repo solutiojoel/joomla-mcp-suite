@@ -12,7 +12,7 @@ Three cooperating servers behind a single orchestrator endpoint:
 |--------|------|-------|-------------|
 | **Joomla MCP** | `apps/joomla-mcp` | 100+ | Every major Joomla admin workflow via form-level HTTP automation |
 | **Gantry MCP** | `apps/gantry-mcp` | 42 | Gantry 5 layouts, particles, styles, outlines — via JSON API |
-| **Orchestrator** | `apps/joomla-orchestrator` | — | Single `/mcp` endpoint that aggregates both servers |
+| **Orchestrator** | `apps/orchestrator` | — | Single `/mcp` endpoint that aggregates both servers |
 
 No direct database writes. Every Joomla operation goes through the same code paths the admin UI uses — CSRF tokens, session state, extension hooks all work correctly.
 
@@ -48,7 +48,7 @@ No direct database writes. Every Joomla operation goes through the same code pat
 apps/
   joomla-mcp/          TypeScript MCP server — Joomla admin automation
   gantry-mcp/          Node.js MCP server — Gantry 5 layout automation
-  joomla-orchestrator/ Router — aggregates both servers under one /mcp endpoint
+  orchestrator/ Router — aggregates both servers under one /mcp endpoint
 docs/
   agents/              Workflow guides loaded by AI agents
     kb/                Knowledge base articles (staff pages, grids, DNS, etc.)
@@ -108,7 +108,7 @@ Run all three MCP servers directly on your machine.
 ```bash
 cd apps/joomla-mcp && npm ci && npm run build
 cd ../gantry-mcp && npm ci
-cd ../joomla-orchestrator && npm ci
+cd ../orchestrator && npm ci
 ```
 
 ### Create local env files
@@ -121,7 +121,7 @@ JOOMLA_PASSWORD=your_password
 ```
 
 ```dotenv
-# apps/joomla-orchestrator/.env
+# apps/orchestrator/.env
 JOOMLA_MCP_URL=http://127.0.0.1:9300/mcp
 GANTRY_MCP_URL=http://127.0.0.1:9301/mcp
 ```
@@ -136,7 +136,7 @@ cd apps/joomla-mcp && HTTP_PORT=9300 node dist/index.js
 cd apps/gantry-mcp && HTTP_PORT=9301 node mcp-server.js
 
 # Terminal 3
-cd apps/joomla-orchestrator && HTTP_PORT=9302 node orchestrator.js
+cd apps/orchestrator && HTTP_PORT=9302 node orchestrator.js
 ```
 
 Connect your MCP client to `http://localhost:9302/mcp`.
