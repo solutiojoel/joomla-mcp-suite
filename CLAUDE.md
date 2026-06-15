@@ -3,7 +3,6 @@
 > **Sync note:** This file is kept in sync with `AGENTS.md`. If you update one, run `scripts/sync-agent-docs.ps1` to update the other, or edit both manually.
 
 ---
-
 ## Platform Overview
 
 All tools in this project are exposed through a single orchestrator MCP endpoint. You will see them as `mcp__orchestrator__*`. There is no separate joomla-mcp or gantry-mcp connection — the orchestrator aggregates everything.
@@ -94,6 +93,7 @@ Call `read_agent_doc(doc: "<name>")` with the name from the first column:
 | `editing-rules` | Every session — universal editing conventions |
 | `freshdesk-agent` | Support ticket triage (Phase 1) and individual ticket research and resolution (Phase 2) |
 | `menu-agent` | Building menus, categories, and menu item structures |
+| `menu-build` | PDF → Menu Spec → built menu: the 5-phase repeatable process with per-phase gates |
 | `content-agent` | Standard article text, SEO, and publish state edits |
 | `custom-page-agent` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
 | `gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |
@@ -113,6 +113,7 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 | `kb/staff-pages` | All staff page layouts (grid, teacherbox, table, contact form) |
 | `kb/teacher-pages` | Teacher/classroom pages with sidebar nav and user groups |
 | `kb/grid-layout` | Grid layout pages using Joomla Articles particle module |
+| `kb/menu-spec-schema` | Menu Spec JSON schema, classification ruleset, and worked example for menu builds |
 | `kb/content-standards` | Formatting rules, images, links, tables — applies to all content work |
 | `kb/css-table-classes` | CSS table classes, button classes, site fonts/colors |
 | `kb/site-config` | Site title, meta, timezone, reCAPTCHA, GA4, Webmaster Verification |

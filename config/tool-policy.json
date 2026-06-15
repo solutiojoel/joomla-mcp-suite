@@ -8,9 +8,9 @@
   "toolRules": {
     "_comment": "Argument-level rules per tool. Each tool has an argDeny array of rules.",
     "_rule_format": {
-      "when":    "optional — { argName: value } conditions, all must match",
-      "field":   "which argument to inspect",
-      "values":  "denied values — exact match or trailing * wildcard",
+      "when":    "optional — { argName: value } conditions, all must match (case-insensitive; supports dotted paths into nested args)",
+      "field":   "which argument to inspect — supports dotted paths (e.g. 'request.id') and matches across arrays",
+      "values":  "denied values — case-insensitive exact match or trailing * wildcard",
       "message": "optional custom error text"
     },
     "_example_disabled": {
@@ -18,7 +18,7 @@
         "argDeny": [
           {
             "when":    { "action": "create" },
-            "field":   "type",
+            "field":   "itemType",
             "values":  ["com_contact.contact", "com_users.login"],
             "message": "Creating menu items of this type is not permitted. Contact your administrator."
           }

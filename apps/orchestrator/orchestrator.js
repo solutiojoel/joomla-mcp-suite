@@ -483,6 +483,11 @@ function buildServer(sessionCtx) {
   // ── Tools ─────────────────────────────────────────────────────────────────────
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
+    // Re-read the agent definition from disk so per-agent scope edits
+    // (tools.allow/deny/rules, docs.allow) take effect without a session
+    // restart — matching the hot-reload of the global policy below.
+    agentDef = loadAgentDef(currentAgent);
+
     // Own management tools come first so the LLM encounters them early
     const ownTools = [
       {
@@ -731,6 +736,9 @@ function buildServer(sessionCtx) {
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args = {} } = request.params;
 
+    // Re-read the agent definition so per-agent scope/rule edits apply mid-session.
+    agentDef = loadAgentDef(currentAgent);
+
     // ── Own tools ──
 
     if (name === 'set_active_site') {
@@ -933,6 +941,28 @@ function buildServer(sessionCtx) {
       };
     }
 
+    // ── Guard: hidden tools cannot be called by name ──
+    // Internal plumbing (joomla_login) — blocked for every agent ahead of scope
+    // and own-tool routing.
+    if (HIDDEN_JOOMLA_TOOLS.has(name)) {
+      return {
+        isError: true,
+        content: [{ type: 'text', text: `Tool '${name}' is internal and cannot be called directly.` }],
+      };
+    }
+
+    // ── Guard: globally disabled tools ──
+    // Re-read each call so config/tool-policy.json edits apply without restart.
+    // Checked before agent scope so the "currently disabled" hint isn't masked
+    // by a per-agent "not available" message, and so it covers own scoped tools.
+    const { globalDeny: callGlobalDeny, toolRules } = loadGlobalPolicy();
+    if (kb.isGloballyDenied(name, callGlobalDeny)) {
+      return {
+        isError: true,
+        content: [{ type: 'text', text: `Tool '${name}' is currently disabled. Check config/tool-policy.json to re-enable it.` }],
+      };
+    }
+
     // ── Agent scope enforcement ───────────────────────────────────────────────
     // Mandatory own tools (handled above) always pass. All remaining tool calls —
     // own scoped tools (solutio_*) and all downstream tools — are checked against
@@ -985,24 +1015,9 @@ function buildServer(sessionCtx) {
       return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }], isError: !result.pass };
     }
 
-    // ── Guard: hidden tools cannot be called by name ──
-    if (HIDDEN_JOOMLA_TOOLS.has(name)) {
-      return {
-        isError: true,
-        content: [{ type: 'text', text: `Tool '${name}' is internal and cannot be called directly.` }],
-      };
-    }
-
-    // ── Guard: globally denied tools and tool-level argument rules ──
-    const { globalDeny: callGlobalDeny, toolRules } = loadGlobalPolicy();
-
-    if (kb.isGloballyDenied(name, callGlobalDeny)) {
-      return {
-        isError: true,
-        content: [{ type: 'text', text: `Tool '${name}' is currently disabled. Check config/tool-policy.json to re-enable it.` }],
-      };
-    }
-
+    // ── Guard: tool-level argument rules ──
+    // Tool is visible and allowed; this blocks only specific argument values
+    // (e.g. creating certain menu item types) per global + per-agent rules.
     const ruleViolation = kb.checkToolRules(agentDef, name, args, toolRules);
     if (ruleViolation) {
       return { isError: true, content: [{ type: 'text', text: ruleViolation }] };

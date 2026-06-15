@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://solutiosoftware.com/schemas/menu-spec.json",
+  "title": "Menu Spec",
+  "description": "Canonical intermediate artifact for a Joomla menu build. Produced by the menu-content agent from a client menu document (PDF), reviewed/edited by a human, then built. See docs/agents/menu-content/kb/menu-spec-schema.md.",
+  "type": "object",
+  "required": ["site", "menus"],
+  "additionalProperties": false,
+  "properties": {
+    "site": { "type": "string", "description": "Active site URL this spec targets." },
+    "source": { "type": "string", "description": "Source document filename the spec was derived from." },
+    "generated": { "type": "string", "description": "Date the spec was generated (YYYY-MM-DD)." },
+    "menus": {
+      "type": "object",
+      "description": "Joomla menus keyed by menu name. 'mainmenu' = visible nav; 'hiddenmenu' = items that need a routable home but are not shown (common for redirect/external targets).",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "array",
+        "items": { "$ref": "#/$defs/menuItem" }
+      }
+    },
+    "modules": {
+      "type": "object",
+      "description": "Homepage/quicklink modules keyed by module key (e.g. toplinks, under_rotator).",
+      "additionalProperties": { "$ref": "#/$defs/module" }
+    },
+    "grids": {
+      "type": "array",
+      "description": "Grid pages. A grid page is a category_grid menu item plus a particle module; its member articles self-route and do NOT get their own menu items.",
+      "items": { "$ref": "#/$defs/grid" }
+    },
+    "open_questions": {
+      "type": "array",
+      "description": "Every guess or missing fact that needs human input before build. Required to be non-empty whenever any target/category is 'TBD'.",
+      "items": { "type": "string" }
+    },
+    "assumptions": {
+      "type": "array",
+      "description": "Defaults the interpreter applied so they are reviewable rather than silent.",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "itemType": {
+      "type": "string",
+      "enum": ["heading", "single_article", "category_grid", "category_blog", "category_list", "external_url", "docman", "alias"]
+    },
+    "contentSource": {
+      "type": "string",
+      "enum": ["pull", "generate", "redirect", "existing", "none"]
+    },
+    "menuItem": {
+      "type": "object",
+      "required": ["title", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "type": { "$ref": "#/$defs/itemType" },
+        "category": { "type": "string", "description": "Joomla category for article/grid types. Defaults to 'Page Articles' for single_article when omitted." },
+        "target": { "type": "string", "description": "Destination URL for external_url items. Use 'TBD' if unknown (and add an open_question)." },
+        "content_source": { "$ref": "#/$defs/contentSource" },
+        "notes": { "type": "string" },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/menuItem" }
+        }
+      }
+    },
+    "module": {
+      "type": "object",
+      "required": ["items"],
+      "additionalProperties": false,
+      "properties": {
+        "position": { "type": "string" },
+        "notes": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label"],
+            "additionalProperties": false,
+            "properties": {
+              "label": { "type": "string" },
+              "type": { "$ref": "#/$defs/itemType" },
+              "target": { "type": "string" },
+              "menu_item": { "type": "string", "description": "Title of a menu item (often on hiddenmenu) this quicklink points to, instead of a raw URL." },
+              "notes": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "grid": {
+      "type": "object",
+      "required": ["page", "category"],
+      "additionalProperties": false,
+      "properties": {
+        "page": { "type": "string" },
+        "menu_ref": { "type": "string", "description": "Title of the menu item that renders this grid." },
+        "type": { "type": "string", "enum": ["category_grid"] },
+        "category": { "type": "string" },
+        "particle": { "type": "string", "enum": ["joomla_articles", "block_content", "contentarray"] },
+        "member_menu_items": { "type": "string", "enum": ["none", "listed"] },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

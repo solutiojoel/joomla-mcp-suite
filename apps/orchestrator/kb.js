@@ -138,26 +138,72 @@ function isGloballyDenied(toolName, globalDeny = []) {
  * Rule format (inside toolRules[toolName].argDeny):
  *   {
  *     when?:    { argName: value, ... }   // all conditions must match; omit to always apply
- *     field:    string                     // argument name to inspect
+ *     field:    string                     // argument to inspect; supports dotted paths
  *     values:   string[]                  // denied values (trailing * wildcard supported)
  *     message?: string                    // optional override for the error text
  *   }
+ *
+ * Matching is case-insensitive and whitespace-trimmed. Both `field` and the keys
+ * of `when` support dotted paths into nested objects (e.g. "request.id"); when a
+ * path crosses an array, every element is inspected, so batch/nested payloads
+ * cannot slip a denied value past the rule.
  *
  * Checks globalToolRules first, then agentDef.tools.rules.
  * Either layer can block the call independently.
  */
 function checkToolRules(agentDef, toolName, args, globalToolRules = {}) {
+  const norm = v => String(v ?? '').trim().toLowerCase();
+
+  // Resolve a (possibly dotted) field path to the list of leaf values found.
+  // Descends through nested objects and fans out across arrays.
+  function resolveValues(root, fieldPath) {
+    let nodes = [root];
+    for (const seg of String(fieldPath).split('.')) {
+      const next = [];
+      for (const node of nodes) {
+        if (node == null) continue;
+        if (Array.isArray(node)) {
+          for (const el of node) {
+            if (el && typeof el === 'object' && seg in el) next.push(el[seg]);
+          }
+        } else if (typeof node === 'object' && seg in node) {
+          next.push(node[seg]);
+        }
+      }
+      nodes = next;
+    }
+    // Flatten any array leaves so each scalar is checked individually.
+    const out = [];
+    for (const n of nodes) Array.isArray(n) ? out.push(...n) : out.push(n);
+    return out;
+  }
+
+  function valueMatches(value, pattern) {
+    const nv = norm(value);
+    const np = norm(pattern);
+    if (np === '*') return true;
+    if (np.endsWith('*')) return nv.startsWith(np.slice(0, -1));
+    return nv === np;
+  }
+
+  function whenMatches(when) {
+    return Object.entries(when).every(([k, v]) => {
+      const found = resolveValues(args, k);
+      return found.some(fv => norm(fv) === norm(v));
+    });
+  }
+
   function applyRuleSet(toolRules) {
     if (!toolRules) return null;
     for (const rule of (toolRules.argDeny || [])) {
-      if (rule.when) {
-        const condMet = Object.entries(rule.when).every(([k, v]) => args[k] === v);
-        if (!condMet) continue;
-      }
-      const fieldVal = String(args[rule.field] ?? '');
-      if ((rule.values || []).some(v => matchesPattern(fieldVal, v))) {
-        return rule.message ||
-          `Tool '${toolName}': '${rule.field}' value '${fieldVal}' is not permitted.`;
+      if (rule.when && !whenMatches(rule.when)) continue;
+      const found = resolveValues(args, rule.field);
+      const candidates = found.length ? found : [undefined];  // absent field → matches '' / '*'
+      for (const fieldVal of candidates) {
+        if ((rule.values || []).some(v => valueMatches(fieldVal, v))) {
+          return rule.message ||
+            `Tool '${toolName}': '${rule.field}' value '${norm(fieldVal)}' is not permitted.`;
+        }
       }
     }
     return null;
