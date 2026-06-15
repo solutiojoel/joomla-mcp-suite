@@ -113,12 +113,12 @@ function resolveSessionContext(authHeader) {
   if (usersRegistry) {
     const entry = usersRegistry[provided];
     if (!entry) return null;
-    return { user: entry.user, agent: entry.agent || 'admin' };
+    return { user: entry.user, agent: entry.agent || 'super_shannon' };
   }
 
   // Fallback: single-token mode (no users.json)
   if (ORCHESTRATOR_TOKEN && provided !== ORCHESTRATOR_TOKEN) return null;
-  return { user: 'local', agent: 'admin' };
+  return { user: 'local', agent: 'super_shannon' };
 }
 
 // ─── Session state ────────────────────────────────────────────────────────────
@@ -126,16 +126,14 @@ function resolveSessionContext(authHeader) {
 
 // ─── Agent definitions ────────────────────────────────────────────────────────
 // config/agents/<name>.json bundles tool allow/deny + doc allow + instruction path.
-// Falls back to unrestricted admin scope when the file is missing.
+// Falls back to unrestricted super_shannon scope when the file is missing.
 
 const AGENTS_CONFIG_DIR = path.join(__dirname, '..', '..', 'config', 'agents');
 
 function loadAgentDef(agentName) {
   const defPath = path.join(AGENTS_CONFIG_DIR, `${agentName}.json`);
   if (!fs.existsSync(defPath)) {
-    if (agentName !== 'admin') {
-      log(`WARNING: no agent definition found for '${agentName}', defaulting to admin scope`);
-    }
+    log(`WARNING: no agent definition found for '${agentName}', defaulting to super_shannon scope`);
     return { name: agentName, tools: { allow: ['*'] }, docs: { allow: ['*'] } };
   }
   try {
@@ -356,7 +354,7 @@ async function runCssAssetSmokeTest(site, args) {
 // ─── Server builder ───────────────────────────────────────────────────────────
 
 function buildServer(sessionCtx) {
-  const { user = 'local', agent = 'admin' } = sessionCtx || {};
+  const { user = 'local', agent = 'super_shannon' } = sessionCtx || {};
   let currentAgent = agent;
   let agentDef = loadAgentDef(agent);
   let activeSiteUrl = null;
