@@ -1,5 +1,5 @@
 {
-  "tok_jeremy_xxxx":  { "user": "jeremy@solutiosoftware.com",  "agent": "admin" },
-  "tok_coworker_xx":  { "user": "coworker@solutiosoftware.com", "agent": "admin" },
+  "tok_jeremy_xxxx":  { "user": "jeremy@solutiosoftware.com",  "agent": "super_shannon" },
+  "tok_coworker_xx":  { "user": "coworker@solutiosoftware.com", "agent": "super_shannon" },
   "tok_support_01":   { "user": "support1@solutiosoftware.com", "agent": "support" }
 }

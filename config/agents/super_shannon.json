@@ -1,7 +1,7 @@
 {
-  "name": "admin",
+  "name": "super_shannon",
   "description": "Super agent — all tools, all docs, no restrictions",
-  "instructions": "admin.md",
+  "instructions": "super_shannon.md",
   "tools": { "allow": ["*"] },
   "docs":  { "allow": ["*"] }
 }

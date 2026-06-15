@@ -16,7 +16,9 @@ Workflow guides and KB articles are accessible via the `read_agent_doc` orchestr
 
 At the start of every conversation:
 
-**Step 1 — `get_active_site`** → announce the result: "Active site: https://example.com"
+**Step 1 — call `get_active_site` and `get_current_agent` in parallel** → announce both results:
+> "Agent: super_shannon | Active site: https://example.com"
+
 - If the user's request includes a site URL, call `set_active_site` with that URL and confirm the switch.
 - If the request implies a specific site (e.g., a Freshdesk ticket), derive it and switch before proceeding.
 - If no site is specified, ask which site to work on before making any changes.
@@ -138,6 +140,8 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 |------|---------|
 | `set_active_site` | Set the working site URL and auto-login |
 | `get_active_site` | Confirm the current active site |
+| `get_current_agent` | Return the active agent scope name and available agents — called at session start |
+| `switch_agent` | Switch to a different agent scope mid-session |
 | `get_agent_instructions` | Return this full AGENTS.md file — required second step at session start |
 | `read_agent_doc` | Read any workflow guide or KB article by doc name (see index above) |
 | `get_site_notes` | Read the active site's history and persistent facts |
@@ -159,4 +163,4 @@ All credentials come from the server's environment variables. Do not ask the use
 
 ## Adding New Workflow Guides
 
-Create a new `.md` file under the matching scope directory in `docs/agents/` — `global/` (all agents), `support/`, `menu-content/`, `design/` (admin only), or `launch/` (admin only) — and add a row to the doc name index in both AGENTS.md and CLAUDE.md. KB articles go in the scope's `kb/` subfolder. The scope directory controls which agents can read the doc; the doc is still referenced by its short name (e.g. `kb/staff-grid`, not `menu-content/kb/staff-grid`). When in doubt, use `global/` — an agent missing a house convention is worse than an agent seeing an extra doc. No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears in the enum immediately.
+Create a new `.md` file under the matching scope directory in `docs/agents/` — `global/` (all agents), `support/`, `menu-content/`, `design/` (super_shannon only), or `launch/` (super_shannon only) — and add a row to the doc name index in both AGENTS.md and CLAUDE.md. KB articles go in the scope's `kb/` subfolder. The scope directory controls which agents can read the doc; the doc is still referenced by its short name (e.g. `kb/staff-grid`, not `menu-content/kb/staff-grid`). When in doubt, use `global/` — an agent missing a house convention is worse than an agent seeing an extra doc. No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears in the enum immediately.
