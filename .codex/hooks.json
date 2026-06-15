@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"c:\\Users\\Jeremy\\code-projects\\joomla-mcp-suite\\scripts\\on-joomla-edit.ps1\""
+          }
+        ]
+      }
+    ]
+  }
+}

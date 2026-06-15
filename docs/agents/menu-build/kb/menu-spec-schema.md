@@ -43,25 +43,11 @@ shown in nav — the common home for redirect/external targets that a quicklink 
 
 ---
 
-## `type` enum — the classification ruleset
+## `type` enum — valid values
 
-Decide each node's `type` by these rules, in order:
+`heading` · `single_article` · `category_grid` · `external_url` · `docman` · `category_blog` · `category_list` · `alias`
 
-| Signal in the source doc | `type` | Rule |
-|---|---|---|
-| Top-level item with sub-items, **not** itself a grid | `heading` | Parent/separator only — no content of its own |
-| Plain leaf, "pull from website" / normal page | `single_article` | **Default.** Article goes in the `Page Content` category |
-| Grid page — "All News", "grids like Stpats-King", any page that is a category of cards | `category_grid` | Joomla Articles particle; **members self-route — no child menu items** |
-| "Redirect", "link to church", any off-site destination | `external_url` | Requires `target`; if it needs a nav home put it on `hiddenmenu` |
-| Bulletin-style document list | `docman` | Occasional — DOCman category/page |
-| Category blog/list page (rare, explicit) | `category_blog` / `category_list` | Only when the doc clearly calls for a blog/list, not a grid |
-| Alias to another menu item | `alias` | Only when explicitly a duplicate link |
-
-### Defaults the interpreter applies (and must list in `assumptions`)
-- A leaf with no other signal → `single_article`, category `Page Content`.
-- **"All News" / news page → `category_grid` (99% of the time).** Add a `grids` entry.
-- A grid page's member articles → **no menu items**; they live in the category and self-route.
-- Top-level parents that aren't grids → `heading` (separators).
+Classification rules (which type to assign and when) live in the **Phase 1 Classification Rules** section of `menu-build.md`. This doc covers output format only.
 
 ### `content_source` (Phase-5 metadata, set now, build later)
 `pull` (copy from existing site) · `generate` (write new — e.g. "principal retiring") ·

@@ -23,7 +23,7 @@ Docs and KB articles are read via `read_agent_doc` — your access is scoped to 
 
 **Step 4 — `read_agent_doc(doc: "editing-rules")`** — universal editing conventions, required every session.
 
-When starting a menu build, also read `menu-build` and `kb/menu-spec-schema` before Phase 1 — these two docs replace the four reads the old menu-content agent required.
+When starting a menu build, also read `menu-build` and `kb/menu-spec-schema` before Phase 1.
 
 ---
 

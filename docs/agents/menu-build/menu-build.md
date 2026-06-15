@@ -1,6 +1,6 @@
 # Menu Build — PDF → Joomla Skeleton
 
-**Scope:** Phases 1–4 only — Menu Spec interpretation, validation, user review, and Joomla skeleton build (categories, placeholder articles, menu items, quicklink modules). Phase 5 content is out of scope; hand off to the content agent when the skeleton is approved.
+**Scope:** Phases 1–4 only — Menu Spec interpretation, validation, user review, and Joomla skeleton build (categories, placeholder articles, menu items, quicklink modules). building content is out of scope; hand off to the content agent when the skeleton is approved.
 
 The contract between phases is the **Menu Spec** — see `kb/menu-spec-schema` for the schema, classification rules, and a worked example. Read that KB doc before doing any interpretation.
 
@@ -8,7 +8,21 @@ The contract between phases is the **Menu Spec** — see `kb/menu-spec-schema` f
 
 ---
 
-## Category Conventions
+## PDF menu build interpretation guide
+
+Use your best judment, add questions to the open questions sections if it is not clear. Category names and menu item names vary from site to site.
+
+Most pages are single article menu items. The articles for each menu item get placed in a category named page content or something similar. Sub sites have similarly named categories. If they don't exist, create them. ex: "School page content", "Church Page Content".
+
+Many pages are grid pages. Read kb/grid-layout.md for context. Articles that appear on grid pages belong in their own categories such as "sacrament grid items" or "Staff Grid Items" etc.
+
+Grid pages are used when there is a need for additional navigation or if the grid items will need changed frequently or added to. Staff pages are almost always grid layouts as well as the all news pages.
+
+Top level and parent menu items with sub menu's are typically grid pages or separators. They may also be system links or menu item aliases.
+
+Pages such as sacraments, minstries, clubs, staff, faculty, councils, or any parent menu item with a significant number of child menu items or contain sub items that will likely need changed or added to by the client are typically grid pages.
+
+Bulletin pages should be single article menu items. Some bulletin pages will have widgets added and other will have docman modules added to them.
 
 Categories control what appears in Gantry 5 Joomla Articles particles:
 
@@ -21,12 +35,37 @@ Articles must not be in the wrong category or they will appear (or fail to appea
 
 ## Phase 1 — Interpret (PDF → Menu Spec)
 
-1. Read the source document and `kb/menu-spec-schema`.
-2. Produce the Menu Spec JSON, applying the classification ruleset. Preserve the document's ordering. Do not invent, reorder, or editorialize.
+1. Read the source document and `kb/menu-spec-schema` (output format, lint rules, worked example).
+2. Classify each item using the rules below. Preserve the document's ordering. Do not invent, reorder, or editorialize.
 3. Push every guess into `open_questions` and every applied default into `assumptions`. When the PDF is silent (redirect targets, ambiguous item types, the TopLinks vs. hidden-menu split), **flag — do not quietly fill**.
 4. Persist the spec with `joomla_workspace_write` (e.g. `menu-spec.json`).
 
 **Gate:** spec is saved and conforms to the schema.
+
+### Classification Rules
+
+Decide each node's `type` using these rules, in priority order:
+
+| Signal in the source doc | `type` | Notes |
+|---|---|---|
+| Top-level item with sub-items, **not** itself a grid landing page | `heading` | Separator/parent — no content of its own |
+| **Staff / team / faculty page** — any page listing people | `category_grid` | **Always a grid.** Read `kb/staff-grid` and `kb/staff-pages` before classifying; flag open questions about layout variant |
+| **News page** — "All News", any page listing news articles as cards | `category_grid` | **Always a grid.** Add a `grids` entry; default category name `News` unless the site uses another |
+| Any other page that is explicitly a category of cards/tiles | `category_grid` | Joomla Articles particle; members self-route — no child menu items |
+| Plain leaf, "pull from website", normal page | `single_article` | **Default.** Article goes in the `Page Content` category |
+| "Redirect", "link to church", any off-site destination | `external_url` | Requires `target`; place on `hiddenmenu` when only a quicklink target |
+| Bulletin-style document list | `docman` | DOCman category/page |
+| Category blog/list page (rare, explicit) | `category_blog` / `category_list` | Only when the doc clearly calls for a blog/list, not a grid |
+| Alias to another menu item | `alias` | Only when explicitly a duplicate link |
+
+**Defaults (list each applied default in `assumptions`):**
+- Any leaf with no other signal → `single_article`, category `Page Content`
+- Staff / faculty / team pages → `category_grid` — never default to `single_article` even if the PDF says "pull from website"
+- News pages → `category_grid` — almost never `single_article`
+- Grid member articles → no menu items; they self-route via their category
+- Top-level parents that aren't grid landing pages → `heading`
+
+**When classification is ambiguous:** consult the relevant KB doc before flagging in `open_questions` — `kb/staff-pages` for staff layout variants, `kb/grid-layout` for general grids. Flag in `open_questions` only if the KB doc doesn't resolve it.
 
 ---
 
