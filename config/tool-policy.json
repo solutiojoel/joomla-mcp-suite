@@ -1,0 +1,29 @@
+{
+  "_comment": "Global tool policy — applies to ALL agents before per-agent rules. Re-read on every request; no orchestrator restart needed.",
+
+  "globalDeny": [
+    "joomla_get_frontend_page"
+  ],
+
+  "toolRules": {
+    "_comment": "Argument-level rules per tool. Each tool has an argDeny array of rules.",
+    "_rule_format": {
+      "when":    "optional — { argName: value } conditions, all must match",
+      "field":   "which argument to inspect",
+      "values":  "denied values — exact match or trailing * wildcard",
+      "message": "optional custom error text"
+    },
+    "_example_disabled": {
+      "joomla_menu_item": {
+        "argDeny": [
+          {
+            "when":    { "action": "create" },
+            "field":   "type",
+            "values":  ["com_contact.contact", "com_users.login"],
+            "message": "Creating menu items of this type is not permitted. Contact your administrator."
+          }
+        ]
+      }
+    }
+  }
+}

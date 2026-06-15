@@ -166,6 +166,25 @@ function listAvailableAgents() {
 
 const HIDDEN_JOOMLA_TOOLS = new Set(['joomla_login']);
 
+// ─── Global tool policy ───────────────────────────────────────────────────────
+// config/tool-policy.json — globalDeny array blocks tools across ALL agents.
+// Re-read on every ListTools/CallTool request so edits take effect without restart.
+// Per-agent deny lists live in config/agents/<name>.json under tools.deny.
+
+const TOOL_POLICY_PATH = path.join(__dirname, '..', '..', 'config', 'tool-policy.json');
+
+function loadGlobalPolicy() {
+  try {
+    const policy = JSON.parse(fs.readFileSync(TOOL_POLICY_PATH, 'utf8'));
+    return {
+      globalDeny: Array.isArray(policy.globalDeny) ? policy.globalDeny : [],
+      toolRules:  (policy.toolRules && typeof policy.toolRules === 'object') ? policy.toolRules : {},
+    };
+  } catch {
+    return { globalDeny: [], toolRules: {} };
+  }
+}
+
 // Own tools that every agent can call regardless of agent definition.
 // These implement the session protocol and changelog discipline; they are not
 // configurable via agent JSON. Everything else goes through scope enforcement.
@@ -684,9 +703,12 @@ function buildServer(sessionCtx) {
       },
     ];
 
-    // Filter own tools: mandatory tools always included; others checked against agent scope
+    const { globalDeny } = loadGlobalPolicy();
+
+    // Filter own tools: mandatory tools always included; others checked against global deny then agent scope
     const filteredOwnTools = ownTools.filter(
-      t => MANDATORY_OWN_TOOLS.has(t.name) || kb.isToolAllowed(agentDef, t.name)
+      t => MANDATORY_OWN_TOOLS.has(t.name) ||
+           (!kb.isGloballyDenied(t.name, globalDeny) && kb.isToolAllowed(agentDef, t.name))
     );
 
     // Aggregate downstream tools in registry order; first server to expose a
@@ -696,6 +718,7 @@ function buildServer(sessionCtx) {
     for (const ds of DOWNSTREAMS) {
       for (const t of ds.toolMap.values()) {
         if (HIDDEN_JOOMLA_TOOLS.has(t.name) || seen.has(t.name)) continue;
+        if (kb.isGloballyDenied(t.name, globalDeny)) continue;
         if (!kb.isToolAllowed(agentDef, t.name)) continue;
         seen.add(t.name);
         downstreamTools.push(t);
@@ -968,6 +991,21 @@ function buildServer(sessionCtx) {
         isError: true,
         content: [{ type: 'text', text: `Tool '${name}' is internal and cannot be called directly.` }],
       };
+    }
+
+    // ── Guard: globally denied tools and tool-level argument rules ──
+    const { globalDeny: callGlobalDeny, toolRules } = loadGlobalPolicy();
+
+    if (kb.isGloballyDenied(name, callGlobalDeny)) {
+      return {
+        isError: true,
+        content: [{ type: 'text', text: `Tool '${name}' is currently disabled. Check config/tool-policy.json to re-enable it.` }],
+      };
+    }
+
+    const ruleViolation = kb.checkToolRules(agentDef, name, args, toolRules);
+    if (ruleViolation) {
+      return { isError: true, content: [{ type: 'text', text: ruleViolation }] };
     }
 
     // ── Route downstream via the registry ──

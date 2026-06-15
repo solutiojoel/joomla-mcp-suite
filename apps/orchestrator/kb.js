@@ -123,6 +123,51 @@ function isToolAllowed(agentDef, toolName) {
   return allow.some(p => matchesPattern(toolName, p));
 }
 
+/**
+ * Returns true if the tool name matches any pattern in the global deny list.
+ * Used by the orchestrator to block tools across all agents regardless of agent scope.
+ */
+function isGloballyDenied(toolName, globalDeny = []) {
+  return globalDeny.some(p => matchesPattern(toolName, p));
+}
+
+/**
+ * Check argument-level rules for a tool call.
+ * Returns an error message string if the call should be blocked, or null if allowed.
+ *
+ * Rule format (inside toolRules[toolName].argDeny):
+ *   {
+ *     when?:    { argName: value, ... }   // all conditions must match; omit to always apply
+ *     field:    string                     // argument name to inspect
+ *     values:   string[]                  // denied values (trailing * wildcard supported)
+ *     message?: string                    // optional override for the error text
+ *   }
+ *
+ * Checks globalToolRules first, then agentDef.tools.rules.
+ * Either layer can block the call independently.
+ */
+function checkToolRules(agentDef, toolName, args, globalToolRules = {}) {
+  function applyRuleSet(toolRules) {
+    if (!toolRules) return null;
+    for (const rule of (toolRules.argDeny || [])) {
+      if (rule.when) {
+        const condMet = Object.entries(rule.when).every(([k, v]) => args[k] === v);
+        if (!condMet) continue;
+      }
+      const fieldVal = String(args[rule.field] ?? '');
+      if ((rule.values || []).some(v => matchesPattern(fieldVal, v))) {
+        return rule.message ||
+          `Tool '${toolName}': '${rule.field}' value '${fieldVal}' is not permitted.`;
+      }
+    }
+    return null;
+  }
+
+  return applyRuleSet(globalToolRules[toolName]) ||
+         applyRuleSet(agentDef?.tools?.rules?.[toolName]) ||
+         null;
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -186,4 +231,4 @@ function readInstructions(agentDef) {
   throw err;
 }
 
-module.exports = { listDocs, readDoc, readInstructions, isToolAllowed, isDocAllowed };
+module.exports = { listDocs, readDoc, readInstructions, isToolAllowed, isDocAllowed, isGloballyDenied, checkToolRules };

@@ -20,7 +20,9 @@
       "joomla_user*", "joomla_group*",
       "joomla_component_inspect",
       "joomla_inspect_admin_form", "joomla_inspect_admin_list"
-    ]
+    ],
+    "_rules_comment": "Argument-level rules for this agent. Same format as toolRules in tool-policy.json.",
+    "rules": {}
   },
   "docs": {
     "allow": ["global/*", "menu-content/*"]

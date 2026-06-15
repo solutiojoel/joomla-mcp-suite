@@ -71,13 +71,15 @@ At the end of any session where persistent facts changed (new key IDs discovered
 
 ## Support Ticket Workflow
 
-If the user sends a standalone 5-digit number (e.g. `35118`), treat it as a Freshdesk ticket ID.
-
-Call this before doing anything else:
+Load the freshdesk-agent doc at the start of any support ticket session:
 
 ```
 read_agent_doc(doc: "freshdesk-agent")
 ```
+
+Two triggers:
+- **User asks to browse, review, or summarize tickets** (no specific ID) → follow Phase 1 (triage)
+- **User sends a standalone 5-digit number** (e.g. `35118`) or names a specific ticket to investigate → follow Phase 2 (research and resolution) for that ticket
 
 ---
 
@@ -90,7 +92,7 @@ Call `read_agent_doc(doc: "<name>")` with the name from the first column:
 | Doc name | When to use |
 |----------|-------------|
 | `editing-rules` | Every session — universal editing conventions |
-| `freshdesk-agent` | Support ticket resolution |
+| `freshdesk-agent` | Support ticket triage (Phase 1) and individual ticket research and resolution (Phase 2) |
 | `menu-agent` | Building menus, categories, and menu item structures |
 | `content-agent` | Standard article text, SEO, and publish state edits |
 | `custom-page-agent` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
