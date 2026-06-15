@@ -317,24 +317,28 @@ const tools = [
   },
   {
     name: "joomla_inspect_admin_form",
-    description: "Inspect any admin edit form by path. Returns fields, options, hidden fields, token.",
+    description: "Inspect any admin edit form by path. Returns fields, options, hidden fields, token. Pass rawHtml:true to get the raw page HTML instead (useful for debugging CSS selectors).",
     inputSchema: {
       type: "object",
       properties: {
         path: { type: "string", description: "Admin path (e.g. index.php?option=com_content&task=article.add)" },
         formId: { type: "string", description: "Form ID to prefer (e.g. item-form)" },
+        rawHtml: { type: "boolean", description: "Return raw page HTML instead of parsed structure." },
+        head: { type: "number", description: "Limit output to first N lines of HTML (default: all)." },
       },
       required: ["path"],
     },
   },
   {
     name: "joomla_inspect_admin_list",
-    description: "Inspect an admin list page. Returns filters, headers, row IDs, toolbar tasks.",
+    description: "Inspect an admin list page. Returns filters, headers, row IDs, toolbar tasks. Pass rawHtml:true to get the raw page HTML instead (useful for debugging CSS selectors).",
     inputSchema: {
       type: "object",
       properties: {
         path: { type: "string", description: "Admin path (e.g. index.php?option=com_content&view=articles)" },
         formId: { type: "string", description: "List form ID (default: adminForm)" },
+        rawHtml: { type: "boolean", description: "Return raw page HTML instead of parsed structure." },
+        head: { type: "number", description: "Limit output to first N lines of HTML (default: all)." },
       },
       required: ["path"],
     },
@@ -357,13 +361,15 @@ const tools = [
   },
   {
     name: "joomla_component_inspect",
-    description: "Explore any admin component path in form or list mode.",
+    description: "Explore any admin component path in form or list mode. Pass rawHtml:true to get the raw page HTML instead (useful for debugging CSS selectors).",
     inputSchema: {
       type: "object",
       properties: {
         path: { type: "string" },
         mode: { type: "string", enum: ["form", "list"] },
         formId: { type: "string" },
+        rawHtml: { type: "boolean", description: "Return raw page HTML instead of parsed structure." },
+        head: { type: "number", description: "Limit output to first N lines of HTML (default: all)." },
       },
       required: ["path"],
     },
@@ -1145,6 +1151,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
         const path = args?.path as string;
         if (!path) return { content: [{ type: "text", text: "Error: path is required" }], isError: true };
         const result = await joomla.inspectAdminForm(path, args?.formId as string);
+        if (args?.rawHtml) {
+          const lines = (result.html || "").split("\n");
+          const limited = args?.head ? lines.slice(0, args.head as number) : lines;
+          return { content: [{ type: "text", text: limited.join("\n") }], isError: !result.success };
+        }
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 
@@ -1154,6 +1165,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
         const path = args?.path as string;
         if (!path) return { content: [{ type: "text", text: "Error: path is required" }], isError: true };
         const result = await joomla.inspectAdminList(path, (args?.formId as string) || "adminForm");
+        if (args?.rawHtml) {
+          const lines = (result.html || "").split("\n");
+          const limited = args?.head ? lines.slice(0, args.head as number) : lines;
+          return { content: [{ type: "text", text: limited.join("\n") }], isError: !result.success };
+        }
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 
@@ -1178,6 +1194,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
         const path = args?.path as string;
         if (!path) return { content: [{ type: "text", text: "Error: path is required" }], isError: true };
         const result = await joomla.componentInspect({ path, mode: args?.mode as "form" | "list", formId: args?.formId as string });
+        if (args?.rawHtml) {
+          const lines = (result.html || "").split("\n");
+          const limited = args?.head ? lines.slice(0, args.head as number) : lines;
+          return { content: [{ type: "text", text: limited.join("\n") }], isError: !result.success };
+        }
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 

@@ -56,7 +56,7 @@
       "properties": {
         "title": { "type": "string" },
         "type": { "$ref": "#/$defs/itemType" },
-        "category": { "type": "string", "description": "Joomla category for article/grid types. Defaults to 'Page Articles' for single_article when omitted." },
+        "category": { "type": "string", "description": "Joomla category for article/grid types. Defaults to 'Page Content' for single_article when omitted." },
         "target": { "type": "string", "description": "Destination URL for external_url items. Use 'TBD' if unknown (and add an open_question)." },
         "content_source": { "$ref": "#/$defs/contentSource" },
         "notes": { "type": "string" },

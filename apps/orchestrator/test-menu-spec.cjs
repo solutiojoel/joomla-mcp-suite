@@ -159,8 +159,8 @@ const VALID = {
     mainmenu: [
       {
         title: 'About Sacred Heart School', type: 'heading', children: [
-          { title: 'Welcome from the Principal', type: 'single_article', category: 'Page Articles', content_source: 'generate', notes: 'principal retiring' },
-          { title: 'Faculty & Staff', type: 'single_article', category: 'Page Articles', content_source: 'pull', notes: 'no teacher pages' }
+          { title: 'Welcome from the Principal', type: 'single_article', category: 'Page Content', content_source: 'generate', notes: 'principal retiring' },
+          { title: 'Faculty & Staff', type: 'single_article', category: 'Page Content', content_source: 'pull', notes: 'no teacher pages' }
         ]
       },
       {
@@ -193,7 +193,7 @@ const VALID = {
     'TopLinks targets for Contact Us / Giving / Apply?'
   ],
   assumptions: [
-    '"Pull from website" leaves default to single_article in the Page Articles category',
+    '"Pull from website" leaves default to single_article in the Page Content category',
     'All News is a category_grid with no per-article menu items'
   ]
 };
@@ -239,6 +239,17 @@ const INVALID = [
       { title: 'Calendar', type: 'single_article' },
       { title: 'Calendar', type: 'single_article' }
     ] } }
+  },
+  {
+    label: 'heading with no children flagged by lint',
+    check: 'lint',
+    spec: { site: 's', menus: { mainmenu: [{ title: 'About', type: 'heading' }] } }
+  },
+  {
+    label: 'module quicklink without target or menu_item flagged by lint',
+    check: 'lint',
+    spec: { site: 's', menus: { mainmenu: [{ title: 'Home', type: 'single_article' }] },
+      modules: { toplinks: { items: [{ label: 'Giving' }] } } }
   }
 ];
 
@@ -260,6 +271,16 @@ check('valid spec passes schema', () => {
 check('valid spec passes lint', () => {
   const e = lint(VALID);
   assert(e.length === 0, `lint errors: ${e.join('; ')}`);
+});
+check('grid with member_menu_items:listed passes schema and lint', () => {
+  const spec = { ...VALID, grids: [
+    { page: 'All News', menu_ref: 'News & Events', type: 'category_grid', category: 'News', particle: 'joomla_articles', member_menu_items: 'none' },
+    { page: 'Parents', menu_ref: 'Parents', type: 'category_grid', category: 'Parents', particle: 'joomla_articles', member_menu_items: 'listed' }
+  ]};
+  const se = schemaErrors(spec);
+  assert(se.length === 0, `schema errors: ${se.join('; ')}`);
+  const le = lint(spec);
+  assert(le.length === 0, `lint errors: ${le.join('; ')}`);
 });
 
 console.log('— invalid fixtures are caught —');

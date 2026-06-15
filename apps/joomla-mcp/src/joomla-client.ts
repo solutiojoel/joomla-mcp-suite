@@ -1029,6 +1029,7 @@ export class JoomlaClient {
         filters: forms[0] || null,
         rows,
       },
+      html: html.substring(0, 50000),
     };
   }
 
@@ -4786,7 +4787,10 @@ export class JoomlaClient {
       const title = $titleLink.text().trim();
       if (!title) return;
       const rowHtml = $.html($row) || "";
-      const type = $row.find("div[title] span.small").first().text().trim();
+      // In Joomla 3 (Isis), type is rendered inside the title column td as div[title] > span.small.
+      // There is no separate type column — the div[title] sits after the alias span within the title td.
+      const $titleTd = $titleLink.closest("td");
+      const type = $titleTd.find("div[title] span.small").first().text().trim() || "";
       // Joomla renders one '–' (en dash) before the title link per depth level
       const $td = $titleLink.closest("td");
       const tdHtml = $.html($td) || "";
@@ -4820,7 +4824,7 @@ export class JoomlaClient {
       "limit": String(effectiveLimit),
       "limitstart": String(limitStart),
     });
-    if (search) params.set("filter[search]", search);
+    params.set("filter[search]", search ?? "");
     const url = this.getAdminUrl(`index.php?${params.toString()}`);
     const { html } = await this.getPage(url);
     const items = this.parseMenuItemList(html);
@@ -4984,7 +4988,9 @@ export class JoomlaClient {
   }): Promise<JoomlaResponse> {
     const typesResult = await this.listMenuItemTypes();
     const types = (typesResult.data || []) as MenuItemType[];
-    const type = this.findMenuItemType(types, data.itemType);
+    // "heading" is a Joomla type but "separator" renders correctly in Gantry 5 nav dropdowns
+    const resolvedItemType = data.itemType.toLowerCase() === "heading" ? "separator" : data.itemType;
+    const type = this.findMenuItemType(types, resolvedItemType);
     if (!type) {
       return { success: false, message: `Menu item type not found: ${data.itemType}` };
     }
@@ -5045,9 +5051,11 @@ export class JoomlaClient {
     const errorMsg = this.extractAlertMessage(result.html);
     let savedId = "";
     if (successMsg) {
-      const itemsResult = await this.listMenuItems(data.menuType);
+      // Search by title so Joomla filters server-side — listing all items hits the default
+      // page limit and misses newly created items at the end of a long menu.
+      const itemsResult = await this.listMenuItems(data.menuType, data.title);
       const items = Array.isArray(itemsResult.data) ? itemsResult.data as Array<Record<string, string>> : [];
-      const exactMatches = items.filter((item) => item.title === data.title);
+      const exactMatches = items.filter((item) => this.decodeHtmlEntities(item.title) === this.decodeHtmlEntities(data.title));
       const listItem = exactMatches[exactMatches.length - 1];
       savedId = listItem?.id || "";
       // Joomla 4 renders the published field as a custom radio group, so extractFormFields

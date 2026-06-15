@@ -9,7 +9,7 @@ mechanical and testable.
 - **Format:** JSON. Schema: [config/menu-spec.schema.json](../../../../config/menu-spec.schema.json).
 - **Validator/lint:** `node apps/orchestrator/test-menu-spec.cjs`.
 - **Persist** each site's spec with `joomla_workspace_write` so it is the durable
-  contract between Phase 1 (structure) and Phase 2 (content).
+  contract between the structure build (Phases 1–4) and the content pass (Phase 5).
 
 Produce the spec deterministically: same PDF in → same JSON out. Do not editorialize,
 reorder, or invent items. When the PDF is silent on something, **flag it in
@@ -50,7 +50,7 @@ Decide each node's `type` by these rules, in order:
 | Signal in the source doc | `type` | Rule |
 |---|---|---|
 | Top-level item with sub-items, **not** itself a grid | `heading` | Parent/separator only — no content of its own |
-| Plain leaf, "pull from website" / normal page | `single_article` | **Default.** Article goes in `Page Articles` (or `Page Content`) category |
+| Plain leaf, "pull from website" / normal page | `single_article` | **Default.** Article goes in the `Page Content` category |
 | Grid page — "All News", "grids like Stpats-King", any page that is a category of cards | `category_grid` | Joomla Articles particle; **members self-route — no child menu items** |
 | "Redirect", "link to church", any off-site destination | `external_url` | Requires `target`; if it needs a nav home put it on `hiddenmenu` |
 | Bulletin-style document list | `docman` | Occasional — DOCman category/page |
@@ -58,12 +58,12 @@ Decide each node's `type` by these rules, in order:
 | Alias to another menu item | `alias` | Only when explicitly a duplicate link |
 
 ### Defaults the interpreter applies (and must list in `assumptions`)
-- A leaf with no other signal → `single_article`, category `Page Articles`.
+- A leaf with no other signal → `single_article`, category `Page Content`.
 - **"All News" / news page → `category_grid` (99% of the time).** Add a `grids` entry.
 - A grid page's member articles → **no menu items**; they live in the category and self-route.
 - Top-level parents that aren't grids → `heading` (separators).
 
-### `content_source` (Phase-2 metadata, set now, build later)
+### `content_source` (Phase-5 metadata, set now, build later)
 `pull` (copy from existing site) · `generate` (write new — e.g. "principal retiring") ·
 `redirect` (external target) · `existing` (already on the new site) · `none`.
 
@@ -102,8 +102,8 @@ A spec must pass all of these — fix or flag before building:
   "menus": {
     "mainmenu": [
       { "title": "About Sacred Heart School", "type": "heading", "children": [
-        { "title": "Welcome from the Principal", "type": "single_article", "category": "Page Articles", "content_source": "generate", "notes": "principal retiring" },
-        { "title": "Faculty & Staff", "type": "single_article", "category": "Page Articles", "content_source": "pull", "notes": "no teacher pages" }
+        { "title": "Welcome from the Principal", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "principal retiring" },
+        { "title": "Faculty & Staff", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "no teacher pages" }
       ]},
       { "title": "News & Events", "type": "heading", "children": [
         { "title": "Calendar", "type": "single_article", "content_source": "pull" },
@@ -133,7 +133,7 @@ A spec must pass all of these — fix or flag before building:
     "TopLinks targets for Contact Us / Giving / Apply?"
   ],
   "assumptions": [
-    "\"Pull from website\" leaves default to single_article in the Page Articles category",
+    "\"Pull from website\" leaves default to single_article in the Page Content category",
     "All News is a category_grid with no per-article menu items"
   ]
 }
