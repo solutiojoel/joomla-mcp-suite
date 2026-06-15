@@ -4,7 +4,7 @@
  * KB accessor module — the only place that touches the docs filesystem.
  *
  * Docs live under docs/agents/<scope>/, where <scope> is one of SCOPE_DIRS
- * (global, support, menu-content, design, launch). A doc has two names:
+ * (global, support, menu-content, menu-build, design, launch). A doc has two names:
  *
  *   canonical — its path relative to docs/agents (e.g. "support/kb/user-accounts")
  *   public    — the canonical name with the scope segment stripped
@@ -36,7 +36,7 @@ const AGENTS_CONFIG_DIR = path.join(__dirname, '..', '..', 'config', 'agents');
 // Top-level dirs under docs/agents that act as permission scopes. A doc's
 // public name strips this segment; anything outside these dirs keeps its
 // full relative path as both canonical and public name.
-const SCOPE_DIRS = new Set(['global', 'support', 'menu-content', 'design', 'launch']);
+const SCOPE_DIRS = new Set(['global', 'support', 'menu-content', 'menu-build', 'design', 'launch']);
 
 // ─── Doc discovery ────────────────────────────────────────────────────────────
 

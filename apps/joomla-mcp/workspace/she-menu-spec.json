@@ -1,0 +1,164 @@
+{
+  "site": "https://test-menu.forge.solutiosoftware.com",
+  "source": "SH-Emporia School Menu & Content.pdf",
+  "generated": "2026-06-15",
+  "menus": {
+    "mainmenu": [
+      {
+        "title": "About Sacred Heart School",
+        "type": "heading",
+        "children": [
+          { "title": "Welcome from the Principal", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "Principal is retiring — generate appropriate welcome content" },
+          { "title": "Why Choose Sacred Heart?", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Faculty & Staff", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "No teacher pages; updated photos and info to be sent by client" },
+          { "title": "Our History", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Contact Us & Directions", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Sacred Heart School Commission", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Alumni", "type": "single_article", "category": "Page Content", "content_source": "pull" }
+        ]
+      },
+      {
+        "title": "News & Events",
+        "type": "heading",
+        "children": [
+          { "title": "Calendar", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Include Academic calendar year view; mimic church calendar format" },
+          { "title": "Weekly Information & Newsletter", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Lunch Menu", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Parish News", "type": "external_url", "target": "TBD", "content_source": "redirect", "notes": "Links to Church's Website — same URL as Capital Campaign and Church quicklink" }
+        ]
+      },
+      {
+        "title": "Admissions & Academics",
+        "type": "heading",
+        "children": [
+          { "title": "Request Information", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Registration", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Financial Aid & Tuition", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Curriculum", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Specials", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Preschool & Child Care Center", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Accreditations", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "KSDE Accountability Reports", "type": "single_article", "category": "Page Content", "content_source": "pull" }
+        ]
+      },
+      {
+        "title": "Parents",
+        "type": "heading",
+        "children": [
+          { "title": "Parent Login", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "May be link to external portal (e.g. FACTS/ParentsWeb) — clarify if it should be external_url" },
+          { "title": "Parent/Student Handbook", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Calendar", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Possible duplicate of News & Events > Calendar — see open_questions; article alias will need site-specific suffix to avoid collision" },
+          { "title": "Lunch Menus & Information", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Include wellness policy and free/reduced lunch application" },
+          { "title": "Virtus", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "PTO", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Convert to one page (may be multi-page on old site)" },
+          { "title": "Extended Care", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Dress Code", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Pick Up/Drop Off", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Supply Lists", "type": "single_article", "category": "Page Content", "content_source": "pull" }
+        ]
+      },
+      {
+        "title": "Support Us",
+        "type": "heading",
+        "children": [
+          { "title": "Donate", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Mexican Supper", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Feast for Our Future", "type": "single_article", "category": "Page Content", "content_source": "pull" }
+        ]
+      },
+      {
+        "title": "Capital Campaign",
+        "type": "external_url",
+        "target": "TBD",
+        "content_source": "redirect",
+        "notes": "Redirect to the church website"
+      },
+      {
+        "title": "Sponsors",
+        "type": "category_grid",
+        "category": "Sponsors",
+        "content_source": "none",
+        "notes": "No items listed in PDF; assumed grid per building note 'Grids like Stpats-King' — confirm in open_questions"
+      }
+    ],
+    "hiddenmenu": [
+      {
+        "title": "Church",
+        "type": "external_url",
+        "target": "TBD",
+        "content_source": "redirect",
+        "notes": "Church website URL — shared target for Parish News, Capital Campaign, and Church quicklink"
+      },
+      {
+        "title": "Preschool & Child Care",
+        "type": "external_url",
+        "target": "TBD",
+        "content_source": "redirect",
+        "notes": "Under Rotator quicklink target — may redirect to Preschool & Child Care Center page in Admissions or old site URL"
+      },
+      {
+        "title": "Parent Resources",
+        "type": "external_url",
+        "target": "TBD",
+        "content_source": "redirect",
+        "notes": "Under Rotator quicklink — no matching mainmenu page; target unclear"
+      },
+      {
+        "title": "Parents Login",
+        "type": "external_url",
+        "target": "TBD",
+        "content_source": "redirect",
+        "notes": "Under Rotator quicklink target — may redirect to Parent Login page in Parents section or external portal"
+      }
+    ]
+  },
+  "modules": {
+    "toplinks": {
+      "items": [
+        { "label": "Contact Us", "type": "external_url", "target": "TBD" },
+        { "label": "Giving", "type": "external_url", "target": "TBD" },
+        { "label": "Apply", "type": "external_url", "target": "TBD" }
+      ]
+    },
+    "under_rotator": {
+      "items": [
+        { "label": "Schedule a Tour", "type": "external_url", "target": "https://www.shsemporia.org/request-information", "notes": "PDF notes to convert to a Google Form — keep old URL for now until form is ready" },
+        { "label": "Preschool & Child Care", "type": "external_url", "menu_item": "Preschool & Child Care" },
+        { "label": "Parent Resources", "type": "external_url", "menu_item": "Parent Resources" },
+        { "label": "Parents Login", "type": "external_url", "menu_item": "Parents Login" },
+        { "label": "Church", "type": "external_url", "menu_item": "Church" }
+      ]
+    }
+  },
+  "grids": [
+    {
+      "page": "Sponsors",
+      "menu_ref": "Sponsors",
+      "type": "category_grid",
+      "category": "Sponsors",
+      "particle": "joomla_articles",
+      "member_menu_items": "none"
+    }
+  ],
+  "open_questions": [
+    "Church website URL — needed for Parish News (News & Events), Capital Campaign (mainmenu), and Church quicklink (hiddenmenu + under_rotator)",
+    "TopLinks: what are the redirect targets for Contact Us, Giving, and Apply?",
+    "Under Rotator 'Preschool & Child Care' — redirect to internal Admissions > Preschool & Child Care Center page, or to old site / external URL?",
+    "Under Rotator 'Parent Resources' — no matching mainmenu page found; what is the intended target? (Options: Parents section heading, a new page, or an external URL)",
+    "Under Rotator 'Parents Login' — redirect to Parents > Parent Login page, or external portal (e.g. FACTS/ParentsWeb)?",
+    "Schedule a Tour — keep shsemporia.org URL temporarily or replace with new Google Form URL before Phase 4 build?",
+    "Parents > Calendar — same article/page as News & Events > Calendar (use alias), or a separate duplicate page?",
+    "Sponsors — confirm it is a grid of sponsor logo cards; any existing sponsor content to pull, or built from scratch?",
+    "Capital Campaign — confirm exact church URL for the redirect"
+  ],
+  "assumptions": [
+    "All 'Pull from website' leaves default to single_article in Page Content category until Phase 5 content pass",
+    "Parish News classified as external_url (links to church website, not a standalone Joomla article)",
+    "Capital Campaign classified as top-level external_url in mainmenu (redirect to church, no children listed)",
+    "Sponsors classified as category_grid per building note 'Grids like Stpats-King'; flagged in open_questions for confirmation",
+    "Under Rotator redirect quicklinks use hiddenmenu external_url items as menu_item targets (URLs TBD pending open questions)",
+    "No teacher pages for Faculty & Staff (explicitly stated in PDF)",
+    "'Supply LIsts' corrected to 'Supply Lists'; 'Pick Up/Drop off' normalized to 'Pick Up/Drop Off'",
+    "Feast for Our Future title corrected to title case from 'Feast for our Future'"
+  ]
+}

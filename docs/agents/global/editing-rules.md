@@ -4,8 +4,15 @@ All agents must follow these rules regardless of the task being performed.
 
 ## Session Start (Required — in this order)
 
-1. Call `get_active_site` and announce the active site to the user:
-   > "Active site: https://example.com"
+**Step 1** — Call `get_active_site` and `get_current_agent` in parallel, then announce both:
+> "Agent: super_shannon | Active site: https://example.com"
+
+- If the user's request includes a site URL, call `set_active_site` with that URL and confirm the switch.
+- If no site is specified, ask which site to work on before making any changes.
+
+**Step 2** — Call `get_agent_instructions` immediately after the active site is confirmed.
+
+**Step 3** — Call `get_site_notes` and review the active site's history before making any changes.
 
 
 ## Switching Sites 
@@ -22,13 +29,27 @@ When asked to switch to a different site:
 
 Username and password come from the server's environment variables (`JOOMLA_USERNAME` / `JOOMLA_PASSWORD`). They are shared across all sites. Do not ask the user for credentials.
 
+## Tool Scope & Policy
+
+The orchestrator enforces two layers of access control before any tool runs:
+
+**Global deny** (`config/tool-policy.json` → `globalDeny`) — blocks a tool for every agent. Error: `"Tool 'X' is currently disabled."` Do not attempt workarounds; tell the user the tool is disabled and that `config/tool-policy.json` controls it.
+
+**Per-agent scope** (`config/agents/<name>.json` → `tools.allow` / `tools.deny`) — tools outside your agent's allow list never appear in your tool list and cannot be called. If you need a tool not available in your current scope, tell the user and suggest switching agents with `switch_agent`.
+
+**Argument rules** (global `toolRules` and per-agent `rules`) — block specific argument values even when the tool itself is allowed (e.g., creating certain menu item types). Error: the custom message defined in the rule. Do not try different argument values to bypass the rule; report the restriction to the user.
+
+**Doc scope** (`docs.allow` in the agent config) — `read_agent_doc` only serves files permitted for your agent. If a doc call returns a not-permitted error, do not guess the content; tell the user the doc is out of scope for the current agent.
+
+All policies hot-reload — no orchestrator restart is needed after editing config files.
+
 ## Update vs. Delete + Recreate
 
-Always use `joomla_update_*` tools to modify existing items. Never delete an item and recreate it — this causes alias conflicts and can break menu links, module assignments, and URL routing.
+Always use `action: "update"` to modify existing items. Never delete an item and recreate it — this causes alias conflicts and can break menu links, module assignments, and URL routing.
 
 - Use `joomla_article(action: "update", ...)` not delete + create
-- Use `joomla_update_module` not delete + create
-- Use `joomla_update_menu_item` not delete + create
+- Use `joomla_module(action: "update", ...)` not delete + create
+- Use `joomla_menu_item(action: "update", ...)` not delete + create
 
 ## Primary Site Outline Page Settings — Do Not Break Inheritance
 
@@ -61,7 +82,6 @@ State clearly what will be changed and wait for explicit user approval.
 When searching for content:
 1. Search by specific name first using the `search` parameter (server-side filter, faster)
 2. If a module search returns nothing, search articles next before exploring Gantry outlines
-3. Use `joomla_backend_inventory` for a broad overview when starting on an unfamiliar site
 
 ## Site Notes (During Session)
 
@@ -128,7 +148,4 @@ This is a shared queue reviewed by the team — not a per-session requirement. O
 
 ## Available Workflow Guides
 
-Additional agent-specific guides are available as MCP resources. Only fetch them when performing that specific workflow:
-
-- `audit-agent` — site audit checklist
-- `content-agent` — article and content editing workflow
+The full index of workflow guides and KB articles is in `get_agent_instructions` (AGENTS.md). Only read a guide when explicitly performing that workflow — do not load them proactively.

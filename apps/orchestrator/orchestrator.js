@@ -1168,7 +1168,7 @@ function log(msg) {
   if (httpPort) {
     await startHttp(httpPort);
   } else {
-    const server    = buildServer({ user: 'local', agent: 'admin' });
+    const server    = buildServer({ user: 'local', agent: 'super_shannon' });
     const transport = new StdioServerTransport();
     await server.connect(transport);
     log('stdio ready');

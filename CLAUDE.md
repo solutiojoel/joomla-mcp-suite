@@ -92,8 +92,7 @@ Call `read_agent_doc(doc: "<name>")` with the name from the first column:
 |----------|-------------|
 | `editing-rules` | Every session — universal editing conventions |
 | `freshdesk-agent` | Support ticket triage (Phase 1) and individual ticket research and resolution (Phase 2) |
-| `menu-agent` | Building menus, categories, and menu item structures |
-| `menu-build` | PDF → Menu Spec → built menu: the 5-phase repeatable process with per-phase gates |
+| `menu-build` | Menu build — PDF → Menu Spec → Joomla skeleton (Phases 1–4). Category conventions, pitfalls, and checklist included. |
 | `content-agent` | Standard article text, SEO, and publish state edits |
 | `custom-page-agent` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
 | `gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |
@@ -166,4 +165,4 @@ All credentials come from the server's environment variables. Do not ask the use
 
 ## Adding New Workflow Guides
 
-Create a new `.md` file under the matching scope directory in `docs/agents/` — `global/` (all agents), `support/`, `menu-content/`, `design/` (super_shannon only), or `launch/` (super_shannon only) — and add a row to the doc name index in both AGENTS.md and CLAUDE.md. KB articles go in the scope's `kb/` subfolder. The scope directory controls which agents can read the doc; the doc is still referenced by its short name (e.g. `kb/staff-grid`, not `menu-content/kb/staff-grid`). When in doubt, use `global/` — an agent missing a house convention is worse than an agent seeing an extra doc. No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears in the enum immediately.
+Create a new `.md` file under the matching scope directory in `docs/agents/` — `global/` (all agents), `support/`, `menu-build/`, `design/` (super_shannon only), or `launch/` (super_shannon only) — and add a row to the doc name index in both AGENTS.md and CLAUDE.md. KB articles go in the scope's `kb/` subfolder. The scope directory controls which agents can read the doc; the doc is still referenced by its short name (e.g. `kb/staff-grid`, not `menu-content/kb/staff-grid`). When in doubt, use `global/` — an agent missing a house convention is worse than an agent seeing an extra doc. No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears in the enum immediately.
