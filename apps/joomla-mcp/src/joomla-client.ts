@@ -4988,8 +4988,8 @@ export class JoomlaClient {
   }): Promise<JoomlaResponse> {
     const typesResult = await this.listMenuItemTypes();
     const types = (typesResult.data || []) as MenuItemType[];
-    // "heading" is a Joomla type but "separator" renders correctly in Gantry 5 nav dropdowns
-    const resolvedItemType = data.itemType.toLowerCase() === "heading" ? "separator" : data.itemType;
+    // "heading" in the menu spec maps to Joomla's "Menu Heading" system link type
+    const resolvedItemType = data.itemType.toLowerCase() === "heading" ? "Menu Heading" : data.itemType;
     const type = this.findMenuItemType(types, resolvedItemType);
     if (!type) {
       return { success: false, message: `Menu item type not found: ${data.itemType}` };
@@ -5069,6 +5069,9 @@ export class JoomlaClient {
           await this.toggleMenuItem(savedId, expectedPublished, data.menuType);
         }
       }
+      // Rebuild the menu nested set (lft/rgt) so subsequent creates don't corrupt
+      // the published-state display in the admin list view.
+      await this.rebuildMenuTree();
     }
     const verify = savedId ? await this.getMenuItem(savedId) : null;
     const item = ((verify?.data || {}) as Record<string, unknown>);
@@ -5142,7 +5145,8 @@ export class JoomlaClient {
     if (data.itemType) {
       const typesResult = await this.listMenuItemTypes();
       const types = (typesResult.data || []) as MenuItemType[];
-      type = this.findMenuItemType(types, data.itemType);
+      const resolvedUpdateType = data.itemType.toLowerCase() === "heading" ? "Menu Heading" : data.itemType;
+      type = this.findMenuItemType(types, resolvedUpdateType);
       if (!type) {
         return { success: false, message: `Menu item type not found: ${data.itemType}` };
       }
@@ -5830,6 +5834,16 @@ export class JoomlaClient {
       zip: "application/zip", mp4: "video/mp4", mp3: "audio/mpeg",
     };
     return map[ext] || "application/octet-stream";
+  }
+
+  // ==================== MENU TREE ====================
+
+  private async rebuildMenuTree(): Promise<void> {
+    const listUrl = this.getAdminUrl("index.php?option=com_menus&view=menus");
+    const { html } = await this.getPage(listUrl);
+    const token = this.extractCsrfToken(html);
+    if (!token) return;
+    await this.postPage(listUrl, { task: "menus.rebuild", [token.name]: token.value });
   }
 
   // ==================== BULK CHECKIN ====================

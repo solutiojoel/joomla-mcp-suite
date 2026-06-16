@@ -13,6 +13,22 @@
       "Parent Grid Items": 51,
       "Sponsors": 52,
       "School News & Events": 53
+    },
+    "landing_page_articles": {
+      "Faculty & Staff": 186,
+      "News & Events": 187,
+      "Parents": 188,
+      "Sponsors": 189
+    },
+    "top_level_menu_items": {
+      "About Sacred Heart School": 179,
+      "News & Events": 180,
+      "Admissions & Academics": 181,
+      "Parents": 182,
+      "Support Us": 183,
+      "Capital Campaign": 184,
+      "Sponsors": 185,
+      "Schedule a Tour (hidden)": 186
     }
   },
   "menus": {
