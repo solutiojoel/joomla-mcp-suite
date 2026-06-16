@@ -133,7 +133,7 @@ Ask: *"Confirm targets above and approve Phase 4 build?"* Do not proceed until t
 
 ## Phase 4 — Build the Menu Skeleton
 
-Build from the approved spec — mechanical, no interpretation:
+Build from the approved spec — mechanical, minimal interpretation:
 
 - `heading` → menu item, type **Menu Heading** (separator/parent). **Exception:** if a `grids` entry names this item as its `menu_ref`, build it as a navigable Single Article instead — the grid landing page article is what the heading links to. Children still nest under it as sub-items.
 - `single_article` → **Single Article** menu item; ensure the article exists in its category. Empty placeholder article is fine — content is Phase 5.

@@ -15,6 +15,17 @@ Workflow guides and KB articles are accessible via the `read_agent_doc` orchestr
 
 At the start of every conversation:
 
+**Step 0 — Infer the correct agent scope and call `switch_agent` immediately.**
+Do this before any other tool call — the active scope controls which tools are visible in the session.
+
+| Task type | Agent scope |
+|-----------|-------------|
+| Support tickets, Freshdesk triage | `support` |
+| Menu build (PDF → spec → Joomla skeleton) | `menu-build` |
+| Everything else (design, content, config, investigation) | `super_shannon` |
+
+Call `switch_agent` with the appropriate name. If the task isn't clear yet, default to `super_shannon`.
+
 **Step 1 — call `get_active_site` and `get_current_agent` in parallel** → announce both results:
 > "Agent: super_shannon | Active site: https://example.com"
 

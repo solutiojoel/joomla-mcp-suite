@@ -883,6 +883,9 @@ function buildServer(sessionCtx) {
       await loadDownstreamTools();
       usersRegistry = loadUsersRegistry();
       const counts = DOWNSTREAMS.map(d => `${d.label}: ${d.toolMap.size} tools`).join(', ');
+      // Notify the client to re-fetch its tool list so newly loaded downstream
+      // tools (joomla-mcp, gantry-mcp) become callable without a session restart.
+      try { server.notification({ method: 'notifications/tools/list_changed' }); } catch { /* best-effort */ }
       return {
         content: [{
           type: 'text',

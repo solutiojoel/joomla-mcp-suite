@@ -1,0 +1,320 @@
+{
+  "site": "https://test-menu.forge.solutiosoftware.com/",
+  "source": "SH-Emporia School Menu & Content.pdf",
+  "generated": "2026-06-16",
+  "menus": {
+    "mainmenu": [
+      {
+        "title": "About Sacred Heart School",
+        "type": "heading",
+        "children": [
+          {
+            "title": "Welcome from the Principal",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "Principal is retiring — generate new content"
+          },
+          {
+            "title": "Why Choose Sacred Heart?",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Faculty & Staff",
+            "type": "category_grid",
+            "category": "Faculty & Staff",
+            "content_source": "pull",
+            "notes": "Contentarray particle grid — no individual teacher pages. Updated info and photos required from client."
+          },
+          {
+            "title": "Our History",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Contact Us & Directions",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Sacred Heart School Commission",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Alumni",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          }
+        ]
+      },
+      {
+        "title": "News & Events",
+        "type": "heading",
+        "children": [
+          {
+            "title": "Calendar",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull",
+            "notes": "Include Academic calendar year view"
+          },
+          {
+            "title": "Weekly Information & Newsletter",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Lunch Menu",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Parish News",
+            "type": "external_url",
+            "target": "https://www.shsemporia.org",
+            "content_source": "redirect"
+          }
+        ]
+      },
+      {
+        "title": "Admissions & Academics",
+        "type": "heading",
+        "children": [
+          {
+            "title": "Request Information",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Registration",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Financial Aid & Tuition",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Curriculum",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Specials",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Preschool & Child Care Center",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Accreditations",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "KSDE Accountability Reports",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          }
+        ]
+      },
+      {
+        "title": "Parents",
+        "type": "heading",
+        "children": [
+          {
+            "title": "Parent Login",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Parent/Student Handbook",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Calendar",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Lunch Menus & Information",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull",
+            "notes": "Include wellness policy and application for free/reduced lunch"
+          },
+          {
+            "title": "Virtus",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "PTO",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull",
+            "notes": "Convert to one page"
+          },
+          {
+            "title": "Extended Care",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Dress Code",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Pick Up/Drop Off",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Supply Lists",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          }
+        ]
+      },
+      {
+        "title": "Support Us",
+        "type": "heading",
+        "children": [
+          {
+            "title": "Donate",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Mexican Supper",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Feast for Our Future",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          }
+        ]
+      },
+      {
+        "title": "Capital Campaign",
+        "type": "single_article",
+        "category": "Page Content",
+        "content_source": "pull"
+      },
+      {
+        "title": "Sponsors",
+        "type": "category_grid",
+        "category": "Sponsors",
+        "content_source": "existing"
+      }
+    ],
+    "hiddenmenu": [
+      {
+        "title": "Schedule a Tour",
+        "type": "single_article",
+        "category": "Page Content",
+        "content_source": "generate",
+        "notes": "Under Rotator quicklink destination — single article page, no form"
+      }
+    ]
+  },
+  "modules": {
+    "toplinks": {
+      "items": [
+        { "label": "Contact Us", "type": "external_url", "target": "TBD" },
+        { "label": "Giving", "type": "external_url", "target": "TBD" },
+        { "label": "Apply", "type": "external_url", "target": "TBD" }
+      ]
+    },
+    "under_rotator": {
+      "items": [
+        { "label": "Schedule a Tour", "menu_item": "Schedule a Tour" },
+        { "label": "Preschool & Child Care", "type": "external_url", "target": "TBD" },
+        { "label": "Parent Resources", "type": "external_url", "target": "TBD" },
+        { "label": "Parents Login", "type": "external_url", "target": "TBD" },
+        { "label": "Church", "type": "external_url", "target": "https://www.shsemporia.org" }
+      ]
+    }
+  },
+  "grids": [
+    {
+      "page": "Faculty & Staff",
+      "menu_ref": "Faculty & Staff",
+      "type": "category_grid",
+      "category": "Faculty & Staff",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "notes": "Contentarray particle. No individual teacher pages. Client must provide updated info and photos."
+    },
+    {
+      "page": "Parents",
+      "menu_ref": "Parents",
+      "type": "category_grid",
+      "category": "Parent Grid Items",
+      "particle": "joomla_articles",
+      "member_menu_items": "listed",
+      "notes": "Edge case: heading that is also a grid landing page. Children retain sub-menu items. Built as navigable Single Article in Phase 4."
+    },
+    {
+      "page": "Sponsors",
+      "menu_ref": "Sponsors",
+      "type": "category_grid",
+      "category": "Sponsors",
+      "particle": "joomla_articles",
+      "member_menu_items": "none"
+    }
+  ],
+  "open_questions": [
+    "TopLinks targets (Contact Us, Giving, Apply) — deferred",
+    "Under Rotator targets (Preschool & Child Care, Parent Resources, Parents Login) — deferred",
+    "Faculty & Staff: updated staff info and photos needed from client before Phase 5"
+  ],
+  "assumptions": [
+    "All 'Pull from website' leaf items defaulted to single_article in Page Content category",
+    "Faculty & Staff classified as category_grid — contentarray particle, no individual teacher pages confirmed",
+    "Parish News external_url target set to https://www.shsemporia.org (church domain confirmed)",
+    "Capital Campaign changed to single_article (root level) per user correction",
+    "Parent Login changed to single_article (embedded login page) per user correction",
+    "Schedule a Tour added to hiddenmenu as single_article — Under Rotator quicklink destination, no form",
+    "Parents treated as edge case: heading type with grids entry — landing page navigable as Single Article grid, children retain sub-menu items, member_menu_items: listed. Category: Parent Grid Items",
+    "Parents > Calendar is a separate article from News & Events > Calendar (confirmed)",
+    "Sponsors is root-level category_grid (confirmed)",
+    "TopLinks and Under Rotator quicklink targets deferred per user instruction"
+  ]
+}
