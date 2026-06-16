@@ -2,8 +2,21 @@
   "site": "https://test-menu.forge.solutiosoftware.com/",
   "source": "SH-Emporia School Menu & Content.pdf",
   "generated": "2026-06-16",
+  "joomla_ids": {
+    "menus": {
+      "school-menu": 7,
+      "school-hidden-menu": 8
+    },
+    "categories": {
+      "Page Content": 54,
+      "Faculty & Staff": 50,
+      "Parent Grid Items": 51,
+      "Sponsors": 52,
+      "School News & Events": 53
+    }
+  },
   "menus": {
-    "mainmenu": [
+    "school-menu": [
       {
         "title": "About Sacred Heart School",
         "type": "heading",
@@ -56,7 +69,11 @@
       },
       {
         "title": "News & Events",
-        "type": "heading",
+        "type": "category_grid",
+        "category": "School News & Events",
+        "content_source": "pull",
+        "member_menu_items": "listed",
+        "notes": "Edge case: grid landing page with children. Children retain sub-menu items. Built as navigable Single Article in Phase 4.",
         "children": [
           {
             "title": "Calendar",
@@ -141,7 +158,11 @@
       },
       {
         "title": "Parents",
-        "type": "heading",
+        "type": "category_grid",
+        "category": "Parent Grid Items",
+        "content_source": "pull",
+        "member_menu_items": "listed",
+        "notes": "Edge case: heading that is also a grid landing page. Children retain sub-menu items. Built as navigable Single Article in Phase 4.",
         "children": [
           {
             "title": "Parent Login",
@@ -244,7 +265,7 @@
         "content_source": "existing"
       }
     ],
-    "hiddenmenu": [
+    "school-hidden-menu": [
       {
         "title": "Schedule a Tour",
         "type": "single_article",
@@ -283,6 +304,15 @@
       "notes": "Contentarray particle. No individual teacher pages. Client must provide updated info and photos."
     },
     {
+      "page": "News & Events",
+      "menu_ref": "News & Events",
+      "type": "category_grid",
+      "category": "School News & Events",
+      "particle": "joomla_articles",
+      "member_menu_items": "listed",
+      "notes": "Edge case: grid landing page with children. Calendar, Weekly Info, Lunch Menu, Parish News retain sub-menu items. Built as navigable Single Article in Phase 4."
+    },
+    {
       "page": "Parents",
       "menu_ref": "Parents",
       "type": "category_grid",
@@ -311,10 +341,12 @@
     "Parish News external_url target set to https://www.shsemporia.org (church domain confirmed)",
     "Capital Campaign changed to single_article (root level) per user correction",
     "Parent Login changed to single_article (embedded login page) per user correction",
-    "Schedule a Tour added to hiddenmenu as single_article — Under Rotator quicklink destination, no form",
+    "Schedule a Tour added to school-hidden-menu as single_article — Under Rotator quicklink destination, no form",
     "Parents treated as edge case: heading type with grids entry — landing page navigable as Single Article grid, children retain sub-menu items, member_menu_items: listed. Category: Parent Grid Items",
     "Parents > Calendar is a separate article from News & Events > Calendar (confirmed)",
     "Sponsors is root-level category_grid (confirmed)",
-    "TopLinks and Under Rotator quicklink targets deferred per user instruction"
+    "TopLinks and Under Rotator quicklink targets deferred per user instruction",
+    "News & Events reclassified from heading to category_grid per user correction — category: School News & Events, member_menu_items: listed (children retain sub-menu items)",
+    "Menu builds use fresh menus (school-menu, school-hidden-menu) — never alter existing forge menus (mainmenu, tempsite-menu, hidden-menu)"
   ]
 }
