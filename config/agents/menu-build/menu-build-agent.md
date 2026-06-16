@@ -68,6 +68,7 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are in scope for this a
 | `kb/menu-spec-schema` | Schema, classification ruleset, lint invariants, and worked example — read before Phase 1 |
 | `kb/grid-layout` | Grid layout page setup (Joomla Articles particle) — read when a `category_grid` is in spec |
 | `kb/staff-grid` | Staff/team grid setup (contentarray particle) — read when Faculty & Staff is a grid |
+| `kb/staff-pages` | All staff page layout variants (grid, teacherbox, table, contact form) — read before classifying any staff/faculty section |
 | `improvements` | Shared team queue for process notes |
 
 ---
