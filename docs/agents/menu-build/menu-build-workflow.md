@@ -24,8 +24,8 @@ Pages such as sacraments, ministries, clubs, staff, faculty, and councils — or
 
 Bulletin pages are single article menu items. Some bulletin pages will have widgets or DOCman modules added in Phase 5.
 
-**Terminology — separator / heading / Menu Heading:**
-The team uses the word "separator" for non-navigable parent items. In the spec these are `heading` type. In Joomla's admin UI the type is called "Menu Heading" (under System Links → Menu Heading). When the PDF or a conversation says "separator", map it to `heading` in the spec and "Menu Heading" when building in Phase 4. Do not confuse this with Joomla's "Text Separator" type, which is a visual-only divider — that is not used here.
+**Terminology — separator / heading / Separator:**
+The team uses the word "separator" for non-navigable parent items. In the spec these are `heading` type. In Joomla's admin UI the type displays as "Separator" (the "Text Separator" system link). When building in Phase 4, pass `itemType: "heading"` — the tool converts it to the correct Joomla type automatically. Do not pass "Menu Heading"; that is a different Joomla type with different rendering behavior.
 
 Categories control what appears in Gantry 5 Joomla Articles particles:
 
@@ -135,7 +135,7 @@ Ask: *"Confirm targets above and approve Phase 4 build?"* Do not proceed until t
 
 Build from the approved spec — mechanical, minimal interpretation:
 
-- `heading` → menu item, type **Menu Heading** (separator/parent). **Exception:** if a `grids` entry names this item as its `menu_ref`, build it as a navigable Single Article instead — the grid landing page article is what the heading links to. Children still nest under it as sub-items.
+- `heading` → menu item, `itemType: "heading"` — the tool converts this to Joomla's Separator type automatically. **Exception:** if a `grids` entry names this item as its `menu_ref`, build it as a navigable Single Article instead — the grid landing page article is what the heading links to. Children still nest under it as sub-items.
 - `single_article` → **Single Article** menu item; ensure the article exists in its category. Empty placeholder article is fine — content is Phase 5.
 - `category_grid` → Single Article menu item for the page title **plus** a Joomla Articles particle module per `kb/grid-layout`. **Do not** create menu items for grid members unless `member_menu_items: "listed"`.
 - `external_url` → **External URL** menu item.

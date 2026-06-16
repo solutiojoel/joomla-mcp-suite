@@ -4988,8 +4988,8 @@ export class JoomlaClient {
   }): Promise<JoomlaResponse> {
     const typesResult = await this.listMenuItemTypes();
     const types = (typesResult.data || []) as MenuItemType[];
-    // "heading" in the menu spec maps to Joomla's "Menu Heading" system link type
-    const resolvedItemType = data.itemType.toLowerCase() === "heading" ? "Menu Heading" : data.itemType;
+    // "heading" in the spec maps to Joomla's "Separator" system link type
+    const resolvedItemType = data.itemType.toLowerCase() === "heading" ? "separator" : data.itemType;
     const type = this.findMenuItemType(types, resolvedItemType);
     if (!type) {
       return { success: false, message: `Menu item type not found: ${data.itemType}` };
@@ -5015,6 +5015,13 @@ export class JoomlaClient {
     const typedHtml = typedPage.html || html;
     const typedToken = this.extractCsrfToken(typedHtml) || token;
     const request = { ...type.request, ...(data.request || {}) };
+    // System link types (separator, heading, url, alias) require the plain internal type
+    // string in jform[type]. Component types (single article, category blog, etc.) need
+    // the encoded base64 payload. Sending encoded JSON for system link types causes Joomla
+    // to save the item with an "Unknown" type.
+    const jformType = (type.request.option === "com_menus" && type.request["type"])
+      ? type.request["type"]
+      : type.encoded;
     const formData: Record<string, string> = {
       ...this.extractFormFields(html),
       ...this.extractFormFields(typedHtml),
@@ -5022,7 +5029,7 @@ export class JoomlaClient {
       "jform[title]": data.title,
       "jform[alias]": data.alias || "",
       "jform[menutype]": data.menuType,
-      "jform[type]": type.encoded,
+      "jform[type]": jformType,
       "jform[link]": data.link || this.buildLinkFromRequest(request),
       "jform[parent_id]": data.parentId || "1",
       "jform[published]": data.published ?? "1",
@@ -5145,7 +5152,7 @@ export class JoomlaClient {
     if (data.itemType) {
       const typesResult = await this.listMenuItemTypes();
       const types = (typesResult.data || []) as MenuItemType[];
-      const resolvedUpdateType = data.itemType.toLowerCase() === "heading" ? "Menu Heading" : data.itemType;
+      const resolvedUpdateType = data.itemType.toLowerCase() === "heading" ? "separator" : data.itemType;
       type = this.findMenuItemType(types, resolvedUpdateType);
       if (!type) {
         return { success: false, message: `Menu item type not found: ${data.itemType}` };
