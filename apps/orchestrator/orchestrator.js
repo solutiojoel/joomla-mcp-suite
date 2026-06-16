@@ -936,7 +936,8 @@ function buildServer(sessionCtx) {
       if (!targetAgent) {
         return { isError: true, content: [{ type: 'text', text: 'agent is required' }] };
       }
-      const defPath = path.join(AGENTS_CONFIG_DIR, `${targetAgent}.json`);
+      let defPath = path.join(AGENTS_CONFIG_DIR, `${targetAgent}.json`);
+      if (!fs.existsSync(defPath)) defPath = path.join(AGENTS_CONFIG_DIR, targetAgent, `${targetAgent}.json`);
       if (!fs.existsSync(defPath)) {
         const available = listAvailableAgents().map(a => a.name).join(', ');
         return {
