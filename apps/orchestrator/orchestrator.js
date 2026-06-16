@@ -131,13 +131,17 @@ function resolveSessionContext(authHeader) {
 const AGENTS_CONFIG_DIR = path.join(__dirname, '..', '..', 'config', 'agents');
 
 function loadAgentDef(agentName) {
-  const defPath = path.join(AGENTS_CONFIG_DIR, `${agentName}.json`);
+  // Try flat: config/agents/<name>.json, then subfolder: config/agents/<name>/<name>.json
+  let defPath = path.join(AGENTS_CONFIG_DIR, `${agentName}.json`);
+  if (!fs.existsSync(defPath)) defPath = path.join(AGENTS_CONFIG_DIR, agentName, `${agentName}.json`);
   if (!fs.existsSync(defPath)) {
     log(`WARNING: no agent definition found for '${agentName}', defaulting to super_shannon scope`);
     return { name: agentName, tools: { allow: ['*'] }, docs: { allow: ['*'] } };
   }
   try {
-    return JSON.parse(fs.readFileSync(defPath, 'utf8'));
+    const def = JSON.parse(fs.readFileSync(defPath, 'utf8'));
+    def._dir = path.dirname(defPath);
+    return def;
   } catch (err) {
     log(`WARNING: failed to parse config/agents/${agentName}.json - ${err.message}`);
     return { name: agentName, tools: { allow: ['*'] }, docs: { allow: ['*'] } };
@@ -146,16 +150,26 @@ function loadAgentDef(agentName) {
 
 function listAvailableAgents() {
   if (!fs.existsSync(AGENTS_CONFIG_DIR)) return [];
-  return fs.readdirSync(AGENTS_CONFIG_DIR)
-    .filter(f => f.endsWith('.json'))
-    .map(f => {
-      try {
-        const def = JSON.parse(fs.readFileSync(path.join(AGENTS_CONFIG_DIR, f), 'utf8'));
-        return { name: def.name || f.slice(0, -5), description: def.description || '' };
-      } catch { return null; }
-    })
-    .filter(Boolean)
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const results = [];
+  const seen = new Set();
+  function addJson(jsonPath) {
+    try {
+      const def = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      const name = def.name || path.basename(jsonPath, '.json');
+      if (seen.has(name)) return;
+      seen.add(name);
+      results.push({ name, description: def.description || '' });
+    } catch { /* skip */ }
+  }
+  for (const entry of fs.readdirSync(AGENTS_CONFIG_DIR, { withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith('.json')) {
+      addJson(path.join(AGENTS_CONFIG_DIR, entry.name));
+    } else if (entry.isDirectory()) {
+      const sub = path.join(AGENTS_CONFIG_DIR, entry.name, `${entry.name}.json`);
+      if (fs.existsSync(sub)) addJson(sub);
+    }
+  }
+  return results.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // ─── Hidden tools ─────────────────────────────────────────────────────────────

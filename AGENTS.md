@@ -92,7 +92,7 @@ Call `read_agent_doc(doc: "<name>")` with the name from the first column:
 |----------|-------------|
 | `editing-rules` | Every session — universal editing conventions |
 | `freshdesk-agent` | Support ticket triage (Phase 1) and individual ticket research and resolution (Phase 2) |
-| `menu-build` | Menu build — PDF → Menu Spec → Joomla skeleton (Phases 1–4). Category conventions, pitfalls, and checklist included. |
+| `menu-build-workflow` | Menu build — PDF → Menu Spec → Joomla skeleton (Phases 1–4). Category conventions, pitfalls, and checklist included. |
 | `content-agent` | Standard article text, SEO, and publish state edits |
 | `custom-page-agent` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
 | `gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |

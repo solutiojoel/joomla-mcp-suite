@@ -1,6 +1,6 @@
 # Menu Build — PDF → Joomla Skeleton
 
-**Scope:** Phases 1–4 only — Menu Spec interpretation, validation, user review, and Joomla skeleton build (categories, placeholder articles, menu items, quicklink modules). building content is out of scope; hand off to the content agent when the skeleton is approved.
+**Scope:** Phases 1–4 only — Menu Spec interpretation, validation, user review, and Joomla skeleton build (categories, placeholder articles, menu items). Building content is out of scope; hand off to the content agent when the skeleton is approved.
 
 The contract between phases is the **Menu Spec** — see `kb/menu-spec-schema` for the schema, classification rules, and a worked example. Read that KB doc before doing any interpretation.
 
@@ -10,26 +10,29 @@ The contract between phases is the **Menu Spec** — see `kb/menu-spec-schema` f
 
 ## PDF menu build interpretation guide
 
-Use your best judment, add questions to the open questions sections if it is not clear. Category names and menu item names vary from site to site.
+Use your best judgment; add questions to `open_questions` when anything is unclear. Category names and menu item names vary from site to site.
 
-Most pages are single article menu items. The articles for each menu item get placed in a category named page content or something similar. Sub sites have similarly named categories. If they don't exist, create them. ex: "School page content", "Church Page Content".
+Most pages are single article menu items. The articles for each menu item get placed in a category named Page Content or something similar. Sub-sites have similarly named categories — create them if they don't exist (e.g. "School Page Content", "Church Page Content").
 
-Many pages are grid pages. Read kb/grid-layout.md for context. Articles that appear on grid pages belong in their own categories such as "sacrament grid items" or "Staff Grid Items" etc.
+**Grid pages** use Joomla Articles particle modules. Articles that appear on grid pages belong in their own named categories (e.g. "Sacrament Grid Items", "Staff Grid Items"). Grid pages are used when items will be changed frequently or added to by the client. Staff pages and All News pages are almost always grids.
 
-Grid pages are used when there is a need for additional navigation or if the grid items will need changed frequently or added to. Staff pages are almost always grid layouts as well as the all news pages.
+**Grid sub-items:** If the PDF labels a parent item as a grid, any items listed beneath it are **articles that belong in the grid's category — not sub-menu items**. Do not create menu items for them. Capture them in the `grids.members` array (or just note the category) and set `member_menu_items: "none"`.
 
-Top level and parent menu items with sub menu's are typically grid pages or separators. They may also be system links or menu item aliases.
+Top-level parent items with real sub-pages beneath them are separators (`heading` type in the spec). They may also be external URLs or aliases.
 
-Pages such as sacraments, minstries, clubs, staff, faculty, councils, or any parent menu item with a significant number of child menu items or contain sub items that will likely need changed or added to by the client are typically grid pages.
+Pages such as sacraments, ministries, clubs, staff, faculty, and councils — or any section whose items will need to be changed or added to by the client — are typically grid pages.
 
-Bulletin pages should be single article menu items. Some bulletin pages will have widgets added and other will have docman modules added to them.
+Bulletin pages are single article menu items. Some bulletin pages will have widgets or DOCman modules added in Phase 5.
+
+**Terminology — separator / heading / Menu Heading:**
+The team uses the word "separator" for non-navigable parent items. In the spec these are `heading` type. In Joomla's admin UI the type is called "Menu Heading" (under System Links → Menu Heading). When the PDF or a conversation says "separator", map it to `heading` in the spec and "Menu Heading" when building in Phase 4. Do not confuse this with Joomla's "Text Separator" type, which is a visual-only divider — that is not used here.
 
 Categories control what appears in Gantry 5 Joomla Articles particles:
 
 - **Page Content** — articles that are not grid members (standalone pages, section landing pages that aren't grids)
-- **Named section category** (e.g. `News & Events`, `Sponsors`) — articles that appear as tiles in a grid; the category name matches the grid's `category` field in the spec's `grids` array
+- **Named section category** (e.g. `Ministries`, `Sponsors`) — articles that appear as tiles in a grid; the category name matches the grid's `category` field in the spec's `grids` array
 
-Articles must not be in the wrong category or they will appear (or fail to appear) in the wrong grid. When in doubt, check the spec's `grids` array: if a menu section has a grids entry, its child articles belong in that grid's named category, not `Page Content`.
+Articles must not be in the wrong category or they will appear (or fail to appear) in the wrong grid. When in doubt, check the spec's `grids` array: if a menu section has a `grids` entry, its child articles belong in that grid's named category, not `Page Content`.
 
 ---
 
@@ -37,7 +40,7 @@ Articles must not be in the wrong category or they will appear (or fail to appea
 
 1. Read the source document and `kb/menu-spec-schema` (output format, lint rules, worked example).
 2. Classify each item using the rules below. Preserve the document's ordering. Do not invent, reorder, or editorialize.
-3. Push every guess into `open_questions` and every applied default into `assumptions`. When the PDF is silent (redirect targets, ambiguous item types, the TopLinks vs. hidden-menu split), **flag — do not quietly fill**.
+3. Push every guess into `open_questions` and every applied default into `assumptions`. When the PDF is silent (redirect targets, ambiguous item types), **flag — do not quietly fill**.
 4. Persist the spec with `joomla_workspace_write` (e.g. `menu-spec.json`).
 
 **Gate:** spec is saved and conforms to the schema.
@@ -48,24 +51,48 @@ Decide each node's `type` using these rules, in priority order:
 
 | Signal in the source doc | `type` | Notes |
 |---|---|---|
-| Top-level item with sub-items, **not** itself a grid landing page | `heading` | Separator/parent — no content of its own |
+| Parent item with real sub-pages, labeled "separator", not itself a grid landing page | `heading` | "Separator" in team vocab → `heading` in spec → "Menu Heading" in Joomla. No content of its own. |
+| Parent item **labeled "grid"** with sub-items that are articles, not sub-pages | `category_grid` | Sub-items go into the grid's named category — **not menu items**. See `grids` construction below. |
 | **Staff / team / faculty page** — any page listing people | `category_grid` | **Always a grid.** Read `kb/staff-grid` and `kb/staff-pages` before classifying; flag open questions about layout variant |
-| **News page** — "All News", any page listing news articles as cards | `category_grid` | **Always a grid.** Add a `grids` entry; default category name `News` unless the site uses another |
-| Any other page that is explicitly a category of cards/tiles | `category_grid` | Joomla Articles particle; members self-route — no child menu items |
+| **News page** — "All News", any page listing news articles as cards | `category_grid` | **Always a grid.** Default category name `News` unless the site uses another |
+| Any other section of cards/tiles that clients will add to or change | `category_grid` | Grid members self-route via their category — no child menu items |
 | Plain leaf, "pull from website", normal page | `single_article` | **Default.** Article goes in the `Page Content` category |
-| "Redirect", "link to church", any off-site destination | `external_url` | Requires `target`; place on `hiddenmenu` when only a quicklink target |
+| "Redirect", "link to church", any off-site destination | `external_url` | Requires `target` |
 | Bulletin-style document list | `docman` | DOCman category/page |
 | Category blog/list page (rare, explicit) | `category_blog` / `category_list` | Only when the doc clearly calls for a blog/list, not a grid |
 | Alias to another menu item | `alias` | Only when explicitly a duplicate link |
 
 **Defaults (list each applied default in `assumptions`):**
 - Any leaf with no other signal → `single_article`, category `Page Content`
-- Staff / faculty / team pages → `category_grid` — never default to `single_article` even if the PDF says "pull from website"
+- Staff / faculty / team pages → `category_grid` — never `single_article` even if the PDF says "pull from website"
 - News pages → `category_grid` — almost never `single_article`
 - Grid member articles → no menu items; they self-route via their category
-- Top-level parents that aren't grid landing pages → `heading`
+- Top-level parents with real sub-pages → `heading`
 
 **When classification is ambiguous:** consult the relevant KB doc before flagging in `open_questions` — `kb/staff-pages` for staff layout variants, `kb/grid-layout` for general grids. Flag in `open_questions` only if the KB doc doesn't resolve it.
+
+---
+
+### `grids` Array Construction
+
+Every `category_grid` item must have a corresponding entry in the top-level `grids` array. Build it at the same time you classify the item — do not defer.
+
+| Field | Value |
+|---|---|
+| `page` | The menu item title |
+| `menu_ref` | The menu item title (same as `page`) |
+| `type` | Always `category_grid` |
+| `category` | Derive from the section name — e.g. "Ministries" → `"Ministries"`, "All News" → `"News"`. This is the Joomla category the particle filters on. |
+| `particle` | Always `joomla_articles` — all grids use the Joomla Articles particle |
+| `member_menu_items` | See rule below |
+
+**`member_menu_items` rule:**
+
+- PDF labels the parent as a grid and lists items beneath it → `"none"`. Those listed items are articles for the category, not sub-menu items.
+- Staff, news, events, or any tile grid where items have no independent nav presence → `"none"` (the default).
+- A grid member explicitly needs its own Joomla menu item (rare) → `"listed"`. Flag this in `open_questions` when you use it.
+
+**Edge case — parent that is both a grid landing page and has real sub-pages in the menu:** Use `heading` type with a `grids` entry (set `menu_ref` to the heading title). Phase 4 will build it as a navigable Single Article rather than a plain separator, and its children will still nest under it as sub-items. Flag this in `assumptions`.
 
 ---
 
@@ -77,7 +104,7 @@ Run the invariants before showing the draft:
 node apps/orchestrator/test-menu-spec.cjs
 ```
 
-Or validate the live spec directly against `config/menu-spec.schema.json` and the lint rules in the KB doc.
+Or validate the live spec directly against `config/agents/menu-build/menu-spec.schema.json` and the lint rules in the KB doc.
 
 **Gate:** zero schema errors; every lint error either fixed or represented by an `open_questions` entry.
 
@@ -110,10 +137,9 @@ Build from the approved spec — mechanical, no interpretation:
 
 - `heading` → menu item, type **Menu Heading** (separator/parent). **Exception:** if a `grids` entry names this item as its `menu_ref`, build it as a navigable Single Article instead — the grid landing page article is what the heading links to. Children still nest under it as sub-items.
 - `single_article` → **Single Article** menu item; ensure the article exists in its category. Empty placeholder article is fine — content is Phase 5.
-- `category_grid` → Single Article menu item for the page title **plus** the grid particle module per `kb/grid-layout` (or `kb/staff-grid` for staff). **Do not** create menu items for grid members unless `member_menu_items: "listed"`.
-- `external_url` → **External URL** menu item; place on `hiddenmenu` when it is only a quicklink target.
+- `category_grid` → Single Article menu item for the page title **plus** a Joomla Articles particle module per `kb/grid-layout`. **Do not** create menu items for grid members unless `member_menu_items: "listed"`.
+- `external_url` → **External URL** menu item.
 - `docman` → DOCman category/page per the DOCman convention.
-- `modules` → homepage quicklink modules; wire `menu_item` references to the `hiddenmenu` items created above.
 
 **Grid article categories:** articles that are grid members go in their grid's named category — not `Page Content`. Check the spec's `grids` array and each item's `category` field.
 
@@ -121,7 +147,7 @@ Preserve parent/child nesting and ordering from the spec.
 
 **Alias collisions:** For any item flagged in the Pre-Phase 4 existing item check (step 3), pass an explicit `alias` with a site-specific suffix on create. If a create returns "not verified" (empty ID), do not retry the same call — see Common Pitfalls below.
 
-**Gate:** every spec node exists in Joomla; grids render; quicklinks resolve.
+**Gate:** every spec node exists in Joomla; grids render.
 
 ---
 
@@ -165,8 +191,6 @@ Call `append_site_note` after Phase 4 completes, recording the spec filename and
 - [ ] Top-level menu items created (note IDs for parentId assignment)
 - [ ] Sub-menu items created with correct `parentId`
 - [ ] Heading items with a `grids` entry built as navigable Single Article (not plain heading)
-- [ ] `hiddenmenu` items created for quicklink targets
-- [ ] Under Rotator quicklinks wired to correct menu items
 - [ ] Template style / Gantry outline assigned to all menu items
 - [ ] `append_site_note` called after Phase 4 completes
 - [ ] Phase 5 handed off to content agent

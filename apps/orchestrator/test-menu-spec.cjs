@@ -11,7 +11,7 @@
 const fs   = require('fs');
 const path = require('path');
 
-const SCHEMA_PATH = path.join(__dirname, '..', '..', 'config', 'menu-spec.schema.json');
+const SCHEMA_PATH = path.join(__dirname, '..', '..', 'config', 'agents', 'menu-build', 'menu-spec.schema.json');
 const schema = JSON.parse(fs.readFileSync(SCHEMA_PATH, 'utf8'));
 
 // ---------------------------------------------------------------------------

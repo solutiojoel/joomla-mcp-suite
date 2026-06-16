@@ -30,6 +30,7 @@
 const fs   = require('fs');
 const path = require('path');
 
+const DOCS_GLOBAL_DIR   = path.join(__dirname, '..', '..', 'docs', 'global');
 const DOCS_AGENTS_DIR   = path.join(__dirname, '..', '..', 'docs', 'agents');
 const AGENTS_CONFIG_DIR = path.join(__dirname, '..', '..', 'config', 'agents');
 
@@ -78,6 +79,9 @@ function buildDocIndex() {
     }
   }
 
+  // docs/global/ is scanned with the 'global' prefix so canonical names remain
+  // 'global/...' and public names (scope stripped) stay unchanged.
+  scanDir(DOCS_GLOBAL_DIR, 'global');
   scanDir(DOCS_AGENTS_DIR, '');
   return index;
 }
@@ -261,8 +265,10 @@ function readDoc(agentDef, docName) {
  */
 function readInstructions(agentDef) {
   if (agentDef && agentDef.instructions) {
-    const instrPath = path.resolve(AGENTS_CONFIG_DIR, agentDef.instructions);
-    // Path-traversal guard
+    // Resolve relative to the agent def's own directory (supports subfolder layout)
+    const baseDir = agentDef._dir || AGENTS_CONFIG_DIR;
+    const instrPath = path.resolve(baseDir, agentDef.instructions);
+    // Path-traversal guard: must stay within config/agents/
     if (!path.relative(AGENTS_CONFIG_DIR, instrPath).startsWith('..') && fs.existsSync(instrPath)) {
       return fs.readFileSync(instrPath, 'utf8');
     }

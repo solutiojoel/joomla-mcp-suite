@@ -23,7 +23,7 @@ Docs and KB articles are read via `read_agent_doc` — your access is scoped to 
 
 **Step 4 — `read_agent_doc(doc: "editing-rules")`** — universal editing conventions, required every session.
 
-When starting a menu build, also read `menu-build` and `kb/menu-spec-schema` before Phase 1.
+When starting a menu build, also read `menu-build-workflow` and `kb/menu-spec-schema` before Phase 1.
 
 ---
 
@@ -64,7 +64,7 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are in scope for this a
 | Doc name | When to use |
 |----------|-------------|
 | `editing-rules` | Every session — required conventions |
-| `menu-build` | Full build workflow — Phases 1–4, category conventions, pitfalls, checklist |
+| `menu-build-workflow` | Full build workflow — Phases 1–4, category conventions, pitfalls, checklist |
 | `kb/menu-spec-schema` | Schema, classification ruleset, lint invariants, and worked example — read before Phase 1 |
 | `kb/grid-layout` | Grid layout page setup (Joomla Articles particle) — read when a `category_grid` is in spec |
 | `kb/staff-grid` | Staff/team grid setup (contentarray particle) — read when Faculty & Staff is a grid |
@@ -89,7 +89,6 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are in scope for this a
 | `joomla_category` | Create or manage categories |
 | `joomla_menu` | List menus |
 | `joomla_menu_item` | Create or update menu items |
-| `joomla_module` | Create or manage modules (quicklinks) |
 | `joomla_backend_inventory` | Inventory of articles, categories, menus, modules |
 | `joomla_bulk_checkin` | Check in locked items |
 

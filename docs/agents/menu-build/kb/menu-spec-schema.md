@@ -6,7 +6,7 @@ fixed field names, fixed enum values, preserved source ordering, and mandatory
 `open_questions` / `assumptions`. Everything downstream (validate, lint, build) is
 mechanical and testable.
 
-- **Format:** JSON. Schema: [config/menu-spec.schema.json](../../../../config/menu-spec.schema.json).
+- **Format:** JSON. Schema: [config/agents/menu-build/menu-spec.schema.json](../../../../config/agents/menu-build/menu-spec.schema.json).
 - **Validator/lint:** `node apps/orchestrator/test-menu-spec.cjs`.
 - **Persist** each site's spec with `joomla_workspace_write` so it is the durable
   contract between the structure build (Phases 1–4) and the content pass (Phase 5).
@@ -47,7 +47,7 @@ shown in nav — the common home for redirect/external targets that a quicklink 
 
 `heading` · `single_article` · `category_grid` · `external_url` · `docman` · `category_blog` · `category_list` · `alias`
 
-Classification rules (which type to assign and when) live in the **Phase 1 Classification Rules** section of `menu-build.md`. This doc covers output format only.
+Classification rules (which type to assign and when) live in the **Phase 1 Classification Rules** section of `menu-build-workflow.md`. This doc covers output format only.
 
 ### `content_source` (Phase-5 metadata, set now, build later)
 `pull` (copy from existing site) · `generate` (write new — e.g. "principal retiring") ·
@@ -125,4 +125,4 @@ A spec must pass all of these — fix or flag before building:
 }
 ```
 
-Related: [kb/grid-layout](grid-layout.md), [kb/staff-grid](staff-grid.md), [menu-build](../menu-build.md).
+Related: [kb/grid-layout](grid-layout.md), [kb/staff-grid](staff-grid.md), [menu-build-workflow](../menu-build-workflow.md).
