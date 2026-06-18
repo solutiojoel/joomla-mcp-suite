@@ -10,6 +10,7 @@ services:
       GANTRY_MCP_PORT: "18301"
       FRESHDESK_MCP_PORT: "18306"
       FTP_MCP_PORT: "18307"
+      MOCKUP_MCP_PORT: "9305"
       HTTP_PORT: "18302"
       SITE_BUILDER_PORT: "18303"
     ports:

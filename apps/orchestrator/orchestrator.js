@@ -53,10 +53,11 @@ const ORCHESTRATOR_TOKEN = process.env.ORCHESTRATOR_TOKEN || '';
 // uppercased, dashes → underscores) override both defaults and the JSON file.
 
 const DEFAULT_DOWNSTREAMS = [
-  { label: 'freshdesk-mcp', url: 'http://host.docker.internal:9303/mcp', inject: null },
-  { label: 'ftp-mcp',       url: 'http://host.docker.internal:9304/mcp', inject: 'site_url' },
-  { label: 'joomla-mcp',    url: 'http://host.docker.internal:9300/mcp', inject: 'site_url' },
-  { label: 'gantry-mcp',    url: 'http://host.docker.internal:9301/mcp', inject: 'site' },
+  { label: 'freshdesk-mcp',  url: 'http://host.docker.internal:9303/mcp', inject: null },
+  { label: 'ftp-mcp',        url: 'http://host.docker.internal:9304/mcp', inject: 'site_url' },
+  { label: 'mockup-analyzer',url: 'http://host.docker.internal:9305/mcp', inject: null },
+  { label: 'joomla-mcp',     url: 'http://host.docker.internal:9300/mcp', inject: 'site_url' },
+  { label: 'gantry-mcp',     url: 'http://host.docker.internal:9301/mcp', inject: 'site' },
 ];
 
 function loadDownstreams() {
