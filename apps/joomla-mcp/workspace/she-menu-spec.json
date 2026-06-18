@@ -1,0 +1,245 @@
+{
+  "site": "https://test-menu.forge.solutiosoftware.com/",
+  "source": "SH-Emporia School Menu & Content.pdf",
+  "generated": "2026-06-17",
+  "menus": {
+    "mainmenu": [
+      {
+        "title": "About Sacred Heart School",
+        "type": "heading",
+        "children": [
+          { "title": "Welcome from the Principal", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "principal is retiring" },
+          { "title": "Why Choose Sacred Heart?", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Faculty & Staff", "type": "category_grid", "category": "Faculty & Staff", "content_source": "pull", "member_menu_items": "none", "notes": "No teacher pages; client to send updated info and pictures" },
+          { "title": "Our History", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Contact Us & Directions", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Sacred Heart School Commission", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Alumni", "type": "single_article", "category": "Page Content", "content_source": "pull" }
+        ]
+      },
+      {
+        "title": "News & Events",
+        "type": "heading",
+        "children": [
+          { "title": "Calendar", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Include Academic calendar year view" },
+          { "title": "Weekly Information & Newsletter", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Lunch Menu", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Parish News", "type": "external_url", "target": "TBD", "content_source": "redirect", "notes": "Link to Church's Website" }
+        ]
+      },
+      {
+        "title": "Admissions & Academics",
+        "type": "heading",
+        "children": [
+          { "title": "Request Information", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Registration", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Financial Aid & Tuition", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Curriculum", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Specials", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Preschool & Child Care Center", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Accreditations", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "KSDE Accountability Reports", "type": "single_article", "category": "Page Content", "content_source": "pull" }
+        ]
+      },
+      {
+        "title": "Parents",
+        "type": "heading",
+        "children": [
+          { "title": "Parent Login", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Under Rotator lists this as Redirect — may be external login; flagged in open_questions" },
+          { "title": "Parent/Student Handbook", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Calendar", "type": "alias", "content_source": "existing", "notes": "Alias to Calendar under News & Events (menu item 238)" },
+          { "title": "Lunch Menus & Information", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Include wellness policy and free/reduced lunch application" },
+          { "title": "Virtus", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "PTO", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Convert to one page" },
+          { "title": "Extended Care", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Dress Code", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Pick Up/Drop Off", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Supply Lists", "type": "single_article", "category": "Page Content", "content_source": "pull" }
+        ]
+      },
+      {
+        "title": "Support Us",
+        "type": "heading",
+        "children": [
+          { "title": "Donate", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Mexican Supper", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Feast for Our Future", "type": "single_article", "category": "Page Content", "content_source": "pull" }
+        ]
+      },
+      {
+        "title": "Capital Campaign",
+        "type": "external_url",
+        "target": "TBD",
+        "content_source": "redirect",
+        "notes": "Redirect to church website"
+      },
+      {
+        "title": "Sponsors",
+        "type": "category_grid",
+        "category": "Sponsors",
+        "content_source": "none",
+        "member_menu_items": "none"
+      }
+    ],
+    "hiddenmenu": [
+      { "title": "Giving", "type": "external_url", "target": "TBD", "content_source": "redirect", "notes": "TopLink — donation platform URL TBD" },
+      { "title": "Apply", "type": "external_url", "target": "TBD", "content_source": "redirect", "notes": "TopLink — admissions/application URL TBD" },
+      { "title": "Church", "type": "external_url", "target": "TBD", "content_source": "redirect", "notes": "Under Rotator — church website URL TBD" },
+      { "title": "Parent Resources", "type": "external_url", "target": "TBD", "content_source": "redirect", "notes": "Under Rotator — may alias to Parents section; URL TBD" },
+      { "title": "Parents Login", "type": "external_url", "target": "TBD", "content_source": "redirect", "notes": "Under Rotator — external login system URL TBD" }
+    ]
+  },
+  "modules": {
+    "toplinks": {
+      "items": [
+        { "label": "Contact Us", "type": "menu_item", "menu_item": "Contact Us & Directions" },
+        { "label": "Giving", "type": "menu_item", "menu_item": "Giving" },
+        { "label": "Apply", "type": "menu_item", "menu_item": "Apply" }
+      ]
+    },
+    "under_rotator": {
+      "items": [
+        { "label": "Schedule a Tour", "type": "external_url", "target": "TBD", "notes": "Was shsemporia.org/request-information — client wants Google Form instead" },
+        { "label": "Preschool & Child Care", "type": "menu_item", "menu_item": "Preschool & Child Care Center" },
+        { "label": "Parent Resources", "type": "menu_item", "menu_item": "Parent Resources" },
+        { "label": "Parents Login", "type": "menu_item", "menu_item": "Parents Login" },
+        { "label": "Church", "type": "menu_item", "menu_item": "Church" }
+      ]
+    }
+  },
+  "grids": [
+    {
+      "page": "Faculty & Staff",
+      "menu_ref": "Faculty & Staff",
+      "type": "category_grid",
+      "category": "Faculty & Staff",
+      "particle": "joomla_articles",
+      "member_menu_items": "none"
+    },
+    {
+      "page": "Sponsors",
+      "menu_ref": "Sponsors",
+      "type": "category_grid",
+      "category": "Sponsors",
+      "particle": "joomla_articles",
+      "member_menu_items": "none"
+    }
+  ],
+  "joomla_ids": {
+    "menus": {
+      "school-menu": 9,
+      "school-hidden-menu": 10
+    },
+    "categories": {
+      "Page Content": 54,
+      "Faculty & Staff": 55,
+      "Sponsors": 56
+    },
+    "articles": {
+      "Welcome from the Principal": 190,
+      "Why Choose Sacred Heart?": 191,
+      "Our History": 192,
+      "Contact Us & Directions": 193,
+      "Sacred Heart School Commission": 194,
+      "Alumni": 195,
+      "Calendar": 196,
+      "Weekly Information & Newsletter": 197,
+      "Lunch Menu": 198,
+      "Request Information": 199,
+      "Registration": 200,
+      "Financial Aid & Tuition": 201,
+      "Curriculum": 202,
+      "Specials": 203,
+      "Preschool & Child Care Center": 204,
+      "Accreditations": 205,
+      "KSDE Accountability Reports": 206,
+      "Parent Login": 207,
+      "Parent/Student Handbook": 208,
+      "Lunch Menus & Information": 209,
+      "Virtus": 210,
+      "PTO": 211,
+      "Extended Care": 212,
+      "Dress Code": 213,
+      "Pick Up/Drop Off": 214,
+      "Supply Lists": 215,
+      "Donate": 216,
+      "Mexican Supper": 217,
+      "Feast for Our Future": 218,
+      "Faculty & Staff (landing)": 219,
+      "Sponsors (landing)": 220
+    },
+    "menu_items": {
+      "About Sacred Heart School": 219,
+      "News & Events": 220,
+      "Admissions & Academics": 221,
+      "Parents": 222,
+      "Support Us": 223,
+      "Capital Campaign": 224,
+      "Sponsors": 225,
+      "Giving": 226,
+      "Apply": 227,
+      "Church": 228,
+      "Parent Resources": 229,
+      "Parents Login": 230,
+      "Welcome from the Principal": 231,
+      "Why Choose Sacred Heart?": 232,
+      "Faculty & Staff": 233,
+      "Our History": 234,
+      "Contact Us & Directions": 235,
+      "Sacred Heart School Commission": 236,
+      "Alumni": 237,
+      "Calendar (News & Events)": 238,
+      "Weekly Information & Newsletter": 239,
+      "Lunch Menu": 240,
+      "Parish News": 241,
+      "Request Information": 242,
+      "Registration": 243,
+      "Financial Aid & Tuition": 244,
+      "Curriculum": 245,
+      "Specials": 246,
+      "Preschool & Child Care Center": 247,
+      "Accreditations": 248,
+      "KSDE Accountability Reports": 249,
+      "Parent Login": 250,
+      "Parent/Student Handbook": 251,
+      "Lunch Menus & Information": 252,
+      "Virtus": 253,
+      "PTO": 254,
+      "Extended Care": 255,
+      "Dress Code": 256,
+      "Pick Up/Drop Off": 257,
+      "Supply Lists": 258,
+      "Donate": 259,
+      "Mexican Supper": 260,
+      "Feast for Our Future": 261,
+      "Calendar alias (Parents)": 262
+    }
+  },
+  "open_questions": [
+    "Parish News — church website URL for redirect?",
+    "Capital Campaign — specific church URL to redirect to?",
+    "TopLinks: Giving — target URL (donation platform)?",
+    "TopLinks: Apply — target URL (admissions/application system)?",
+    "Under Rotator: Schedule a Tour — Google Form URL (replacing shsemporia.org/request-information)?",
+    "Under Rotator: Parent Resources — alias to Parents section, or external URL?",
+    "Under Rotator: Parents Login — external login system URL?",
+    "Under Rotator: Church — church website URL?",
+    "Parent Login (under Parents) — PDF says 'pull from website' but Under Rotator lists as Redirect; internal article or external login redirect?",
+    "News & Events — previous build reclassified from heading to category_grid; confirm heading is correct for this build",
+    "Faculty & Staff — client to provide updated staff info and photos (Phase 5 dependency)"
+  ],
+  "assumptions": [
+    "About Sacred Heart School: heading — has real navigable sub-pages",
+    "News & Events: heading — children are navigable sub-pages, not grid tiles (previous build reclassified to category_grid; flagged)",
+    "Admissions & Academics: heading — has real navigable sub-pages",
+    "Parents: heading — has real navigable sub-pages",
+    "Support Us: heading — has real navigable sub-pages",
+    "Faculty & Staff: category_grid — staff pages are always grids per classification rules",
+    "Sponsors: category_grid — top-level sponsor tiles that client will manage",
+    "Capital Campaign: top-level external_url (not nested under Support Us)",
+    "Calendar under Parents: alias to Calendar under News & Events (menu item 238)",
+    "Lunch Menus & Information (Parents) and Lunch Menu (News & Events) are two separate articles with different content",
+    "Giving, Apply, Church, Parent Resources, Parents Login: hiddenmenu external_url items as routable quicklink targets",
+    "All 'pull from website' single_article items go in Page Content category"
+  ]
+}

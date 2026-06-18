@@ -5069,16 +5069,16 @@ export class JoomlaClient {
       // never captures jform[published] and the form-save path cannot commit it. Fix by
       // using the direct items.publish/items.unpublish list task, which writes to the DB
       // without going through the form.
-      if (savedId && listItem) {
-        const expectedPublished = data.published ?? "1";
-        const actualPublished = listItem.state === "Published" ? "1" : "0";
-        if (actualPublished !== expectedPublished) {
-          await this.toggleMenuItem(savedId, expectedPublished, data.menuType);
-        }
-      }
       // Rebuild the menu nested set (lft/rgt) so subsequent creates don't corrupt
       // the published-state display in the admin list view.
       await this.rebuildMenuTree();
+      // Joomla 4/5 custom radio group for published is not committed by the form POST.
+      // Always force the desired state via the list task after rebuild, so the rebuild
+      // cannot undo a prior toggle and so false-positive state detection can't skip it.
+      if (savedId) {
+        const expectedPublished = data.published ?? "1";
+        await this.toggleMenuItem(savedId, expectedPublished, data.menuType);
+      }
     }
     const verify = savedId ? await this.getMenuItem(savedId) : null;
     const item = ((verify?.data || {}) as Record<string, unknown>);
