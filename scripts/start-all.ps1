@@ -7,6 +7,7 @@
 #   orchestrator  -> 9302  (what Claude Desktop connects to)
 #   freshdesk-mcp -> 9303
 #   ftp-mcp       -> 9304
+#   agents-mcp    -> 9305
 #   site-builder  -> 18303
 
 $root = Split-Path -Parent $PSScriptRoot
@@ -16,6 +17,7 @@ $gantryPort = 9301
 $orchPort   = 9302
 $freshdeskPort = 9303
 $ftpPort    = 9304
+$agentsPort = 9305
 $siteBuilderPort = 18303
 
 function Start-McpService([string]$Title, [string]$Dir, [string]$Cmd) {
@@ -34,6 +36,9 @@ Start-McpService "freshdesk-mcp :$freshdeskPort" "$root\apps\freshdesk-mcp" "`$e
 
 Write-Host "Starting ftp-mcp on port $ftpPort..."
 Start-McpService "ftp-mcp :$ftpPort" "$root\apps\ftp-mcp" "`$env:HTTP_PORT='$ftpPort'; node dist/index.js"
+
+Write-Host "Starting agents-mcp on port $agentsPort..."
+Start-McpService "agents-mcp :$agentsPort" "$root\apps\agents-mcp" "`$env:HTTP_PORT='$agentsPort'; npx tsx src/index.ts"
 
 function Wait-Port([int]$Port, [int]$TimeoutSec = 60) {
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
@@ -61,6 +66,9 @@ if (Wait-Port $freshdeskPort) { Write-Host " ready." } else { Write-Error "fresh
 
 Write-Host "Waiting for ftp-mcp..." -NoNewline
 if (Wait-Port $ftpPort) { Write-Host " ready." } else { Write-Error "ftp-mcp did not start in time."; exit 1 }
+
+Write-Host "Waiting for agents-mcp..." -NoNewline
+if (Wait-Port $agentsPort) { Write-Host " ready." } else { Write-Error "agents-mcp did not start in time."; exit 1 }
 
 Write-Host "Starting orchestrator on port $orchPort..."
 Start-McpService "orchestrator :$orchPort" "$root\apps\orchestrator" "`$env:HTTP_PORT='$orchPort'; node orchestrator.js"

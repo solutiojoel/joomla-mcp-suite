@@ -5015,13 +5015,12 @@ export class JoomlaClient {
     const typedHtml = typedPage.html || html;
     const typedToken = this.extractCsrfToken(typedHtml) || token;
     const request = { ...type.request, ...(data.request || {}) };
-    // System link types (separator, heading, url, alias) require the plain internal type
-    // string in jform[type]. Component types (single article, category blog, etc.) need
-    // the encoded base64 payload. Sending encoded JSON for system link types causes Joomla
-    // to save the item with an "Unknown" type.
-    const jformType = (type.request.option === "com_menus" && type.request["type"])
-      ? type.request["type"]
-      : type.encoded;
+    // System link types (separator, url, alias, heading) have an empty request object;
+    // Joomla requires the plain type title string in jform[type] for these.
+    // Component types (com_content.article etc.) have a non-empty request and need the
+    // base64 encoded JSON payload. Sending the encoded payload for system link types
+    // causes Joomla to save the item with "Unknown" type.
+    const jformType = Object.keys(type.request).length === 0 ? type.title : type.encoded;
     const formData: Record<string, string> = {
       ...this.extractFormFields(html),
       ...this.extractFormFields(typedHtml),
@@ -5054,7 +5053,10 @@ export class JoomlaClient {
     Object.assign(formData, data.fieldOverrides || {});
 
     const result = await this.postPage(newItemUrl, formData);
-    const successMsg = /menu item saved|item saved|has been saved/i.test(result.html);
+    // Joomla 4/5: success message appears in redirect target HTML.
+    // Joomla 3: message format differs and may not match, but a 303 redirect always
+    // means Joomla accepted the save — a validation failure stays on the form (200).
+    const successMsg = result.redirected || /menu item saved|item saved|has been saved/i.test(result.html);
     const errorMsg = this.extractAlertMessage(result.html);
     let savedId = "";
     if (successMsg) {
@@ -5065,16 +5067,12 @@ export class JoomlaClient {
       const exactMatches = items.filter((item) => this.decodeHtmlEntities(item.title) === this.decodeHtmlEntities(data.title));
       const listItem = exactMatches[exactMatches.length - 1];
       savedId = listItem?.id || "";
-      // Joomla 4 renders the published field as a custom radio group, so extractFormFields
-      // never captures jform[published] and the form-save path cannot commit it. Fix by
-      // using the direct items.publish/items.unpublish list task, which writes to the DB
-      // without going through the form.
-      // Rebuild the menu nested set (lft/rgt) so subsequent creates don't corrupt
-      // the published-state display in the admin list view.
+      // Rebuild the menu nested set (lft/rgt) after each create so the tree stays
+      // consistent and subsequent creates don't corrupt the published-state display.
       await this.rebuildMenuTree();
-      // Joomla 4/5 custom radio group for published is not committed by the form POST.
-      // Always force the desired state via the list task after rebuild, so the rebuild
-      // cannot undo a prior toggle and so false-positive state detection can't skip it.
+      // Always force the desired published state via the list task after rebuild.
+      // This ensures the rebuild cannot undo a toggle and acts as a safety net for
+      // any edge case where the form POST did not commit jform[published] correctly.
       if (savedId) {
         const expectedPublished = data.published ?? "1";
         await this.toggleMenuItem(savedId, expectedPublished, data.menuType);

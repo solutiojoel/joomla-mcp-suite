@@ -57,6 +57,7 @@ const DEFAULT_DOWNSTREAMS = [
   { label: 'ftp-mcp',       url: 'http://host.docker.internal:9304/mcp', inject: 'site_url' },
   { label: 'joomla-mcp',    url: 'http://host.docker.internal:9300/mcp', inject: 'site_url' },
   { label: 'gantry-mcp',    url: 'http://host.docker.internal:9301/mcp', inject: 'site' },
+  { label: 'agents-mcp',    url: 'http://host.docker.internal:9305/mcp', inject: 'site_url' },
 ];
 
 function loadDownstreams() {
@@ -232,13 +233,22 @@ async function createClient(label, url, token) {
  * Call a tool on a downstream server (registry entry).
  * Creates a fresh client, calls the tool, then closes cleanly.
  * Retries once automatically on any transport/connection error.
+ *
+ * agents-mcp tools run LLM agentic loops that can take several minutes.
+ * We raise the timeout to 10 min and enable resetTimeoutOnProgress so
+ * that each progress notification emitted by agents-mcp resets the clock.
  */
 async function callDownstream(ds, toolName, toolArgs) {
+  const isAgentCall = ds.label === 'agents-mcp';
+  const callOptions = isAgentCall
+    ? { timeout: 600_000, resetTimeoutOnProgress: true, maxTotalTimeout: 900_000 }
+    : undefined;
+
   for (let attempt = 1; attempt <= 2; attempt++) {
     let client;
     try {
       client = await createClient(ds.label, ds.url, ds.token);
-      const result = await client.callTool({ name: toolName, arguments: toolArgs });
+      const result = await client.callTool({ name: toolName, arguments: toolArgs }, undefined, callOptions);
       client.close().catch(() => {});
       return result;
     } catch (err) {
