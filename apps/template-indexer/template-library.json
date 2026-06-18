@@ -1,0 +1,1705 @@
+{
+  "generated": "2026-06-18T13:17:07.122212Z",
+  "stats": {
+    "template_count": 17,
+    "block_classes_indexed": 19,
+    "section_ids_indexed": 12,
+    "particle_types_indexed": 11
+  },
+  "templates": {
+    "alert-banner": {
+      "file": "sections/alert-banner.yaml",
+      "section_id": "top",
+      "section_class": "",
+      "particles": [
+        "contentarray"
+      ],
+      "block_classes": [
+        "modern-alert"
+      ],
+      "context_vars": [
+        "alert_category_id"
+      ],
+      "multi_section": false,
+      "raw": {
+        "id": "top",
+        "type": "section",
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "modern-alert",
+                "particle": "contentarray",
+                "title": "Alert",
+                "attributes": {
+                  "article": {
+                    "filter": {
+                      "categories": "{{alert_category_id}}",
+                      "articles": "",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "10",
+                      "columns": "1",
+                      "start": "0"
+                    },
+                    "display": {
+                      "pagination_buttons": "",
+                      "title": {
+                        "enabled": "show"
+                      }
+                    },
+                    "sort": {
+                      "orderby": "ordering",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {
+        "modern-alert": 25
+      }
+    },
+    "aside-ads": {
+      "file": "sections/aside-ads.yaml",
+      "section_id": "aside",
+      "section_class": "news-to-me headlines-spacing",
+      "particles": [
+        "position"
+      ],
+      "block_classes": [
+        "ads-903",
+        "side-ads",
+        "ads-901",
+        "ads-902"
+      ],
+      "context_vars": [],
+      "multi_section": false,
+      "raw": {
+        "id": "aside",
+        "type": "section",
+        "attributes": {
+          "class": "news-to-me headlines-spacing"
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "ads-903 side-ads ads-901 ads-902",
+                "particle": "position",
+                "title": "Home Ads",
+                "position_type": "module"
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {
+        "ads-903": 23,
+        "side-ads": 19,
+        "ads-901": 23,
+        "ads-902": 23
+      }
+    },
+    "copyright-bar": {
+      "file": "sections/copyright-bar.yaml",
+      "section_id": "copyright",
+      "section_class": "",
+      "particles": [
+        "custom"
+      ],
+      "block_classes": [],
+      "context_vars": [],
+      "multi_section": false,
+      "raw": {
+        "id": "copyright",
+        "type": "section",
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "particle": "custom",
+                "title": "Admin Footer",
+                "attributes": {
+                  "enabled": 1,
+                  "html": "<div class=\"adminfootericon\" style=\"font-size: x-small; line-height: 1.3; text-shadow: 2px 2px #000000;\">\n  <a style=\"font-size: large;\" href=\"/administrator/\" target=\"_blank\">\n    <i class=\"fa fa-lock\"></i></a>\n  <br><br>\n  <a style=\"color: #ffffff;\" href=\"http://solutiosoftware.com/\" target=\"_blank\">Site by Solutio</a>\n  <br>\n  <a style=\"color: #ffffff;\" href=\"https://solutiosoftware.com/web-policy\" target=\"_blank\" rel=\"noopener noreferrer\">Analytics Privacy Policy</a>\n</div>\n"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {}
+    },
+    "extension-timeline": {
+      "file": "sections/extension-timeline.yaml",
+      "section_id": "extension",
+      "section_class": "",
+      "particles": [
+        "timeline"
+      ],
+      "block_classes": [],
+      "context_vars": [
+        "events_category_id"
+      ],
+      "multi_section": false,
+      "raw": {
+        "id": "extension",
+        "type": "section",
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "particle": "timeline",
+                "title": "Upcoming Events",
+                "attributes": {
+                  "source": "joomla",
+                  "article": {
+                    "filter": {
+                      "categories": "{{events_category_id}}",
+                      "articles": "",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "5",
+                      "columns": "1",
+                      "start": "0"
+                    },
+                    "display": {
+                      "pagination_buttons": "",
+                      "title": {
+                        "enabled": "show"
+                      },
+                      "image": {
+                        "enabled": ""
+                      },
+                      "text": {
+                        "type": "intro",
+                        "limit": "120",
+                        "formatting": "text"
+                      },
+                      "read_more": {
+                        "enabled": "show"
+                      }
+                    },
+                    "sort": {
+                      "orderby": "date",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {}
+    },
+    "footer-3col": {
+      "file": "sections/footer-3col.yaml",
+      "section_id": "footer",
+      "section_class": "s-padding-2",
+      "particles": [
+        "position",
+        "contentarray",
+        "custom"
+      ],
+      "block_classes": [],
+      "context_vars": [
+        "footer_article_id"
+      ],
+      "multi_section": true,
+      "raw": {
+        "sections": {
+          "footer": {
+            "id": "footer",
+            "type": "footer",
+            "attributes": {
+              "class": "s-padding-2"
+            },
+            "grids": [
+              {
+                "blocks": [
+                  {
+                    "size": 33.3,
+                    "particle": "position",
+                    "title": "Footer A",
+                    "position_type": "position"
+                  },
+                  {
+                    "size": 33.3,
+                    "particle": "position",
+                    "title": "Footer B",
+                    "position_type": "position"
+                  },
+                  {
+                    "size": 33.3,
+                    "particle": "position",
+                    "title": "Footer C",
+                    "position_type": "position"
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "size": 100,
+                    "particle": "contentarray",
+                    "title": "Footer",
+                    "attributes": {
+                      "article": {
+                        "filter": {
+                          "categories": "",
+                          "articles": "{{footer_article_id}}",
+                          "featured": "include"
+                        },
+                        "limit": {
+                          "total": "1",
+                          "columns": "1"
+                        },
+                        "display": {
+                          "pagination_buttons": ""
+                        },
+                        "sort": {
+                          "orderby": "ordering",
+                          "ordering": "ASC"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "copyright": {
+            "id": "copyright",
+            "type": "section",
+            "grids": [
+              {
+                "blocks": [
+                  {
+                    "size": 100,
+                    "particle": "custom",
+                    "title": "Admin Footer",
+                    "attributes": {
+                      "html": "<div class=\"adminfootericon\" style=\"font-size: x-small; line-height: 1.3; text-shadow: 2px 2px #000000;\">\n  <a style=\"font-size: large;\" href=\"/administrator/\" target=\"_blank\">\n    <i class=\"fa fa-lock\"></i></a>\n  <br><br>\n  <a style=\"color: #ffffff;\" href=\"http://solutiosoftware.com/\" target=\"_blank\">Site by Solutio</a>\n  <br>\n  <a style=\"color: #ffffff;\" href=\"https://solutiosoftware.com/web-policy\" target=\"_blank\" rel=\"noopener noreferrer\">Analytics Privacy Policy</a>\n</div>\n",
+                      "enabled": 1
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "sub_section_ids": [
+        "footer",
+        "copyright"
+      ],
+      "block_class_usage": {}
+    },
+    "footer-positions": {
+      "file": "sections/footer-positions.yaml",
+      "section_id": "footer",
+      "section_class": "s-padding-2",
+      "particles": [
+        "position",
+        "contentarray"
+      ],
+      "block_classes": [],
+      "context_vars": [
+        "footer_article_id"
+      ],
+      "multi_section": false,
+      "raw": {
+        "id": "footer",
+        "type": "section",
+        "attributes": {
+          "class": "s-padding-2"
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 33.3,
+                "particle": "position",
+                "title": "Footer A",
+                "position_type": "position"
+              },
+              {
+                "size": 33.3,
+                "particle": "position",
+                "title": "Footer B",
+                "position_type": "position"
+              },
+              {
+                "size": 33.4,
+                "particle": "position",
+                "title": "Footer C",
+                "position_type": "position"
+              }
+            ]
+          },
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "particle": "contentarray",
+                "title": "Footer",
+                "attributes": {
+                  "article": {
+                    "filter": {
+                      "categories": "",
+                      "articles": "{{footer_article_id}}",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "1",
+                      "columns": "1"
+                    },
+                    "display": {
+                      "pagination_buttons": ""
+                    },
+                    "sort": {
+                      "orderby": "ordering",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {}
+    },
+    "footer-shell-article": {
+      "file": "sections/footer-shell-article.yaml",
+      "section_id": "footer",
+      "section_class": "",
+      "particles": [
+        "contentarray"
+      ],
+      "block_classes": [],
+      "context_vars": [
+        "footer_article_id"
+      ],
+      "multi_section": false,
+      "raw": {
+        "id": "footer",
+        "type": "section",
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "particle": "contentarray",
+                "title": "Footer",
+                "attributes": {
+                  "article": {
+                    "filter": {
+                      "categories": "",
+                      "articles": "{{footer_article_id}}",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "1",
+                      "columns": "1"
+                    },
+                    "display": {
+                      "pagination_buttons": "",
+                      "title": {
+                        "enabled": "hide"
+                      }
+                    },
+                    "sort": {
+                      "orderby": "ordering",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {}
+    },
+    "header-navigation": {
+      "file": "sections/header-navigation.yaml",
+      "section_id": "navigation",
+      "section_class": "ole-faithful stock",
+      "particles": [
+        "logo",
+        "spacer",
+        "blockcontent",
+        "menu"
+      ],
+      "block_classes": [
+        "show-mobile",
+        "hidden-phone",
+        "ql-toplinks-studius"
+      ],
+      "context_vars": [],
+      "multi_section": false,
+      "raw": {
+        "id": "navigation",
+        "type": "section",
+        "attributes": {
+          "class": "ole-faithful stock"
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "show-mobile",
+                "particle": "logo",
+                "title": "Mobile Logo"
+              }
+            ]
+          },
+          {
+            "blocks": [
+              {
+                "size": 65,
+                "blockClass": "hidden-phone",
+                "particle": "logo",
+                "title": "Logo / Image"
+              },
+              {
+                "size": 10,
+                "particle": "spacer",
+                "title": "Spacer"
+              },
+              {
+                "size": 25,
+                "blockClass": "ql-toplinks-studius",
+                "particle": "blockcontent",
+                "title": "Toplinks",
+                "attributes": {
+                  "source": "particle",
+                  "title": "",
+                  "subcontents": [
+                    {
+                      "name": "Mass Times",
+                      "button": "Mass Times",
+                      "buttonlink": "/mass-times",
+                      "buttontarget": "_self",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "img": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "Contact Us",
+                      "button": "Contact Us",
+                      "buttonlink": "/contact-us",
+                      "buttontarget": "_self",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "img": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "particle": "menu",
+                "title": "Navigation Menu",
+                "attributes": {
+                  "showTitle": 0,
+                  "layout": "horizontal",
+                  "startLevel": 1,
+                  "endLevel": 0,
+                  "showAllChildren": 1,
+                  "activeClass": "active",
+                  "highlightClass": "active",
+                  "activeDropdownClass": "active"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {
+        "show-mobile": 20,
+        "hidden-phone": 22,
+        "ql-toplinks-studius": 12
+      }
+    },
+    "hero-swiper": {
+      "file": "sections/hero-swiper.yaml",
+      "section_id": "slideshow",
+      "section_class": "floatator slideshow-spacing",
+      "particles": [
+        "swiper",
+        "contentarray"
+      ],
+      "block_classes": [
+        "fullwidth-swiper",
+        "rotate-wide",
+        "mass-times-block"
+      ],
+      "context_vars": [
+        "mass_times_article_id"
+      ],
+      "multi_section": false,
+      "raw": {
+        "id": "slideshow",
+        "type": "section",
+        "attributes": {
+          "class": "floatator slideshow-spacing"
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 70,
+                "blockClass": "fullwidth-swiper rotate-wide",
+                "particle": "swiper",
+                "title": "Hero Slider",
+                "attributes": {
+                  "class": "",
+                  "source": "joomla",
+                  "image": "img",
+                  "height": "36vw",
+                  "heightMobile": "56vw",
+                  "nav": "enabled",
+                  "pagination": "bullets",
+                  "autoplay": "enabled",
+                  "autoplayTimeout": "8000",
+                  "loop": "enabled",
+                  "speed": "800",
+                  "slides_linkable": "disabled",
+                  "touchmove": "enabled",
+                  "overlaycolor": "rgba(255, 255, 255, 0)",
+                  "direction": "horizontal",
+                  "effect": "slide",
+                  "items": [],
+                  "largedesktopslides": "1",
+                  "largedesktopgroup": "1",
+                  "largedesktopspace": "0",
+                  "desktopslides": "1",
+                  "desktopgroup": "1",
+                  "desktopspace": "0",
+                  "tabletslides": "1",
+                  "tabletgroup": "1",
+                  "tabletspace": "0"
+                }
+              },
+              {
+                "size": 30,
+                "blockClass": "mass-times-block",
+                "particle": "contentarray",
+                "title": "Mass Times",
+                "attributes": {
+                  "article": {
+                    "filter": {
+                      "categories": "",
+                      "articles": "{{mass_times_article_id}}",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "1",
+                      "columns": "1",
+                      "start": "0"
+                    },
+                    "display": {
+                      "pagination_buttons": "",
+                      "title": {
+                        "enabled": "hide"
+                      }
+                    },
+                    "sort": {
+                      "orderby": "ordering",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {
+        "fullwidth-swiper": 32,
+        "rotate-wide": 7,
+        "mass-times-block": 9
+      }
+    },
+    "link-boxes": {
+      "file": "sections/link-boxes.yaml",
+      "section_id": "expanded",
+      "section_class": "",
+      "particles": [
+        "blockcontent"
+      ],
+      "block_classes": [
+        "link-boxes"
+      ],
+      "context_vars": [],
+      "multi_section": false,
+      "raw": {
+        "id": "expanded",
+        "type": "section",
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "link-boxes",
+                "particle": "blockcontent",
+                "title": "Links",
+                "attributes": {
+                  "source": "particle",
+                  "title": "",
+                  "subcontents": [
+                    {
+                      "name": "Faith Formation",
+                      "button": "Faith Formation",
+                      "buttonlink": "/faith-formation",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://template/faith-formation.jpg",
+                      "class": "full-image",
+                      "accent": "none",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "Sacraments",
+                      "button": "Sacraments",
+                      "buttonlink": "/sacraments",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://template/sacraments.jpg",
+                      "class": "full-image",
+                      "accent": "none",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "Ministries",
+                      "button": "Ministries",
+                      "buttonlink": "/ministries",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://template/ministries.jpg",
+                      "class": "full-image",
+                      "accent": "none",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "Parish Life",
+                      "button": "Parish Life",
+                      "buttonlink": "/parish-life",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://template/parish-life.jpg",
+                      "class": "full-image",
+                      "accent": "none",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {
+        "link-boxes": 1
+      }
+    },
+    "mainbar-social": {
+      "file": "sections/mainbar-social.yaml",
+      "section_id": "mainbar",
+      "section_class": "news-to-me headlines-spacing",
+      "particles": [
+        "contentarray"
+      ],
+      "block_classes": [
+        "facebook-widget-container",
+        "widget-container"
+      ],
+      "context_vars": [
+        "social_article_id"
+      ],
+      "multi_section": false,
+      "raw": {
+        "id": "mainbar",
+        "type": "section",
+        "attributes": {
+          "class": "news-to-me headlines-spacing"
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "facebook-widget-container widget-container",
+                "particle": "contentarray",
+                "title": "Social Feed",
+                "attributes": {
+                  "article": {
+                    "filter": {
+                      "categories": "",
+                      "articles": "{{social_article_id}}",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "1",
+                      "columns": "1"
+                    },
+                    "display": {
+                      "pagination_buttons": ""
+                    },
+                    "sort": {
+                      "orderby": "ordering",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {
+        "facebook-widget-container": 23,
+        "widget-container": 6
+      }
+    },
+    "news-events-grid": {
+      "file": "sections/news-events-grid.yaml",
+      "section_id": "sidebar",
+      "section_class": "news-to-me headlines-spacing",
+      "particles": [
+        "contentarray",
+        "custom",
+        "position"
+      ],
+      "block_classes": [
+        "ph-sideway-stack",
+        "news-button",
+        "facebook-widget-container",
+        "widget-container",
+        "ads-903",
+        "side-ads",
+        "ads-901",
+        "ads-902"
+      ],
+      "context_vars": [
+        "social_article_id",
+        "news_category_id"
+      ],
+      "multi_section": true,
+      "raw": {
+        "sections": {
+          "sidebar": {
+            "id": "sidebar",
+            "type": "aside",
+            "attributes": {
+              "class": "news-to-me headlines-spacing"
+            },
+            "grids": [
+              {
+                "blocks": [
+                  {
+                    "size": 100,
+                    "blockClass": "ph-sideway-stack",
+                    "particle": "contentarray",
+                    "title": "News & Events",
+                    "attributes": {
+                      "article": {
+                        "filter": {
+                          "categories": "{{news_category_id}}",
+                          "articles": "",
+                          "featured": "include"
+                        },
+                        "limit": {
+                          "total": "4",
+                          "columns": "1",
+                          "start": "0"
+                        },
+                        "display": {
+                          "pagination_buttons": "",
+                          "image": {
+                            "enabled": "full"
+                          },
+                          "title": {
+                            "enabled": "show"
+                          },
+                          "text": {
+                            "type": "intro",
+                            "limit": "90",
+                            "formatting": "text"
+                          },
+                          "read_more": {
+                            "enabled": "show"
+                          }
+                        },
+                        "sort": {
+                          "orderby": "ordering",
+                          "ordering": "ASC"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "size": 100,
+                    "blockClass": "news-button",
+                    "particle": "custom",
+                    "title": "View All News & Events Button",
+                    "attributes": {
+                      "html": "<a href=\"/news\" class=\"button\">View All News</a>",
+                      "enabled": 1
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "mainbar": {
+            "id": "mainbar",
+            "type": "main",
+            "attributes": {
+              "class": "news-to-me headlines-spacing"
+            },
+            "grids": [
+              {
+                "blocks": [
+                  {
+                    "size": 100,
+                    "blockClass": "facebook-widget-container widget-container",
+                    "particle": "contentarray",
+                    "title": "Social Feed",
+                    "attributes": {
+                      "article": {
+                        "filter": {
+                          "categories": "",
+                          "articles": "{{social_article_id}}",
+                          "featured": "include"
+                        },
+                        "limit": {
+                          "total": "1",
+                          "columns": "1"
+                        },
+                        "display": {
+                          "pagination_buttons": ""
+                        },
+                        "sort": {
+                          "orderby": "ordering",
+                          "ordering": "ASC"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "aside": {
+            "id": "aside",
+            "type": "aside",
+            "attributes": {
+              "class": "news-to-me headlines-spacing"
+            },
+            "grids": [
+              {
+                "blocks": [
+                  {
+                    "size": 100,
+                    "blockClass": "ads-903 side-ads ads-901 ads-902",
+                    "particle": "position",
+                    "title": "Home Ads",
+                    "position_type": "module"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "sub_section_ids": [
+        "sidebar",
+        "mainbar",
+        "aside"
+      ],
+      "block_class_usage": {
+        "ph-sideway-stack": 3,
+        "news-button": 19,
+        "facebook-widget-container": 23,
+        "widget-container": 6,
+        "ads-903": 23,
+        "side-ads": 19,
+        "ads-901": 23,
+        "ads-902": 23
+      }
+    },
+    "offcanvas-mobile-menu": {
+      "file": "sections/offcanvas-mobile-menu.yaml",
+      "section_id": "offcanvas",
+      "section_class": "",
+      "particles": [
+        "mobile-menu",
+        "custom"
+      ],
+      "block_classes": [],
+      "context_vars": [
+        "site_name"
+      ],
+      "multi_section": false,
+      "raw": {
+        "id": "offcanvas",
+        "type": "offcanvas",
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 50,
+                "particle": "mobile-menu",
+                "title": "Mobile Menu"
+              },
+              {
+                "size": 50,
+                "particle": "custom",
+                "title": "Subsite Navigation",
+                "attributes": {
+                  "enabled": 1,
+                  "html": "<div class=\"subsite-nav\">\n  <p class=\"subsite-name\">{{site_name}}</p>\n</div>\n"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {}
+    },
+    "sidebar-news-feed": {
+      "file": "sections/sidebar-news-feed.yaml",
+      "section_id": "sidebar",
+      "section_class": "news-to-me headlines-spacing",
+      "particles": [
+        "contentarray",
+        "custom"
+      ],
+      "block_classes": [
+        "ph-sideway-stack",
+        "news-button"
+      ],
+      "context_vars": [
+        "news_category_id"
+      ],
+      "multi_section": false,
+      "raw": {
+        "id": "sidebar",
+        "type": "section",
+        "attributes": {
+          "class": "news-to-me headlines-spacing"
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "ph-sideway-stack",
+                "particle": "contentarray",
+                "title": "News & Events",
+                "attributes": {
+                  "article": {
+                    "filter": {
+                      "categories": "{{news_category_id}}",
+                      "articles": "",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "4",
+                      "columns": "1",
+                      "start": "0"
+                    },
+                    "display": {
+                      "pagination_buttons": "",
+                      "image": {
+                        "enabled": "full"
+                      },
+                      "title": {
+                        "enabled": "show"
+                      },
+                      "text": {
+                        "type": "intro",
+                        "limit": "90",
+                        "formatting": "text"
+                      },
+                      "read_more": {
+                        "enabled": "show"
+                      }
+                    },
+                    "sort": {
+                      "orderby": "ordering",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "news-button",
+                "particle": "custom",
+                "title": "View All News Button",
+                "attributes": {
+                  "html": "<a href=\"/news\" class=\"button\">View All News</a>",
+                  "enabled": 1
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {
+        "ph-sideway-stack": 3,
+        "news-button": 19
+      }
+    },
+    "top-system-alerts": {
+      "file": "sections/top-system-alerts.yaml",
+      "section_id": "top",
+      "section_class": "",
+      "particles": [
+        "system/messages",
+        "contentarray"
+      ],
+      "block_classes": [
+        "modern-alert"
+      ],
+      "context_vars": [
+        "alert_category_id"
+      ],
+      "multi_section": false,
+      "raw": {
+        "id": "top",
+        "type": "section",
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "particle": "system/messages",
+                "title": "System Messages"
+              }
+            ]
+          },
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "modern-alert",
+                "particle": "contentarray",
+                "title": "Alert",
+                "attributes": {
+                  "article": {
+                    "filter": {
+                      "categories": "{{alert_category_id}}",
+                      "articles": "",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "10",
+                      "columns": "1",
+                      "start": "0"
+                    },
+                    "display": {
+                      "pagination_buttons": "",
+                      "title": {
+                        "enabled": "show"
+                      }
+                    },
+                    "sort": {
+                      "orderby": "ordering",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {
+        "modern-alert": 25
+      }
+    },
+    "utility-parish-mission": {
+      "file": "sections/utility-parish-mission.yaml",
+      "section_id": "utility",
+      "section_class": "",
+      "particles": [
+        "contentarray"
+      ],
+      "block_classes": [
+        "parish-mission-wrapper"
+      ],
+      "context_vars": [
+        "mission_article_id"
+      ],
+      "multi_section": false,
+      "raw": {
+        "id": "utility",
+        "type": "section",
+        "attributes": {
+          "class": ""
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "parish-mission-wrapper",
+                "particle": "contentarray",
+                "title": "Parish Mission",
+                "attributes": {
+                  "article": {
+                    "filter": {
+                      "categories": "",
+                      "articles": "{{mission_article_id}}",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "1",
+                      "columns": "1"
+                    },
+                    "display": {
+                      "pagination_buttons": "",
+                      "title": {
+                        "enabled": "hide"
+                      },
+                      "text": {
+                        "type": "intro"
+                      }
+                    },
+                    "sort": {
+                      "orderby": "ordering",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {
+        "parish-mission-wrapper": 1
+      }
+    },
+    "utility-quicklinks": {
+      "file": "sections/utility-quicklinks.yaml",
+      "section_id": "utility",
+      "section_class": "standard-ql",
+      "particles": [
+        "custom",
+        "blockcontent"
+      ],
+      "block_classes": [
+        "welcome-title",
+        "ql-united"
+      ],
+      "context_vars": [
+        "parish_name"
+      ],
+      "multi_section": false,
+      "raw": {
+        "id": "utility",
+        "type": "section",
+        "attributes": {
+          "class": "standard-ql"
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "welcome-title",
+                "particle": "custom",
+                "title": "Welcome Title",
+                "attributes": {
+                  "html": "<h3 class=\"g-title\">Welcome to {{parish_name}}</h3>",
+                  "enabled": 1
+                }
+              }
+            ]
+          },
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "ql-united",
+                "particle": "blockcontent",
+                "title": "Standard Quicklinks",
+                "attributes": {
+                  "source": "particle",
+                  "title": "",
+                  "subcontents": [
+                    {
+                      "name": "What's New",
+                      "button": "What's New",
+                      "buttonlink": "/whats-new",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://stories/template/quicklinks/computer2.jpg",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "Site Registration",
+                      "button": "Site Registration",
+                      "buttonlink": "/site-registration",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://stories/template/quicklinks/register.jpg",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "What's Changed",
+                      "button": "What's Changed",
+                      "buttonlink": "/whats-changed",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://stories/template/quicklinks/bulletin.jpg",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "Bulletin",
+                      "button": "Bulletin",
+                      "buttonlink": "/bulletin",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://stories/template/quicklinks/church.jpg",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "Online Giving",
+                      "button": "Online Giving",
+                      "buttonlink": "/giving",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://stories/template/quicklinks/giving.jpg",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_class_usage": {
+        "welcome-title": 0,
+        "ql-united": 1
+      }
+    }
+  },
+  "block_class_index": {
+    "modern-alert": [
+      "alert-banner",
+      "top-system-alerts"
+    ],
+    "ads-903": [
+      "aside-ads",
+      "news-events-grid"
+    ],
+    "side-ads": [
+      "aside-ads",
+      "news-events-grid"
+    ],
+    "ads-901": [
+      "aside-ads",
+      "news-events-grid"
+    ],
+    "ads-902": [
+      "aside-ads",
+      "news-events-grid"
+    ],
+    "show-mobile": [
+      "header-navigation"
+    ],
+    "hidden-phone": [
+      "header-navigation"
+    ],
+    "ql-toplinks-studius": [
+      "header-navigation"
+    ],
+    "fullwidth-swiper": [
+      "hero-swiper"
+    ],
+    "rotate-wide": [
+      "hero-swiper"
+    ],
+    "mass-times-block": [
+      "hero-swiper"
+    ],
+    "link-boxes": [
+      "link-boxes"
+    ],
+    "facebook-widget-container": [
+      "mainbar-social",
+      "news-events-grid"
+    ],
+    "widget-container": [
+      "mainbar-social",
+      "news-events-grid"
+    ],
+    "ph-sideway-stack": [
+      "news-events-grid",
+      "sidebar-news-feed"
+    ],
+    "news-button": [
+      "news-events-grid",
+      "sidebar-news-feed"
+    ],
+    "parish-mission-wrapper": [
+      "utility-parish-mission"
+    ],
+    "welcome-title": [
+      "utility-quicklinks"
+    ],
+    "ql-united": [
+      "utility-quicklinks"
+    ]
+  },
+  "section_id_index": {
+    "top": [
+      "alert-banner",
+      "top-system-alerts"
+    ],
+    "aside": [
+      "aside-ads",
+      "news-events-grid"
+    ],
+    "copyright": [
+      "copyright-bar",
+      "footer-3col"
+    ],
+    "extension": [
+      "extension-timeline"
+    ],
+    "footer": [
+      "footer-3col",
+      "footer-positions",
+      "footer-shell-article"
+    ],
+    "navigation": [
+      "header-navigation"
+    ],
+    "slideshow": [
+      "hero-swiper"
+    ],
+    "expanded": [
+      "link-boxes"
+    ],
+    "mainbar": [
+      "mainbar-social",
+      "news-events-grid"
+    ],
+    "sidebar": [
+      "news-events-grid",
+      "sidebar-news-feed"
+    ],
+    "offcanvas": [
+      "offcanvas-mobile-menu"
+    ],
+    "utility": [
+      "utility-parish-mission",
+      "utility-quicklinks"
+    ]
+  },
+  "particle_index": {
+    "contentarray": [
+      "alert-banner",
+      "footer-3col",
+      "footer-positions",
+      "footer-shell-article",
+      "hero-swiper",
+      "mainbar-social",
+      "news-events-grid",
+      "sidebar-news-feed",
+      "top-system-alerts",
+      "utility-parish-mission"
+    ],
+    "position": [
+      "aside-ads",
+      "footer-3col",
+      "footer-positions",
+      "news-events-grid"
+    ],
+    "custom": [
+      "copyright-bar",
+      "footer-3col",
+      "news-events-grid",
+      "offcanvas-mobile-menu",
+      "sidebar-news-feed",
+      "utility-quicklinks"
+    ],
+    "timeline": [
+      "extension-timeline"
+    ],
+    "logo": [
+      "header-navigation"
+    ],
+    "spacer": [
+      "header-navigation"
+    ],
+    "blockcontent": [
+      "header-navigation",
+      "link-boxes",
+      "utility-quicklinks"
+    ],
+    "menu": [
+      "header-navigation"
+    ],
+    "swiper": [
+      "hero-swiper"
+    ],
+    "mobile-menu": [
+      "offcanvas-mobile-menu"
+    ],
+    "system/messages": [
+      "top-system-alerts"
+    ]
+  },
+  "usage_stats": {
+    "crawl-space": 17,
+    "fullwidth-swiper": 32,
+    "grand-entry": 19,
+    "headlines-rounded-square": 5,
+    "modern-alert": 25,
+    "nav-main-menu": 1,
+    "news-button": 19,
+    "news-title": 4,
+    "ph-rounded-square": 3,
+    "ph-rounded-square-mobile": 3,
+    "ph-wide": 3,
+    "pop-up-block-2": 24,
+    "ql-sbound": 1,
+    "s-padding-2": 22,
+    "s-vertical-padding-2": 21,
+    "show-mobile": 20,
+    "side-ads": 19,
+    "slideshow-spacing": 14,
+    "stock": 15,
+    "swiper-overlay-title": 7,
+    "widget-parthenon-alt": 6,
+    "calendar-button": 12,
+    "calendar-title": 12,
+    "daily-readings-widget-container": 11,
+    "ec-vert": 11,
+    "facebook-widget-container": 23,
+    "formed-widget-container": 14,
+    "grid": 14,
+    "grid-articles": 14,
+    "grid-bg-primary": 11,
+    "grid-hover-scale": 14,
+    "grid-mobile-horizontal-scroll": 11,
+    "grid-mobile-stacked": 12,
+    "grid-sideways": 9,
+    "grid-text-white": 9,
+    "grid-title-tertiary": 9,
+    "grid-wide": 6,
+    "headlines-spacing": 13,
+    "hidden-phone": 22,
+    "nav-social-icons": 11,
+    "news-to-me": 12,
+    "ql-dm": 3,
+    "ql-height-13vw": 3,
+    "ql-square-1": 3,
+    "ql-toplinks-studius": 12,
+    "standard-ql": 9,
+    "swiper-ql-overlay": 6,
+    "widget-container": 6,
+    "ads-901": 23,
+    "ads-902": 23,
+    "ads-903": 23,
+    "calendar-widget-container": 5,
+    "floatator": 9,
+    "instagram-widget-container": 1,
+    "mass-times-block": 9,
+    "ph-sidenews": 3,
+    "ql-circle-row": 2,
+    "rotate-wide": 7,
+    "grid-g-grid-border-radius-1-point-5": 8,
+    "grid-g-grid-box-shadow": 8,
+    "grid-image-border-radius-1": 9,
+    "grid-img-border-2-tertiary": 8,
+    "association-container": 1,
+    "center-of-attention": 5,
+    "choose-container": 1,
+    "connected-container": 1,
+    "grid-columns-2": 1,
+    "grid-img-box-shadow-50": 2,
+    "grid-no-text": 1,
+    "info-container": 1,
+    "linksources": 1,
+    "translate-container": 1,
+    "welcome-container": 3,
+    "mt-overlay-schedule": 1,
+    "welcome-box": 1,
+    "ec-row": 2,
+    "mass-times-container": 2,
+    "ph-side-circles": 1,
+    "special-message-container": 1,
+    "beads-bottom": 2,
+    "flocknotes-container": 2,
+    "info-box-container": 1,
+    "ph-shadowbox2": 1,
+    "ql-portraitbox": 1,
+    "enroll-container": 1,
+    "ql-icon-links": 1,
+    "sd-container": 1,
+    "calendar-container": 3,
+    "free-menu": 5,
+    "ilinks-button": 1,
+    "photoalbum-container": 1,
+    "ql-blocktitle": 1,
+    "ql-ilinks": 1,
+    "bulletin-widget-container": 5,
+    "header-contact-container": 1,
+    "links-widget-container": 1,
+    "mission-container": 2,
+    "ole-faithful": 2,
+    "ph-sideway-stack": 3,
+    "ql-under-title": 1,
+    "border-top": 2,
+    "blfb-container": 1,
+    "fotm-container": 1,
+    "grid-bg-img-flush-white": 1,
+    "grid-no-img": 1,
+    "grid-title-secondary": 1,
+    "ql-buttons": 1,
+    "hallow-widget-container": 1,
+    "rotate-sw": 4,
+    "swiper-qls-overlay": 1,
+    "video-bg": 1,
+    "cal-button": 1,
+    "cal-title": 1,
+    "mass-times-overlay": 2,
+    "parish-mission-wrapper": 1,
+    "ql-toplinks-vertical-studius": 1,
+    "calbox-container": 1,
+    "grid-columns-4": 1,
+    "grid-square": 1,
+    "grid-text-black": 1,
+    "grid-text-body": 1,
+    "grid-title-600": 1,
+    "grid-title-black": 1,
+    "grid-title-body": 1,
+    "pop-box": 1,
+    "instagram-container": 1,
+    "link-boxes": 1,
+    "ql-united": 1,
+    "mass-schedule-overlay-button": 1,
+    "nav-contactinfo": 1,
+    "ph-titlestack": 1,
+    "ql-boxtitle": 1,
+    "sign-container": 1,
+    "sl-container": 1,
+    "column-container": 1,
+    "ph-imgcard": 1,
+    "ql-windowsill": 1,
+    "contact-overlay-container": 1,
+    "contact-title": 1,
+    "give-container": 1,
+    "ph-accordian-list": 1,
+    "ql-title-overlay": 1,
+    "quote-overlay": 1,
+    "calendar-widget": 2,
+    "mass-sched-container": 1,
+    "nav-container": 2,
+    "news-container": 2,
+    "ql-shamrocks": 2,
+    "stack-container": 1,
+    "stewardship-container": 1,
+    "ue-button": 1,
+    "ue-sideitems": 1,
+    "ue-title": 1,
+    "circle-ql": 1,
+    "formed-container": 1,
+    "homily-widget-container": 1,
+    "swiper-mass-times-overlay": 1,
+    "section-horizontal-paddings": 1
+  }
+}

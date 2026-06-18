@@ -1,0 +1,145 @@
+{
+  "particle": "logo",
+  "variant": "mobile-logo",
+  "site": "https://martyrs-lincoln.backup.solutiosoftware.com",
+  "page": "https://martyrs-lincoln.backup.solutiosoftware.com/",
+  "captured": "2026-06-17T17:04:12.611282+00:00",
+  "matched_rules": [
+    {
+      "selector": "*",
+      "properties": {
+        "box-sizing": "inherit"
+      }
+    },
+    {
+      "selector": "a",
+      "properties": {
+        "background-image": "initial",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-size": "initial",
+        "background-repeat": "initial",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "transparent",
+        "text-decoration-line": "none",
+        "text-decoration-thickness": "initial",
+        "text-decoration-style": "initial",
+        "text-decoration-color": "initial"
+      }
+    },
+    {
+      "selector": "img",
+      "properties": {
+        "height": "auto",
+        "max-width": "100%",
+        "display": "inline-block",
+        "vertical-align": "middle",
+        "border-top-width": "0px",
+        "border-right-width": "0px",
+        "border-bottom-width": "0px",
+        "border-left-width": "0px",
+        "border-top-style": "none",
+        "border-right-style": "none",
+        "border-bottom-style": "none",
+        "border-left-style": "none",
+        "border-top-color": "currentcolor",
+        "border-right-color": "currentcolor",
+        "border-bottom-color": "currentcolor",
+        "border-left-color": "currentcolor",
+        "border-image-source": "initial",
+        "border-image-slice": "initial",
+        "border-image-width": "initial",
+        "border-image-outset": "initial",
+        "border-image-repeat": "initial"
+      }
+    },
+    {
+      "selector": ".g-logo",
+      "properties": {
+        "display": "flex",
+        "justify-content": "center",
+        "position": "relative",
+        "font-weight": "400",
+        "text-transform": "uppercase",
+        "font-size": "0.7vw",
+        "line-height": "normal",
+        "max-width": "110px",
+        "align-items": "center",
+        "white-space-collapse": "collapse",
+        "text-wrap-mode": "nowrap",
+        "box-shadow": "none"
+      }
+    },
+    {
+      "selector": ".g-logo span",
+      "properties": {
+        "padding-left": "0.625rem",
+        "padding-top": "0.3rem"
+      }
+    },
+    {
+      "selector": "#g-navigation a",
+      "properties": {
+        "color": "rgb(0, 0, 0)"
+      }
+    }
+  ],
+  "computed_visual": {
+    "display": "flex",
+    "position": "relative",
+    "width": "auto",
+    "height": "auto",
+    "min-height": "0px",
+    "max-width": "none",
+    "padding": "0px",
+    "padding-top": "0px",
+    "padding-right": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "0px",
+    "margin": "0px",
+    "margin-top": "0px",
+    "margin-right": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "flex-direction": "row",
+    "flex-wrap": "nowrap",
+    "justify-content": "flex-start",
+    "align-items": "center",
+    "grid-template-columns": "none",
+    "grid-template-rows": "none",
+    "gap": "normal",
+    "column-gap": "normal",
+    "row-gap": "normal",
+    "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "background-image": "none",
+    "background-size": "auto",
+    "background-position": "0% 0%",
+    "background-repeat": "repeat",
+    "background-attachment": "scroll",
+    "color": "rgb(0, 0, 0)",
+    "font-family": "\"Momo Trust Sans\", sans-serif",
+    "font-size": "11.2px",
+    "font-weight": "400",
+    "font-style": "normal",
+    "line-height": "normal",
+    "letter-spacing": "normal",
+    "text-align": "start",
+    "text-transform": "uppercase",
+    "text-decoration": "none",
+    "border": "0px none rgb(0, 0, 0)",
+    "border-top": "0px none rgb(0, 0, 0)",
+    "border-right": "0px none rgb(0, 0, 0)",
+    "border-bottom": "0px none rgb(0, 0, 0)",
+    "border-left": "0px none rgb(0, 0, 0)",
+    "border-radius": "0px",
+    "box-shadow": "none",
+    "outline": "rgb(0, 0, 0) none 3px",
+    "opacity": "1",
+    "visibility": "visible",
+    "overflow": "visible",
+    "z-index": "auto"
+  }
+}

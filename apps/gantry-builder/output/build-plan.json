@@ -1,0 +1,703 @@
+{
+  "generated": "2026-06-18T13:19:14.443170+00:00",
+  "image": "test-mockup.png",
+  "analysis": "Parish homepage with hero slider and mass times sidebar, quicklinks bar, news/social grid, and three-column footer.",
+  "sections": [
+    {
+      "gantry_section": "g-top",
+      "label": "Alert bar",
+      "fingerprint": "100",
+      "plan_confidence": 0.9,
+      "template_name": "alert-banner",
+      "template_confidence": 1.0,
+      "match_reasons": [
+        "section_id:top",
+        "scored:1.00",
+        "over_2_candidates"
+      ],
+      "needs_resolution": [
+        {
+          "var": "alert_category_id",
+          "description": "Joomla category ID for alerts/announcements"
+        }
+      ],
+      "resolved_context": {},
+      "template_raw": {
+        "id": "top",
+        "type": "section",
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "modern-alert",
+                "particle": "contentarray",
+                "title": "Alert",
+                "attributes": {
+                  "article": {
+                    "filter": {
+                      "categories": "{{alert_category_id}}",
+                      "articles": "",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "10",
+                      "columns": "1",
+                      "start": "0"
+                    },
+                    "display": {
+                      "pagination_buttons": "",
+                      "title": {
+                        "enabled": "show"
+                      }
+                    },
+                    "sort": {
+                      "orderby": "ordering",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "particle_filter_hints": [],
+      "section_class": ""
+    },
+    {
+      "gantry_section": "g-navigation",
+      "label": "Navigation bar",
+      "fingerprint": "100/65|10|25/100",
+      "plan_confidence": 0.95,
+      "template_name": "header-navigation",
+      "template_confidence": 1.0,
+      "match_reasons": [
+        "section_id:navigation",
+        "only_candidate"
+      ],
+      "needs_resolution": [],
+      "resolved_context": {},
+      "template_raw": {
+        "id": "navigation",
+        "type": "section",
+        "attributes": {
+          "class": "ole-faithful stock"
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "show-mobile",
+                "particle": "logo",
+                "title": "Mobile Logo"
+              }
+            ]
+          },
+          {
+            "blocks": [
+              {
+                "size": 65,
+                "blockClass": "hidden-phone",
+                "particle": "logo",
+                "title": "Logo / Image"
+              },
+              {
+                "size": 10,
+                "particle": "spacer",
+                "title": "Spacer"
+              },
+              {
+                "size": 25,
+                "blockClass": "ql-toplinks-studius",
+                "particle": "blockcontent",
+                "title": "Toplinks",
+                "attributes": {
+                  "source": "particle",
+                  "title": "",
+                  "subcontents": [
+                    {
+                      "name": "Mass Times",
+                      "button": "Mass Times",
+                      "buttonlink": "/mass-times",
+                      "buttontarget": "_self",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "img": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "Contact Us",
+                      "button": "Contact Us",
+                      "buttonlink": "/contact-us",
+                      "buttontarget": "_self",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "img": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "particle": "menu",
+                "title": "Navigation Menu",
+                "attributes": {
+                  "showTitle": 0,
+                  "layout": "horizontal",
+                  "startLevel": 1,
+                  "endLevel": 0,
+                  "showAllChildren": 1,
+                  "activeClass": "active",
+                  "highlightClass": "active",
+                  "activeDropdownClass": "active"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "particle_filter_hints": [],
+      "section_class": "ole-faithful stock"
+    },
+    {
+      "gantry_section": "g-slideshow",
+      "label": "Hero slider + mass times",
+      "fingerprint": "70|30",
+      "plan_confidence": 0.92,
+      "template_name": "hero-swiper",
+      "template_confidence": 1.0,
+      "match_reasons": [
+        "section_id:slideshow",
+        "only_candidate"
+      ],
+      "needs_resolution": [
+        {
+          "var": "mass_times_article_id",
+          "description": "Joomla article ID containing mass times content"
+        }
+      ],
+      "resolved_context": {},
+      "template_raw": {
+        "id": "slideshow",
+        "type": "section",
+        "attributes": {
+          "class": "floatator slideshow-spacing"
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 70,
+                "blockClass": "fullwidth-swiper rotate-wide",
+                "particle": "swiper",
+                "title": "Hero Slider",
+                "attributes": {
+                  "class": "",
+                  "source": "joomla",
+                  "image": "img",
+                  "height": "36vw",
+                  "heightMobile": "56vw",
+                  "nav": "enabled",
+                  "pagination": "bullets",
+                  "autoplay": "enabled",
+                  "autoplayTimeout": "8000",
+                  "loop": "enabled",
+                  "speed": "800",
+                  "slides_linkable": "disabled",
+                  "touchmove": "enabled",
+                  "overlaycolor": "rgba(255, 255, 255, 0)",
+                  "direction": "horizontal",
+                  "effect": "slide",
+                  "items": [],
+                  "largedesktopslides": "1",
+                  "largedesktopgroup": "1",
+                  "largedesktopspace": "0",
+                  "desktopslides": "1",
+                  "desktopgroup": "1",
+                  "desktopspace": "0",
+                  "tabletslides": "1",
+                  "tabletgroup": "1",
+                  "tabletspace": "0"
+                }
+              },
+              {
+                "size": 30,
+                "blockClass": "mass-times-block",
+                "particle": "contentarray",
+                "title": "Mass Times",
+                "attributes": {
+                  "article": {
+                    "filter": {
+                      "categories": "",
+                      "articles": "{{mass_times_article_id}}",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "1",
+                      "columns": "1",
+                      "start": "0"
+                    },
+                    "display": {
+                      "pagination_buttons": "",
+                      "title": {
+                        "enabled": "hide"
+                      }
+                    },
+                    "sort": {
+                      "orderby": "ordering",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "particle_filter_hints": [],
+      "section_class": "floatator slideshow-spacing"
+    },
+    {
+      "gantry_section": "g-utility",
+      "label": "Quicklinks strip",
+      "fingerprint": "100/100",
+      "plan_confidence": 0.85,
+      "template_name": "utility-quicklinks",
+      "template_confidence": 1.0,
+      "match_reasons": [
+        "section_id:utility",
+        "scored:1.00",
+        "over_2_candidates"
+      ],
+      "needs_resolution": [
+        {
+          "var": "parish_name",
+          "description": "Full parish name, e.g. \"St. Joseph Catholic Church\""
+        }
+      ],
+      "resolved_context": {},
+      "template_raw": {
+        "id": "utility",
+        "type": "section",
+        "attributes": {
+          "class": "standard-ql"
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "welcome-title",
+                "particle": "custom",
+                "title": "Welcome Title",
+                "attributes": {
+                  "html": "<h3 class=\"g-title\">Welcome to {{parish_name}}</h3>",
+                  "enabled": 1
+                }
+              }
+            ]
+          },
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "blockClass": "ql-united",
+                "particle": "blockcontent",
+                "title": "Standard Quicklinks",
+                "attributes": {
+                  "source": "particle",
+                  "title": "",
+                  "subcontents": [
+                    {
+                      "name": "What's New",
+                      "button": "What's New",
+                      "buttonlink": "/whats-new",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://stories/template/quicklinks/computer2.jpg",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "Site Registration",
+                      "button": "Site Registration",
+                      "buttonlink": "/site-registration",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://stories/template/quicklinks/register.jpg",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "What's Changed",
+                      "button": "What's Changed",
+                      "buttonlink": "/whats-changed",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://stories/template/quicklinks/bulletin.jpg",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "Bulletin",
+                      "button": "Bulletin",
+                      "buttonlink": "/bulletin",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://stories/template/quicklinks/church.jpg",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    },
+                    {
+                      "name": "Online Giving",
+                      "button": "Online Giving",
+                      "buttonlink": "/giving",
+                      "buttontarget": "_self",
+                      "img": "gantry-media://stories/template/quicklinks/giving.jpg",
+                      "accent": "none",
+                      "class": "",
+                      "icon": "",
+                      "subtitle": "",
+                      "description": "",
+                      "buttonclass": "",
+                      "rokboximage": "",
+                      "rokboxcaption": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "particle_filter_hints": [],
+      "section_class": "standard-ql"
+    },
+    {
+      "gantry_section": "g-mainbar",
+      "label": "News + social feed",
+      "fingerprint": "55|30|15",
+      "plan_confidence": 0.88,
+      "template_name": "news-events-grid",
+      "template_confidence": 0.6,
+      "match_reasons": [
+        "section_id:mainbar",
+        "scored:0.60",
+        "over_2_candidates"
+      ],
+      "needs_resolution": [
+        {
+          "var": "social_article_id",
+          "description": "Joomla article ID for social feed (Facebook) widget shell"
+        },
+        {
+          "var": "news_category_id",
+          "description": "Joomla category ID for News & Events articles"
+        }
+      ],
+      "resolved_context": {},
+      "template_raw": {
+        "sections": {
+          "sidebar": {
+            "id": "sidebar",
+            "type": "aside",
+            "attributes": {
+              "class": "news-to-me headlines-spacing"
+            },
+            "grids": [
+              {
+                "blocks": [
+                  {
+                    "size": 100,
+                    "blockClass": "ph-sideway-stack",
+                    "particle": "contentarray",
+                    "title": "News & Events",
+                    "attributes": {
+                      "article": {
+                        "filter": {
+                          "categories": "{{news_category_id}}",
+                          "articles": "",
+                          "featured": "include"
+                        },
+                        "limit": {
+                          "total": "4",
+                          "columns": "1",
+                          "start": "0"
+                        },
+                        "display": {
+                          "pagination_buttons": "",
+                          "image": {
+                            "enabled": "full"
+                          },
+                          "title": {
+                            "enabled": "show"
+                          },
+                          "text": {
+                            "type": "intro",
+                            "limit": "90",
+                            "formatting": "text"
+                          },
+                          "read_more": {
+                            "enabled": "show"
+                          }
+                        },
+                        "sort": {
+                          "orderby": "ordering",
+                          "ordering": "ASC"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "blocks": [
+                  {
+                    "size": 100,
+                    "blockClass": "news-button",
+                    "particle": "custom",
+                    "title": "View All News & Events Button",
+                    "attributes": {
+                      "html": "<a href=\"/news\" class=\"button\">View All News</a>",
+                      "enabled": 1
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "mainbar": {
+            "id": "mainbar",
+            "type": "main",
+            "attributes": {
+              "class": "news-to-me headlines-spacing"
+            },
+            "grids": [
+              {
+                "blocks": [
+                  {
+                    "size": 100,
+                    "blockClass": "facebook-widget-container widget-container",
+                    "particle": "contentarray",
+                    "title": "Social Feed",
+                    "attributes": {
+                      "article": {
+                        "filter": {
+                          "categories": "",
+                          "articles": "{{social_article_id}}",
+                          "featured": "include"
+                        },
+                        "limit": {
+                          "total": "1",
+                          "columns": "1"
+                        },
+                        "display": {
+                          "pagination_buttons": ""
+                        },
+                        "sort": {
+                          "orderby": "ordering",
+                          "ordering": "ASC"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "aside": {
+            "id": "aside",
+            "type": "aside",
+            "attributes": {
+              "class": "news-to-me headlines-spacing"
+            },
+            "grids": [
+              {
+                "blocks": [
+                  {
+                    "size": 100,
+                    "blockClass": "ads-903 side-ads ads-901 ads-902",
+                    "particle": "position",
+                    "title": "Home Ads",
+                    "position_type": "module"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "particle_filter_hints": [],
+      "section_class": "news-to-me headlines-spacing"
+    },
+    {
+      "gantry_section": "g-footer",
+      "label": "Footer 3-column",
+      "fingerprint": "33.3|33.3|33.3/100",
+      "plan_confidence": 0.9,
+      "template_name": "footer-positions",
+      "template_confidence": 0.6,
+      "match_reasons": [
+        "section_id:footer",
+        "scored:0.60",
+        "over_3_candidates"
+      ],
+      "needs_resolution": [
+        {
+          "var": "footer_article_id",
+          "description": "Joomla article ID for footer contact/logo content"
+        }
+      ],
+      "resolved_context": {},
+      "template_raw": {
+        "id": "footer",
+        "type": "section",
+        "attributes": {
+          "class": "s-padding-2"
+        },
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 33.3,
+                "particle": "position",
+                "title": "Footer A",
+                "position_type": "position"
+              },
+              {
+                "size": 33.3,
+                "particle": "position",
+                "title": "Footer B",
+                "position_type": "position"
+              },
+              {
+                "size": 33.4,
+                "particle": "position",
+                "title": "Footer C",
+                "position_type": "position"
+              }
+            ]
+          },
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "particle": "contentarray",
+                "title": "Footer",
+                "attributes": {
+                  "article": {
+                    "filter": {
+                      "categories": "",
+                      "articles": "{{footer_article_id}}",
+                      "featured": "include"
+                    },
+                    "limit": {
+                      "total": "1",
+                      "columns": "1"
+                    },
+                    "display": {
+                      "pagination_buttons": ""
+                    },
+                    "sort": {
+                      "orderby": "ordering",
+                      "ordering": "ASC"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "particle_filter_hints": [],
+      "section_class": "s-padding-2"
+    },
+    {
+      "gantry_section": "g-copyright",
+      "label": "Admin copyright bar",
+      "fingerprint": "100",
+      "plan_confidence": 0.95,
+      "template_name": "copyright-bar",
+      "template_confidence": 0.6,
+      "match_reasons": [
+        "section_id:copyright",
+        "scored:0.60",
+        "over_2_candidates"
+      ],
+      "needs_resolution": [],
+      "resolved_context": {},
+      "template_raw": {
+        "id": "copyright",
+        "type": "section",
+        "grids": [
+          {
+            "blocks": [
+              {
+                "size": 100,
+                "particle": "custom",
+                "title": "Admin Footer",
+                "attributes": {
+                  "enabled": 1,
+                  "html": "<div class=\"adminfootericon\" style=\"font-size: x-small; line-height: 1.3; text-shadow: 2px 2px #000000;\">\n  <a style=\"font-size: large;\" href=\"/administrator/\" target=\"_blank\">\n    <i class=\"fa fa-lock\"></i></a>\n  <br><br>\n  <a style=\"color: #ffffff;\" href=\"http://solutiosoftware.com/\" target=\"_blank\">Site by Solutio</a>\n  <br>\n  <a style=\"color: #ffffff;\" href=\"https://solutiosoftware.com/web-policy\" target=\"_blank\" rel=\"noopener noreferrer\">Analytics Privacy Policy</a>\n</div>\n"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "particle_filter_hints": [],
+      "section_class": ""
+    }
+  ],
+  "all_unresolved": {
+    "alert_category_id": "Joomla category ID for alerts/announcements",
+    "mass_times_article_id": "Joomla article ID containing mass times content",
+    "parish_name": "Full parish name, e.g. \"St. Joseph Catholic Church\"",
+    "social_article_id": "Joomla article ID for social feed (Facebook) widget shell",
+    "news_category_id": "Joomla category ID for News & Events articles",
+    "footer_article_id": "Joomla article ID for footer contact/logo content"
+  },
+  "stats": {
+    "total_sections": 7,
+    "matched": 7,
+    "unmatched": 0,
+    "needs_resolution": 6
+  }
+}

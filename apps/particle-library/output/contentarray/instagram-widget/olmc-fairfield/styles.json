@@ -1,0 +1,1003 @@
+{
+  "particle": "contentarray",
+  "variant": "instagram-widget",
+  "site": "https://olmc-fairfield.backup.solutiosoftware.com",
+  "page": "https://olmc-fairfield.backup.solutiosoftware.com/",
+  "captured": "2026-06-17T16:46:44.363113+00:00",
+  "matched_rules": [
+    {
+      "selector": "*",
+      "properties": {
+        "box-sizing": "inherit"
+      }
+    },
+    {
+      "selector": "a",
+      "properties": {
+        "background-image": "initial",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-size": "initial",
+        "background-repeat": "initial",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "transparent",
+        "text-decoration-line": "none",
+        "text-decoration-thickness": "initial",
+        "text-decoration-style": "initial",
+        "text-decoration-color": "initial"
+      }
+    },
+    {
+      "selector": "img",
+      "properties": {
+        "height": "auto",
+        "max-width": "100%",
+        "display": "inline-block",
+        "vertical-align": "middle",
+        "border-top-width": "0px",
+        "border-right-width": "0px",
+        "border-bottom-width": "0px",
+        "border-left-width": "0px",
+        "border-top-style": "none",
+        "border-right-style": "none",
+        "border-bottom-style": "none",
+        "border-left-style": "none",
+        "border-top-color": "currentcolor",
+        "border-right-color": "currentcolor",
+        "border-bottom-color": "currentcolor",
+        "border-left-color": "currentcolor",
+        "border-image-source": "initial",
+        "border-image-slice": "initial",
+        "border-image-width": "initial",
+        "border-image-outset": "initial",
+        "border-image-repeat": "initial"
+      }
+    },
+    {
+      "selector": "svg",
+      "properties": {
+        "max-width": "100%"
+      }
+    },
+    {
+      "selector": "svg:not(:root)",
+      "properties": {
+        "overflow-x": "hidden",
+        "overflow-y": "hidden"
+      }
+    },
+    {
+      "selector": "button",
+      "properties": {
+        "color": "inherit",
+        "font-style": "inherit",
+        "font-variant-ligatures": "inherit",
+        "font-variant-caps": "inherit",
+        "font-variant-numeric": "inherit",
+        "font-variant-east-asian": "inherit",
+        "font-variant-alternates": "inherit",
+        "font-variant-position": "inherit",
+        "font-variant-emoji": "inherit",
+        "font-weight": "inherit",
+        "font-stretch": "inherit",
+        "font-size": "inherit",
+        "line-height": "inherit",
+        "font-family": "inherit",
+        "font-optical-sizing": "inherit",
+        "font-size-adjust": "inherit",
+        "font-kerning": "inherit",
+        "font-feature-settings": "inherit",
+        "font-variation-settings": "inherit",
+        "font-language-override": "inherit",
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px"
+      }
+    },
+    {
+      "selector": ".g-grid",
+      "properties": {
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "wrap",
+        "list-style-position": "initial",
+        "list-style-image": "initial",
+        "list-style-type": "none",
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "text-rendering": "optimizespeed"
+      }
+    },
+    {
+      "selector": ".g-block",
+      "properties": {
+        "flex-grow": "1",
+        "flex-shrink": "1",
+        "flex-basis": "0%",
+        "min-width": "0px",
+        "min-height": "0px"
+      }
+    },
+    {
+      "selector": ".size-100",
+      "properties": {
+        "width": "100%",
+        "max-width": "100%",
+        "flex-grow": "0",
+        "flex-basis": "100%"
+      }
+    },
+    {
+      "selector": "h3",
+      "properties": {
+        "margin-top": "0.75rem",
+        "margin-right": "0px",
+        "margin-bottom": "1.5rem",
+        "margin-left": "0px",
+        "text-rendering": "optimizelegibility"
+      }
+    },
+    {
+      "selector": ".g-flushed .g-content",
+      "properties": {
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px"
+      }
+    },
+    {
+      "selector": ".g-content",
+      "properties": {
+        "margin-top": "0.625rem",
+        "margin-right": "0.625rem",
+        "margin-bottom": "0.625rem",
+        "margin-left": "0.625rem",
+        "padding-top": "1.5rem",
+        "padding-right": "1.5rem",
+        "padding-bottom": "1.5rem",
+        "padding-left": "1.5rem"
+      }
+    },
+    {
+      "selector": "h3.g-title",
+      "properties": {
+        "font-size": "1rem",
+        "font-weight": "700",
+        "display": "block",
+        "line-height": "1.5"
+      }
+    },
+    {
+      "selector": ".g-title",
+      "properties": {
+        "font-size": "0.8rem",
+        "font-weight": "700",
+        "line-height": "1.5",
+        "margin-bottom": "0px"
+      }
+    },
+    {
+      "selector": ".g-content-array",
+      "properties": {
+        "margin-left": "-1.5rem",
+        "margin-right": "-1.5rem"
+      }
+    },
+    {
+      "selector": ".g-content-array .g-grid",
+      "properties": {
+        "margin-bottom": "2.5rem"
+      }
+    },
+    {
+      "selector": ".g-content-array .g-grid:last-child",
+      "properties": {
+        "margin-bottom": "0px"
+      }
+    },
+    {
+      "selector": ".g-content-array .g-content",
+      "properties": {
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px",
+        "padding-top": "0px"
+      }
+    },
+    {
+      "selector": ".g-content-array .g-array-item .g-array-item-text",
+      "properties": {
+        "font-size": "1.25rem"
+      }
+    },
+    {
+      "selector": ".g-content-array .g-array-item-text",
+      "properties": {
+        "margin-top": "15px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px"
+      }
+    },
+    {
+      "selector": ".g-array-item-text",
+      "properties": {
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px",
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px"
+      }
+    },
+    {
+      "selector": ".eui-slider",
+      "properties": {
+        "position": "relative",
+        "height": "100%",
+        "user-select": "none",
+        "overflow-x": "hidden",
+        "overflow-y": "hidden"
+      }
+    },
+    {
+      "selector": ".eui-slider-inner",
+      "properties": {
+        "z-index": "1",
+        "position": "relative",
+        "height": "100%",
+        "display": "flex",
+        "transition-property": "transform"
+      }
+    },
+    {
+      "selector": ".eui-slider-slide",
+      "properties": {
+        "width": "100%",
+        "height": "100%",
+        "display": "inline-block",
+        "overflow-x": "hidden",
+        "overflow-y": "hidden",
+        "flex-grow": "1",
+        "flex-shrink": "0"
+      }
+    },
+    {
+      "selector": ".eui-slider-arrow",
+      "properties": {
+        "opacity": "0",
+        "visibility": "hidden",
+        "pointer-events": "none"
+      }
+    },
+    {
+      "selector": ".eui-slider-arrow-enabled",
+      "properties": {
+        "opacity": "1",
+        "visibility": "visible",
+        "pointer-events": "all"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-container div:empty",
+      "properties": {
+        "display": "block"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed",
+      "properties": {
+        "font-size": "14px",
+        "font-family": "-apple-system, BlinkMacSystemFont, Roboto, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+        "line-height": "18px",
+        "font-weight": "400",
+        "width": "100%",
+        "max-height": "100%",
+        "position": "relative",
+        "box-sizing": "border-box",
+        "min-width": "150px",
+        "min-height": "100px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-title",
+      "properties": {
+        "font-size": "24px",
+        "font-weight": "600",
+        "text-align": "center",
+        "line-height": "32px",
+        "padding-top": "24px",
+        "padding-right": "10px",
+        "padding-bottom": "24px",
+        "padding-left": "10px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-content",
+      "properties": {
+        "position": "relative",
+        "width": "100%"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-content-loader",
+      "properties": {
+        "color": "rgba(0, 0, 0, 0.2)"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-container",
+      "properties": {
+        "width": "100%"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed a",
+      "properties": {
+        "text-decoration-line": "none",
+        "text-decoration-thickness": "initial",
+        "text-decoration-style": "initial",
+        "text-decoration-color": "initial",
+        "color": "rgb(0, 0, 0)",
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-loader",
+      "properties": {
+        "box-sizing": "border-box",
+        "display": "block",
+        "position": "absolute",
+        "top": "50%",
+        "left": "50%",
+        "border-top-left-radius": "50%",
+        "border-top-right-radius": "50%",
+        "border-bottom-right-radius": "50%",
+        "border-bottom-left-radius": "50%",
+        "border-top-style": "solid",
+        "border-right-style": "solid",
+        "border-bottom-style": "solid",
+        "border-left-style": "solid",
+        "border-top-color": "transparent",
+        "animation-duration": "1s",
+        "animation-timing-function": "linear",
+        "animation-delay": "0s",
+        "animation-iteration-count": "infinite",
+        "animation-direction": "normal",
+        "animation-fill-mode": "none",
+        "animation-play-state": "running",
+        "animation-name": "eapps-instagram-feed-loader",
+        "animation-timeline": "auto",
+        "animation-range-start": "normal",
+        "animation-range-end": "normal",
+        "opacity": "0",
+        "visibility": "hidden",
+        "width": "32px",
+        "height": "32px",
+        "margin-top": "-16px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "-16px",
+        "border-top-width": "2px",
+        "border-right-width": "2px",
+        "border-bottom-width": "2px",
+        "border-left-width": "2px",
+        "z-index": "1"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-data-status",
+      "properties": {
+        "position": "fixed",
+        "bottom": "20px",
+        "right": "20px",
+        "padding-top": "16px",
+        "padding-right": "16px",
+        "padding-bottom": "16px",
+        "padding-left": "16px",
+        "border-top-left-radius": "8px",
+        "border-top-right-radius": "8px",
+        "border-bottom-right-radius": "8px",
+        "border-bottom-left-radius": "8px",
+        "background-image": "initial",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-size": "initial",
+        "background-repeat": "initial",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "rgb(255, 255, 255)",
+        "box-shadow": "rgba(0, 0, 0, 0.2) 0px 4px 6px",
+        "z-index": "99999999",
+        "opacity": "0",
+        "visibility": "hidden",
+        "pointer-events": "none",
+        "transition-behavior": "normal",
+        "transition-duration": "0.2s",
+        "transition-timing-function": "ease",
+        "transition-delay": "0s",
+        "transition-property": "all",
+        "max-width": "320px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts",
+      "properties": {
+        "width": "100%"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-container",
+      "properties": {
+        "width": "100%"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-inner",
+      "properties": {
+        "box-sizing": "border-box",
+        "position": "relative"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-view",
+      "properties": {
+        "display": "inline-flex",
+        "flex-direction": "row",
+        "justify-content": "flex-start",
+        "flex-wrap": "wrap",
+        "box-sizing": "border-box",
+        "width": "100%",
+        "height": "auto"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-view.eui-slider-slide",
+      "properties": {
+        "display": "inline-flex",
+        "width": "100%",
+        "height": "auto"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-slider",
+      "properties": {
+        "position": "relative",
+        "height": "auto",
+        "user-select": "none",
+        "cursor": "grab",
+        "width": "100%"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-slider-inner",
+      "properties": {
+        "z-index": "1",
+        "position": "relative",
+        "height": "auto",
+        "display": "flex",
+        "width": "100%"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-slider-nav",
+      "properties": {
+        "background-image": "initial",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-size": "initial",
+        "background-repeat": "initial",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "rgb(0, 0, 0)",
+        "position": "absolute",
+        "top": "50%",
+        "width": "60px",
+        "height": "60px",
+        "justify-content": "center",
+        "align-items": "center",
+        "border-top-left-radius": "50%",
+        "border-top-right-radius": "50%",
+        "border-bottom-right-radius": "50%",
+        "border-bottom-left-radius": "50%",
+        "z-index": "1",
+        "cursor": "pointer",
+        "opacity": "0.85",
+        "transition-behavior": "normal",
+        "transition-duration": "0.2s",
+        "transition-timing-function": "ease",
+        "transition-delay": "0s",
+        "transition-property": "all",
+        "backface-visibility": "hidden",
+        "border-top-width": "medium",
+        "border-right-width": "medium",
+        "border-bottom-width": "medium",
+        "border-left-width": "medium",
+        "border-top-style": "none",
+        "border-right-style": "none",
+        "border-bottom-style": "none",
+        "border-left-style": "none",
+        "border-top-color": "currentcolor",
+        "border-right-color": "currentcolor",
+        "border-bottom-color": "currentcolor",
+        "border-left-color": "currentcolor",
+        "border-image-source": "initial",
+        "border-image-slice": "initial",
+        "border-image-width": "initial",
+        "border-image-outset": "initial",
+        "border-image-repeat": "initial"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-slider-nav-icon",
+      "properties": {
+        "width": "12px",
+        "height": "16px",
+        "fill": "rgb(255, 255, 255)",
+        "display": "block",
+        "position": "absolute",
+        "top": "50%",
+        "transform": "translateY(-50%)"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-slider-prev",
+      "properties": {
+        "left": "0px",
+        "transform": "translate3d(-50%, -50%, 0px)",
+        "box-shadow": "rgba(0, 0, 0, 0.3) 2px 0px 5px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-slider-prev .eapps-instagram-feed-posts-slider-nav-icon",
+      "properties": {
+        "right": "12px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-slider-next",
+      "properties": {
+        "right": "0px",
+        "transform": "translate(50%, -50%)",
+        "box-shadow": "rgba(0, 0, 0, 0.3) -2px 0px 5px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-slider-next .eapps-instagram-feed-posts-slider-nav-icon",
+      "properties": {
+        "left": "12px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item",
+      "properties": {
+        "box-sizing": "border-box",
+        "display": "flex",
+        "flex-direction": "column",
+        "position": "relative",
+        "background-image": "initial",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-size": "initial",
+        "background-repeat": "initial",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "rgb(255, 255, 255)",
+        "transition-behavior": "normal, normal",
+        "transition-duration": "0.2s, 0.2s",
+        "transition-timing-function": "ease, ease",
+        "transition-delay": "0s, 0s",
+        "transition-property": "opacity, visibility",
+        "opacity": "0",
+        "overflow-x": "hidden",
+        "overflow-y": "hidden",
+        "visibility": "hidden",
+        "flex-grow": "0",
+        "flex-shrink": "0"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-visible.eapps-instagram-feed-posts-item-loaded",
+      "properties": {
+        "opacity": "1",
+        "visibility": "visible"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item a",
+      "properties": {
+        "color": "rgb(0, 53, 105)"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-link",
+      "properties": {
+        "cursor": "pointer",
+        "overflow-x": "hidden",
+        "overflow-y": "hidden"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-image",
+      "properties": {
+        "width": "auto",
+        "top": "50%",
+        "left": "50%",
+        "position": "absolute",
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px",
+        "transform": "translate(-50%, -50%)"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-image-portrait .eapps-instagram-feed-posts-item-image",
+      "properties": {
+        "width": "100%"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-image-landscape .eapps-instagram-feed-posts-item-image",
+      "properties": {
+        "min-width": "100%",
+        "height": "100%",
+        "max-width": "inherit"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-image-wrapper",
+      "properties": {
+        "position": "relative",
+        "overflow-x": "hidden",
+        "overflow-y": "hidden",
+        "margin-top": "-1px",
+        "margin-right": "-1px",
+        "margin-bottom": "-1px",
+        "margin-left": "-1px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-image-ratio-1-1 .eapps-instagram-feed-posts-item-image-wrapper",
+      "properties": {
+        "padding-top": "100%"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-image-icon",
+      "properties": {
+        "display": "none",
+        "position": "absolute",
+        "z-index": "2",
+        "top": "0.6em",
+        "right": "0.6em",
+        "width": "24px",
+        "height": "24px",
+        "transition-behavior": "normal",
+        "transition-duration": "0.3s",
+        "transition-timing-function": "ease",
+        "transition-delay": "0s",
+        "transition-property": "all"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-image-icon svg",
+      "properties": {
+        "display": "block",
+        "width": "24px",
+        "height": "24px",
+        "fill": "rgba(255, 255, 255, 0.8)"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-type-carousel .eapps-instagram-feed-posts-item-image-icon-carousel",
+      "properties": {
+        "display": "block"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-likes-count",
+      "properties": {
+        "display": "inline-flex",
+        "align-items": "center"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-likes-count-icon",
+      "properties": {
+        "fill": "currentcolor",
+        "width": "24px",
+        "height": "24px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-likes-count-label",
+      "properties": {
+        "margin-left": "6px",
+        "font-size": "14px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile",
+      "properties": {
+        "user-select": "none"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile .eapps-instagram-feed-posts-item-link",
+      "properties": {
+        "width": "100%",
+        "box-sizing": "border-box",
+        "display": "flex"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile .eapps-instagram-feed-posts-item-overlay",
+      "properties": {
+        "position": "absolute",
+        "z-index": "2",
+        "top": "-1px",
+        "right": "-1px",
+        "bottom": "-1px",
+        "left": "-1px",
+        "opacity": "0",
+        "visibility": "hidden",
+        "pointer-events": "none",
+        "transition-behavior": "normal, normal",
+        "transition-duration": "0.3s, 0.3s",
+        "transition-timing-function": "ease, ease",
+        "transition-delay": "0s, 0s",
+        "transition-property": "opacity, visibility",
+        "text-align": "center",
+        "box-sizing": "border-box",
+        "color": "rgb(255, 255, 255)",
+        "background-image": "initial",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-size": "initial",
+        "background-repeat": "initial",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "rgba(0, 0, 0, 0.8)",
+        "display": "flex",
+        "align-items": "center"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile .eapps-instagram-feed-posts-item-content",
+      "properties": {
+        "transform": "translateY(10%)",
+        "width": "80%",
+        "max-height": "80%",
+        "margin-top": "0px",
+        "margin-right": "auto",
+        "margin-bottom": "0px",
+        "margin-left": "auto",
+        "position": "relative",
+        "transition-behavior": "normal",
+        "transition-duration": "0.3s",
+        "transition-timing-function": "ease",
+        "transition-delay": "0s",
+        "transition-property": "all"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile .eapps-instagram-feed-posts-item-media",
+      "properties": {
+        "width": "100%"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile .eapps-instagram-feed-posts-item-image",
+      "properties": {
+        "transition-behavior": "normal, normal",
+        "transition-duration": "0.3s, 0.3s",
+        "transition-timing-function": "ease, ease",
+        "transition-delay": "0s, 0s",
+        "transition-property": "transform, filter",
+        "left": "50%",
+        "transform": "scale(1) translate(-50%, -50%)",
+        "transform-origin": "0px 0px",
+        "backface-visibility": "hidden"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile .eapps-instagram-feed-posts-item-likes-count",
+      "properties": {
+        "min-width": "70px",
+        "justify-content": "center"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile .eapps-instagram-feed-posts-item-likes-count-label",
+      "properties": {
+        "font-size": "16px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile .eapps-instagram-feed-posts-item-likes-count-icon",
+      "properties": {
+        "width": "24px",
+        "height": "24px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile .eapps-instagram-feed-posts-item-likes-count + .eapps-instagram-feed-posts-item-comments-count",
+      "properties": {
+        "margin-left": "20px"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile .eapps-instagram-feed-posts-item-text",
+      "properties": {
+        "font-size": "14px",
+        "line-height": "21px",
+        "display": "inline-block",
+        "overflow-x": "hidden",
+        "overflow-y": "hidden",
+        "margin-top": "12%",
+        "text-align": "center",
+        "max-height": "84px",
+        "width": "100%"
+      }
+    },
+    {
+      "selector": ".eapps-instagram-feed-posts-item-template-tile .eapps-instagram-feed-posts-item-text-clone",
+      "properties": {
+        "opacity": "0",
+        "visibility": "hidden",
+        "position": "absolute",
+        "left": "0px",
+        "right": "0px",
+        "max-height": "none"
+      }
+    },
+    {
+      "selector": "#eapps-instagram-feed-1 a",
+      "properties": {
+        "text-decoration-line": "none",
+        "text-decoration-thickness": "initial",
+        "text-decoration-style": "initial",
+        "text-decoration-color": "initial",
+        "color": "rgb(0, 0, 0)",
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px"
+      }
+    },
+    {
+      "selector": "#eapps-instagram-feed-1",
+      "properties": {
+        "width": "100%",
+        "max-width": "100%"
+      }
+    },
+    {
+      "selector": "#eapps-instagram-feed-1 .eapps-instagram-feed-posts-item",
+      "properties": {
+        "color": "rgb(0, 0, 0)"
+      }
+    },
+    {
+      "selector": "#eapps-instagram-feed-1 .eapps-instagram-feed-posts-item-overlay .eapps-instagram-feed-posts-item-content",
+      "properties": {
+        "color": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "selector": "#eapps-instagram-feed-1 .eapps-instagram-feed-posts-item-overlay",
+      "properties": {
+        "background-image": "initial",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-size": "initial",
+        "background-repeat": "initial",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "rgba(0, 0, 0, 0.8)"
+      }
+    },
+    {
+      "selector": "#eapps-instagram-feed-1 .eapps-instagram-feed-posts-slider-nav-icon",
+      "properties": {
+        "fill": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "selector": "#eapps-instagram-feed-1 .eapps-instagram-feed-posts-slider-nav",
+      "properties": {
+        "background-image": "initial",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-size": "initial",
+        "background-repeat": "initial",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "rgba(0, 0, 0, 0.9)"
+      }
+    }
+  ],
+  "computed_visual": {
+    "display": "block",
+    "position": "static",
+    "width": "1440px",
+    "height": "354.797px",
+    "min-height": "0px",
+    "max-width": "100%",
+    "padding": "0px",
+    "padding-top": "0px",
+    "padding-right": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "0px",
+    "margin": "0px",
+    "margin-top": "0px",
+    "margin-right": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "flex-direction": "row",
+    "flex-wrap": "nowrap",
+    "justify-content": "normal",
+    "align-items": "normal",
+    "grid-template-columns": "none",
+    "grid-template-rows": "none",
+    "gap": "normal",
+    "column-gap": "normal",
+    "row-gap": "normal",
+    "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "background-image": "none",
+    "background-size": "auto",
+    "background-position": "0% 0%",
+    "background-repeat": "repeat",
+    "background-attachment": "scroll",
+    "color": "rgb(0, 0, 0)",
+    "font-family": "Inter, sans-serif",
+    "font-size": "17.6px",
+    "font-weight": "400",
+    "font-style": "normal",
+    "line-height": "26.4px",
+    "letter-spacing": "normal",
+    "text-align": "start",
+    "text-transform": "none",
+    "text-decoration": "none",
+    "border": "0px none rgb(0, 0, 0)",
+    "border-top": "0px none rgb(0, 0, 0)",
+    "border-right": "0px none rgb(0, 0, 0)",
+    "border-bottom": "0px none rgb(0, 0, 0)",
+    "border-left": "0px none rgb(0, 0, 0)",
+    "border-radius": "0px",
+    "box-shadow": "none",
+    "outline": "rgb(0, 0, 0) none 3px",
+    "opacity": "1",
+    "visibility": "visible",
+    "overflow": "visible",
+    "z-index": "auto"
+  }
+}

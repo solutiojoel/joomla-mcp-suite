@@ -1,0 +1,387 @@
+{
+  "_comment": "Particle Library Builder config. Selectors from live inventory scan across 19 sites.",
+
+  "sites": [
+    { "name": "StCats-Wichita",    "url": "https://stcats-wichita.backup.solutiosoftware.com",    "path": "/", "extra_pages": ["/school"] },
+    { "name": "Shelbyville",       "url": "https://shelbyville.backup.solutiosoftware.com",       "path": "/home-cl", "extra_pages": ["/school-cl"] },
+    { "name": "StAgnes-Concord",   "url": "https://stagnes-concord.backup.solutiosoftware.com",   "path": "/" },
+    { "name": "OLMC-Fairfield",    "url": "https://olmc-fairfield.backup.solutiosoftware.com",    "path": "/" },
+    { "name": "StLaw-Alex",        "url": "https://stlaw-alex.backup.solutiosoftware.com",        "path": "/" },
+    { "name": "Trinity-Lenexa",    "url": "https://trinity-lenexa.backup.solutiosoftware.com",    "path": "/", "extra_pages": ["/school", "/eec-2"] },
+    { "name": "Assumption-Center", "url": "https://assumption-center.backup.solutiosoftware.com", "path": "/" },
+    { "name": "StBern-Levit",      "url": "https://stbern-levit.backup.solutiosoftware.com",      "path": "/home-cl" },
+    { "name": "StBosco-Hammond",   "url": "https://stbosco-hammond.backup.solutiosoftware.com",   "path": "/" },
+    { "name": "Martyrs-Lincoln",   "url": "https://martyrs-lincoln.backup.solutiosoftware.com",   "path": "/" },
+    { "name": "StPeter-Eaton",     "url": "https://stpeter-eaton.backup.solutiosoftware.com",     "path": "/" },
+    { "name": "SD-Cemetery",       "url": "https://sd-cemetery.backup.solutiosoftware.com",       "path": "/", "extra_pages": ["/holy-cross"] }
+  ],
+
+  "particles": [
+
+    { "type": "swiper", "variant": "hero-fullwidth-sw",
+      "description": "Full-width hero carousel with rotate-sw class. Most common modern variant.",
+      "selectors": [".fullwidth-swiper.rotate-sw", ".fullwidth-swiper.rotate-sw .g-swiper", ".fullwidth-swiper.rotate-sw .swiper-slide"],
+      "notes": "stcats-wichita, stlaw-alex, stpeter-eaton, trinity-lenexa." },
+
+    { "type": "swiper", "variant": "hero-fullwidth-wide",
+      "description": "70%-width hero carousel with rotate-wide class. Paired with sidebar quicklinks.",
+      "selectors": [".fullwidth-swiper.rotate-wide", ".fullwidth-swiper.rotate-wide .g-swiper", ".fullwidth-swiper.rotate-wide .swiper-slide"],
+      "notes": "olmc-fairfield, shelbyville, stagnes-concord, stagnes-greenport, stbern-levit, stliz-melville." },
+
+    { "type": "swiper", "variant": "hero-fullwidth-basic",
+      "description": "Full-width hero with no rotate class.",
+      "selectors": [".fullwidth-swiper:not(.rotate-sw):not(.rotate-wide):not(.rotate-standard)", ".fullwidth-swiper .g-swiper"],
+      "notes": "assumption-center, olg-green, sd-cemetery, seas-ontario, stpats-par." },
+
+    { "type": "swiper", "variant": "hero-fullwidth-standard",
+      "description": "70%-width hero with rotate-standard class.",
+      "selectors": [".fullwidth-swiper.rotate-standard", ".fullwidth-swiper.rotate-standard .g-swiper"],
+      "notes": "martyrs-lincoln." },
+
+    { "type": "swiper", "variant": "news-swiper",
+      "description": "Secondary swiper for recent news or events, not the main hero.",
+      "selectors": [".swiper-news", ".swiper-news .g-swiper", ".swiper-news .swiper-slide"],
+      "notes": "trinity-lenexa." },
+
+    { "type": "swiper", "variant": "testimonial-swiper",
+      "description": "Quote/testimonial carousel.",
+      "selectors": [".testimonial-swiper", ".testimonial-swiper .g-swiper", ".testimonial-swiper .swiper-slide"],
+      "notes": "trinity-lenexa." },
+
+    { "type": "blockcontent", "variant": "ql-overlay-swiper",
+      "description": "Quicklinks overlay on or directly below the hero swiper.",
+      "selectors": [".swiper-ql-overlay", ".swiper-ql-overlay .g-blockcontent", ".swiper-ql-overlay .g-blockcontent-subcontent-block"],
+      "notes": "sd-cemetery, stbosco-hammond." },
+
+    { "type": "blockcontent", "variant": "ql-overlay-swiper-studius",
+      "description": "Quicklinks overlay in Studius style on the hero swiper.",
+      "selectors": [".swiper-qls-overlay", ".swiper-qls-overlay .g-blockcontent", ".swiper-qls-overlay .g-blockcontent-subcontent-block"],
+      "notes": "stcats-wichita." },
+
+    { "type": "blockcontent", "variant": "ql-toplinks-studius-25",
+      "description": "Vertical quicklinks column in Studius style, 25% width. Paired with rotate-wide hero.",
+      "selectors": [".ql-toplinks-studius.size-25", ".ql-toplinks-studius.size-25 .g-blockcontent", ".ql-toplinks-studius.size-25 .g-blockcontent-subcontent-block"],
+      "notes": "stagnes-concord, stagnes-greenport, shelbyville, trinity-lenexa." },
+
+    { "type": "blockcontent", "variant": "ql-toplinks-studius-36",
+      "description": "Vertical quicklinks column in Studius style, 36% width.",
+      "selectors": [".ql-toplinks-studius.size-36", ".ql-toplinks-studius.size-36 .g-blockcontent"],
+      "notes": "stliz-melville, olmc-fairfield." },
+
+    { "type": "blockcontent", "variant": "ql-toplinks-studius-50",
+      "description": "Vertical quicklinks column in Studius style, 50% width.",
+      "selectors": [".ql-toplinks-studius.size-50", ".ql-toplinks-studius.size-50 .g-blockcontent"],
+      "notes": "martyrs-lincoln." },
+
+    { "type": "blockcontent", "variant": "ql-circle-row",
+      "description": "Row of circular icon cards with label, for key action links.",
+      "selectors": [".ql-circle-row", ".ql-circle-row .g-blockcontent", ".ql-circle-row .g-blockcontent-subcontent-block"],
+      "notes": "olmc-fairfield, seas-ontario." },
+
+    { "type": "blockcontent", "variant": "ql-icon-links",
+      "description": "Grid of icon links, typically for school navigation.",
+      "selectors": [".ql-icon-links", ".ql-icon-links .g-blockcontent", ".ql-icon-links .g-blockcontent-subcontent-block"],
+      "notes": "olg-green, shelbyville." },
+
+    { "type": "blockcontent", "variant": "ql-iconblock",
+      "description": "Grid of icon+label cards.",
+      "selectors": [".ql-iconblock", ".ql-iconblock .g-blockcontent", ".ql-iconblock .g-blockcontent-subcontent-block"],
+      "notes": "stagnes-greenport." },
+
+    { "type": "blockcontent", "variant": "ql-sbound",
+      "description": "Sidebar-bound quicklinks with label and icon.",
+      "selectors": [".ql-sbound", ".ql-sbound .g-blockcontent", ".ql-sbound .g-blockcontent-subcontent-block"],
+      "notes": "assumption-center." },
+
+    { "type": "blockcontent", "variant": "ql-portraitbox",
+      "description": "Portrait-style quicklink boxes with image and title.",
+      "selectors": [".ql-portraitbox", ".ql-portraitbox .g-blockcontent", ".ql-portraitbox .g-blockcontent-subcontent-block"],
+      "notes": "shelbyville." },
+
+    { "type": "blockcontent", "variant": "ql-blocktitle",
+      "description": "Quicklinks with a large heading above the link grid.",
+      "selectors": [".ql-blocktitle", ".ql-blocktitle .g-blockcontent", ".ql-blocktitle .g-blockcontent-subcontent-block"],
+      "notes": "stagnes-concord." },
+
+    { "type": "blockcontent", "variant": "ql-border-box",
+      "description": "Quicklinks in bordered boxes.",
+      "selectors": [".ql-border-box", ".ql-border-box .g-blockcontent", ".ql-border-box .g-blockcontent-subcontent-block"],
+      "notes": "trinity-lenexa." },
+
+    { "type": "blockcontent", "variant": "ql-windowsill",
+      "description": "Horizontal band of quicklink tiles.",
+      "selectors": [".ql-windowsill", ".ql-windowsill .g-blockcontent", ".ql-windowsill .g-blockcontent-subcontent-block"],
+      "notes": "stliz-melville, stpeter-eaton." },
+
+    { "type": "blockcontent", "variant": "ql-boxtitle",
+      "description": "Box-style quicklinks with a title inside each box.",
+      "selectors": [".ql-boxtitle", ".ql-boxtitle .g-blockcontent", ".ql-boxtitle .g-blockcontent-subcontent-block"],
+      "notes": "stlaw-alex." },
+
+    { "type": "blockcontent", "variant": "ql-under-title",
+      "description": "Quicklinks displayed beneath a heading.",
+      "selectors": [".ql-under-title", ".ql-under-title .g-blockcontent", ".ql-under-title .g-blockcontent-subcontent-block"],
+      "notes": "stbern-levit." },
+
+    { "type": "blockcontent", "variant": "ql-swiper-sidelinks",
+      "description": "Quicklinks as a sidebar beside the hero swiper.",
+      "selectors": [".ql-swiper-sidelinks", ".ql-swiper-sidelinks .g-blockcontent", ".ql-swiper-sidelinks .g-blockcontent-subcontent-block"],
+      "notes": "martyrs-lincoln." },
+
+    { "type": "blockcontent", "variant": "ql-toplinks-side-studius",
+      "description": "Side-positioned Studius toplinks, 50% width.",
+      "selectors": [".ql-toplinks-side-studius", ".ql-toplinks-side-studius .g-blockcontent"],
+      "notes": "stbosco-hammond." },
+
+    { "type": "contentarray", "variant": "modern-alert",
+      "description": "Full-width alert/announcement banner. Near-universal (18/19 sites).",
+      "selectors": [".modern-alert", ".modern-alert .g-content-array", ".modern-alert .g-array-item-text"],
+      "notes": "Often hidden when no active alert." },
+
+    { "type": "contentarray", "variant": "welcome-container",
+      "description": "Full-width welcome/intro section.",
+      "selectors": [".welcome-container", ".welcome-container .g-content-array", ".welcome-container .g-array-item-text"],
+      "notes": "olmc-fairfield, sd-cemetery, shelbyville, stagnes-greenport, stlaw-alex, trinity-lenexa." },
+
+    { "type": "contentarray", "variant": "welcome-box",
+      "description": "Welcome section with boxed/card treatment.",
+      "selectors": [".welcome-box", ".welcome-box .g-content-array", ".welcome-box .g-array-item-text"],
+      "notes": "seas-ontario." },
+
+    { "type": "contentarray", "variant": "mass-times-block",
+      "description": "Mass times schedule in a ~30% wide sidebar block.",
+      "selectors": [".mass-times-block", ".mass-times-block .g-content-array", ".mass-times-block .g-array-item-text"],
+      "notes": "olmc-fairfield, shelbyville, stagnes-concord, stagnes-greenport, stbern-levit, stliz-melville." },
+
+    { "type": "contentarray", "variant": "mass-times-container",
+      "description": "Full-width mass times block.",
+      "selectors": [".mass-times-container", ".mass-times-container .g-content-array", ".mass-times-container .g-array-item-text"],
+      "notes": "stcats-wichita." },
+
+    { "type": "contentarray", "variant": "mass-times-overlay",
+      "description": "Mass times as an overlay on/beside the hero.",
+      "selectors": [".mass-times-overlay", ".mass-times-overlay .g-content-array", ".mass-times-overlay .g-array-item-text"],
+      "notes": "stlaw-alex." },
+
+    { "type": "contentarray", "variant": "mass-container",
+      "description": "Mass schedule in a full-width container.",
+      "selectors": [".mass-container", ".mass-container .g-content-array", ".mass-container .g-array-item-text"],
+      "notes": "stpeter-eaton, trinity-lenexa." },
+
+    { "type": "contentarray", "variant": "mt-overlay-schedule",
+      "description": "Mass times overlay with language/location labels.",
+      "selectors": [".mt-overlay-schedule", ".mt-overlay-schedule .g-content-array", ".mt-overlay-schedule .g-array-item-text"],
+      "notes": "seas-ontario." },
+
+    { "type": "contentarray", "variant": "mt-side-image",
+      "description": "Mass times with a side image.",
+      "selectors": [".mt-side-image", ".mt-side-image .g-content-array", ".mt-side-image .g-array-item-text"],
+      "notes": "stbosco-hammond." },
+
+    { "type": "contentarray", "variant": "ph-sidenews",
+      "description": "Side news panel, usually paired with calendar or mass times.",
+      "selectors": [".ph-sidenews", ".ph-sidenews .g-content-array", ".ph-sidenews .g-array-item", ".ph-sidenews .g-array-item-text"],
+      "notes": "olmc-fairfield, seas-ontario, stagnes-concord, stagnes-greenport." },
+
+    { "type": "contentarray", "variant": "ph-sideway-stack",
+      "description": "News articles stacked in a horizontal strip layout.",
+      "selectors": [".ph-sideway-stack", ".ph-sideway-stack .g-content-array", ".ph-sideway-stack .g-array-item"],
+      "notes": "stbern-levit." },
+
+    { "type": "contentarray", "variant": "ph-shadowbox2",
+      "description": "News articles in shadowed box cards.",
+      "selectors": [".ph-shadowbox2", ".ph-shadowbox2 .g-content-array", ".ph-shadowbox2 .g-array-item"],
+      "notes": "shelbyville." },
+
+    { "type": "contentarray", "variant": "ph-rounded-square",
+      "description": "News/event articles in rounded square image cards.",
+      "selectors": [".ph-rounded-square", ".ph-rounded-square .g-content-array", ".ph-rounded-square .g-array-item"],
+      "notes": "assumption-center, stcats-wichita." },
+
+    { "type": "contentarray", "variant": "ph-imgcard",
+      "description": "News articles as image-first cards with title and excerpt.",
+      "selectors": [".ph-imgcard", ".ph-imgcard .g-content-array", ".ph-imgcard .g-array-item"],
+      "notes": "stliz-melville." },
+
+    { "type": "contentarray", "variant": "ph-titlestack",
+      "description": "News articles stacked title-first.",
+      "selectors": [".ph-titlestack", ".ph-titlestack .g-content-array", ".ph-titlestack .g-array-item"],
+      "notes": "stlaw-alex." },
+
+    { "type": "contentarray", "variant": "grid-articles",
+      "description": "CSS Grid article layout with bg-img, hover-scale modifiers.",
+      "selectors": [".grid.grid-articles", ".grid.grid-articles .g-content-array", ".grid.grid-articles .g-array-item"],
+      "notes": "martyrs-lincoln (3-col), sd-cemetery (2-col), stbosco-hammond (4-col)." },
+
+    { "type": "contentarray", "variant": "re-news",
+      "description": "Recent news section.",
+      "selectors": [".re-news", ".re-news .g-content-array", ".re-news .g-array-item"],
+      "notes": "trinity-lenexa." },
+
+    { "type": "contentarray", "variant": "news-container",
+      "description": "News container at 85% or 50% width.",
+      "selectors": [".news-container", ".news-container .g-content-array", ".news-container .g-array-item"],
+      "notes": "stpeter-eaton, stpats-par." },
+
+    { "type": "contentarray", "variant": "calendar-widget-sm",
+      "description": "Small (33%) calendar widget, typically in a 3-col widget row.",
+      "selectors": [".calendar-widget-container.size-33-3", ".calendar-widget-container.size-33-3 .g-content-array"],
+      "notes": "olg-green, stcats-wichita, stpeter-eaton, trinity-lenexa." },
+
+    { "type": "contentarray", "variant": "calendar-widget-full",
+      "description": "Full-width calendar widget.",
+      "selectors": [".calendar-widget-container.size-100", ".calendar-widget-container.size-100 .g-content-array"],
+      "notes": "olmc-fairfield, stcats-wichita." },
+
+    { "type": "contentarray", "variant": "calendar-container-full",
+      "description": "Full-width calendar section with heading.",
+      "selectors": [".calendar-container.size-100", ".calendar-container.size-100 .g-content-array"],
+      "notes": "stagnes-concord, stlaw-alex." },
+
+    { "type": "contentarray", "variant": "facebook-widget-sm",
+      "description": "Facebook feed embed at 33% width in a widget column.",
+      "selectors": [".facebook-widget-container.size-33-3", ".facebook-widget-container.size-33-3 .g-content-array"],
+      "notes": "olg-green, stbern-levit, stlaw-alex, stpeter-eaton." },
+
+    { "type": "contentarray", "variant": "facebook-widget-full",
+      "description": "Full-width Facebook feed embed.",
+      "selectors": [".facebook-widget-container.size-100", ".facebook-widget-container.size-100 .g-content-array"],
+      "notes": "stcats-wichita." },
+
+    { "type": "contentarray", "variant": "formed-widget",
+      "description": "FORMED.org embed widget, usually 33% wide.",
+      "selectors": [".formed-widget-container", ".formed-widget-container .g-content-array"],
+      "notes": "stcats-wichita, stlaw-alex, trinity-lenexa." },
+
+    { "type": "contentarray", "variant": "bulletin-widget",
+      "description": "Parish bulletin embed widget.",
+      "selectors": [".bulletin-widget-container", ".bulletin-widget-container .g-content-array"],
+      "notes": "stbern-levit, stlaw-alex." },
+
+    { "type": "contentarray", "variant": "flocknotes-container",
+      "description": "Flocknote email signup and latest notes embed.",
+      "selectors": [".flocknotes-container", ".flocknotes-container .g-content-array"],
+      "notes": "shelbyville, stpats-par." },
+
+    { "type": "contentarray", "variant": "instagram-widget",
+      "description": "Instagram feed embed widget.",
+      "selectors": [".instagram-widget-container", ".instagram-widget-container .g-content-array"],
+      "notes": "olmc-fairfield." },
+
+    { "type": "contentarray", "variant": "mission-container",
+      "description": "Parish or school mission statement section.",
+      "selectors": [".mission-container", ".mission-container .g-content-array", ".mission-container .g-array-item-text"],
+      "notes": "olg-green, stbern-levit, stpats-par, stpeter-eaton." },
+
+    { "type": "contentarray", "variant": "boxes-container",
+      "description": "Content displayed in a grid of styled boxes.",
+      "selectors": [".boxes-container", ".boxes-container .g-content-array", ".boxes-container .g-array-item"],
+      "notes": "assumption-center." },
+
+    { "type": "contentarray", "variant": "enroll-container",
+      "description": "School enrollment CTA section.",
+      "selectors": [".enroll-container", ".enroll-container .g-content-array", ".enroll-container .g-array-item-text"],
+      "notes": "shelbyville, trinity-lenexa." },
+
+    { "type": "contentarray", "variant": "header-contact-container",
+      "description": "Contact info (address, phone) in the header area.",
+      "selectors": [".header-contact-container", ".header-contact-container .g-content-array", ".header-contact-container .g-array-item-text"],
+      "notes": "seas-ontario, stbern-levit." },
+
+    { "type": "contentarray", "variant": "nav-contactinfo",
+      "description": "Compact contact info in the top nav bar.",
+      "selectors": [".nav-contactinfo", ".nav-contactinfo .g-content-array", ".nav-contactinfo .g-array-item-text"],
+      "notes": "stlaw-alex." },
+
+    { "type": "contentarray", "variant": "photoalbum-container",
+      "description": "Photo album gallery embed section.",
+      "selectors": [".photoalbum-container", ".photoalbum-container .g-content-array"],
+      "notes": "stagnes-concord." },
+
+    { "type": "contentarray", "variant": "youtube-container",
+      "description": "YouTube live stream or video embed section.",
+      "selectors": [".youtube-container", ".youtube-container .g-content-array"],
+      "notes": "stcats-wichita." },
+
+    { "type": "custom", "variant": "popup-scaffold",
+      "description": "Hidden popup modal container. Near-universal (18/19 sites).",
+      "selectors": [".pop-up-block-2"],
+      "notes": "Usually display:none. Will render as an empty block in screenshot." },
+
+    { "type": "custom", "variant": "news-title",
+      "description": "Section heading above the news/events area.",
+      "selectors": [".news-title", ".center.news-title"],
+      "notes": "Block class: news-title size-100 or center news-title size-100." },
+
+    { "type": "custom", "variant": "news-button",
+      "description": "View All / View All Events CTA button below news.",
+      "selectors": [".news-button", ".center.news-button"],
+      "notes": "Block class: news-button size-100 or center news-button size-100." },
+
+    { "type": "custom", "variant": "ue-title",
+      "description": "Upcoming Events section heading.",
+      "selectors": [".ue-title"],
+      "notes": "stbosco-hammond, stpats-par." },
+
+    { "type": "custom", "variant": "ue-button",
+      "description": "Upcoming Events view-all button.",
+      "selectors": [".ue-button"],
+      "notes": "stbosco-hammond, stpats-par." },
+
+    { "type": "logo", "variant": "desktop-logo",
+      "description": "Desktop logo image in the navigation bar.",
+      "selectors": [".g-block.size-100 .g-logo", ".g-block.size-100 .g-logo img"],
+      "notes": "Found on all sites." },
+
+    { "type": "logo", "variant": "mobile-logo",
+      "description": "Mobile logo shown on small screens.",
+      "selectors": [".show-mobile .g-logo", ".show-mobile .g-logo img"],
+      "notes": "18 sites." },
+
+    { "type": "logo", "variant": "circle-icon-logo",
+      "description": "Round icon/crest logo variant used alongside a text logo.",
+      "selectors": [".sh-circle-icon .g-logo", ".sh-circle-icon .g-logo img"],
+      "notes": "olg-green, trinity-lenexa." },
+
+    { "type": "menu", "variant": "main-nav",
+      "description": "Primary Joomla/Gantry navigation menu.",
+      "selectors": [".g-block.size-100 .g-main-nav", ".g-block.size-100 .g-main-nav > ul > li > a"],
+      "notes": "No unique block class. Target via section context." },
+
+    { "type": "social", "variant": "nav-social-icons-full",
+      "description": "Social icon links in the navigation, full width.",
+      "selectors": [".nav-social-icons.size-100", ".nav-social-icons.size-100 .g-social-items a"],
+      "notes": "olg-green, stagnes-concord, stliz-melville." },
+
+    { "type": "social", "variant": "nav-social-icons-half",
+      "description": "Social icon links at 50% width.",
+      "selectors": [".nav-social-icons.size-50", ".nav-social-icons.size-50 .g-social-items a"],
+      "notes": "stbosco-hammond, trinity-lenexa." },
+
+    { "type": "search", "variant": "nav-search",
+      "description": "Search input in the navigation bar.",
+      "selectors": [".nav-search", ".nav-search .g-search"],
+      "notes": "trinity-lenexa." },
+
+    { "type": "timeline", "variant": "events-horizontal",
+      "description": "Horizontal scrolling events calendar timeline.",
+      "selectors": [".ec-horiz", ".ec-horiz .g-timeline"],
+      "notes": "stbosco-hammond." },
+
+    { "type": "timeline", "variant": "ue-sideitems",
+      "description": "Upcoming events as a sidebar item list.",
+      "selectors": [".ue-sideitems", ".ue-sideitems .g-timeline"],
+      "notes": "stpats-par." },
+
+    { "type": "video", "variant": "video-standard",
+      "description": "Inline or embedded video content.",
+      "selectors": [".g-block:not(.video-bg) .g-video"],
+      "notes": "stcats-wichita." },
+
+    { "type": "video", "variant": "video-background",
+      "description": "Video used as a full-section background.",
+      "selectors": [".video-bg", ".video-bg .g-video"],
+      "notes": "stcats-wichita." }
+
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "_comment": "Particle Inventory Scanner - site list. Add as many sites as you like. 'extra_pages' are crawled in addition to the homepage.",
+
+  "sites": [
+    {
+      "name": "SD-Cemetery",
+      "url": "https://sd-cemetery.backup.solutiosoftware.com",
+      "path": "/",
+      "extra_pages": ["/holy-cross", "/home-gs"]
+    },
+    {
+      "name": "StBern-Levit",
+      "url": "https://stbern-levit.backup.solutiosoftware.com",
+      "path": "/home-cl"
+    },
+    {
+      "name": "Shelbyville",
+      "url": "https://shelbyville.backup.solutiosoftware.com",
+      "path": "/home-cl",
+      "extra_pages": ["/school-cl"]
+    },
+    {
+      "name": "StPats-Par",
+      "url": "https://stpats-par.backup.solutiosoftware.com",
+      "path": "/home-cl",
+      "extra_pages": ["/school-cl"]
+    },
+    {
+      "name": "StLaw-Alex",
+      "url": "https://stlaw-alex.backup.solutiosoftware.com",
+      "path": "/"
+    },
+    {
+      "name": "Olg-Green",
+      "url": "https://olg-green.backup.solutiosoftware.com",
+      "path": "/school"
+    },
+    {
+      "name": "StAgnes-Concord",
+      "url": "https://stagnes-concord.backup.solutiosoftware.com",
+      "path": "/"
+    },
+    {
+      "name": "StCats-Wichita",
+      "url": "https://stcats-wichita.backup.solutiosoftware.com",
+      "path": "/",
+      "extra_pages": ["/school"]
+    },
+    {
+      "name": "Assumption-Center",
+      "url": "https://assumption-center.backup.solutiosoftware.com",
+      "path": "/"
+    },
+    {
+      "name": "OLMC-Fairfield",
+      "url": "https://olmc-fairfield.backup.solutiosoftware.com",
+      "path": "/"
+    },
+    {
+      "name": "Seas-Ontario",
+      "url": "https://seas-ontario.backup.solutiosoftware.com",
+      "path": "/"
+    },
+    {
+      "name": "StPeter-Eaton",
+      "url": "https://stpeter-eaton.backup.solutiosoftware.com",
+      "path": "/"
+    },
+    {
+      "name": "Martyrs-Lincoln",
+      "url": "https://martyrs-lincoln.backup.solutiosoftware.com",
+      "path": "/"
+    },
+    {
+      "name": "StAgnes-Greenport",
+      "url": "https://stagnes-greenport.backup.solutiosoftware.com",
+      "path": "/"
+    },
+    {
+      "name": "Trinity-Lenexa",
+      "url": "https://trinity-lenexa.backup.solutiosoftware.com",
+      "path": "/",
+      "extra_pages": ["/school", "/eec-2"]
+    },
+    {
+      "name": "StGertrud-Bay",
+      "url": "https://stgertrud-bay.backup.solutiosoftware.com",
+      "path": "/"
+    },
+    {
+      "name": "StLiz-Melville",
+      "url": "https://stliz-melville.backup.solutiosoftware.com",
+      "path": "/"
+    },
+    {
+      "name": "StBon-Tipton",
+      "url": "https://stbon-tipton.backup.solutiosoftware.com",
+      "path": "/"
+    },
+    {
+      "name": "StBosco-Hammond",
+      "url": "https://stbosco-hammond.backup.solutiosoftware.com",
+      "path": "/"
+    }
+  ]
+}

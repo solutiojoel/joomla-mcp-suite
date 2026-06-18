@@ -1,0 +1,13 @@
+{
+  "site": {
+    "name": "StPats-Par",
+    "url": "https://stpats-par.backup.solutiosoftware.com",
+    "path": "/home-cl",
+    "extra_pages": [
+      "/school-cl"
+    ]
+  },
+  "scanned": "2026-06-17T17:15:32.599054+00:00",
+  "section_count": 0,
+  "sections": []
+}
