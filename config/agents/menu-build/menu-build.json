@@ -7,6 +7,7 @@
       "set_active_site", "get_active_site", "get_agent_instructions",
       "get_site_notes", "append_site_note", "write_site_notes",
       "read_agent_doc", "reload_tools",
+      "run_menu_interpretation",
       "joomla_article", "joomla_category", "joomla_menu*",
       "joomla_media", "joomla_bulk_checkin",
       "joomla_get_frontend_*", "joomla_verify_frontend_content",
@@ -25,6 +26,16 @@
     "rules": {}
   },
   "docs": {
-    "allow": ["global/*", "menu-build/*"]
+    "allow": [
+      "workflows/editing-rules",
+      "workflows/menu-build-workflow",
+      "workflows/improvements",
+      "kb/menu-spec-schema",
+      "kb/grid-layout",
+      "kb/staff-grid",
+      "kb/staff-pages",
+      "kb/content-standards",
+      "kb/css-table-classes"
+    ]
   }
 }

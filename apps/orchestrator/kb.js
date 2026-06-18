@@ -3,20 +3,17 @@
 /**
  * KB accessor module — the only place that touches the docs filesystem.
  *
- * Docs live under docs/agents/<scope>/, where <scope> is one of SCOPE_DIRS
- * (global, support, menu-content, menu-build, design, launch). A doc has two names:
+ * Docs live under docs/workflows/ and docs/kb/ (and any other topic dirs added
+ * under docs/ except docs/sites/, which is managed by get_site_notes).
  *
- *   canonical — its path relative to docs/agents (e.g. "support/kb/user-accounts")
- *   public    — the canonical name with the scope segment stripped
- *               (e.g. "kb/user-accounts") — this is the name agents use and
- *               the name all pre-reorg references (CLAUDE.md, instruction
- *               files) were written against. Both names resolve.
+ * A doc's name is its path relative to docs/, without the .md extension:
+ *   e.g. "workflows/editing-rules", "kb/user-accounts"
  *
- * Agent docs.allow patterns are matched against BOTH names, so scope globs
- * ("global/*", "support/*") and legacy explicit names ("editing-rules") work.
+ * Agent docs.allow patterns support trailing-* wildcards, so you can grant
+ * access by folder ("kb/*", "workflows/*") or by explicit name ("workflows/editing-rules").
  *
  * Exports:
- *   listDocs(agentDef)          → string[]        public doc names visible to the agent
+ *   listDocs(agentDef)          → string[]        doc names visible to the agent
  *   readDoc(agentDef, name)     → string           throws with .code on error
  *   readInstructions(agentDef)  → string           agent instruction file
  *   isToolAllowed(agentDef, toolName) → boolean
@@ -30,59 +27,43 @@
 const fs   = require('fs');
 const path = require('path');
 
-const DOCS_GLOBAL_DIR   = path.join(__dirname, '..', '..', 'docs', 'global');
-const DOCS_AGENTS_DIR   = path.join(__dirname, '..', '..', 'docs', 'agents');
+const DOCS_DIR          = path.join(__dirname, '..', '..', 'docs');
 const AGENTS_CONFIG_DIR = path.join(__dirname, '..', '..', 'config', 'agents');
 
-// Top-level dirs under docs/agents that act as permission scopes. A doc's
-// public name strips this segment; anything outside these dirs keeps its
-// full relative path as both canonical and public name.
-const SCOPE_DIRS = new Set(['global', 'support', 'menu-content', 'menu-build', 'design', 'launch']);
+// Top-level dirs under docs/ that are excluded from the doc index.
+// sites/ is managed by get_site_notes / write_site_notes, not read_agent_doc.
+const EXCLUDED_DIRS = new Set(['sites']);
 
 // ─── Doc discovery ────────────────────────────────────────────────────────────
 
 /**
- * Scan docs/agents and build the doc index.
- * Returns Map<lookupName, { canonical, publicName, file }> where lookupName
- * covers both the canonical and public spellings of every doc.
+ * Scan docs/ and build the doc index.
+ * Returns Map<name, { name, file }> where name is the path relative to docs/
+ * without the .md extension (e.g. "workflows/editing-rules", "kb/user-accounts").
  * Re-scanned on every call so new files appear without a restart.
  */
 function buildDocIndex() {
   const index = new Map();
 
-  function register(lookupName, entry) {
-    if (index.has(lookupName) && index.get(lookupName).file !== entry.file) {
-      console.error(
-        `[kb] WARNING: doc name collision on '${lookupName}': ` +
-        `keeping ${index.get(lookupName).canonical}, ignoring ${entry.canonical}`
-      );
-      return;
-    }
-    index.set(lookupName, entry);
-  }
-
   function scanDir(dir, prefix) {
     if (!fs.existsSync(dir)) return;
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryName = prefix ? `${prefix}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
-        scanDir(path.join(dir, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name);
+        if (!prefix && EXCLUDED_DIRS.has(entry.name)) continue;
+        scanDir(path.join(dir, entry.name), entryName);
       } else if (entry.isFile() && entry.name.endsWith('.md')) {
-        const canonical = (prefix ? `${prefix}/` : '') + entry.name.slice(0, -3);
-        const firstSeg  = canonical.split('/')[0];
-        const publicName = SCOPE_DIRS.has(firstSeg)
-          ? canonical.slice(firstSeg.length + 1)
-          : canonical;
-        const doc = { canonical, publicName, file: path.join(dir, entry.name) };
-        register(canonical, doc);
-        if (publicName !== canonical) register(publicName, doc);
+        const name = entryName.slice(0, -3);
+        if (index.has(name)) {
+          console.error(`[kb] WARNING: doc name collision on '${name}': keeping ${index.get(name).file}, ignoring ${path.join(dir, entry.name)}`);
+          continue;
+        }
+        index.set(name, { name, file: path.join(dir, entry.name) });
       }
     }
   }
 
-  // docs/global/ is scanned with the 'global' prefix so canonical names remain
-  // 'global/...' and public names (scope stripped) stay unchanged.
-  scanDir(DOCS_GLOBAL_DIR, 'global');
-  scanDir(DOCS_AGENTS_DIR, '');
+  scanDir(DOCS_DIR, '');
   return index;
 }
 
@@ -98,14 +79,13 @@ function matchesPattern(name, pattern) {
 // ─── Access checks ────────────────────────────────────────────────────────────
 
 function docMatchesAllow(doc, allow) {
-  return allow.some(p => matchesPattern(doc.canonical, p) || matchesPattern(doc.publicName, p));
+  return allow.some(p => matchesPattern(doc.name, p));
 }
 
 /**
  * Returns true if the agent definition permits reading the named doc.
- * Accepts either the canonical or public name; unknown names are checked
- * against the patterns directly (so NOT_FOUND, not PERMISSION_DENIED, is
- * reported for files that simply don't exist in an allowed scope).
+ * Unknown names are checked against the patterns directly (so NOT_FOUND,
+ * not PERMISSION_DENIED, is reported for files that simply don't exist).
  */
 function isDocAllowed(agentDef, docName) {
   if (!agentDef || !agentDef.docs) return true;
@@ -221,20 +201,20 @@ function checkToolRules(agentDef, toolName, args, globalToolRules = {}) {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
- * List public doc names available to the agent (filtered by docs.allow).
+ * List doc names available to the agent (filtered by docs.allow).
  * Called on every ListTools request so new files appear without a restart.
  */
 function listDocs(agentDef) {
   const allow = (agentDef && agentDef.docs && agentDef.docs.allow) || ['*'];
-  const names = new Set();
+  const names = [];
   for (const doc of buildDocIndex().values()) {
-    if (allow.includes('*') || docMatchesAllow(doc, allow)) names.add(doc.publicName);
+    if (allow.includes('*') || docMatchesAllow(doc, allow)) names.push(doc.name);
   }
-  return Array.from(names).sort();
+  return names.sort();
 }
 
 /**
- * Read a doc by canonical or public name.
+ * Read a doc by name (path relative to docs/, without .md extension).
  * Throws Error with .code === 'PERMISSION_DENIED' or 'NOT_FOUND'.
  */
 function readDoc(agentDef, docName) {

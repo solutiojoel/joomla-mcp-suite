@@ -23,6 +23,6 @@
     ]
   },
   "docs": {
-    "allow": ["global/*", "support/*"]
+    "allow": ["workflows/*", "kb/*"]
   }
 }

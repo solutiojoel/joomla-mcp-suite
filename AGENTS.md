@@ -38,7 +38,7 @@ This tool returns the full contents of this file (AGENTS.md) via the orchestrato
 
 **Step 3 — `get_site_notes`** → read the active site's history before making any changes.
 
-After completing these three steps, call `read_agent_doc(doc: "editing-rules")` — it contains universal conventions that apply to every task.
+After completing these three steps, call `read_agent_doc(doc: "workflows/editing-rules")` — it contains universal conventions that apply to every task.
 
 ---
 
@@ -66,7 +66,7 @@ At the end of any session where persistent facts changed (new key IDs discovered
 
 **1. Update persistent facts** — call `get_site_notes`, update the relevant section, call `write_site_notes` with the full updated content.
 
-**2. Review for process improvements** (when applicable — not required every session) — replay the session's steps and check: did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered mid-task? Did a tool behave unexpectedly? If yes, call `read_agent_doc(doc: "improvements")` and append an entry. This is a shared team queue — only log when something genuinely useful was found.
+**2. Review for process improvements** (when applicable — not required every session) — replay the session's steps and check: did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered mid-task? Did a tool behave unexpectedly? If yes, call `read_agent_doc(doc: "workflows/improvements")` and append an entry. This is a shared team queue — only log when something genuinely useful was found.
 
 ---
 
@@ -84,7 +84,7 @@ At the end of any session where persistent facts changed (new key IDs discovered
 Load the freshdesk-agent doc at the start of any support ticket session:
 
 ```
-read_agent_doc(doc: "freshdesk-agent")
+read_agent_doc(doc: "workflows/freshdesk-agent")
 ```
 
 Two triggers:
@@ -101,17 +101,17 @@ Call `read_agent_doc(doc: "<name>")` with the name from the first column:
 
 | Doc name | When to use |
 |----------|-------------|
-| `editing-rules` | Every session — universal editing conventions |
-| `freshdesk-agent` | Support ticket triage (Phase 1) and individual ticket research and resolution (Phase 2) |
-| `menu-build-workflow` | Menu build — PDF → Menu Spec → Joomla skeleton (Phases 1–4). Category conventions, pitfalls, and checklist included. |
-| `content-agent` | Standard article text, SEO, and publish state edits |
-| `custom-page-agent` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
-| `gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |
-| `gantry-particle-map` | Gantry particle settings, rendered HTML anchors, and particle selection/CSS targeting map |
-| `gantry-visual-qa` | Visual QA loop after any layout or CSS work — screenshots, checklist, CSS iteration |
-| `ftp-css-smoke-test` | End-to-end validation that FTP upload → Gantry Page Settings → live page emission works; use before custom page builds or after server migrations |
-| `gantry-design-agent` | Solutio Gantry design workflow — step-by-step process for building or rebuilding a homepage layout |
-| `improvements` | Shared team queue for process improvement notes |
+| `workflows/editing-rules` | Every session — universal editing conventions |
+| `workflows/freshdesk-agent` | Support ticket triage (Phase 1) and individual ticket research and resolution (Phase 2) |
+| `workflows/menu-build-workflow` | Menu build — PDF → Menu Spec → Joomla skeleton (Phases 1–4). Category conventions, pitfalls, and checklist included. |
+| `workflows/content-agent` | Standard article text, SEO, and publish state edits |
+| `workflows/custom-page-agent` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
+| `workflows/gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |
+| `workflows/gantry-particle-map` | Gantry particle settings, rendered HTML anchors, and particle selection/CSS targeting map |
+| `workflows/gantry-visual-qa` | Visual QA loop after any layout or CSS work — screenshots, checklist, CSS iteration |
+| `workflows/ftp-css-smoke-test` | End-to-end validation that FTP upload → Gantry Page Settings → live page emission works; use before custom page builds or after server migrations |
+| `workflows/gantry-design-agent` | Solutio Gantry design workflow — step-by-step process for building or rebuilding a homepage layout |
+| `workflows/improvements` | Shared team queue for process improvement notes |
 
 Knowledge base articles for specific issue types — call `read_agent_doc(doc: "kb/<name>")`. When investigating a support ticket, check the KB index below and read any files that match the issue type before starting your investigation.
 
@@ -176,4 +176,10 @@ All credentials come from the server's environment variables. Do not ask the use
 
 ## Adding New Workflow Guides
 
-Create a new `.md` file under the matching scope directory in `docs/agents/` — `global/` (all agents), `support/`, `menu-build/`, `design/` (super_shannon only), or `launch/` (super_shannon only) — and add a row to the doc name index in both AGENTS.md and CLAUDE.md. KB articles go in the scope's `kb/` subfolder. The scope directory controls which agents can read the doc; the doc is still referenced by its short name (e.g. `kb/staff-grid`, not `menu-content/kb/staff-grid`). When in doubt, use `global/` — an agent missing a house convention is worse than an agent seeing an extra doc. No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears in the enum immediately.
+Create a new `.md` file in `docs/workflows/` (for procedural how-to guides) or `docs/kb/` (for reference articles) and add a row to the doc name index in both AGENTS.md and CLAUDE.md. The doc name agents use is its path relative to `docs/` without the `.md` extension — e.g. `workflows/my-guide` or `kb/my-article`.
+
+Agent access is controlled by `docs.allow` in each agent's JSON config (`config/agents/<name>/<name>.json`):
+- Folder-level access: `"workflows/*"` or `"kb/*"` grants the whole folder
+- Explicit access: `"workflows/my-guide"` grants a single doc
+
+No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears immediately.

@@ -157,6 +157,7 @@ function listAvailableAgents() {
   function addJson(jsonPath) {
     try {
       const def = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      if (def.hidden) return; // sub-agents are hidden from the switch menu
       const name = def.name || path.basename(jsonPath, '.json');
       if (seen.has(name)) return;
       seen.add(name);

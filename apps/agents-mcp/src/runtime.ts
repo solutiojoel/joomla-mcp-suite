@@ -8,6 +8,7 @@ export interface RunSubAgentParams {
   tools: any[];
   toolExecutor: (name: string, args: Record<string, any>) => Promise<any>;
   userMessage: string;
+  model?: string;
   maxIterations?: number;
   onIteration?: (current: number, max: number) => Promise<void>;
 }
@@ -41,7 +42,7 @@ export async function runSubAgent(params: RunSubAgentParams): Promise<{ success:
     let response;
     try {
       response = await anthropic.messages.create({
-        model: "claude-3-5-sonnet-latest",
+        model: params.model || "claude-3-5-sonnet-latest",
         system: params.systemPrompt,
         messages,
         tools: params.tools.length > 0 ? params.tools as any : undefined,

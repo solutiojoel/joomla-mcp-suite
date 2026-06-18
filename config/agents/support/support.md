@@ -25,7 +25,7 @@ Docs and KB articles are read via `read_agent_doc` — your access is limited to
 
 **Step 3 — `get_site_notes`** → read the active site's history before touching anything.
 
-**Step 4 — `read_agent_doc(doc: "editing-rules")`** — universal editing conventions, required every session.
+**Step 4 — `read_agent_doc(doc: "workflows/editing-rules")`** — universal editing conventions, required every session.
 
 ---
 
@@ -36,7 +36,7 @@ If the user sends a standalone 5-digit number (e.g. `35118`), treat it as a Fres
 Call this before doing anything else:
 
 ```
-read_agent_doc(doc: "freshdesk-agent")
+read_agent_doc(doc: "workflows/freshdesk-agent")
 ```
 
 That doc contains the full ticket resolution workflow: fetch ticket → fetch contact → derive site →
@@ -82,8 +82,9 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are available to the su
 
 | Doc name | When to use |
 |----------|-------------|
-| `editing-rules` | Every session — required conventions |
-| `freshdesk-agent` | Freshdesk ticket resolution workflow |
+| `workflows/editing-rules` | Every session — required conventions |
+| `workflows/freshdesk-agent` | Freshdesk ticket resolution workflow |
+| `workflows/improvements` | Shared team queue for process notes |
 | `kb/site-history` | Site history format spec and examples |
 | `kb/content-standards` | Content formatting rules |
 | `kb/css-table-classes` | CSS table and button classes, fonts, colors |
@@ -98,7 +99,6 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are available to the su
 | `kb/acymail` | AcyMail email newsletter template CSS |
 | `kb/business-directory` | Business Directory & Sponsorship passcode |
 | `kb/error-pages` | 404 error page setup |
-| `improvements` | Shared team queue for process notes |
 
 ---
 

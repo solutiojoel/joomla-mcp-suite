@@ -21,9 +21,9 @@ Docs and KB articles are read via `read_agent_doc` — your access is scoped to 
 
 **Step 3 — `get_site_notes`** → read the active site's history before making any changes.
 
-**Step 4 — `read_agent_doc(doc: "editing-rules")`** — universal editing conventions, required every session.
+**Step 4 — `read_agent_doc(doc: "workflows/editing-rules")`** — universal editing conventions, required every session.
 
-When starting a menu build, also read `menu-build-workflow` and `kb/menu-spec-schema` before Phase 1.
+When starting a menu build, also read `workflows/menu-build-workflow` and `kb/menu-spec-schema` before Phase 1.
 
 ---
 
@@ -63,13 +63,13 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are in scope for this a
 
 | Doc name | When to use |
 |----------|-------------|
-| `editing-rules` | Every session — required conventions |
-| `menu-build-workflow` | Full build workflow — Phases 1–4, category conventions, pitfalls, checklist |
+| `workflows/editing-rules` | Every session — required conventions |
+| `workflows/menu-build-workflow` | Full build workflow — Phases 1–4, category conventions, pitfalls, checklist |
+| `workflows/improvements` | Shared team queue for process notes |
 | `kb/menu-spec-schema` | Schema, classification ruleset, lint invariants, and worked example — read before Phase 1 |
 | `kb/grid-layout` | Grid layout page setup (Joomla Articles particle) — read when a `category_grid` is in spec |
 | `kb/staff-grid` | Staff/team grid setup (contentarray particle) — read when Faculty & Staff is a grid |
 | `kb/staff-pages` | All staff page layout variants (grid, teacherbox, table, contact form) — read before classifying any staff/faculty section |
-| `improvements` | Shared team queue for process notes |
 
 ---
 

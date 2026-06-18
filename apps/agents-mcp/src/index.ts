@@ -8,6 +8,7 @@ import http from "node:http";
 import { randomUUID } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { runMenuInterpreter } from "./agents/menu-interpreter.js";
 
 const TOOLS = [
   {
@@ -15,6 +16,32 @@ const TOOLS = [
     description:
       "Phase-0 transport spike. Sleeps 90 seconds, emitting a progress notification every 10s, then returns { ok: true }. Used to validate that the orchestrator timeout + resetTimeoutOnProgress config works before any real sub-agent logic is built.",
     inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "run_menu_interpretation",
+    description:
+      "Phase 1–2 of the menu build workflow: interprets a raw menu document and produces a validated Menu Spec JSON. " +
+      "Runs a Sonnet sub-agent that applies Phase 1 classification rules, produces the spec, validates it against the 8 lint invariants, " +
+      "and persists it to the workspace via joomla_workspace_write. " +
+      "Returns { success: true, spec: {...} } on success or { success: false, error, lint_errors?, partial_spec? } on failure.",
+    inputSchema: {
+      type: "object",
+      required: ["site_url", "menu_text"],
+      properties: {
+        site_url: {
+          type: "string",
+          description: "The active site URL (e.g. https://example.com). Used to persist the spec to the correct workspace.",
+        },
+        menu_text: {
+          type: "string",
+          description: "Raw text extracted from the menu document (PDF, Word doc, etc.). Include all headings, page names, and sub-items.",
+        },
+        source_filename: {
+          type: "string",
+          description: "Original filename of the source document (e.g. \"Church-Menu.pdf\"). Used as the spec's source field.",
+        },
+      },
+    },
   },
 ];
 
@@ -61,6 +88,28 @@ function buildServer(): Server {
 
         return {
           content: [{ type: "text" as const, text: JSON.stringify({ ok: true }) }],
+        };
+      }
+
+      case "run_menu_interpretation": {
+        console.error(`[run_menu_interpretation] starting`);
+        let iterCount = 0;
+        const result = await runMenuInterpreter(
+          {
+            site_url: request.params.arguments?.site_url as string,
+            menu_text: request.params.arguments?.menu_text as string,
+            source_filename: request.params.arguments?.source_filename as string | undefined,
+          },
+          async (progress, total) => {
+            iterCount = progress;
+            console.error(`[run_menu_interpretation] iteration ${progress}/${total}`);
+            await sendProgress(progress, total);
+          }
+        );
+        console.error(`[run_menu_interpretation] done after ${iterCount} iterations, success=${result.success}`);
+        return {
+          content: [{ type: "text" as const, text: JSON.stringify(result) }],
+          isError: !result.success,
         };
       }
 

@@ -1,0 +1,12 @@
+{
+  "name": "menu-interpreter",
+  "hidden": true,
+  "description": "Phase 1–2 of the menu build: interprets a menu document and produces a validated Menu Spec JSON.",
+  "instructions": "menu-interpreter-system.md",
+  "model": "claude-3-5-sonnet-latest",
+  "tools": {
+    "allow": ["joomla_workspace_write"],
+    "downstreams": ["joomla-mcp"]
+  },
+  "docs": { "allow": ["menu-build/*", "global/*"] }
+}

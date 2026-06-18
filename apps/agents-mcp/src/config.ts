@@ -3,6 +3,7 @@ import path from "node:path";
 
 export interface SubAgentConfig {
   name: string;
+  model?: string;
   allow: string[];
   downstreams: string[];
   instructions: string;
@@ -32,6 +33,7 @@ export async function loadSubAgentConfig(name: string): Promise<SubAgentConfig> 
 
   return {
     name: def.name || name,
+    model: def.model,
     allow: def.tools?.allow || [],
     downstreams: def.tools?.downstreams || [],
     instructions,
