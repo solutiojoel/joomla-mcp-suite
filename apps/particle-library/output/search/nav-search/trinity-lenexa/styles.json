@@ -1,0 +1,208 @@
+{
+  "particle": "search",
+  "variant": "nav-search",
+  "site": "https://trinity-lenexa.backup.solutiosoftware.com",
+  "page": "https://trinity-lenexa.backup.solutiosoftware.com/eec-2",
+  "captured": "2026-06-17T16:55:30.138451+00:00",
+  "matched_rules": [
+    {
+      "selector": "*",
+      "properties": {
+        "box-sizing": "inherit"
+      }
+    },
+    {
+      "selector": "input",
+      "properties": {
+        "color": "inherit",
+        "font-style": "inherit",
+        "font-variant-ligatures": "inherit",
+        "font-variant-caps": "inherit",
+        "font-variant-numeric": "inherit",
+        "font-variant-east-asian": "inherit",
+        "font-variant-alternates": "inherit",
+        "font-variant-position": "inherit",
+        "font-variant-emoji": "inherit",
+        "font-weight": "inherit",
+        "font-stretch": "inherit",
+        "font-size": "inherit",
+        "line-height": "inherit",
+        "font-family": "inherit",
+        "font-optical-sizing": "inherit",
+        "font-size-adjust": "inherit",
+        "font-kerning": "inherit",
+        "font-feature-settings": "inherit",
+        "font-variation-settings": "inherit",
+        "font-language-override": "inherit",
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px"
+      }
+    },
+    {
+      "selector": ".g-block",
+      "properties": {
+        "flex-grow": "1",
+        "flex-shrink": "1",
+        "flex-basis": "0%",
+        "min-width": "0px",
+        "min-height": "0px"
+      }
+    },
+    {
+      "selector": ".size-50",
+      "properties": {
+        "flex-grow": "0",
+        "flex-shrink": "1",
+        "flex-basis": "50%",
+        "width": "50%"
+      }
+    },
+    {
+      "selector": "input[type=\"text\"]",
+      "properties": {
+        "transition-behavior": "normal",
+        "transition-duration": "0s",
+        "transition-timing-function": "ease",
+        "transition-delay": "0s",
+        "transition-property": "border-color",
+        "padding-top": "0.375rem",
+        "padding-right": "0.375rem",
+        "padding-bottom": "0.375rem",
+        "padding-left": "0.375rem"
+      }
+    },
+    {
+      "selector": ".g-flushed .g-content",
+      "properties": {
+        "padding-top": "0px",
+        "padding-right": "0px",
+        "padding-bottom": "0px",
+        "padding-left": "0px",
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px"
+      }
+    },
+    {
+      "selector": ".g-content",
+      "properties": {
+        "margin-top": "0.625rem",
+        "margin-right": "0.625rem",
+        "margin-bottom": "0.625rem",
+        "margin-left": "0.625rem",
+        "padding-top": "1.5rem",
+        "padding-right": "1.5rem",
+        "padding-bottom": "1.5rem",
+        "padding-left": "1.5rem"
+      }
+    },
+    {
+      "selector": ".g-search input[type=\"text\"]",
+      "properties": {
+        "border-top-style": "none",
+        "border-top-color": "currentcolor",
+        "border-left-style": "none",
+        "border-left-color": "currentcolor",
+        "border-right-style": "none",
+        "border-right-color": "currentcolor",
+        "border-top-width": "0px",
+        "border-right-width": "0px",
+        "border-bottom-width": "0px",
+        "border-left-width": "0px",
+        "border-top-left-radius": "0.3rem",
+        "border-top-right-radius": "0.3rem",
+        "border-bottom-right-radius": "0.3rem",
+        "border-bottom-left-radius": "0.3rem",
+        "padding-left": "2.5rem",
+        "background-image": "initial",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-size": "initial",
+        "background-repeat": "initial",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "rgba(0, 0, 0, 0.04)",
+        "margin-bottom": "0px"
+      }
+    },
+    {
+      "selector": ".g-search form",
+      "properties": {
+        "position": "relative",
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "0px",
+        "margin-left": "0px"
+      }
+    },
+    {
+      "selector": "form",
+      "properties": {
+        "margin-top": "0px",
+        "margin-right": "0px",
+        "margin-bottom": "20px",
+        "margin-left": "0px"
+      }
+    }
+  ],
+  "computed_visual": {
+    "display": "block",
+    "position": "static",
+    "width": "284px",
+    "height": "37px",
+    "min-height": "0px",
+    "max-width": "none",
+    "padding": "0px",
+    "padding-top": "0px",
+    "padding-right": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "0px",
+    "margin": "0px",
+    "margin-top": "0px",
+    "margin-right": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "flex-direction": "row",
+    "flex-wrap": "nowrap",
+    "justify-content": "normal",
+    "align-items": "normal",
+    "grid-template-columns": "none",
+    "grid-template-rows": "none",
+    "gap": "normal",
+    "column-gap": "normal",
+    "row-gap": "normal",
+    "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "background-image": "none",
+    "background-size": "auto",
+    "background-position": "0% 0%",
+    "background-repeat": "repeat",
+    "background-attachment": "scroll",
+    "color": "rgb(0, 0, 0)",
+    "font-family": "\"STIX Two Text\", serif",
+    "font-size": "17.6px",
+    "font-weight": "400",
+    "font-style": "normal",
+    "line-height": "26.4px",
+    "letter-spacing": "normal",
+    "text-align": "start",
+    "text-transform": "none",
+    "text-decoration": "none",
+    "border": "0px none rgb(0, 0, 0)",
+    "border-top": "0px none rgb(0, 0, 0)",
+    "border-right": "0px none rgb(0, 0, 0)",
+    "border-bottom": "0px none rgb(0, 0, 0)",
+    "border-left": "0px none rgb(0, 0, 0)",
+    "border-radius": "0px",
+    "box-shadow": "none",
+    "outline": "rgb(0, 0, 0) none 3px",
+    "opacity": "1",
+    "visibility": "visible",
+    "overflow": "hidden",
+    "z-index": "auto"
+  }
+}

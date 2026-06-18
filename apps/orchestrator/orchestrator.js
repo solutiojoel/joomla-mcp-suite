@@ -21,10 +21,10 @@ require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const { STYLE_GUIDE, SECTIONS, PARTICLES } = require('./solutio-conventions.js');
 
-const { Server }   = require('@modelcontextprotocol/sdk/server/index.js');
-const { Client }   = require('@modelcontextprotocol/sdk/client/index.js');
+const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
+const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
 const { StreamableHTTPClientTransport } = require('@modelcontextprotocol/sdk/client/streamableHttp.js');
-const { StdioServerTransport }          = require('@modelcontextprotocol/sdk/server/stdio.js');
+const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
 const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
 const {
   CallToolRequestSchema,
@@ -34,9 +34,9 @@ const {
 } = require('@modelcontextprotocol/sdk/types.js');
 const http = require('http');
 const { randomUUID } = require('crypto');
-const fs   = require('fs');
+const fs = require('fs');
 const path = require('path');
-const kb   = require('./kb.js');
+const kb = require('./kb.js');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -54,10 +54,11 @@ const ORCHESTRATOR_TOKEN = process.env.ORCHESTRATOR_TOKEN || '';
 
 const DEFAULT_DOWNSTREAMS = [
   { label: 'freshdesk-mcp', url: 'http://host.docker.internal:9303/mcp', inject: null },
-  { label: 'ftp-mcp',       url: 'http://host.docker.internal:9304/mcp', inject: 'site_url' },
-  { label: 'joomla-mcp',    url: 'http://host.docker.internal:9300/mcp', inject: 'site_url' },
-  { label: 'gantry-mcp',    url: 'http://host.docker.internal:9301/mcp', inject: 'site' },
-  { label: 'agents-mcp',    url: 'http://host.docker.internal:9305/mcp', inject: 'site_url' },
+  { label: 'ftp-mcp', url: 'http://host.docker.internal:9304/mcp', inject: 'site_url' },
+  { label: 'mockup-analyzer', url: 'http://host.docker.internal:9305/mcp', inject: null },
+  { label: 'joomla-mcp', url: 'http://host.docker.internal:9300/mcp', inject: 'site_url' },
+  { label: 'gantry-mcp', url: 'http://host.docker.internal:9301/mcp', inject: 'site' },
+  { label: 'agents-mcp', url: 'http://host.docker.internal:9306/mcp', inject: 'site_url' }
 ];
 
 function loadDownstreams() {
@@ -73,9 +74,9 @@ function loadDownstreams() {
   return defs.map(d => {
     const envPrefix = d.label.toUpperCase().replace(/-/g, '_');
     return {
-      label:  d.label,
-      url:    process.env[`${envPrefix}_URL`]   || d.url,
-      token:  process.env[`${envPrefix}_TOKEN`] || d.token || '',
+      label: d.label,
+      url: process.env[`${envPrefix}_URL`] || d.url,
+      token: process.env[`${envPrefix}_TOKEN`] || d.token || '',
       inject: d.inject !== undefined ? d.inject : 'site_url',
       toolMap: new Map(), // tool name → tool definition
     };
@@ -193,7 +194,7 @@ function loadGlobalPolicy() {
     const policy = JSON.parse(fs.readFileSync(TOOL_POLICY_PATH, 'utf8'));
     return {
       globalDeny: Array.isArray(policy.globalDeny) ? policy.globalDeny : [],
-      toolRules:  (policy.toolRules && typeof policy.toolRules === 'object') ? policy.toolRules : {},
+      toolRules: (policy.toolRules && typeof policy.toolRules === 'object') ? policy.toolRules : {},
     };
   } catch {
     return { globalDeny: [], toolRules: {} };
@@ -249,10 +250,10 @@ async function callDownstream(ds, toolName, toolArgs) {
     try {
       client = await createClient(ds.label, ds.url, ds.token);
       const result = await client.callTool({ name: toolName, arguments: toolArgs }, undefined, callOptions);
-      client.close().catch(() => {});
+      client.close().catch(() => { });
       return result;
     } catch (err) {
-      if (client) client.close().catch(() => {});
+      if (client) client.close().catch(() => { });
       if (attempt === 2) throw err;
       log(`${ds.label} call failed (attempt ${attempt}), retrying - ${err.message}`);
     }
@@ -263,7 +264,7 @@ async function callDownstream(ds, toolName, toolArgs) {
 async function loadToolMap(ds) {
   const client = await createClient(ds.label, ds.url, ds.token);
   const { tools = [] } = await client.listTools();
-  client.close().catch(() => {});
+  client.close().catch(() => { });
   ds.toolMap.clear();
   tools.forEach(t => ds.toolMap.set(t.name, t));
   log(`loaded ${ds.toolMap.size} tools from ${ds.label}`);
@@ -620,8 +621,8 @@ function buildServer(sessionCtx) {
             particle: {
               type: 'string',
               enum: ['all', 'contentarray', 'swiper', 'blockcontent', 'custom', 'logo',
-                     'menu', 'mobile-menu', 'social', 'timeline', 'position', 'spacer',
-                     'copyright', 'horizmenu', 'search', 'video', 'system'],
+                'menu', 'mobile-menu', 'social', 'timeline', 'position', 'spacer',
+                'copyright', 'horizmenu', 'search', 'video', 'system'],
               description: 'Particle type to look up. Omit or "all" for the full reference.',
             },
           },
@@ -737,7 +738,7 @@ function buildServer(sessionCtx) {
     // Filter own tools: mandatory tools always included; others checked against global deny then agent scope
     const filteredOwnTools = ownTools.filter(
       t => MANDATORY_OWN_TOOLS.has(t.name) ||
-           (!kb.isGloballyDenied(t.name, globalDeny) && kb.isToolAllowed(agentDef, t.name))
+        (!kb.isGloballyDenied(t.name, globalDeny) && kb.isToolAllowed(agentDef, t.name))
     );
 
     // Aggregate downstream tools in registry order; first server to expose a
@@ -779,7 +780,7 @@ function buildServer(sessionCtx) {
         );
         const loginText = loginResult?.content?.[0]?.text || '';
         let parsed = null;
-        try { parsed = JSON.parse(loginText); } catch {}
+        try { parsed = JSON.parse(loginText); } catch { }
         if (parsed?.success === false) {
           loginNote = `\n\nNote: auto-login attempt returned: ${parsed.message || loginText.slice(0, 120)}`;
         } else {
@@ -1096,7 +1097,7 @@ function buildServer(sessionCtx) {
       // joomla-mcp auth error → re-login and retry once
       if (ds.label === 'joomla-mcp' && /401|403|login|csrf|cookie|session/i.test(err.message)) {
         log(`joomla-mcp auth error, re-logging in and retrying: ${err.message}`);
-        try { await callDownstream(ds, 'joomla_login', { site_url: activeSiteUrl }); } catch {}
+        try { await callDownstream(ds, 'joomla_login', { site_url: activeSiteUrl }); } catch { }
         try {
           return await callDownstream(ds, name, dsArgs);
         } catch (err2) {
@@ -1106,7 +1107,7 @@ function buildServer(sessionCtx) {
       // Transport/connection error - callDownstream already retried once.
       // Refresh this server's tool map so the next call sees fresh data.
       log(`${ds.label} transport error on ${name}, reloading tool map: ${err.message}`);
-      loadToolMap(ds).catch(() => {});
+      loadToolMap(ds).catch(() => { });
       return { isError: true, content: [{ type: 'text', text: `${ds.label} error: ${err.message}` }] };
     }
   });
@@ -1121,7 +1122,7 @@ async function startHttp(port) {
 
   const httpServer = http.createServer(async (req, res) => {
     // ── CORS - must be set on every response including errors ─────────────────
-    res.setHeader('Access-Control-Allow-Origin',  process.env.CORS_ORIGIN || 'http://localhost');
+    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
     // Reflect whatever headers the client asks for - handles mcp-protocol-version
     // and any future MCP headers without needing further changes here.
@@ -1190,13 +1191,13 @@ function log(msg) {
   log('loading tools from downstream servers...');
   await loadDownstreamTools();
 
-  const rawPort  = process.env.HTTP_PORT || process.env.PORT;
+  const rawPort = process.env.HTTP_PORT || process.env.PORT;
   const httpPort = rawPort ? parseInt(rawPort, 10) : null;
 
   if (httpPort) {
     await startHttp(httpPort);
   } else {
-    const server    = buildServer({ user: 'local', agent: 'super_shannon' });
+    const server = buildServer({ user: 'local', agent: 'super_shannon' });
     const transport = new StdioServerTransport();
     await server.connect(transport);
     log('stdio ready');

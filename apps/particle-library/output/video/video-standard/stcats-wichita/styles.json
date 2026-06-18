@@ -1,0 +1,149 @@
+{
+  "particle": "video",
+  "variant": "video-standard",
+  "site": "https://stcats-wichita.backup.solutiosoftware.com",
+  "page": "https://stcats-wichita.backup.solutiosoftware.com/",
+  "captured": "2026-06-17T16:38:00.281352+00:00",
+  "matched_rules": [
+    {
+      "selector": "*",
+      "properties": {
+        "box-sizing": "inherit"
+      }
+    },
+    {
+      "selector": "video",
+      "properties": {
+        "display": "inline-block",
+        "vertical-align": "baseline"
+      }
+    },
+    {
+      "selector": ".g-video-container .g-video",
+      "properties": {
+        "position": "relative",
+        "padding-bottom": "56.25%",
+        "overflow-x": "hidden",
+        "overflow-y": "hidden",
+        "max-width": "100%",
+        "height": "auto",
+        "background-image": "initial",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-size": "initial",
+        "background-repeat": "initial",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "rgb(0, 0, 0)",
+        "box-shadow": "rgb(0, 0, 0) 0px 0.5rem 3rem"
+      }
+    },
+    {
+      "selector": ".g-video-container .g-video video",
+      "properties": {
+        "position": "absolute",
+        "top": "0px",
+        "left": "0px",
+        "width": "100%",
+        "height": "100%"
+      }
+    },
+    {
+      "selector": ".g-video-container .g-video .g-videolocal-play",
+      "properties": {
+        "height": "3.5vw",
+        "width": "3.5vw",
+        "position": "absolute",
+        "left": "0px",
+        "right": "0px",
+        "margin-left": "auto",
+        "margin-right": "auto",
+        "bottom": "50%",
+        "margin-bottom": "-40px",
+        "background-image": "url(\"../../images/owlcarousel/play.svg\")",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-repeat": "no-repeat",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "initial",
+        "background-size": "contain",
+        "cursor": "pointer",
+        "opacity": "1"
+      }
+    },
+    {
+      "selector": ".g-video-container .g-video .g-videolocal-play.pause",
+      "properties": {
+        "background-image": "url(\"../../images/owlcarousel/paused.svg\")",
+        "background-position-x": "initial",
+        "background-position-y": "initial",
+        "background-repeat": "initial",
+        "background-attachment": "initial",
+        "background-origin": "initial",
+        "background-clip": "initial",
+        "background-color": "initial",
+        "background-size": "contain",
+        "opacity": "0"
+      }
+    }
+  ],
+  "computed_visual": {
+    "display": "block",
+    "position": "relative",
+    "width": "1440px",
+    "height": "602.5px",
+    "min-height": "0px",
+    "max-width": "100%",
+    "padding": "0px 0px 602.5px",
+    "padding-top": "0px",
+    "padding-right": "0px",
+    "padding-bottom": "602.5px",
+    "padding-left": "0px",
+    "margin": "0px",
+    "margin-top": "0px",
+    "margin-right": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "flex-direction": "row",
+    "flex-wrap": "nowrap",
+    "justify-content": "normal",
+    "align-items": "normal",
+    "grid-template-columns": "none",
+    "grid-template-rows": "none",
+    "gap": "normal",
+    "column-gap": "normal",
+    "row-gap": "normal",
+    "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "background-image": "none",
+    "background-size": "auto",
+    "background-position": "0% 0%",
+    "background-repeat": "repeat",
+    "background-attachment": "scroll",
+    "color": "rgb(0, 0, 0)",
+    "font-family": "\"EB Garamond\", serif",
+    "font-size": "17.6px",
+    "font-weight": "400",
+    "font-style": "normal",
+    "line-height": "26.4px",
+    "letter-spacing": "normal",
+    "text-align": "start",
+    "text-transform": "none",
+    "text-decoration": "none",
+    "border": "0px none rgb(0, 0, 0)",
+    "border-top": "0px none rgb(0, 0, 0)",
+    "border-right": "0px none rgb(0, 0, 0)",
+    "border-bottom": "0px none rgb(0, 0, 0)",
+    "border-left": "0px none rgb(0, 0, 0)",
+    "border-radius": "0px",
+    "box-shadow": "none",
+    "outline": "rgb(0, 0, 0) none 3px",
+    "opacity": "1",
+    "visibility": "visible",
+    "overflow": "hidden",
+    "z-index": "auto"
+  }
+}

@@ -1,11 +1,13 @@
 FROM node:22-slim
 
-# Install Chromium and common runtime deps once for all apps.
+# Install Chromium, Python 3, and common runtime deps once for all apps.
 RUN apt-get update && apt-get install -y \
   chromium \
   ca-certificates \
   fonts-liberation \
   bash \
+  python3 \
+  python3-pip \
   --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
@@ -32,8 +34,12 @@ RUN cd apps/freshdesk-mcp && npm ci && npm run build
 RUN cd apps/ftp-mcp && npm ci && npm run build
 RUN cd apps/orchestrator && npm ci
 
-# Orchestrator (MCP/HTTP) and site-builder webapp
+# Python deps for mockup-analyzer
+RUN pip3 install "mcp[cli]" pyyaml --break-system-packages
+
+# Orchestrator (MCP/HTTP), site-builder webapp, and mockup-analyzer
 EXPOSE 9302
+EXPOSE 9305
 EXPOSE 18303
 
 CMD ["bash", "scripts/start-all.sh"]

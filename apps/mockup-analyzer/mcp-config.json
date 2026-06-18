@@ -1,0 +1,8 @@
+{
+  "_comment": "Add this block to your MCP host config (Claude Code .claude/settings.json, Cursor mcp.json, etc.)",
+  "mockup-analyzer": {
+    "command": "python",
+    "args": ["C:\\joomla-mcp-suite\\apps\\mockup-analyzer\\server.py"],
+    "description": "Gantry 5 mockup analysis — loads images, serves design vocabulary, saves layout plans"
+  }
+}
