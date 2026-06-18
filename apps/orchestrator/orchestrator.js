@@ -58,7 +58,7 @@ const DEFAULT_DOWNSTREAMS = [
   { label: 'mockup-analyzer', url: 'http://host.docker.internal:9305/mcp', inject: null },
   { label: 'joomla-mcp', url: 'http://host.docker.internal:9300/mcp', inject: 'site_url' },
   { label: 'gantry-mcp', url: 'http://host.docker.internal:9301/mcp', inject: 'site' },
-  { label: 'agents-mcp', url: 'http://host.docker.internal:9306/mcp', inject: 'site_url' }
+  { label: 'agents-mcp', url: 'http://host.docker.internal:3506/mcp', inject: 'site_url' }
 ];
 
 function loadDownstreams() {

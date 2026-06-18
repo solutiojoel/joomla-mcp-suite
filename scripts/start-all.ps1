@@ -7,7 +7,7 @@
 #   orchestrator  -> 9302  (what Claude Desktop connects to)
 #   freshdesk-mcp -> 9303
 #   ftp-mcp       -> 9304
-#   agents-mcp    -> 9305
+#   agents-mcp    -> 3506
 #   site-builder  -> 18303
 
 $root = Split-Path -Parent $PSScriptRoot
@@ -17,7 +17,7 @@ $gantryPort = 9301
 $orchPort   = 9302
 $freshdeskPort = 9303
 $ftpPort    = 9304
-$agentsPort = 9305
+$agentsPort = 3506
 $siteBuilderPort = 18303
 
 function Start-McpService([string]$Title, [string]$Dir, [string]$Cmd) {
