@@ -17,6 +17,10 @@ ENV XDG_CONFIG_HOME=/workspace/.config
 
 WORKDIR /workspace
 
+# The repo is an npm-workspaces monorepo: one root lockfile installs every app
+# and the shared packages/ in a single pass.
+COPY package.json package-lock.json ./
+COPY packages ./packages
 COPY apps ./apps
 COPY docs ./docs
 COPY config ./config
@@ -27,12 +31,11 @@ COPY README.md ./
 # Normalize potential CRLF from Windows checkouts before running with bash.
 RUN sed -i 's/\r$//' ./scripts/start-all.sh && chmod +x ./scripts/start-all.sh
 
-# Install dependencies for each app.
-RUN cd apps/gantry-mcp && npm ci
-RUN cd apps/joomla-mcp && npm ci && npm run build
-RUN cd apps/freshdesk-mcp && npm ci && npm run build
-RUN cd apps/ftp-mcp && npm ci && npm run build
-RUN cd apps/orchestrator && npm ci
+# Install all workspaces from the root lockfile (includes devDeps needed to
+# build), then build the shared packages and the TypeScript servers. The plain
+# JS servers (orchestrator, gantry-mcp) need no build step.
+RUN npm ci
+RUN npm run build
 
 # Python deps for mockup-analyzer
 RUN pip3 install "mcp[cli]" pyyaml --break-system-packages

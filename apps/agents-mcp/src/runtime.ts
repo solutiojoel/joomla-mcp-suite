@@ -1,7 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk";
-import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { createRunLog } from "@solutio/logging";
 
 export interface RunSubAgentParams {
   systemPrompt: string;
@@ -22,13 +22,8 @@ export async function runSubAgent(params: RunSubAgentParams): Promise<{ success:
   ];
 
   const runId = randomUUID();
-  const logDir = path.join(__dirname, "..", "logs");
-  await fs.mkdir(logDir, { recursive: true });
-  const logFile = path.join(logDir, `${runId}.jsonl`);
-
-  const appendLog = async (entry: any) => {
-    await fs.appendFile(logFile, JSON.stringify({ timestamp: new Date().toISOString(), ...entry }) + "\n");
-  };
+  const runLog = createRunLog(path.join(__dirname, "..", "logs"), runId);
+  const appendLog = (entry: any) => runLog.append(entry);
 
   await appendLog({ type: "start", systemPrompt: params.systemPrompt, userMessage: params.userMessage });
 

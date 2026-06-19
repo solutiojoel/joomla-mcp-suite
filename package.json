@@ -1,0 +1,26 @@
+{
+  "name": "joomla-mcp-suite",
+  "version": "1.0.0",
+  "description": "Joomla/Gantry MCP orchestration suite — npm workspaces root.",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/orchestrator",
+    "apps/joomla-mcp",
+    "apps/gantry-mcp",
+    "apps/freshdesk-mcp",
+    "apps/ftp-mcp",
+    "apps/agents-mcp",
+    "apps/dashboard"
+  ],
+  "scripts": {
+    "build:packages": "npm run build --workspace=@solutio/mcp-downstream-client --workspace=@solutio/mcp-transport --workspace=@solutio/logging",
+    "build:apps": "npm run build --workspace=apps/joomla-mcp --workspace=apps/freshdesk-mcp --workspace=apps/ftp-mcp --workspace=apps/agents-mcp --if-present",
+    "build": "npm run build:packages && npm run build:apps",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.10.0"
+  }
+}

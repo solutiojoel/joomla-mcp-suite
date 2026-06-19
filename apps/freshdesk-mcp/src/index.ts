@@ -4,10 +4,8 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import http from "node:http";
-import { randomUUID } from "node:crypto";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { runServer } from "@solutio/mcp-transport";
+import { createLogger } from "@solutio/logging";
 import { FreshdeskClient, FreshdeskResponse } from "./freshdesk-client.js";
 
 // Freshdesk client (optional — tools fail gracefully if not configured)
@@ -216,69 +214,10 @@ function buildServer(): Server {
   return server;
 }
 
-async function startHttp(port: number): Promise<void> {
-  const sessions = new Map<string, StreamableHTTPServerTransport>();
-
-  const httpServer = http.createServer(async (req, res) => {
-    const reqUrl = new URL(req.url ?? "/", `http://${req.headers.host}`);
-
-    if (reqUrl.pathname !== "/mcp") {
-      res.writeHead(404);
-      res.end("Not found");
-      return;
-    }
-
-    const sessionId = req.headers["mcp-session-id"] as string | undefined;
-    let transport = sessionId ? sessions.get(sessionId) : undefined;
-
-    if (!transport) {
-      const mcpServer = buildServer();
-      transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
-        onsessioninitialized: (id) => {
-          sessions.set(id, transport!);
-        },
-      });
-      await mcpServer.connect(transport);
-    }
-
-    let body: unknown;
-    if (req.method === "POST") {
-      body = await new Promise((resolve, reject) => {
-        let data = "";
-        req.on("data", (chunk: Buffer) => (data += chunk.toString()));
-        req.on("end", () => {
-          try { resolve(JSON.parse(data)); } catch { resolve(undefined); }
-        });
-        req.on("error", reject);
-      });
-    }
-
-    await transport.handleRequest(req, res, body);
-    if (req.method === "DELETE" && sessionId) {
-      sessions.delete(sessionId);
-    }
-  });
-
-  await new Promise<void>((resolve) => httpServer.listen(port, resolve));
-  console.error(`Freshdesk MCP Server running on HTTP port ${port}`);
-}
-
-async function main() {
-  const rawPort = process.env.HTTP_PORT || process.env.PORT;
-  const httpPort = rawPort ? parseInt(rawPort, 10) : null;
-
-  if (httpPort) {
-    await startHttp(httpPort);
-  } else {
-    const mcpServer = buildServer();
-    const transport = new StdioServerTransport();
-    await mcpServer.connect(transport);
-    console.error("Freshdesk MCP Server running on stdio");
-  }
-}
-
-main().catch((error) => {
+runServer({
+  buildServer,
+  logger: createLogger("freshdesk-mcp"),
+}).catch((error) => {
   console.error("Fatal error:", error);
   process.exit(1);
 });

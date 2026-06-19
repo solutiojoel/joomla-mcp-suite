@@ -24,60 +24,66 @@ const { STYLE_GUIDE, SECTIONS, PARTICLES } = require('./solutio-conventions.js')
 const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
 const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
 const { StreamableHTTPClientTransport } = require('@modelcontextprotocol/sdk/client/streamableHttp.js');
-const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
-const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
+const { runServer } = require('@solutio/mcp-transport');
 const {
   CallToolRequestSchema,
   ListToolsRequestSchema,
   ListPromptsRequestSchema,
   GetPromptRequestSchema,
 } = require('@modelcontextprotocol/sdk/types.js');
-const http = require('http');
-const { randomUUID } = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const kb = require('./kb.js');
+const { createLogger } = require('@solutio/logging');
+
+// Shared leveled logger. Defined up here because loadDownstreams() (called at
+// module load) may log on a config-parse error.
+const log = createLogger('orchestrator');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const ORCHESTRATOR_TOKEN = process.env.ORCHESTRATOR_TOKEN || '';
 
 // ─── Downstream registry ──────────────────────────────────────────────────────
-// Routing is config-driven: config/downstreams.json (optional) overrides these
-// defaults. `inject` names the argument that carries the active site on every
-// call — 'site_url' (joomla-mcp, ftp-mcp), 'site' (gantry-mcp), or null for
-// servers that need no site context (freshdesk-mcp).
-// Order matters: the first server whose tool map contains a tool name wins, so
-// the single-purpose servers come before joomla-mcp during migration overlap.
-// Per-server URL/token env vars (e.g. FTP_MCP_URL, FTP_MCP_TOKEN — label
-// uppercased, dashes → underscores) override both defaults and the JSON file.
+// The label → { port, inject } map is the single source of truth in
+// @solutio/mcp-downstream-client, shared with the agents-mcp bridge so the two
+// can never drift. `inject` names the argument that carries the active site on
+// every call — 'site_url' (joomla-mcp, ftp-mcp, agents-mcp), 'site' (gantry-mcp),
+// or null for servers that need no site context (freshdesk-mcp, mockup-analyzer).
+//
+// The orchestrator runs inside Docker, so it reaches the other servers on
+// host.docker.internal by default (override with DOWNSTREAM_HOST). Routing is
+// still config-driven: config/downstreams.json (optional) replaces the registry
+// list. Per-server URL/token env vars (e.g. FTP_MCP_URL, FTP_MCP_TOKEN — label
+// uppercased, dashes → underscores) override both the JSON file and the registry.
 
-const DEFAULT_DOWNSTREAMS = [
-  { label: 'freshdesk-mcp', url: 'http://host.docker.internal:9303/mcp', inject: null },
-  { label: 'ftp-mcp', url: 'http://host.docker.internal:9304/mcp', inject: 'site_url' },
-  { label: 'mockup-analyzer', url: 'http://host.docker.internal:9305/mcp', inject: null },
-  { label: 'joomla-mcp', url: 'http://host.docker.internal:9300/mcp', inject: 'site_url' },
-  { label: 'gantry-mcp', url: 'http://host.docker.internal:9301/mcp', inject: 'site' },
-  { label: 'agents-mcp', url: 'http://host.docker.internal:3506/mcp', inject: 'site_url' }
-];
+const dsRegistry = require('@solutio/mcp-downstream-client');
+const DOWNSTREAM_HOST = process.env.DOWNSTREAM_HOST || 'host.docker.internal';
 
 function loadDownstreams() {
   const cfgPath = path.join(__dirname, '..', '..', 'config', 'downstreams.json');
-  let defs = DEFAULT_DOWNSTREAMS;
+  let defs = null;
   if (fs.existsSync(cfgPath)) {
     try {
       defs = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
     } catch (err) {
-      log(`WARNING: failed to parse config/downstreams.json, using defaults - ${err.message}`);
+      log(`WARNING: failed to parse config/downstreams.json, using registry defaults - ${err.message}`);
     }
   }
+  // Default to the shared registry (label + inject); URLs derive from the
+  // registry port on DOWNSTREAM_HOST unless a config/env override is present.
+  if (!defs) defs = dsRegistry.DOWNSTREAM_DEFAULTS.map(d => ({ label: d.label, inject: d.inject }));
+
   return defs.map(d => {
-    const envPrefix = d.label.toUpperCase().replace(/-/g, '_');
+    const prefix = dsRegistry.envPrefix(d.label);
+    const def = dsRegistry.getDownstreamDef(d.label);
+    const url = process.env[`${prefix}_URL`] || d.url ||
+      (def ? `http://${DOWNSTREAM_HOST}:${def.port}/mcp` : undefined);
     return {
       label: d.label,
-      url: process.env[`${envPrefix}_URL`] || d.url,
-      token: process.env[`${envPrefix}_TOKEN`] || d.token || '',
-      inject: d.inject !== undefined ? d.inject : 'site_url',
+      url,
+      token: process.env[`${prefix}_TOKEN`] || d.token || '',
+      inject: d.inject !== undefined ? d.inject : dsRegistry.getInject(d.label),
       toolMap: new Map(), // tool name → tool definition
     };
   });
@@ -176,12 +182,11 @@ function listAvailableAgents() {
 }
 
 // ─── Hidden tools ─────────────────────────────────────────────────────────────
-// joomla_login is internal plumbing — the orchestrator calls it automatically
-// via set_active_site and on auth error recovery. Hiding it prevents the AI
-// from calling it directly, which would bypass activeSiteUrl tracking.
-// Enforced in both ListTools (filtered from the list) and CallTool (blocked by name).
+// HIDDEN_JOOMLA_TOOLS and MANDATORY_OWN_TOOLS now live in kb.js alongside
+// resolveToolAccess so the precedence helper, the orchestrator, and the
+// scope-enforcement test all share one definition.
 
-const HIDDEN_JOOMLA_TOOLS = new Set(['joomla_login']);
+const { HIDDEN_JOOMLA_TOOLS, MANDATORY_OWN_TOOLS } = kb;
 
 // ─── Global tool policy ───────────────────────────────────────────────────────
 // config/tool-policy.json — globalDeny array blocks tools across ALL agents.
@@ -201,17 +206,6 @@ function loadGlobalPolicy() {
     return { globalDeny: [], toolRules: {} };
   }
 }
-
-// Own tools that every agent can call regardless of agent definition.
-// These implement the session protocol and changelog discipline; they are not
-// configurable via agent JSON. Everything else goes through scope enforcement.
-const MANDATORY_OWN_TOOLS = new Set([
-  'set_active_site', 'get_active_site',
-  'get_site_notes', 'append_site_note', 'write_site_notes',
-  'gantry_reconnect', 'reload_tools',
-  'get_agent_instructions', 'read_agent_doc',
-  'get_current_agent', 'switch_agent',
-]);
 
 // ─── Downstream clients ───────────────────────────────────────────────────────
 // We create a fresh MCP client per call rather than holding a persistent
@@ -735,11 +729,12 @@ function buildServer(sessionCtx) {
     ];
 
     const { globalDeny } = loadGlobalPolicy();
+    const accessOpts = { globalDeny, mandatory: MANDATORY_OWN_TOOLS, hidden: HIDDEN_JOOMLA_TOOLS };
 
-    // Filter own tools: mandatory tools always included; others checked against global deny then agent scope
+    // Filter own tools via the shared precedence helper (mandatory bypass →
+    // hidden → global deny → agent scope). Same helper backs CallTool below.
     const filteredOwnTools = ownTools.filter(
-      t => MANDATORY_OWN_TOOLS.has(t.name) ||
-        (!kb.isGloballyDenied(t.name, globalDeny) && kb.isToolAllowed(agentDef, t.name))
+      t => kb.resolveToolAccess(agentDef, t.name, accessOpts).allowed
     );
 
     // Aggregate downstream tools in registry order; first server to expose a
@@ -748,9 +743,8 @@ function buildServer(sessionCtx) {
     const downstreamTools = [];
     for (const ds of DOWNSTREAMS) {
       for (const t of ds.toolMap.values()) {
-        if (HIDDEN_JOOMLA_TOOLS.has(t.name) || seen.has(t.name)) continue;
-        if (kb.isGloballyDenied(t.name, globalDeny)) continue;
-        if (!kb.isToolAllowed(agentDef, t.name)) continue;
+        if (seen.has(t.name)) continue;
+        if (!kb.resolveToolAccess(agentDef, t.name, accessOpts).allowed) continue;
         seen.add(t.name);
         downstreamTools.push(t);
       }
@@ -971,37 +965,25 @@ function buildServer(sessionCtx) {
       };
     }
 
-    // ── Guard: hidden tools cannot be called by name ──
-    // Internal plumbing (joomla_login) — blocked for every agent ahead of scope
-    // and own-tool routing.
-    if (HIDDEN_JOOMLA_TOOLS.has(name)) {
-      return {
-        isError: true,
-        content: [{ type: 'text', text: `Tool '${name}' is internal and cannot be called directly.` }],
-      };
-    }
-
-    // ── Guard: globally disabled tools ──
-    // Re-read each call so config/tool-policy.json edits apply without restart.
-    // Checked before agent scope so the "currently disabled" hint isn't masked
-    // by a per-agent "not available" message, and so it covers own scoped tools.
+    // ── Access enforcement: hidden → mandatory → global deny → agent scope ──
+    // Single precedence helper shared with ListTools so the two can never drift.
+    // Mandatory own tools (set_active_site, get_site_notes, …) are handled by the
+    // early-return blocks above and never reach here. toolRules is also read here
+    // (re-read each call so config/tool-policy.json edits apply without restart)
+    // for the argument-level guard further below.
     const { globalDeny: callGlobalDeny, toolRules } = loadGlobalPolicy();
-    if (kb.isGloballyDenied(name, callGlobalDeny)) {
-      return {
-        isError: true,
-        content: [{ type: 'text', text: `Tool '${name}' is currently disabled. Check config/tool-policy.json to re-enable it.` }],
-      };
-    }
-
-    // ── Agent scope enforcement ───────────────────────────────────────────────
-    // Mandatory own tools (handled above) always pass. All remaining tool calls —
-    // own scoped tools (solutio_*) and all downstream tools — are checked against
-    // the session's agent definition before routing.
-    if (!kb.isToolAllowed(agentDef, name)) {
-      return {
-        isError: true,
-        content: [{ type: 'text', text: `Tool '${name}' is not available to the '${currentAgent}' agent.` }],
-      };
+    const access = kb.resolveToolAccess(agentDef, name, {
+      globalDeny: callGlobalDeny,
+      mandatory: MANDATORY_OWN_TOOLS,
+      hidden: HIDDEN_JOOMLA_TOOLS,
+    });
+    if (!access.allowed) {
+      const msg = access.code === 'hidden'
+        ? `Tool '${name}' is internal and cannot be called directly.`
+        : access.code === 'global_deny'
+          ? `Tool '${name}' is currently disabled. Check config/tool-policy.json to re-enable it.`
+          : `Tool '${name}' is not available to the '${currentAgent}' agent.`;
+      return { isError: true, content: [{ type: 'text', text: msg }] };
     }
 
     if (name === 'solutio_style_guide') {
@@ -1116,91 +1098,23 @@ function buildServer(sessionCtx) {
   return server;
 }
 
-// ─── HTTP transport ───────────────────────────────────────────────────────────
-
-async function startHttp(port) {
-  const sessions = new Map();
-
-  const httpServer = http.createServer(async (req, res) => {
-    // ── CORS - must be set on every response including errors ─────────────────
-    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-    // Reflect whatever headers the client asks for - handles mcp-protocol-version
-    // and any future MCP headers without needing further changes here.
-    res.setHeader('Access-Control-Allow-Headers',
-      req.headers['access-control-request-headers'] ||
-      'Content-Type, Accept, Authorization, Mcp-Session-Id, Mcp-Protocol-Version, ' +
-      'X-Requested-With, Last-Event-Id, Cache-Control');
-    res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id, Mcp-Protocol-Version');
-    // Disable buffering for SSE streams (nginx / reverse proxies)
-    res.setHeader('X-Accel-Buffering', 'no');
-
-    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
-    // ── end CORS ──────────────────────────────────────────────────────────────
-
-    // ── Auth: resolve session context from bearer token ───────────────────────
-    const sessionCtx = resolveSessionContext(req.headers['authorization'] || '');
-    if (sessionCtx === null) {
-      res.writeHead(401, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Unauthorized' }));
-      return;
-    }
-    // ── end auth ──────────────────────────────────────────────────────────────
-
-    const urlPath = new URL(req.url, `http://localhost:${port}`).pathname;
-    if (urlPath !== '/mcp') { res.writeHead(404); res.end(); return; }
-
-    const sessionId = req.headers['mcp-session-id'];
-
-    if (req.method === 'POST') {
-      let transport = sessions.get(sessionId);
-      if (!transport) {
-        const server = buildServer(sessionCtx);
-        transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => randomUUID(),
-          onsessioninitialized: (id) => sessions.set(id, transport),
-        });
-        transport.onclose = () => sessions.delete(sessionId);
-        await server.connect(transport);
-      }
-      await transport.handleRequest(req, res);
-    } else if (req.method === 'GET') {
-      const transport = sessions.get(sessionId);
-      if (!transport) { res.writeHead(404); res.end(); return; }
-      await transport.handleRequest(req, res);
-    } else if (req.method === 'DELETE') {
-      sessions.delete(sessionId); res.writeHead(200); res.end();
-    } else {
-      res.writeHead(405); res.end();
-    }
-  });
-
-  const host = process.env.HTTP_HOST || '0.0.0.0';
-  await new Promise((resolve) => httpServer.listen(port, host, resolve));
-  log(`HTTP server ready on port ${port} (${host})`);
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function log(msg) {
-  process.stderr.write(`[orchestrator] ${msg}\n`);
-}
-
 // ─── Main ─────────────────────────────────────────────────────────────────────
+// The StreamableHTTP/stdio session lifecycle lives in @solutio/mcp-transport.
+// The orchestrator supplies what is specific to it: bearer-token auth (resolving
+// a per-session { user, agent } context passed to buildServer), CORS for browser
+// clients, and a downstream-tool warm-up before it starts listening.
 
-(async () => {
-  log('loading tools from downstream servers...');
-  await loadDownstreamTools();
-
-  const rawPort = process.env.HTTP_PORT || process.env.PORT;
-  const httpPort = rawPort ? parseInt(rawPort, 10) : null;
-
-  if (httpPort) {
-    await startHttp(httpPort);
-  } else {
-    const server = buildServer({ user: 'local', agent: 'super_shannon' });
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-    log('stdio ready');
-  }
-})();
+runServer({
+  buildServer,
+  authenticate: (req) => resolveSessionContext(req.headers['authorization'] || ''),
+  cors: true,
+  stdioContext: { user: 'local', agent: 'super_shannon' },
+  logger: log,
+  onStart: async () => {
+    log('loading tools from downstream servers...');
+    await loadDownstreamTools();
+  },
+}).catch((err) => {
+  log(`fatal: ${err && err.message ? err.message : err}`);
+  process.exit(1);
+});

@@ -194,19 +194,14 @@ export async function runMenuInterpreter(
   // Load config (system prompt + model + tool allow list + downstreams)
   const config = await loadSubAgentConfig("menu-interpreter");
 
-  // Connect to joomla-mcp for joomla_workspace_write
-  const { tools: allTools, executor } = await connectDownstreams(
+  // Connect to the declared downstreams (e.g. joomla-mcp for joomla_workspace_write).
+  // The allow-list is passed through so the bridge advertises only permitted tools
+  // AND enforces the same list at execution time (see buildExecutor) — no separate
+  // filter is needed here.
+  const { tools: allowedTools, executor } = await connectDownstreams(
     config.downstreams,
-    site_url
-  );
-
-  // Filter to the allow list declared in agent config
-  const allowedTools = allTools.filter((t) =>
-    (config.allow || []).some((pattern) => {
-      if (pattern === "*") return true;
-      if (pattern.endsWith("*")) return t.name.startsWith(pattern.slice(0, -1));
-      return t.name === pattern;
-    })
+    site_url,
+    config.allow
   );
 
   const today = new Date().toISOString().slice(0, 10);

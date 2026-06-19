@@ -6,7 +6,7 @@
 //
 // Run: node apps/orchestrator/test-downstream-routing.cjs [orchestratorUrl] [siteUrl]
 //   orchestratorUrl defaults to http://127.0.0.1:9302/mcp (override for a test instance)
-//   siteUrl defaults to https://magdalen.solutiosoftware.com
+//   siteUrl defaults to https://shannon.forge.solutiosoftware.com
 
 const fs   = require('fs');
 const path = require('path');
@@ -14,13 +14,15 @@ const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
 const { StreamableHTTPClientTransport } = require('@modelcontextprotocol/sdk/client/streamableHttp.js');
 
 const ORCH_URL = process.argv[2] || 'http://127.0.0.1:9302/mcp';
-const SITE_URL = process.argv[3] || 'https://magdalen.solutiosoftware.com';
+const SITE_URL = process.argv[3] || 'https://shannon.forge.solutiosoftware.com';
 
-function adminToken() {
+// The test exercises tools across all four downstreams, so it needs a token
+// whose agent has unrestricted scope. super_shannon (allow: ["*"]) is that agent.
+function privilegedToken() {
   const usersPath = path.join(__dirname, '..', '..', 'config', 'users.json');
   const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-  const entry = Object.entries(users).find(([, v]) => (v.agent || 'admin') === 'admin');
-  if (!entry) throw new Error('no admin token in config/users.json');
+  const entry = Object.entries(users).find(([, v]) => v.agent === 'super_shannon');
+  if (!entry) throw new Error('no super_shannon token in config/users.json');
   return entry[0];
 }
 
@@ -41,7 +43,7 @@ function parsed(result) {
 (async () => {
   const client = new Client({ name: 'routing-smoke', version: '1.0.0' }, { capabilities: {} });
   await client.connect(new StreamableHTTPClientTransport(new URL(ORCH_URL), {
-    requestInit: { headers: { Authorization: `Bearer ${adminToken()}` } },
+    requestInit: { headers: { Authorization: `Bearer ${privilegedToken()}` } },
   }));
   console.log(`connected to ${ORCH_URL}`);
 

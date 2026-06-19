@@ -115,6 +115,57 @@ function isGloballyDenied(toolName, globalDeny = []) {
   return globalDeny.some(p => matchesPattern(toolName, p));
 }
 
+// ─── Access-control constants ─────────────────────────────────────────────────
+// Kept here (the access module) so resolveToolAccess and its callers — the
+// orchestrator's ListTools/CallTool handlers and the scope-enforcement test —
+// all share one definition.
+
+// Internal plumbing: joomla_login is called automatically by the orchestrator
+// via set_active_site and on auth-error recovery. Hiding it prevents the AI from
+// calling it directly, which would bypass activeSiteUrl tracking. Enforced in
+// both ListTools (filtered from the list) and CallTool (blocked by name).
+const HIDDEN_JOOMLA_TOOLS = new Set(['joomla_login']);
+
+// Own tools every agent can call regardless of its agent definition. These
+// implement the session protocol and changelog discipline; they are not
+// configurable via agent JSON. Everything else goes through scope enforcement.
+const MANDATORY_OWN_TOOLS = new Set([
+  'set_active_site', 'get_active_site',
+  'get_site_notes', 'append_site_note', 'write_site_notes',
+  'gantry_reconnect', 'reload_tools',
+  'get_agent_instructions', 'read_agent_doc',
+  'get_current_agent', 'switch_agent',
+]);
+
+/**
+ * Single source of truth for tool-access precedence, shared by the orchestrator's
+ * ListTools (silent filter) and CallTool (error message) handlers so the two can
+ * never drift.
+ *
+ * Precedence (first match wins):
+ *   1. hidden     → denied  (internal plumbing, e.g. joomla_login — never callable)
+ *   2. mandatory  → allowed (session-protocol own tools — bypass global deny + scope)
+ *   3. globalDeny → denied  (config/tool-policy.json globalDeny — all agents)
+ *   4. agent scope → isToolAllowed(agentDef) (per-agent allow/deny)
+ *
+ * @param {object}   agentDef             agent definition ({ tools: { allow, deny } })
+ * @param {string}   toolName
+ * @param {object}   opts
+ * @param {string[]} [opts.globalDeny]    global deny patterns
+ * @param {Set}      [opts.mandatory]     tool names always allowed
+ * @param {Set}      [opts.hidden]        tool names never allowed
+ * @returns {{ allowed: boolean, code: 'hidden'|'global_deny'|'scope'|null }}
+ *          code identifies the denying rule so the caller can format the right
+ *          message; null when allowed.
+ */
+function resolveToolAccess(agentDef, toolName, { globalDeny = [], mandatory, hidden } = {}) {
+  if (hidden && hidden.has(toolName)) return { allowed: false, code: 'hidden' };
+  if (mandatory && mandatory.has(toolName)) return { allowed: true, code: null };
+  if (isGloballyDenied(toolName, globalDeny)) return { allowed: false, code: 'global_deny' };
+  if (!isToolAllowed(agentDef, toolName)) return { allowed: false, code: 'scope' };
+  return { allowed: true, code: null };
+}
+
 /**
  * Check argument-level rules for a tool call.
  * Returns an error message string if the call should be blocked, or null if allowed.
@@ -263,4 +314,4 @@ function readInstructions(agentDef) {
   throw err;
 }
 
-module.exports = { listDocs, readDoc, readInstructions, isToolAllowed, isDocAllowed, isGloballyDenied, checkToolRules };
+module.exports = { listDocs, readDoc, readInstructions, isToolAllowed, isDocAllowed, isGloballyDenied, resolveToolAccess, matchesPattern, checkToolRules, HIDDEN_JOOMLA_TOOLS, MANDATORY_OWN_TOOLS };

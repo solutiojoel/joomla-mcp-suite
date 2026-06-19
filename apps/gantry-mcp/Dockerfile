@@ -1,3 +1,6 @@
+# DEPRECATED: this standalone per-app image no longer builds on its own. The repo
+# is now an npm-workspaces monorepo. Build from the repo-root Dockerfile
+# (docker compose up) instead, which installs every workspace in one pass.
 FROM node:22-slim
 
 # Install Chromium — let apt resolve all transitive deps automatically.
