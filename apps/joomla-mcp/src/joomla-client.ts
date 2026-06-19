@@ -422,6 +422,12 @@ export class JoomlaClient {
     return actual.trim().length > 0;
   }
 
+  private collapseVerification(detail: Record<string, boolean>, verified: boolean): Record<string, unknown> {
+    if (verified) return { verified: true };
+    const failures = Object.fromEntries(Object.entries(detail).filter(([, v]) => v !== true));
+    return { verified: false, failures };
+  }
+
   private shouldVerifyAssignedMembers(assignment: string): boolean {
     return assignment === "1" || assignment === "-1";
   }
@@ -2543,10 +2549,7 @@ export class JoomlaClient {
       data: this.buildOperationData("article", createdId || "", {
         title: article.title || data.title,
         state: article.state || String(data.state ?? "1"),
-        verification: {
-          ...verification,
-          verified,
-        },
+        verification: this.collapseVerification(verification, verified),
       }),
       html: result.html,
     };
@@ -2639,10 +2642,7 @@ export class JoomlaClient {
       data: this.buildOperationData("article", id, {
         title: article.title || expectedTitle,
         state: article.state || expectedState,
-        verification: {
-          ...verification,
-          verified,
-        },
+        verification: this.collapseVerification(verification, verified),
       }),
       html: result.html,
     };
@@ -2893,10 +2893,7 @@ export class JoomlaClient {
       data: this.buildOperationData("category", createdId || "", {
         title: category.title || data.title,
         state: category.published || String(data.published ?? "1"),
-        verification: {
-          ...verification,
-          verified,
-        },
+        verification: this.collapseVerification(verification, verified),
       }),
       html: result.html,
     };
@@ -2968,8 +2965,7 @@ export class JoomlaClient {
         title: category.title || String(formData["jform[title]"] || ""),
         state: category.published || String(formData["jform[published]"] || ""),
         verification: {
-          ...verification,
-          verified,
+          ...this.collapseVerification(verification, verified),
           ...(reorderResult !== undefined ? { reorderSuccess: reorderResult.success } : {}),
         },
       }),
@@ -3712,10 +3708,7 @@ export class JoomlaClient {
         state: String(module.published || formData["jform[published]"] || ""),
         position: String(module.position || formData["jform[position]"] || ""),
         moduleType: String(module.moduleType || existingModule.moduleType || ""),
-        verification: {
-          ...verification,
-          verified,
-        },
+        verification: this.collapseVerification(verification, verified),
       }),
       html: result.html,
     };
@@ -5070,12 +5063,26 @@ export class JoomlaClient {
       // Rebuild the menu nested set (lft/rgt) after each create so the tree stays
       // consistent and subsequent creates don't corrupt the published-state display.
       await this.rebuildMenuTree();
-      // Always force the desired published state via the list task after rebuild.
-      // This ensures the rebuild cannot undo a toggle and acts as a safety net for
-      // any edge case where the form POST did not commit jform[published] correctly.
+      // Always force the desired published state via the edit-form save after rebuild.
+      // items.publish task fails when the item is checked out (which toggleMenuItem's
+      // preflight getMenuItem call causes). updateMenuItem goes through the edit form
+      // and handles checkout correctly.
       if (savedId) {
         const expectedPublished = data.published ?? "1";
-        await this.toggleMenuItem(savedId, expectedPublished, data.menuType);
+        await this.updateMenuItem(savedId, { published: expectedPublished, menuType: data.menuType });
+      }
+    }
+    // Verify published state from the list, not the edit form. The edit form's
+    // jform[published] field defaults to "1" even when the item is unpublished,
+    // causing false-positive publishedMatches. Use a title search so this works
+    // even when the menu has more items than the list page limit.
+    let publishedFromList = "";
+    if (savedId) {
+      const listVerify = await this.listMenuItems(data.menuType, data.title);
+      const listItems = Array.isArray(listVerify.data) ? listVerify.data as Array<Record<string, string>> : [];
+      const listItem = listItems.find((i) => i.id === savedId);
+      if (listItem) {
+        publishedFromList = listItem.state === "Published" ? "1" : listItem.state === "Unpublished" ? "0" : "";
       }
     }
     const verify = savedId ? await this.getMenuItem(savedId) : null;
@@ -5088,7 +5095,9 @@ export class JoomlaClient {
       aliasMatches: !!verify?.success && this.verifyAlias(String(item.alias || ""), data.alias),
       menuTypeMatches: !!verify?.success && String(item.menuType || "") === data.menuType,
       parentMatches: !!verify?.success && String(item.parentId || "") === String(data.parentId || "1"),
-      publishedMatches: !!verify?.success && String(item.published || "") === String(data.published ?? "1"),
+      publishedMatches: publishedFromList !== ""
+        ? publishedFromList === String(data.published ?? "1")
+        : (!!verify?.success && String(item.published || "") === String(data.published ?? "1")),
       accessMatches: !!verify?.success && String(item.access || "") === String(data.access || "1"),
       languageMatches: !!verify?.success && String(item.language || "") === String(data.language || "*"),
       browserNavMatches: !!verify?.success && String(item.browserNav || "") === String(data.browserNav || "0"),
@@ -5101,15 +5110,12 @@ export class JoomlaClient {
       message: verified ? "Menu item saved" : (errorMsg ?? successMsg ? "Menu item save submitted, but creation was not verified" : "Unknown result"),
       data: this.buildOperationData("menuItem", savedId, {
         title: String(item.title || data.title),
-        state: String(item.published || data.published || "1"),
+        state: publishedFromList || String(item.published || data.published || "1"),
         alias: String(item.alias || data.alias || ""),
         menuType: String(item.menuType || data.menuType),
         parentId: String(item.parentId || data.parentId || "1"),
         itemType: type.title || data.itemType,
-        verification: {
-          ...verification,
-          verified,
-        },
+        verification: this.collapseVerification(verification, verified),
       }),
       html: result.html,
     };
@@ -5255,10 +5261,7 @@ export class JoomlaClient {
         alias: String(item.alias || formData["jform[alias]"] || ""),
         menuType: String(item.menuType || formData["jform[menutype]"] || ""),
         parentId: String(item.parentId || formData["jform[parent_id]"] || ""),
-        verification: {
-          ...verification,
-          verified,
-        },
+        verification: this.collapseVerification(verification, verified),
       }),
       html: result.html,
     };
