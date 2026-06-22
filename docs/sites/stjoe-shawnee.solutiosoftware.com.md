@@ -35,3 +35,11 @@
 - Menu item 423 (Seven Sisters Apostolate) moved from Acts of Mercy section to Practice of Prayer section, positioned after Parish Vocation Ministry (ID 429)
 - Reason: Seven Sisters is a prayer ministry, not a charity ministry — incorrect categorization
 **Notes:** CHAPELS menu drag-and-drop quirk confirmed — `templateStyleId` must be verified after any reorder. All affected items confirmed at templateStyleId 27 after this move.
+
+### 2026-06-19 — Ticket #35339 | Replace Blue Streak slider with Fr. Scott Farewell slide
+**Requested by:** Libby Knox (Knox Development) | **Ticket:** #35339
+**Changes:**
+- Unpublished article 798 ("BLUE STREAK ALUMNI ANNOUNCE DECADE CHALLENGE") from category 84 (Rotator - Capital Campaign) to remove the Blue Streak Decade Challenge slide
+- Created article 806 ("Wish Fr. Scott a Fond Farewell") in category 84 with body `<h1><a class="stj-chevron-link" href="campaign-giving"> Wish Fr. Scott a Fond Farewell </a></h1>` and linked to /campaign-giving
+**Notes:** Jeremy will add the Fr. Scott featured image to article 806 to complete the slide. The slider is the Swiper particle (swiper-6123) in the Capital Campaign Home outline (ID 23), pulling from category 84. Article ordering by ASC — if slide needs to be repositioned, adjust ordering on article 806.
+_Logged by: local_
