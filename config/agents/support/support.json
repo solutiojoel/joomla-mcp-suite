@@ -12,7 +12,8 @@
       "joomla_get_frontend_*", "joomla_verify_frontend_content",
       "joomla_redirects_list", "joomla_site_config_inspect",
       "joomla_backend_inventory",
-      "freshdesk_*"
+      "freshdesk_*",
+      "knowledge_*"
     ],
     "deny": [
       "joomla_submit_admin_form", "joomla_permissions",

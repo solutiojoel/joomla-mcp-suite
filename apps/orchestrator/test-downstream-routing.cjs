@@ -52,7 +52,7 @@ function parsed(result) {
   const names = tools.map(t => t.name);
   const dupes = names.filter((n, i) => names.indexOf(n) !== i);
   report('no duplicate tool names', dupes.length === 0, dupes.length ? `dupes: ${[...new Set(dupes)].join(', ')}` : `${names.length} tools`);
-  for (const expected of ['freshdesk_get_ticket', 'ftp_site_config', 'joomla_article', 'gantry_outlines_list', 'gantry_css_asset_smoke_test']) {
+  for (const expected of ['freshdesk_get_ticket', 'ftp_site_config', 'joomla_article', 'gantry_outlines_list', 'gantry_css_asset_smoke_test', 'knowledge_universal']) {
     report(`tool listed: ${expected}`, names.includes(expected));
   }
 
@@ -61,6 +61,12 @@ function parsed(result) {
   const fdParsed = parsed(fd);
   report('freshdesk_list_tickets (no active site)', !!fdParsed && fdParsed.success === true,
     fdParsed ? `${fdParsed.itemCount ?? '?'} open tickets` : text(fd).slice(0, 120));
+
+  // ── knowledge-gateway-mcp: no active site required ──
+  const kg = await client.callTool({ name: 'knowledge_universal', arguments: { action: 'list' } });
+  const kgParsed = parsed(kg);
+  report('knowledge_universal list (no active site)', !!kgParsed && kgParsed.success === true,
+    kgParsed ? `${kgParsed.itemCount ?? '?'} entries` : text(kg).slice(0, 120));
 
   // ── site-scoped tool without active site → guard error ──
   const guard = await client.callTool({ name: 'ftp_site_config', arguments: {} });

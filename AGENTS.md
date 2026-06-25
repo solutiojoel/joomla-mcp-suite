@@ -144,6 +144,7 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 | `kb/animate-on-scroll` | Scroll-triggered animations on article/grid sections |
 | `kb/subpage-backgrounds` | Full-page background image on specific subpages via CSS |
 | `kb/site-history` | Site history system — two-layer format spec, changelog entry format, examples |
+| `kb/knowledge-gateway` | AI Knowledge Gateway tools — universal/client knowledge, self-improving instructions, audit log |
 
 ---
 
@@ -163,6 +164,7 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 | `solutio_style_guide` | Load Solutio house conventions for Gantry 5 builds |
 | `solutio_particles` | Load Solutio particle reference before adding/editing particles |
 | `gantry_outline_conventions` | Load Base/#Outline/#Home/#Grid/#Sponsors and subsite outline inheritance rules before creating or rewiring outlines |
+| `knowledge_universal` / `knowledge_client` / `knowledge_self_improving` / `knowledge_audit` | AI Knowledge Gateway access — see `kb/knowledge-gateway` |
 | `reload_tools` | Reload tool lists if a downstream server was restarted |
 | `gantry_reconnect` | Force Gantry re-auth if layout tools are failing |
 

@@ -7,6 +7,7 @@ export ORCHESTRATOR_PORT="${ORCHESTRATOR_PORT:-9302}"
 export FRESHDESK_MCP_PORT="${FRESHDESK_MCP_PORT:-9303}"
 export FTP_MCP_PORT="${FTP_MCP_PORT:-9304}"
 export MOCKUP_MCP_PORT="${MOCKUP_MCP_PORT:-9305}"
+export KNOWLEDGE_GATEWAY_MCP_PORT="${KNOWLEDGE_GATEWAY_MCP_PORT:-9306}"
 export SITE_BUILDER_PORT="${SITE_BUILDER_PORT:-18303}"
 
 # Force orchestrator to talk to services running in the same container.
@@ -15,6 +16,7 @@ export GANTRY_MCP_URL="${GANTRY_MCP_URL:-http://127.0.0.1:${GANTRY_MCP_PORT}/mcp
 export FRESHDESK_MCP_URL="${FRESHDESK_MCP_URL:-http://127.0.0.1:${FRESHDESK_MCP_PORT}/mcp}"
 export FTP_MCP_URL="${FTP_MCP_URL:-http://127.0.0.1:${FTP_MCP_PORT}/mcp}"
 export MOCKUP_MCP_URL="${MOCKUP_MCP_URL:-http://127.0.0.1:${MOCKUP_MCP_PORT}/mcp}"
+export KNOWLEDGE_GATEWAY_MCP_URL="${KNOWLEDGE_GATEWAY_MCP_URL:-http://127.0.0.1:${KNOWLEDGE_GATEWAY_MCP_PORT}/mcp}"
 
 cleanup() {
   echo "Stopping child processes..."
@@ -65,11 +67,17 @@ wait_for_port() {
   HTTP_PORT="${MOCKUP_MCP_PORT}" python3 server.py
 ) &
 
+(
+  cd /workspace/apps/knowledge-gateway-mcp
+  HTTP_PORT="${KNOWLEDGE_GATEWAY_MCP_PORT}" node dist/index.js
+) &
+
 wait_for_port 127.0.0.1 "${JOOMLA_MCP_PORT}"
 wait_for_port 127.0.0.1 "${GANTRY_MCP_PORT}"
 wait_for_port 127.0.0.1 "${FRESHDESK_MCP_PORT}"
 wait_for_port 127.0.0.1 "${FTP_MCP_PORT}"
 wait_for_port 127.0.0.1 "${MOCKUP_MCP_PORT}"
+wait_for_port 127.0.0.1 "${KNOWLEDGE_GATEWAY_MCP_PORT}"
 
 (
   cd /workspace/apps/orchestrator

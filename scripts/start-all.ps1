@@ -7,6 +7,7 @@
 #   orchestrator  -> 9302  (what Claude Desktop connects to)
 #   freshdesk-mcp -> 9303
 #   ftp-mcp       -> 9304
+#   knowledge-gateway-mcp -> 9306
 #   agents-mcp    -> 3506
 #   site-builder  -> 18303
 
@@ -17,6 +18,7 @@ $gantryPort = 9301
 $orchPort   = 9302
 $freshdeskPort = 9303
 $ftpPort    = 9304
+$knowledgePort = 9306
 $agentsPort = 3506
 $siteBuilderPort = 18303
 
@@ -36,6 +38,9 @@ Start-McpService "freshdesk-mcp :$freshdeskPort" "$root\apps\freshdesk-mcp" "`$e
 
 Write-Host "Starting ftp-mcp on port $ftpPort..."
 Start-McpService "ftp-mcp :$ftpPort" "$root\apps\ftp-mcp" "`$env:HTTP_PORT='$ftpPort'; node dist/index.js"
+
+Write-Host "Starting knowledge-gateway-mcp on port $knowledgePort..."
+Start-McpService "knowledge-gateway-mcp :$knowledgePort" "$root\apps\knowledge-gateway-mcp" "`$env:HTTP_PORT='$knowledgePort'; node dist/index.js"
 
 Write-Host "Starting agents-mcp on port $agentsPort..."
 Start-McpService "agents-mcp :$agentsPort" "$root\apps\agents-mcp" "`$env:HTTP_PORT='$agentsPort'; npx tsx src/index.ts"
@@ -66,6 +71,9 @@ if (Wait-Port $freshdeskPort) { Write-Host " ready." } else { Write-Error "fresh
 
 Write-Host "Waiting for ftp-mcp..." -NoNewline
 if (Wait-Port $ftpPort) { Write-Host " ready." } else { Write-Error "ftp-mcp did not start in time."; exit 1 }
+
+Write-Host "Waiting for knowledge-gateway-mcp..." -NoNewline
+if (Wait-Port $knowledgePort) { Write-Host " ready." } else { Write-Error "knowledge-gateway-mcp did not start in time."; exit 1 }
 
 Write-Host "Waiting for agents-mcp..." -NoNewline
 if (Wait-Port $agentsPort) { Write-Host " ready." } else { Write-Error "agents-mcp did not start in time."; exit 1 }
