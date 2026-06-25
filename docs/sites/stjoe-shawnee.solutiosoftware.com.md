@@ -43,3 +43,10 @@
 - Created article 806 ("Wish Fr. Scott a Fond Farewell") in category 84 with body `<h1><a class="stj-chevron-link" href="campaign-giving"> Wish Fr. Scott a Fond Farewell </a></h1>` and linked to /campaign-giving
 **Notes:** Jeremy will add the Fr. Scott featured image to article 806 to complete the slide. The slider is the Swiper particle (swiper-6123) in the Capital Campaign Home outline (ID 23), pulling from category 84. Article ordering by ASC — if slide needs to be repositioned, adjust ordering on article 806.
 _Logged by: local_
+
+### 2026-06-24 — Ticket #35339 | Float check presentation photo in article 807
+**Requested by:** Jeremy (internal) | **Ticket:** #35339
+**Changes:**
+- Article 807 ("Partnership with Security Bank of Kansas City"): removed full-width check photo block (was 673×658px standalone); replaced with a right-floated div (max-width: 300px) containing the same image (width:100%/auto height) and caption, positioned before the "The St. Joseph Athletic Facility will be home to..." paragraph so it tucks alongside the 2–3 paragraphs above
+**Notes:** Scoreboard sign image at bottom of article unchanged. Jeremy handling image uploads separately.
+_Logged by: local_
