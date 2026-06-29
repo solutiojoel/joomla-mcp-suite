@@ -129,12 +129,14 @@ const HIDDEN_JOOMLA_TOOLS = new Set(['joomla_login']);
 // Own tools every agent can call regardless of its agent definition. These
 // implement the session protocol and changelog discipline; they are not
 // configurable via agent JSON. Everything else goes through scope enforcement.
+// NOTE: switch_agent is intentionally NOT here — it is controlled per-agent
+// so restricted scopes (support, menu-build) cannot self-elevate.
 const MANDATORY_OWN_TOOLS = new Set([
   'set_active_site', 'get_active_site',
   'get_site_notes', 'append_site_note', 'write_site_notes',
   'gantry_reconnect', 'reload_tools',
   'get_agent_instructions', 'read_agent_doc',
-  'get_current_agent', 'switch_agent',
+  'get_current_agent',
 ]);
 
 /**

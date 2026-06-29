@@ -57,9 +57,10 @@ console.log('— preconditions —');
 check("globalDeny contains 'joomla_get_frontend_page'", () => {
   if (!globalDeny.includes('joomla_get_frontend_page')) throw new Error(`globalDeny = ${JSON.stringify(globalDeny)}`);
 });
-check("HIDDEN contains 'joomla_login', MANDATORY contains 'switch_agent'", () => {
-  if (!kb.HIDDEN_JOOMLA_TOOLS.has('joomla_login')) throw new Error('joomla_login not hidden');
-  if (!kb.MANDATORY_OWN_TOOLS.has('switch_agent')) throw new Error('switch_agent not mandatory');
+check("HIDDEN contains 'joomla_login', MANDATORY contains 'get_current_agent', switch_agent NOT mandatory", () => {
+  if (!kb.HIDDEN_JOOMLA_TOOLS.has('joomla_login'))     throw new Error('joomla_login not hidden');
+  if (!kb.MANDATORY_OWN_TOOLS.has('get_current_agent')) throw new Error('get_current_agent not mandatory');
+  if (kb.MANDATORY_OWN_TOOLS.has('switch_agent'))       throw new Error('switch_agent should NOT be mandatory — it must be scope-controlled');
 });
 
 console.log('— precedence 1: hidden beats everything —');
@@ -69,10 +70,9 @@ check('support DENIED joomla_login (hidden)',        () => expectAccess(support,
 
 console.log('— precedence 2: mandatory bypasses scope —');
 // These are NOT in support/menu-build allow-lists but must always pass.
-check('support ALLOWED gantry_reconnect (mandatory)', () => expectAccess(support, 'support', 'gantry_reconnect', true, null));
-check('support ALLOWED switch_agent (mandatory)',     () => expectAccess(support, 'support', 'switch_agent', true, null));
-check('support ALLOWED get_current_agent (mandatory)', () => expectAccess(support, 'support', 'get_current_agent', true, null));
-check('menu-build ALLOWED gantry_reconnect (mandatory)', () => expectAccess(menuBuild, 'menu-build', 'gantry_reconnect', true, null));
+check('support ALLOWED gantry_reconnect (mandatory)',    () => expectAccess(support,   'support',    'gantry_reconnect',  true,  null));
+check('support ALLOWED get_current_agent (mandatory)',   () => expectAccess(support,   'support',    'get_current_agent', true,  null));
+check('menu-build ALLOWED gantry_reconnect (mandatory)', () => expectAccess(menuBuild, 'menu-build', 'gantry_reconnect',  true,  null));
 
 console.log('— precedence 3: global deny beats agent allow —');
 // support allows joomla_get_frontend_* and menu-build too, but globalDeny wins.
@@ -82,7 +82,7 @@ check('menu-build DENIED joomla_get_frontend_page (global)', () => expectAccess(
 
 console.log('— precedence 4: per-agent scope —');
 // support: the headline invariant — a support session cannot reach admin/design tools.
-check('support DENIED joomla_user (scope)',           () => expectAccess(support, 'support', 'joomla_user', false, 'scope'));
+check('support ALLOWED joomla_user (joomla_user* in allow)', () => expectAccess(support, 'support', 'joomla_user', true, null));
 check('support DENIED joomla_workspace_write (deny)', () => expectAccess(support, 'support', 'joomla_workspace_write', false, 'scope'));
 check('support DENIED gantry_layout_edit (scope)',    () => expectAccess(support, 'support', 'gantry_layout_edit', false, 'scope'));
 check('support DENIED joomla_submit_admin_form (deny)', () => expectAccess(support, 'support', 'joomla_submit_admin_form', false, 'scope'));
@@ -97,6 +97,12 @@ check('menu-build ALLOWED joomla_docman_category (joomla_docman_* wildcard)', ()
 check('menu-build DENIED joomla_user (deny)',          () => expectAccess(menuBuild, 'menu-build', 'joomla_user', false, 'scope'));
 check('menu-build DENIED gantry_layout_add (scope)',   () => expectAccess(menuBuild, 'menu-build', 'gantry_layout_add', false, 'scope'));
 check('menu-build DENIED freshdesk_get_ticket (scope)', () => expectAccess(menuBuild, 'menu-build', 'freshdesk_get_ticket', false, 'scope'));
+
+console.log('— switch_agent scope enforcement —');
+// switch_agent is no longer mandatory — restricted agents must be blocked from re-switching.
+check('support DENIED switch_agent (scope)',        () => expectAccess(support,      'support',       'switch_agent', false, 'scope'));
+check('menu-build DENIED switch_agent (scope)',     () => expectAccess(menuBuild,    'menu-build',    'switch_agent', false, 'scope'));
+check('super_shannon ALLOWED switch_agent (allow *)', () => expectAccess(superShannon, 'super_shannon', 'switch_agent', true,  null));
 
 console.log('— super_shannon (allow: *) reaches scoped tools —');
 check('super_shannon ALLOWED gantry_layout_edit', () => expectAccess(superShannon, 'super_shannon', 'gantry_layout_edit', true, null));

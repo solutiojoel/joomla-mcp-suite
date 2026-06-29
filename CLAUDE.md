@@ -81,15 +81,14 @@ At the end of any session where persistent facts changed (new key IDs discovered
 
 ## Support Ticket Workflow
 
-Load the freshdesk-agent doc at the start of any support ticket session:
+The support workflow lives in the Knowledge Gateway — not in local docs. Load it via:
 
 ```
-read_agent_doc(doc: "workflows/freshdesk-agent")
+knowledge_universal { action: "list", tag: "triage" }    ← browsing/summarizing tickets
+knowledge_universal { action: "list", tag: "workflow" }  ← working a specific ticket
 ```
 
-Two triggers:
-- **User asks to browse, review, or summarize tickets** (no specific ID) → follow Phase 1 (triage)
-- **User sends a standalone 5-digit number** (e.g. `35118`) or names a specific ticket to investigate → follow Phase 2 (research and resolution) for that ticket
+Do NOT call `read_agent_doc(doc: "workflows/freshdesk-agent")` — that file is deprecated and archived. The support agent's `get_agent_instructions` handles this correctly; this note is for any other agent or human referencing CLAUDE.md.
 
 ---
 
@@ -101,8 +100,8 @@ Call `read_agent_doc(doc: "<name>")` with the name from the first column:
 
 | Doc name | When to use |
 |----------|-------------|
-| `workflows/editing-rules` | Every session — universal editing conventions |
-| `workflows/freshdesk-agent` | Support ticket triage (Phase 1) and individual ticket research and resolution (Phase 2) |
+| `workflows/editing-rules` | **Moved to Knowledge Gateway.** Use `knowledge_universal { action: "list", tag: "editing-rules" }` instead. |
+| `workflows/freshdesk-agent` | **Deprecated — archived only.** Use `knowledge_universal { tag: "triage" \| "workflow" }` instead. |
 | `workflows/menu-build-workflow` | Menu build — PDF → Menu Spec → Joomla skeleton (Phases 1–4). Category conventions, pitfalls, and checklist included. |
 | `workflows/content-agent` | Standard article text, SEO, and publish state edits |
 | `workflows/custom-page-agent` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |

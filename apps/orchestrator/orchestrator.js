@@ -941,6 +941,18 @@ function buildServer(sessionCtx) {
     }
 
     if (name === 'switch_agent') {
+      // Enforce agent scope so restricted agents (support, menu-build) cannot
+      // re-call switch_agent to self-elevate.
+      const { globalDeny: swGlobalDeny } = loadGlobalPolicy();
+      const swAccess = kb.resolveToolAccess(agentDef, 'switch_agent', {
+        globalDeny: swGlobalDeny,
+        mandatory: MANDATORY_OWN_TOOLS,
+        hidden: HIDDEN_JOOMLA_TOOLS,
+      });
+      if (!swAccess.allowed) {
+        return { isError: true, content: [{ type: 'text', text: `Tool 'switch_agent' is not available to the '${currentAgent}' agent.` }] };
+      }
+
       const targetAgent = args.agent;
       if (!targetAgent) {
         return { isError: true, content: [{ type: 'text', text: 'agent is required' }] };
@@ -955,7 +967,7 @@ function buildServer(sessionCtx) {
         };
       }
       currentAgent = targetAgent;
-      agentDef = loadAgentDef(targetAgent);
+      agentDef     = loadAgentDef(targetAgent);
       log(`session switched agent: ${user} → ${currentAgent}`);
       return {
         content: [{

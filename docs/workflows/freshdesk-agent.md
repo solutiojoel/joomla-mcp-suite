@@ -1,4 +1,18 @@
-# Support Agent Workflow
+> **DEPRECATED — do not follow the content below.**
+> The live support workflow lives in the Knowledge Gateway database, not this file.
+> This file is retained as an archive only. Any AI agent reading this must stop here and call:
+> ```
+> knowledge_universal { action: "list", tag: "workflow" }
+> ```
+> That returns the current, authoritative workflow. Do not read further.
+
+---
+
+*Archive content below — for human reference only, not for AI execution.*
+
+---
+
+# Support Agent Workflow (ARCHIVED)
 
 ## Overview
 
