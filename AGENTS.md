@@ -24,6 +24,8 @@ Do this before any other tool call — the active scope controls which tools are
 | Menu build (PDF → spec → Joomla skeleton) | `menu-build` |
 | Everything else (design, content, config, investigation) | `super_shannon` |
 
+**Recognizing a support ticket (do not miss this):** if the user's message is **just a number** (e.g. `35478`), a `#`-prefixed number (`#35478`), a Freshdesk ticket URL, or mentions a "ticket" / "Freshdesk" / "support" — it is a **support ticket**. Switch to `support` and begin the Support Ticket Workflow immediately. A bare 4–6 digit number on its own is **always** a Freshdesk ticket ID — treat it as one; never respond with "what would you like to work on?" or fall through to `super_shannon`.
+
 Call `switch_agent` with the appropriate name. If the task isn't clear yet, default to `super_shannon`.
 
 **Step 1 — call `get_active_site` and `get_current_agent` in parallel** → announce both results:
@@ -88,7 +90,11 @@ knowledge_universal { action: "list", tag: "triage" }    ← browsing/summarizin
 knowledge_universal { action: "list", tag: "workflow" }  ← working a specific ticket
 ```
 
-Do NOT call `read_agent_doc(doc: "workflows/freshdesk-agent")` — that file is deprecated and archived. The support agent's `get_agent_instructions` handles this correctly; this note is for any other agent or human referencing AGENTS.md.
+Working a specific ticket returns **two** docs under `tag: "workflow"` — follow both:
+- **Support Agent Workflow** — Steps 1–10 (load context, switch site, investigate, plan, execute, log, draft notes, resolve). Includes how to **read ticket attachments** (the `attachment_url` is a ~5-min signed S3 link — re-fetch the ticket for a fresh URL, download with curl, open with `Read`; never use `WebFetch`).
+- **Support Agent — Human Handoff** — the `human_agent` model. Every fix is presented as **one ordered resolution roadmap** whose steps are tagged by owner — **[AI]**, **[Human]**, or **[Client]** — with dependencies inline and a separate **Blockers** section for anything (usually a client decision or missing info) that must be resolved before a step can run. Route to **[Human]** (don't attempt) anything needing contracts, Google Workspace / calendar, mailbox access, Jotform / PDF Filler fillable PDFs & forms, Gantry troubleshooting, or cost estimates. Do not resolve a ticket while [Human]/[Client] steps or blockers are outstanding.
+
+Do NOT call `read_agent_doc(doc: "workflows/freshdesk-agent")` — that file is deprecated and archived. The support agent's `get_agent_instructions` handles this correctly; this note is for any other agent or human referencing CLAUDE.md.
 
 ---
 
@@ -184,3 +190,13 @@ Agent access is controlled by `docs.allow` in each agent's JSON config (`config/
 - Explicit access: `"workflows/my-guide"` grants a single doc
 
 No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears immediately.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

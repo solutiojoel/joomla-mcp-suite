@@ -41,7 +41,7 @@ const NOT_CONFIGURED = {
 const tools = [
   {
     name: "freshdesk_get_ticket",
-    description: "Fetch a Freshdesk ticket. Returns subject, description, status, priority, tags, requester_id, company_id.",
+    description: "Fetch a Freshdesk ticket. Returns subject, description, status, priority, tags, requester_id, company_id, attachments (name, content_type, size, attachment_url — note the URL is a short-lived signed link), and inline_images (URLs of images embedded in the body).",
     inputSchema: {
       type: "object",
       properties: {
@@ -74,7 +74,7 @@ const tools = [
   },
   {
     name: "freshdesk_get_conversations",
-    description: "Fetch all replies and notes for a ticket in chronological order.",
+    description: "Fetch all replies and notes for a ticket in chronological order. Each message includes any attachments (name, content_type, size, attachment_url — the URL is a short-lived signed link) and inline_images (URLs of images embedded in the message body).",
     inputSchema: {
       type: "object",
       properties: {

@@ -11,6 +11,14 @@ export interface FreshdeskConfig {
   apiKey: string;
 }
 
+export interface FreshdeskAttachment {
+  id: number;
+  name: string;
+  content_type: string;
+  size: number;
+  attachment_url: string;
+}
+
 export interface FreshdeskTicket {
   id: number;
   subject: string;
@@ -25,6 +33,8 @@ export interface FreshdeskTicket {
   company_id: number | null;
   site_code: string | null;
   site_url: string | null;
+  attachments: FreshdeskAttachment[];
+  inline_images: string[];
   created_at: string;
   updated_at: string;
 }
@@ -61,6 +71,8 @@ export interface FreshdeskConversation {
   author_name: string;
   from_email: string | null;
   private: boolean;
+  attachments: FreshdeskAttachment[];
+  inline_images: string[];
   created_at: string;
   updated_at: string;
 }
@@ -97,6 +109,18 @@ export function toSiteCode(companyName: string): string {
   return companyName.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
 }
 
+function extractInlineImages(html: string | undefined): string[] {
+  if (!html) return [];
+  const urls: string[] = [];
+  const re = /<img[^>]+src\s*=\s*["']([^"']+)["']/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null) {
+    // Skip data: URIs — they're inline base64 and would bloat the result.
+    if (/^https?:\/\//i.test(m[1])) urls.push(m[1]);
+  }
+  return Array.from(new Set(urls));
+}
+
 function stripHtml(html: string): string {
   return html
     .replace(/<[^>]+>/g, " ")
@@ -109,6 +133,24 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+interface AttachmentRaw {
+  id: number;
+  name: string;
+  content_type: string;
+  size: number;
+  attachment_url: string;
+}
+
+function mapAttachments(raw: AttachmentRaw[] | undefined): FreshdeskAttachment[] {
+  return (raw ?? []).map((a) => ({
+    id: a.id,
+    name: a.name,
+    content_type: a.content_type,
+    size: a.size,
+    attachment_url: a.attachment_url,
+  }));
+}
+
 interface ConvRaw {
   id: number;
   source: number;
@@ -117,6 +159,7 @@ interface ConvRaw {
   from_email: string | null;
   user_id: number;
   private: boolean;
+  attachments?: AttachmentRaw[];
   created_at: string;
   updated_at: string;
 }
@@ -131,6 +174,7 @@ interface TicketRaw {
   tags: string[];
   requester_id: number;
   company_id: number | null;
+  attachments?: AttachmentRaw[];
   created_at: string;
   updated_at: string;
 }
@@ -216,6 +260,8 @@ export class FreshdeskClient {
         company_id: data.company_id ?? null,
         site_code: siteCode,
         site_url: siteUrl,
+        attachments: mapAttachments(data.attachments),
+        inline_images: extractInlineImages(data.description),
         created_at: data.created_at,
         updated_at: data.updated_at,
       };
@@ -283,6 +329,8 @@ export class FreshdeskClient {
         author_name: c.from_email ?? `Agent #${c.user_id}`,
         from_email: c.from_email ?? null,
         private: c.private ?? false,
+        attachments: mapAttachments(c.attachments),
+        inline_images: extractInlineImages(c.body),
         created_at: c.created_at,
         updated_at: c.updated_at,
       }));
