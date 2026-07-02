@@ -4806,24 +4806,24 @@ export class JoomlaClient {
     return items;
   }
 
-  async listMenuItems(menuId: string, search?: string, limit?: number, page?: number): Promise<JoomlaResponse> {
+  async listMenuItems(menuId?: string, search?: string, limit?: number, page?: number): Promise<JoomlaResponse> {
     const effectiveLimit = limit != null ? Math.min(limit, 500) : 0;
     const effectivePage = Math.max(page ?? 1, 1);
     const limitStart = effectiveLimit > 0 ? (effectivePage - 1) * effectiveLimit : 0;
     const params = new URLSearchParams({
       "option": "com_menus",
       "view": "items",
-      "menutype": menuId,
       "limit": String(effectiveLimit),
       "limitstart": String(limitStart),
     });
+    if (menuId) params.set("menutype", menuId);
     params.set("filter[search]", search ?? "");
     const url = this.getAdminUrl(`index.php?${params.toString()}`);
     const { html } = await this.getPage(url);
     const items = this.parseMenuItemList(html);
     return {
       success: true,
-      message: `Found ${items.length} menu items${search ? `, search="${search}"` : ""}`,
+      message: `Found ${items.length} menu items${menuId ? ` in menu "${menuId}"` : " across all menus"}${search ? `, search="${search}"` : ""}`,
       data: items,
       html,
     };

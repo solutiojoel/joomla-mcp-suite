@@ -257,8 +257,8 @@ const tools = [
       properties: {
         action: { type: "string", enum: ["list", "get", "create", "update", "delete", "toggle", "checkin"], description: "Operation to perform" },
         id: { type: "string", description: "get|update|delete|toggle|checkin: menu item ID" },
-        menuId: { type: "string", description: "list: menu type identifier (e.g. mainmenu). get: scope title search." },
-        search: { type: "string", description: "list: server-side title filter" },
+        menuId: { type: "string", description: "list: menu type identifier to scope to one menu (e.g. mainmenu). Omit to search/list across all menus. get: optional scope for title search." },
+        search: { type: "string", description: "list: server-side title filter. Combine with an omitted menuId to find an item by title when you don't know which menu it's in." },
         limit: { type: "number", description: "list: per page (default: 0=all, max 500)" },
         page: { type: "number", description: "list: page number, 1-based" },
         title: { type: "string", description: "get: search by title. create|update: item title." },
@@ -994,10 +994,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
 
         switch (action) {
           case "list": {
-            const menuId = args?.menuId as string;
-            if (!menuId) return { content: [{ type: "text", text: "Error: menuId is required for list" }], isError: true };
             result = await joomla.listMenuItems(
-              menuId,
+              (args?.menuId as string) || undefined,
               (args?.search as string) || undefined,
               (args?.limit as number) || undefined,
               (args?.page as number) || undefined,
