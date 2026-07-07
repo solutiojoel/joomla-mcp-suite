@@ -8,7 +8,7 @@ mandatory `open_questions` / `assumptions`. Everything downstream (validate, lin
 build) is mechanical and testable.
 
 - **Format:** JSON. Schema: [config/agents/menu-build/menu-spec.schema.json](../../../../config/agents/menu-build/menu-spec.schema.json).
-- **Validator/lint:** `run_menu_interpretation` validates automatically; for hand edits run `node apps/orchestrator/test-menu-spec.cjs`.
+- **Validator/lint:** `run_menu_interpretation` validates automatically; for hand edits run `npm run validate -w apps/agents-mcp -- <spec.json>` (exit 0 = valid). `test-menu-spec.cjs` only regression-tests the validator against fixtures — it does not read your spec.
 - **Persist** each site's spec with `joomla_workspace_write` so it is the durable
   contract between the structure build (Phases 1–4) and the content pass (Phase 5).
 

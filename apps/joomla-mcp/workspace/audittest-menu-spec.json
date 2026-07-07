@@ -1,0 +1,186 @@
+{
+  "site": "https://audittest.example.com",
+  "source": "Audit-Test-Menu.pdf",
+  "generated": "2026-07-07",
+  "menus": {
+    "mainmenu": [
+      {
+        "title": "About Us",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "Welcome from the Principal",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "Principal will provide draft content"
+          },
+          {
+            "title": "Our History",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Faculty & Staff",
+            "type": "category_grid",
+            "category": "Staff",
+            "content_source": "pull"
+          },
+          {
+            "title": "School Board",
+            "type": "category_grid",
+            "category": "School Board",
+            "content_source": "existing",
+            "notes": "Grid of school board members"
+          }
+        ]
+      },
+      {
+        "title": "Admissions",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "Why St. Augustine",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Tuition & Fees",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Apply Online",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Redirect to FACTS enrollment portal"
+          },
+          {
+            "title": "Scholarships",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate"
+          }
+        ]
+      },
+      {
+        "title": "News & Events",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "All News",
+            "type": "category_grid",
+            "category": "News",
+            "content_source": "existing"
+          },
+          {
+            "title": "School Calendar",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Parish News",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Redirect to church website"
+          }
+        ]
+      },
+      {
+        "title": "Ministries",
+        "type": "category_grid",
+        "category": "Ministries",
+        "content_source": "existing"
+      },
+      {
+        "title": "Contact Us",
+        "type": "single_article",
+        "category": "Page Content",
+        "content_source": "pull"
+      }
+    ],
+    "hiddenmenu": []
+  },
+  "modules": {
+    "under_rotator": {
+      "items": [
+        {
+          "label": "Apply",
+          "type": "external_url",
+          "menu_item": "Apply Online"
+        },
+        {
+          "label": "Calendar",
+          "type": "external_url",
+          "menu_item": "School Calendar"
+        },
+        {
+          "label": "Church",
+          "type": "external_url",
+          "menu_item": "Parish News",
+          "notes": "Assumed to reuse Parish News redirect target (church website) since no separate URL was given"
+        }
+      ]
+    }
+  },
+  "grids": [
+    {
+      "page": "School Board",
+      "menu_ref": "School Board",
+      "type": "category_grid",
+      "category": "School Board",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "members": ["Board President", "Vice President", "Secretary", "Treasurer"]
+    },
+    {
+      "page": "Ministries",
+      "menu_ref": "Ministries",
+      "type": "category_grid",
+      "category": "Ministries",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "members": ["Altar Servers", "Choir", "Food Pantry", "Youth Group"]
+    },
+    {
+      "page": "Faculty & Staff",
+      "menu_ref": "Faculty & Staff",
+      "type": "category_grid",
+      "category": "Staff",
+      "particle": "joomla_articles",
+      "member_menu_items": "none"
+    },
+    {
+      "page": "All News",
+      "menu_ref": "All News",
+      "type": "category_grid",
+      "category": "News",
+      "particle": "joomla_articles",
+      "member_menu_items": "none"
+    }
+  ],
+  "open_questions": [
+    "Apply Online redirect target URL (FACTS enrollment portal) not specified — TBD placeholder used",
+    "Parish News redirect target URL (church website) not specified — TBD placeholder used",
+    "Church quicklink has no distinct URL in the document; assumed to reuse the Parish News menu item's target since both point to the church website — confirm this is correct or if a separate URL should be used",
+    "Confirm 'School Board' is the correct Joomla category name for that grid, or whether a different category (e.g. 'Board') should be used"
+  ],
+  "assumptions": [
+    "Faculty & Staff classified as category_grid, never single_article, per staff/team page rule (source said 'pull from website' but staff pages are always grids)",
+    "All News classified as category_grid per news page rule; content_source defaulted to 'existing' since the document gave no pull/generate annotation",
+    "Ministries and School Board grid members (Board President, Vice President, Secretary, Treasurer, Altar Servers, Choir, Food Pantry, Youth Group) are grid category articles, not menu items, per grid sub-item rule",
+    "Default category 'Page Content' applied to all single_article items with no explicit category given",
+    "About Us, Admissions, and News & Events classified as 'heading' type since they are separators with real sub-pages and are not themselves grid landing pages",
+    "Quicklinks section documented as 'homepage buttons under rotator' mapped to modules.under_rotator",
+    "Apply and Calendar quicklinks mapped via menu_item reference to their corresponding existing mainmenu items rather than duplicate targets"
+  ]
+}

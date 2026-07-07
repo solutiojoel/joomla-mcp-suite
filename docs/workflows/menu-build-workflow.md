@@ -69,11 +69,13 @@ Articles must not be in the wrong category or they will appear (or fail to appea
 
 ## Phase 2 — Validate & Lint
 
-The interpreter output is already validated (schema + the 8 lint invariants — see `kb/menu-spec-schema`). Re-validate **after any hand edit** to the spec:
+The interpreter output is already validated (schema + the 8 lint invariants — see `kb/menu-spec-schema`). Re-validate **after any hand edit** to the spec by running the same validator against the edited file:
 
 ```
-node apps/orchestrator/test-menu-spec.cjs
+npm run validate -w apps/agents-mcp -- path/to/site-menu-spec.json
 ```
+
+Exit 0 = valid; it prints every schema and lint error plus the remaining `open_questions`. (`node apps/orchestrator/test-menu-spec.cjs` is different — it regression-tests the validator itself against fixtures and never reads your spec.)
 
 **Gate:** zero schema errors; every lint error either fixed or represented by an `open_questions` entry.
 
@@ -230,6 +232,6 @@ Call `append_site_note` after Phase 4 completes, recording the spec filename and
 
 - Interpretation is isolated in one specialized sub-agent with a hard-constrained system prompt; the schema removes interpretation degrees of freedom and the worked example anchors output.
 - `open_questions` / `assumptions` surface guesses instead of letting them vary silently.
-- All determinism lives in validate/lint/build — the interpreter self-validates, `run_menu_interpretation` re-validates, and `test-menu-spec.cjs` is the regression net for hand edits.
+- All determinism lives in validate/lint/build — the interpreter self-validates, `run_menu_interpretation` re-validates, `npm run validate -w apps/agents-mcp` re-checks hand-edited specs, and `test-menu-spec.cjs` is the regression net for the validator itself.
 - Every run leaves a JSONL transcript (`apps/agents-mcp/logs/`), and the standalone runner (`npm run interpret`) reproduces any run outside the orchestrator.
 - Bit-for-bit LLM reproducibility is not guaranteed; these levers are what make the output consistent enough to trust.

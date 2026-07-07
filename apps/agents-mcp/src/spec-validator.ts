@@ -7,7 +7,9 @@ import path from "node:path";
  *
  * The schema file at config/agents/menu-build/menu-spec.schema.json is the
  * single structural source of truth (also consumed by
- * apps/orchestrator/test-menu-spec.cjs, the Path-A CLI gate). The lint rules
+ * apps/orchestrator/test-menu-spec.cjs, the fixture regression net for this
+ * validator). Hand-edited specs are checked via src/validate-spec.ts
+ * (`npm run validate -w apps/agents-mcp -- <spec.json>`). The lint rules
  * here mirror the "Lint invariants" section of docs/kb/menu-spec-schema.md —
  * if you change one, change both.
  */
@@ -162,7 +164,7 @@ export function lintSpec(spec: Record<string, unknown>): string[] {
           errors.push(`${fullPath}: external_url is missing "target"`);
         } else if (item.target === "TBD") {
           const covered = openQuestions.some((q) =>
-            q.toLowerCase().includes(title.toLowerCase())
+            String(q).toLowerCase().includes(title.toLowerCase())
           );
           if (!covered) {
             errors.push(
@@ -240,7 +242,12 @@ export function lintSpec(spec: Record<string, unknown>): string[] {
     | undefined;
   if (modules && typeof modules === "object") {
     for (const [modKey, mod] of Object.entries(modules)) {
-      for (const item of mod.items || []) {
+      const items = mod && typeof mod === "object" ? mod.items : undefined;
+      if (!Array.isArray(items)) {
+        errors.push(`modules.${modKey}: missing or invalid "items" array`);
+        continue;
+      }
+      for (const item of items) {
         if (!item.target && !item.menu_item) {
           errors.push(
             `modules.${modKey} item "${item.label}": must have either "target" or "menu_item"`
@@ -259,10 +266,23 @@ export interface SpecValidationResult {
   lint_errors: string[];
 }
 
-/** Full validation: structural schema check + the 8 lint invariants. */
+/** Full validation: structural schema check + the 8 lint invariants.
+ *  A crash in either pass is reported as an error, never thrown — so a
+ *  malformed spec always yields an error envelope, and a lint crash can't
+ *  mask the schema errors that explain it. */
 export function validateSpec(spec: Record<string, unknown>): SpecValidationResult {
-  const schema_errors = validateSchema(spec);
-  const lint_errors = lintSpec(spec);
+  let schema_errors: string[];
+  try {
+    schema_errors = validateSchema(spec);
+  } catch (err: unknown) {
+    schema_errors = [`schema validation crashed: ${err instanceof Error ? err.message : err}`];
+  }
+  let lint_errors: string[];
+  try {
+    lint_errors = lintSpec(spec);
+  } catch (err: unknown) {
+    lint_errors = [`lint crashed on malformed spec: ${err instanceof Error ? err.message : err}`];
+  }
   return {
     valid: schema_errors.length === 0 && lint_errors.length === 0,
     schema_errors,

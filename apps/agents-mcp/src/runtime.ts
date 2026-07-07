@@ -23,6 +23,8 @@ export interface SubAgentEvent {
 }
 
 export interface RunSubAgentParams {
+  /** Sub-agent identifier for observability, e.g. "menu-interpreter". */
+  agentName: string;
   systemPrompt: string;
   userMessage: string;
   /** SDK MCP server configs, keyed by server name (see createSdkMcpServer). */
@@ -72,6 +74,7 @@ export async function runSubAgent(params: RunSubAgentParams): Promise<RunSubAgen
   await runLog.append({
     type: "start",
     runId,
+    agentName: params.agentName,
     model: params.model,
     maxTurns,
     userMessage: params.userMessage,

@@ -233,11 +233,13 @@ async function createClient(label, url, token) {
  * agents-mcp tools run LLM agentic loops that can take several minutes.
  * We raise the timeout to 10 min and enable resetTimeoutOnProgress so
  * that each progress notification emitted by agents-mcp resets the clock.
+ * maxTotalTimeout is the hard cap regardless of progress — 30 min, sized
+ * for a long PDF interpretation (chunked reads + up to 30 turns).
  */
 async function callDownstream(ds, toolName, toolArgs) {
   const isAgentCall = ds.label === 'agents-mcp';
   const callOptions = isAgentCall
-    ? { timeout: 600_000, resetTimeoutOnProgress: true, maxTotalTimeout: 900_000 }
+    ? { timeout: 600_000, resetTimeoutOnProgress: true, maxTotalTimeout: 1_800_000 }
     : undefined;
 
   for (let attempt = 1; attempt <= 2; attempt++) {

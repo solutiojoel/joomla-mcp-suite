@@ -60,10 +60,10 @@ export async function runMenuInterpreter(
     "joomla_workspace_write",
     "Persist a file to the active site's workspace. Use it to save the finished Menu Spec JSON.",
     {
-      filename: z.string().describe("Workspace filename, e.g. {site-slug}-menu-spec.json"),
+      path: z.string().describe("Workspace filename (no directories), e.g. {site-slug}-menu-spec.json"),
       content: z.string().describe("Full file content (the Menu Spec JSON)"),
     },
-    async (input: { filename: string; content: string }) => {
+    async (input: { path: string; content: string }) => {
       const result = await executor("joomla_workspace_write", input);
       return {
         content: [
@@ -110,6 +110,7 @@ export async function runMenuInterpreter(
   );
 
   const result = await runSubAgent({
+    agentName: "menu-interpreter",
     systemPrompt: config.instructions,
     userMessage: promptLines.join("\n"),
     mcpServers: { joomla: joomlaServer },

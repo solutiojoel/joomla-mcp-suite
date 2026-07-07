@@ -8,6 +8,8 @@
     "start": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
     "interpret": "tsx src/run-interpreter.ts",
+    "validate": "tsx src/validate-spec.ts",
+    "dashboard": "tsx src/dashboard.ts",
     "test": "tsx src/bridge.test.ts"
   },
   "dependencies": {

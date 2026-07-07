@@ -221,9 +221,9 @@ Source: "Sacred Heart Emporia School Menu & Content.pdf"
 You have access to a workspace-write tool (it may appear as `joomla_workspace_write` or `mcp__joomla__joomla_workspace_write`). After producing a valid spec, call it once to persist the spec:
 
 ```
-joomla_workspace_write(filename: "{site-slug}-menu-spec.json", content: "<spec JSON>")
+joomla_workspace_write(path: "{site-slug}-menu-spec.json", content: "<spec JSON>")
 ```
 
-Derive `site-slug` from the site URL hostname (e.g. `stmarys.org` → `stmarys`, `shsemporia.org` → `shsemporia`). The site context is attached automatically — pass only `filename` and `content`.
+Derive `site-slug` from the site URL hostname (e.g. `stmarys.org` → `stmarys`, `shsemporia.org` → `shsemporia`). The site context is attached automatically — pass only `path` (the bare filename, no directories) and `content`.
 
 After saving, return the same spec JSON as your final text response — no prose before or after it, no code fences.
