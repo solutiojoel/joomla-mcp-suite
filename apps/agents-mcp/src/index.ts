@@ -18,25 +18,31 @@ const TOOLS = [
   {
     name: "run_menu_interpretation",
     description:
-      "Phase 1–2 of the menu build workflow: interprets a raw menu document and produces a validated Menu Spec JSON. " +
-      "Runs a Sonnet sub-agent that applies Phase 1 classification rules, produces the spec, validates it against the 8 lint invariants, " +
-      "and persists it to the workspace via joomla_workspace_write. " +
-      "Returns { success: true, spec: {...} } on success or { success: false, error, lint_errors?, partial_spec? } on failure.",
+      "Phase 1–2 of the menu build workflow: interprets a menu document and produces a validated Menu Spec JSON. " +
+      "Runs the menu-interpreter sub-agent in a separate context window (Claude Agent SDK on the operator's subscription). " +
+      "It applies the Phase 1 classification rules, self-checks the 8 lint invariants, persists the spec to the workspace " +
+      "via joomla_workspace_write, and the result is re-validated (JSON schema + lint) before being returned. " +
+      "Provide either pdf_path (preferred — the sub-agent reads the PDF itself, keeping it out of your context) or menu_text. " +
+      "Returns { success: true, spec, run_log } or { success: false, error, schema_errors?, lint_errors?, partial_spec?, run_log }.",
     inputSchema: {
       type: "object",
-      required: ["site_url", "menu_text"],
+      required: ["site_url"],
       properties: {
         site_url: {
           type: "string",
           description: "The active site URL (e.g. https://example.com). Used to persist the spec to the correct workspace.",
         },
+        pdf_path: {
+          type: "string",
+          description: "Absolute path to the menu PDF on this host (e.g. C:\\Users\\...\\Church-Menu.pdf). The sub-agent reads it directly.",
+        },
         menu_text: {
           type: "string",
-          description: "Raw text extracted from the menu document (PDF, Word doc, etc.). Include all headings, page names, and sub-items.",
+          description: "Raw text of the menu document, if already extracted. Include all headings, page names, and sub-items. Ignored when pdf_path is set.",
         },
         source_filename: {
           type: "string",
-          description: "Original filename of the source document (e.g. \"Church-Menu.pdf\"). Used as the spec's source field.",
+          description: "Original filename of the source document (e.g. \"Church-Menu.pdf\"). Used as the spec's source field. Defaults to the pdf_path basename.",
         },
       },
     },
@@ -95,7 +101,8 @@ function buildServer(): Server {
         const result = await runMenuInterpreter(
           {
             site_url: request.params.arguments?.site_url as string,
-            menu_text: request.params.arguments?.menu_text as string,
+            menu_text: request.params.arguments?.menu_text as string | undefined,
+            pdf_path: request.params.arguments?.pdf_path as string | undefined,
             source_filename: request.params.arguments?.source_filename as string | undefined,
           },
           async (progress, total) => {

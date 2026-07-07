@@ -2,7 +2,9 @@
 
 **Scope:** Phases 1–4 only — Menu Spec interpretation, validation, user review, and Joomla skeleton build (categories, placeholder articles, menu items). Building content is out of scope; hand off to the content agent when the skeleton is approved.
 
-The contract between phases is the **Menu Spec** — see `kb/menu-spec-schema` for the schema, classification rules, and a worked example. Read that KB doc before doing any interpretation.
+The contract between phases is the **Menu Spec** — see `kb/menu-spec-schema` for the schema, lint invariants, and a worked example.
+
+**Phase 1 is delegated.** Interpretation runs in the **menu-interpreter sub-agent** via the `run_menu_interpretation` tool — a separate context window that reads the PDF, classifies it, and returns a validated spec. Do **not** interpret the PDF yourself in-session; your job is to hand off the document, then review the returned spec, resolve its open questions with the user, and build. (Manual interpretation per the Classification Reference below is the fallback only if the interpreter is unavailable.)
 
 **Structure first, content second.** Phases 1–4 produce the menu skeleton. The spec carries `content_source` annotations so the content agent can drive Phase 5 without re-interpretation.
 
@@ -16,7 +18,7 @@ Most pages are single article menu items. The articles for each menu item get pl
 
 **Grid pages** use Joomla Articles particle modules. Articles that appear on grid pages belong in their own named categories (e.g. "Sacrament Grid Items", "Staff Grid Items"). Grid pages are used when items will be changed frequently or added to by the client. Staff pages and All News pages are almost always grids.
 
-**Grid sub-items:** If the PDF labels a parent item as a grid, any items listed beneath it are **articles that belong in the grid's category — not sub-menu items**. Do not create menu items for them. Capture them in the `grids.members` array (or just note the category) and set `member_menu_items: "none"`.
+**Grid sub-items:** If the PDF labels a parent item as a grid, any items listed beneath it are **articles that belong in the grid's category — not sub-menu items**. Do not create menu items for them. Capture their titles in the grid's `members` array and set `member_menu_items: "none"` — Phase 4 creates them as articles in the grid's category.
 
 Top-level parent items with real sub-pages beneath them are separators (`heading` type in the spec). They may also be external URLs or aliases.
 
@@ -36,16 +38,63 @@ Articles must not be in the wrong category or they will appear (or fail to appea
 
 ---
 
-## Phase 1 — Interpret (PDF → Menu Spec)
+## Phase 1 — Interpret (PDF → Menu Spec, via `run_menu_interpretation`)
 
-1. Read the source document and `kb/menu-spec-schema` (output format, lint rules, worked example).
-2. Classify each item using the rules below. Preserve the document's ordering. Do not invent, reorder, or editorialize.
-3. Push every guess into `open_questions` and every applied default into `assumptions`. When the PDF is silent (redirect targets, ambiguous item types), **flag — do not quietly fill**.
-4. Persist the spec with `joomla_workspace_write` (e.g. `menu-spec.json`).
+1. **Get the PDF onto this host.** Menu docs arrive as ticket/Dropbox/email attachments — download the file and note its absolute path. Do not paste the PDF contents into your own context; the whole point of the sub-agent is that the document is interpreted in a separate context window.
+2. **Call the interpreter:**
 
-**Gate:** spec is saved and conforms to the schema.
+   ```
+   run_menu_interpretation {
+     site_url: "https://example.com",
+     pdf_path: "C:\\path\\to\\Client-Menu.pdf",     ← preferred
+     source_filename: "Client-Menu.pdf"              ← optional
+   }
+   ```
 
-### Classification Rules
+   Pass `menu_text` instead of `pdf_path` only when the document is already plain text. The sub-agent (Claude Agent SDK, operator subscription auth) reads the PDF, classifies every item per its system prompt, self-checks the lint invariants, and persists the spec to the site workspace via `joomla_workspace_write`.
+3. **Read the result.** Success returns `{ success: true, spec, run_log }` — the spec is already schema- and lint-validated. Failure returns `{ success: false, error, schema_errors?, lint_errors?, partial_spec?, run_log }`.
+   - On lint/schema failures: inspect `partial_spec` and the errors; usually a re-run fixes it. If it fails twice, fix the spec by hand (small errors) or fall back to manual interpretation using the Classification Reference below.
+   - The run is long (a few minutes) — the tool emits progress notifications while it works.
+4. **Observability.** Every run writes a JSONL transcript to `apps/agents-mcp/logs/<runId>.jsonl` (path returned as `run_log`). To watch a run live or debug the interpreter outside the orchestrator, use the standalone runner:
+
+   ```
+   npm run interpret -w apps/agents-mcp -- --site https://example.com --pdf "C:\path\to\Menu.pdf"
+   ```
+
+   It streams the sub-agent's text and tool calls to the terminal, writes the spec locally, and prints open questions/assumptions. Use this while tuning the interpreter.
+
+**Gate:** interpreter returned `success: true` and the spec is saved in the workspace.
+
+---
+
+## Phase 2 — Validate & Lint
+
+The interpreter output is already validated (schema + the 8 lint invariants — see `kb/menu-spec-schema`). Re-validate **after any hand edit** to the spec:
+
+```
+node apps/orchestrator/test-menu-spec.cjs
+```
+
+**Gate:** zero schema errors; every lint error either fixed or represented by an `open_questions` entry.
+
+---
+
+## Phase 3 — Resolve Open Questions & Review
+
+The spec arrives with `open_questions` (facts the document didn't provide — redirect targets, ambiguous classifications) and `assumptions` (defaults the interpreter applied). This phase turns the draft into the approved build plan:
+
+1. Present `open_questions` and `assumptions` to the user as a numbered list.
+2. Apply the user's answers directly to the spec JSON — fill `TBD` targets, reclassify items, adjust categories. The JSON is the artifact; edit it, don't paraphrase it in prose.
+3. Remove each resolved entry from `open_questions`; keep `assumptions` the user confirmed.
+4. Re-run Phase 2 validation after edits. Loop until the user approves.
+
+**Gate:** explicit user approval; `open_questions` resolved or accepted as deferred.
+
+---
+
+## Classification Reference (fallback / review aid)
+
+> The **canonical copy of these rules lives in the interpreter's system prompt** (`config/agents/menu-interpreter/menu-interpreter-system.md`) — if you change classification behavior, change it there and mirror it here. Use this section to sanity-check a returned spec or to interpret manually when the sub-agent is unavailable.
 
 Decide each node's `type` using these rules, in priority order:
 
@@ -85,6 +134,7 @@ Every `category_grid` item must have a corresponding entry in the top-level `gri
 | `category` | Derive from the section name — e.g. "Ministries" → `"Ministries"`, "All News" → `"News"`. This is the Joomla category the particle filters on. |
 | `particle` | Always `joomla_articles` — all grids use the Joomla Articles particle |
 | `member_menu_items` | See rule below |
+| `members` | Article titles listed under the grid in the source doc (optional) — built as articles in the grid's category in Phase 4, never as menu items |
 
 **`member_menu_items` rule:**
 
@@ -93,28 +143,6 @@ Every `category_grid` item must have a corresponding entry in the top-level `gri
 - A grid member explicitly needs its own Joomla menu item (rare) → `"listed"`. Flag this in `open_questions` when you use it.
 
 **Edge case — parent that is both a grid landing page and has real sub-pages in the menu:** Use `heading` type with a `grids` entry (set `menu_ref` to the heading title). Phase 4 will build it as a navigable Single Article rather than a plain separator, and its children will still nest under it as sub-items. Flag this in `assumptions`.
-
----
-
-## Phase 2 — Validate & Lint
-
-Run the invariants before showing the draft:
-
-```
-node apps/orchestrator/test-menu-spec.cjs
-```
-
-Or validate the live spec directly against `config/agents/menu-build/menu-spec.schema.json` and the lint rules in the KB doc.
-
-**Gate:** zero schema errors; every lint error either fixed or represented by an `open_questions` entry.
-
----
-
-## Phase 3 — Review with the User
-
-Present the spec plus its `open_questions` and `assumptions`. The user edits the JSON directly (it is the artifact, not prose) and/or answers the open questions. Re-run Phase 2 after edits. Loop until the user approves.
-
-**Gate:** explicit user approval; `open_questions` resolved or accepted as deferred.
 
 ---
 
@@ -182,7 +210,8 @@ Call `append_site_note` after Phase 4 completes, recording the spec filename and
 ## Checklist
 
 - [ ] Site confirmed via `get_active_site` before any edits
-- [ ] `kb/menu-spec-schema` read before Phase 1
+- [ ] PDF saved locally and interpreted via `run_menu_interpretation` (not in-session)
+- [ ] `open_questions` resolved with the user; spec updated and re-validated
 - [ ] Menu Spec validated (zero schema + lint errors) before Phase 4
 - [ ] Pre-Phase 4 confirmation presented and approved (menus, categories, item count)
 - [ ] Categories created with correct names and parent assignments
@@ -199,7 +228,8 @@ Call `append_site_note` after Phase 4 completes, recording the spec filename and
 
 ## Why this is consistent & testable
 
-- The schema removes interpretation degrees of freedom; the worked example anchors output.
+- Interpretation is isolated in one specialized sub-agent with a hard-constrained system prompt; the schema removes interpretation degrees of freedom and the worked example anchors output.
 - `open_questions` / `assumptions` surface guesses instead of letting them vary silently.
-- All determinism lives in validate/lint/build — `test-menu-spec.cjs` is the regression net.
-- Bit-for-bit LLM reproducibility is not guaranteed; these four levers are what make the output consistent enough to trust.
+- All determinism lives in validate/lint/build — the interpreter self-validates, `run_menu_interpretation` re-validates, and `test-menu-spec.cjs` is the regression net for hand edits.
+- Every run leaves a JSONL transcript (`apps/agents-mcp/logs/`), and the standalone runner (`npm run interpret`) reproduces any run outside the orchestrator.
+- Bit-for-bit LLM reproducibility is not guaranteed; these levers are what make the output consistent enough to trust.

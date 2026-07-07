@@ -1,13 +1,14 @@
 # KB — Menu Spec Schema & Classification Rules
 
 The **Menu Spec** is the canonical intermediate artifact for a menu build. The PDF→spec
-interpretation is the only step where an LLM has discretion, so it is constrained hard:
-fixed field names, fixed enum values, preserved source ordering, and mandatory
-`open_questions` / `assumptions`. Everything downstream (validate, lint, build) is
-mechanical and testable.
+interpretation is the only step where an LLM has discretion, so it is isolated in the
+**menu-interpreter sub-agent** (invoked via the `run_menu_interpretation` tool) and
+constrained hard: fixed field names, fixed enum values, preserved source ordering, and
+mandatory `open_questions` / `assumptions`. Everything downstream (validate, lint,
+build) is mechanical and testable.
 
 - **Format:** JSON. Schema: [config/agents/menu-build/menu-spec.schema.json](../../../../config/agents/menu-build/menu-spec.schema.json).
-- **Validator/lint:** `node apps/orchestrator/test-menu-spec.cjs`.
+- **Validator/lint:** `run_menu_interpretation` validates automatically; for hand edits run `node apps/orchestrator/test-menu-spec.cjs`.
 - **Persist** each site's spec with `joomla_workspace_write` so it is the durable
   contract between the structure build (Phases 1–4) and the content pass (Phase 5).
 
@@ -32,9 +33,10 @@ reorder, or invent items. When the PDF is silent on something, **flag it in
     "toplinks": { "items": [ /* moduleItem */ ] },
     "under_rotator": { "items": [ /* moduleItem */ ] }
   },
-  "grids": [ /* grid */ ],        // grid pages
+  "grids": [ /* grid */ ],        // grid pages; each may carry a "members" array of article titles
   "open_questions": [ "..." ],    // every guess / missing fact — MANDATORY when anything is TBD
-  "assumptions": [ "..." ]        // defaults applied, made reviewable
+  "assumptions": [ "..." ],       // defaults applied, made reviewable
+  "joomla_ids": { }               // filled during Pre-Phase-4/Phase 4 — created menu/category/item IDs (not from the interpreter)
 }
 ```
 
@@ -89,7 +91,7 @@ A spec must pass all of these — fix or flag before building:
     "mainmenu": [
       { "title": "About Sacred Heart School", "type": "heading", "children": [
         { "title": "Welcome from the Principal", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "principal retiring" },
-        { "title": "Faculty & Staff", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "no teacher pages" }
+        { "title": "Faculty & Staff", "type": "category_grid", "category": "Staff", "content_source": "pull", "notes": "no teacher pages — staff pages are always grids" }
       ]},
       { "title": "News & Events", "type": "heading", "children": [
         { "title": "Calendar", "type": "single_article", "content_source": "pull" },
@@ -111,6 +113,7 @@ A spec must pass all of these — fix or flag before building:
     ]}
   },
   "grids": [
+    { "page": "Faculty & Staff", "menu_ref": "Faculty & Staff", "type": "category_grid", "category": "Staff", "particle": "joomla_articles", "member_menu_items": "none" },
     { "page": "All News", "menu_ref": "News & Events", "type": "category_grid", "category": "News", "particle": "joomla_articles", "member_menu_items": "none" }
   ],
   "open_questions": [
@@ -120,6 +123,7 @@ A spec must pass all of these — fix or flag before building:
   ],
   "assumptions": [
     "\"Pull from website\" leaves default to single_article in the Page Content category",
+    "Faculty & Staff classified as category_grid — staff pages are always grids, never single_article",
     "All News is a category_grid with no per-article menu items"
   ]
 }

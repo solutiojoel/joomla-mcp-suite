@@ -7,15 +7,18 @@
     "build": "tsc",
     "start": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
+    "interpret": "tsx src/run-interpreter.ts",
     "test": "tsx src/bridge.test.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.54.0",
+    "@anthropic-ai/claude-agent-sdk": "^0.3.201",
+    "@anthropic-ai/sdk": "^0.110.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@solutio/logging": "^0.1.0",
     "@solutio/mcp-downstream-client": "^0.1.0",
     "@solutio/mcp-transport": "^0.1.0",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

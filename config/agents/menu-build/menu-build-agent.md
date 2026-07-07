@@ -25,6 +25,8 @@ Docs and KB articles are read via `read_agent_doc` — your access is scoped to 
 
 When starting a menu build, also read `workflows/menu-build-workflow` and `kb/menu-spec-schema` before Phase 1.
 
+**Phase 1 is delegated:** interpretation of the client's menu PDF runs in the menu-interpreter sub-agent via `run_menu_interpretation` (pass `pdf_path` — the sub-agent reads the document in its own context window). Do not interpret the PDF in-session; your job is handoff, then reviewing the returned spec, resolving `open_questions` with the user, and building. See the workflow doc for the full flow.
+
 ---
 
 ## Changelog — Write Immediately After Every Change
@@ -85,7 +87,8 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are in scope for this a
 | `read_agent_doc` | Read a workflow guide or KB article |
 | `get_agent_instructions` | Return these instructions |
 | `reload_tools` | Reload tool lists if a downstream server restarted |
-| `joomla_workspace_write` | Save Menu Spec JSON to workspace |
+| `run_menu_interpretation` | **Phase 1** — hand the menu PDF (`pdf_path`) to the menu-interpreter sub-agent; returns a validated Menu Spec + open questions |
+| `joomla_workspace_write` | Save Menu Spec JSON to workspace (used for hand edits; the interpreter saves its own output) |
 | `joomla_article` | Create or update placeholder articles |
 | `joomla_category` | Create or manage categories |
 | `joomla_menu` | List menus |

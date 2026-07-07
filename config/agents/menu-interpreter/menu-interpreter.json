@@ -1,9 +1,9 @@
 {
   "name": "menu-interpreter",
   "hidden": true,
-  "description": "Phase 1–2 of the menu build: interprets a menu document and produces a validated Menu Spec JSON.",
+  "description": "Phase 1–2 of the menu build: interprets a menu document (PDF or text) and produces a validated Menu Spec JSON. Runs on the Claude Agent SDK using the operator's Claude Code subscription credentials (CLAUDE_CODE_OAUTH_TOKEN or local claude login).",
   "instructions": "menu-interpreter-system.md",
-  "model": "claude-3-5-sonnet-latest",
+  "model": "claude-sonnet-5",
   "tools": {
     "allow": ["joomla_workspace_write"],
     "downstreams": ["joomla-mcp"]

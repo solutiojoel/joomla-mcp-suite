@@ -1,95 +1,160 @@
-import { Anthropic } from "@anthropic-ai/sdk";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createRunLog } from "@solutio/logging";
 
-export interface RunSubAgentParams {
-  systemPrompt: string;
-  tools: any[];
-  toolExecutor: (name: string, args: Record<string, any>) => Promise<any>;
-  userMessage: string;
-  model?: string;
-  maxIterations?: number;
-  onIteration?: (current: number, max: number) => Promise<void>;
+/**
+ * Sub-agent runtime on the Claude Agent SDK.
+ *
+ * Runs the Claude Code engine headlessly, so authentication comes from the
+ * operator's Claude Code credentials — a Pro/Max subscription via
+ * CLAUDE_CODE_OAUTH_TOKEN (mint one with `claude setup-token`) or the local
+ * `claude` login. No ANTHROPIC_API_KEY is required.
+ *
+ * The SDK is ESM-only and this package compiles to CJS, so it is loaded via
+ * dynamic import() (preserved by module: NodeNext).
+ */
+
+/** A user-visible event from the sub-agent run, for logging/observability. */
+export interface SubAgentEvent {
+  type: "text" | "tool_use" | "tool_result" | "system" | "result";
+  text?: string;
+  toolName?: string;
+  toolInput?: unknown;
 }
 
-export async function runSubAgent(params: RunSubAgentParams): Promise<{ success: boolean; result?: any; error?: string }> {
-  const anthropic = new Anthropic();
-  const maxIterations = params.maxIterations || 25;
-  
-  const messages: Anthropic.MessageParam[] = [
-    { role: "user", content: params.userMessage }
-  ];
+export interface RunSubAgentParams {
+  systemPrompt: string;
+  userMessage: string;
+  /** SDK MCP server configs, keyed by server name (see createSdkMcpServer). */
+  mcpServers?: Record<string, unknown>;
+  /** Tools auto-allowed without prompting, e.g. ["mcp__joomla__joomla_workspace_write"]. */
+  allowedTools?: string[];
+  /** Built-in Claude Code tools to expose. Defaults to [] — no filesystem/bash access. */
+  builtinTools?: string[];
+  model?: string;
+  maxTurns?: number;
+  cwd?: string;
+  onIteration?: (current: number, max: number) => Promise<void>;
+  /** Called for each notable event — lets the CLI runner stream the run live. */
+  onEvent?: (event: SubAgentEvent) => void;
+}
 
+export interface RunSubAgentResult {
+  success: boolean;
+  result?: unknown;
+  error?: string;
+  runLogPath?: string;
+}
+
+/** Strip markdown code fences if the model wrapped its final JSON anyway. */
+function stripFences(text: string): string {
+  const trimmed = text.trim();
+  const match = trimmed.match(/^```(?:json)?\s*\n([\s\S]*?)\n```$/);
+  return match ? match[1] : trimmed;
+}
+
+export async function runSubAgent(params: RunSubAgentParams): Promise<RunSubAgentResult> {
+  const { query } = await import("@anthropic-ai/claude-agent-sdk");
+
+  const maxTurns = params.maxTurns || 30;
   const runId = randomUUID();
-  const runLog = createRunLog(path.join(__dirname, "..", "logs"), runId);
-  const appendLog = (entry: any) => runLog.append(entry);
-
-  await appendLog({ type: "start", systemPrompt: params.systemPrompt, userMessage: params.userMessage });
-
-  for (let i = 1; i <= maxIterations; i++) {
-    if (params.onIteration) {
-      await params.onIteration(i, maxIterations);
-    }
-
-    await appendLog({ type: "iteration", iteration: i });
-
-    let response;
+  const logDir = path.join(__dirname, "..", "logs");
+  const runLog = createRunLog(logDir, runId);
+  const runLogPath = path.join(logDir, `${runId}.jsonl`);
+  const emit = (event: SubAgentEvent) => {
     try {
-      response = await anthropic.messages.create({
-        model: params.model || "claude-3-5-sonnet-latest",
-        system: params.systemPrompt,
-        messages,
-        tools: params.tools.length > 0 ? params.tools as any : undefined,
-        max_tokens: 4096,
-      });
-    } catch (err: any) {
-      await appendLog({ type: "error", error: err.message });
-      return { success: false, error: `Anthropic API error: ${err.message}` };
+      params.onEvent?.(event);
+    } catch {
+      /* observer errors must not kill the run */
     }
+  };
 
-    messages.push({ role: "assistant", content: response.content });
-    await appendLog({ type: "response", response });
+  await runLog.append({
+    type: "start",
+    runId,
+    model: params.model,
+    maxTurns,
+    userMessage: params.userMessage,
+  });
 
-    if (response.stop_reason === "tool_use") {
-      const toolResults: Anthropic.ToolResultBlockParam[] = [];
+  const q = query({
+    prompt: params.userMessage,
+    options: {
+      systemPrompt: params.systemPrompt,
+      model: params.model,
+      maxTurns,
+      cwd: params.cwd,
+      // Isolation: no user/project settings, no CLAUDE.md — the system prompt
+      // in config/agents/<name> is the sub-agent's entire brain.
+      settingSources: [],
+      // Built-in tools off by default; the caller opts in (e.g. Read for PDFs).
+      tools: (params.builtinTools ?? []) as string[],
+      mcpServers: (params.mcpServers ?? {}) as never,
+      allowedTools: params.allowedTools,
+      permissionMode: "bypassPermissions",
+      allowDangerouslySkipPermissions: true,
+    },
+  });
 
-      for (const block of response.content) {
-        if (block.type === "tool_use") {
-          let output;
-          let isError = false;
-          try {
-            const rawOutput = await params.toolExecutor(block.name, block.input as Record<string, any>);
-            output = typeof rawOutput === "string" ? rawOutput : JSON.stringify(rawOutput);
-          } catch (err: any) {
-            output = err.message;
-            isError = true;
+  let turns = 0;
+  let finalResult: { success: boolean; result?: unknown; error?: string } | null = null;
+
+  try {
+    for await (const message of q) {
+      await runLog.append({ type: "sdk_message", message });
+
+      if (message.type === "assistant") {
+        turns++;
+        if (params.onIteration) await params.onIteration(turns, maxTurns);
+        const content = (message as { message?: { content?: unknown[] } }).message?.content;
+        if (Array.isArray(content)) {
+          for (const block of content as Array<Record<string, unknown>>) {
+            if (block.type === "text" && block.text) {
+              emit({ type: "text", text: String(block.text) });
+            } else if (block.type === "tool_use") {
+              emit({
+                type: "tool_use",
+                toolName: String(block.name ?? ""),
+                toolInput: block.input,
+              });
+            }
           }
-
-          toolResults.push({
-            type: "tool_result",
-            tool_use_id: block.id,
-            content: output,
-            is_error: isError,
-          });
+        }
+      } else if (message.type === "system") {
+        const subtype = (message as { subtype?: string }).subtype;
+        emit({ type: "system", text: subtype });
+      } else if (message.type === "result") {
+        const res = message as {
+          subtype: string;
+          is_error?: boolean;
+          result?: string;
+          num_turns?: number;
+        };
+        if (res.subtype === "success" && !res.is_error) {
+          const text = stripFences(res.result ?? "");
+          emit({ type: "result", text });
+          try {
+            finalResult = { success: true, result: JSON.parse(text) };
+          } catch {
+            finalResult = { success: true, result: text };
+          }
+        } else {
+          const error = `Sub-agent run failed (${res.subtype})${res.result ? `: ${res.result}` : ""}`;
+          emit({ type: "result", text: error });
+          finalResult = { success: false, error };
         }
       }
-
-      messages.push({ role: "user", content: toolResults });
-      await appendLog({ type: "tool_results", toolResults });
-    } else {
-      const finalText = response.content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n");
-      await appendLog({ type: "end", finalText });
-      
-      try {
-        return { success: true, result: JSON.parse(finalText) };
-      } catch {
-        return { success: true, result: finalText };
-      }
     }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await runLog.append({ type: "error", error: msg });
+    return { success: false, error: `Agent SDK error: ${msg}`, runLogPath };
   }
 
-  const errorMsg = "Max iterations reached";
-  await appendLog({ type: "error", error: errorMsg });
-  return { success: false, error: errorMsg };
+  if (!finalResult) {
+    finalResult = { success: false, error: "Sub-agent produced no result message" };
+  }
+
+  await runLog.append({ type: "end", success: finalResult.success, turns });
+  return { ...finalResult, runLogPath };
 }

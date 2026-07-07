@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://solutiosoftware.com/schemas/menu-spec.json",
   "title": "Menu Spec",
-  "description": "Canonical intermediate artifact for a Joomla menu build. Produced by the menu-content agent from a client menu document (PDF), reviewed/edited by a human, then built. See docs/agents/menu-content/kb/menu-spec-schema.md.",
+  "description": "Canonical intermediate artifact for a Joomla menu build. Produced by the menu-interpreter sub-agent (run_menu_interpretation) from a client menu document (PDF), reviewed/edited by a human, then built. See docs/kb/menu-spec-schema.md.",
   "type": "object",
   "required": ["site", "menus"],
   "additionalProperties": false,
@@ -38,6 +38,11 @@
       "type": "array",
       "description": "Defaults the interpreter applied so they are reviewable rather than silent.",
       "items": { "type": "string" }
+    },
+    "joomla_ids": {
+      "type": "object",
+      "description": "Filled in during the Pre-Phase-4 confirmation and the Phase 4 build — created Joomla IDs (menus by menuType slug, categories, key menu items) keyed by name. Not produced by the interpreter.",
+      "additionalProperties": true
     }
   },
   "$defs": {
@@ -101,6 +106,11 @@
         "category": { "type": "string" },
         "particle": { "type": "string", "enum": ["joomla_articles", "block_content", "contentarray"] },
         "member_menu_items": { "type": "string", "enum": ["none", "listed"] },
+        "members": {
+          "type": "array",
+          "description": "Article titles listed under the grid in the source document. Created as articles in the grid's category during Phase 4 — never as menu items.",
+          "items": { "type": "string" }
+        },
         "notes": { "type": "string" }
       }
     }
