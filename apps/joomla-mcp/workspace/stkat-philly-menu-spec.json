@@ -1,6 +1,6 @@
 {
   "site": "https://stkat-philly.solutiosoftware.com",
-  "source": "StKat-Philly Church Menu & Content.pdf",
+  "source": "StKat-Philly School Menu.pdf",
   "generated": "2026-07-07",
   "menus": {
     "mainmenu": [
@@ -9,125 +9,277 @@
         "type": "single_article",
         "category": "Page Content",
         "content_source": "existing",
-        "notes": "No description given in source; assumed existing/default homepage."
+        "notes": "No annotation given; treated as the site homepage."
       },
       {
         "title": "About St. Katherine",
         "type": "heading",
         "content_source": "none",
         "children": [
-          { "title": "Welcome from the Pastor", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "Open question in source: does Father want a welcome message created for him?" },
-          { "title": "Our History & Values", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "Include mission. Open question: is there more in-depth history about the St. Katherine connection?" },
-          { "title": "Our Staff", "type": "category_grid", "category": "Staff Items", "content_source": "pull", "notes": "Fields: Image, Name, Position, Tel, Email, Bio. Fr. Sunny currently missing from list; new staff images needed." },
-          { "title": "Join the Parish", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "Convert registration form to fillable PDF. Sr. Guia to (re)upload Parish Registration Form." },
-          { "title": "Adoration Chapel", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Pull from website; send updated pictures." }
+          { "title": "Contact Us & Directions", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Mission & History", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Our Beliefs", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "About our Patroness", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          {
+            "title": "Our Staff",
+            "type": "category_grid",
+            "category": "Staff Items",
+            "content_source": "generate",
+            "notes": "Staff listing (image, name, position, email). Only partial extension info given (sr ext 200, mccormick 223, betty 221, janice 220) — full roster needed. Always classified as category_grid per staff page convention."
+          },
+          { "title": "Our Graduates", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          {
+            "title": "Alumni",
+            "type": "heading",
+            "content_source": "none",
+            "children": [
+              { "title": "Stay in Touch", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+              { "title": "Alumni Basketball Tournament", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+              { "title": "SKS Quizzo", "type": "single_article", "category": "Page Content", "content_source": "pull" }
+            ]
+          }
         ]
       },
       {
-        "title": "News & Events",
+        "title": "News & Communication",
         "type": "heading",
         "content_source": "none",
         "children": [
-          { "title": "Mass & Confession times", "type": "single_article", "category": "Page Content", "content_source": "pull" },
-          { "title": "Bulletin", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Bulletins managed by John and Patrick." },
-          { "title": "Calendar", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Embed CalendarWiz widget." },
-          { "title": "Mass Cards, Candles, & Bread & Wine Requests", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Pull content from bulletin." },
-          { "title": "Photo Gallery", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "New page to be added; no existing content." }
+          {
+            "title": "Principal's Corner",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "Doc notes 'this is news'; kept as a single named page rather than a grid since it is not a listing of many entries."
+          },
+          {
+            "title": "Parish News",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Likely redirect to parish site news section."
+          },
+          {
+            "title": "Calendar",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Doc says 'Get link'; digital calendar requested per Solutio Building Notes."
+          },
+          {
+            "title": "Home & School",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Instagram link; exact URL needed."
+          }
         ]
       },
       {
-        "title": "Sacraments & Liturgies",
+        "title": "Admissions",
         "type": "heading",
         "content_source": "none",
-        "notes": "Grid landing page with sub-menu items pointing to grid member articles (member_menu_items: listed) per client decision — each sacrament keeps its own nav entry while also rendering as a tile on the Sacraments & Liturgies grid.",
         "children": [
-          { "title": "Baptism", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Send forms and requirements." },
-          { "title": "Confession", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "For confession times, view bulletin. Confessions also available by appointment with Father." },
-          { "title": "Holy Eucharist", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Include communion to the homebound." },
-          { "title": "Confirmation", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Send forms and requirements. Include redirect note for adult sacraments to OCIA page." },
-          { "title": "Marriage", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Send forms, booklets and requirements." },
-          { "title": "Holy Orders", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Blurb about the call to talk to a priest. Include a link to the diocese (URL TBD)." },
-          { "title": "Anointing of the Sick", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Yearly event where 70+ attend a special mass for anointing; anyone can also receive if requested." },
-          { "title": "Eucharistic Adoration", "type": "single_article", "category": "Sacraments Items", "content_source": "pull", "notes": "Pull blurb from bulletin. Title typo 'Euchrastic' corrected to 'Eucharistic'." },
-          { "title": "Funerals", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Contact the funeral director, who will make arrangements with the church. Send booklets." }
+          { "title": "Why St. Katherine of Siena?", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Spiritual Life", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          {
+            "title": "Admission Requirements",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull",
+            "notes": "Pull content specifically from https://sksphila.com/primary-open-house (not the homepage)."
+          },
+          {
+            "title": "New Student Enrollment",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull",
+            "notes": "Pull content specifically from https://sksphila.com/admissions (not the homepage)."
+          },
+          {
+            "title": "Re-Enrollment",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull",
+            "notes": "Pull content specifically from https://sksphila.com/2026-2027-re-enrollment-information (not the homepage)."
+          },
+          {
+            "title": "Financial Aid & Tuition",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "No annotation given in source document; content source unconfirmed."
+          },
+          {
+            "title": "FACTS Management",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Likely external link to FACTS platform; exact URL needed."
+          }
         ]
       },
       {
-        "title": "Ministries: Get Involved",
+        "title": "Academics",
         "type": "heading",
         "content_source": "none",
-        "notes": "Create content overall; get contact info from Sr. Guia.",
         "children": [
-          { "title": "Liturgical Groups", "type": "category_grid", "category": "Liturgical Groups Items", "content_source": "none", "notes": "Gather contact information. Grid — members have no individual menu items." },
-          { "title": "Organization Groups", "type": "category_grid", "category": "Organization Groups Items", "content_source": "none", "notes": "Gather contact information. Grid — members have no individual menu items. Includes Respect Life per client decision." }
+          { "title": "Curriculum", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "'Will see if we can get the information' — content not yet available." },
+          { "title": "CAPIT Learning (Pre-k - Third grade)", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "'Need information' — content not yet available." },
+          { "title": "School Specials", "type": "single_article", "category": "Page Content", "content_source": "existing", "notes": "'Update the special and subjects' — implies existing content needs updating." },
+          { "title": "CORA", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "I Ready Benchmarks", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "'Will need new information' — content not yet available." },
+          { "title": "Title 1/ Catapult", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Social & Emotional Support - Friendzy", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "'Need information' — content not yet available." },
+          { "title": "STREAM", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "'Need information' — content not yet available." }
         ]
       },
       {
-        "title": "Religious Education",
+        "title": "Parents & Student Life",
         "type": "heading",
         "content_source": "none",
         "children": [
-          { "title": "PYM & Child Care", "type": "external_url", "target": "#", "content_source": "redirect", "notes": "Placeholder target — redirect to School's info; real URL TBD, update before launch." },
-          { "title": "Prep Classes", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "Send information, booklets, forms, and requirements from Deacon." },
-          { "title": "Children's Liturgy", "type": "single_article", "category": "Page Content", "content_source": "pull" },
-          { "title": "OCIA", "type": "single_article", "category": "Page Content", "content_source": "pull" },
-          { "title": "Virtus Requirements", "type": "single_article", "category": "Page Content", "content_source": "pull" }
+          { "title": "Parent/Student Handbook", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Parent Resources", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Bus Information", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Catapult Community Resources", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "AM/PM CARES", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "SKIP", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          {
+            "title": "Facts Family Portal",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Likely external link to FACTS platform family portal; exact URL needed."
+          },
+          { "title": "Nurses Corner", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          {
+            "title": "Volunteer Information",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull",
+            "notes": "Pull content specifically from https://files.ecatholic.com/21724/documents/2025/9/Safe%20Enviroment%20Required%20Documents%20Checklist.pdf?t=1758299523000 (Safe Environment checklist PDF)."
+          },
+          {
+            "title": "Student Activities",
+            "type": "category_grid",
+            "category": "Student Activities Items",
+            "content_source": "pull",
+            "notes": "Clubs/activities list the client will add to over time; classified as category_grid per clubs-list convention even though not explicitly labeled 'grid'.",
+            "children": [
+              {
+                "title": "CYO",
+                "type": "external_url",
+                "target": "TBD",
+                "content_source": "redirect",
+                "notes": "Link out to the parish website; exact URL needed."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Give",
+        "type": "single_article",
+        "category": "Page Content",
+        "content_source": "pull",
+        "children": [
+          {
+            "title": "School Supports",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "No annotation given in source document; content source unconfirmed."
+          }
         ]
       }
     ],
     "hiddenmenu": [
-      { "title": "Parish Registration", "type": "external_url", "target": "#", "content_source": "redirect", "notes": "Placeholder target — Sr. Guia has the registration form PDF and will (re)upload it; update before launch." },
-      { "title": "Donate", "type": "external_url", "target": "#", "content_source": "redirect", "notes": "Placeholder target — likely an external donation platform; update before launch." },
-      { "title": "Request Sacramental Form", "type": "external_url", "target": "#", "content_source": "redirect", "notes": "Placeholder target — sacrament forms still being gathered per Sr. Guia; update before launch." },
-      { "title": "School", "type": "external_url", "target": "#", "content_source": "redirect", "notes": "Placeholder target — also the destination for the PYM & Child Care redirect; update before launch." }
+      {
+        "title": "Parish",
+        "type": "external_url",
+        "target": "TBD",
+        "content_source": "redirect",
+        "notes": "Target for the Parish quicklink module item; parish/church site homepage URL needed."
+      }
     ]
   },
   "modules": {
     "toplinks": {
       "items": [
-        { "label": "Bulletin", "type": "single_article", "menu_item": "Bulletin" },
-        { "label": "Parish Registration", "type": "external_url", "menu_item": "Parish Registration" },
-        { "label": "Donate", "type": "external_url", "menu_item": "Donate" },
-        { "label": "Request Sacramental Form", "type": "external_url", "menu_item": "Request Sacramental Form" },
-        { "label": "School", "type": "external_url", "menu_item": "School" }
+        { "label": "Parish", "type": "external_url", "menu_item": "Parish" },
+        { "label": "Parent Resources", "type": "single_article", "menu_item": "Parent Resources" },
+        { "label": "Facts", "type": "external_url", "menu_item": "FACTS Management", "notes": "Ambiguous — could point to FACTS Management or Facts Family Portal; needs confirmation." },
+        { "label": "Enrollment", "type": "single_article", "menu_item": "New Student Enrollment" },
+        { "label": "Donate", "type": "single_article", "menu_item": "Give" }
       ]
     }
   },
   "grids": [
-    { "page": "Our Staff", "menu_ref": "Our Staff", "type": "category_grid", "category": "Staff Items", "particle": "joomla_articles", "member_menu_items": "none", "notes": "Staff bios pulled from existing site; Fr. Sunny currently missing from listing and new staff images are needed." },
-    { "page": "Sacraments & Liturgies", "menu_ref": "Sacraments & Liturgies", "type": "category_grid", "category": "Sacraments Items", "particle": "joomla_articles", "member_menu_items": "listed", "members": ["Baptism", "Confession", "Holy Eucharist", "Confirmation", "Marriage", "Holy Orders", "Anointing of the Sick", "Eucharistic Adoration", "Funerals"], "notes": "member_menu_items is 'listed' (non-default) per client decision on 2026-07-07 — each sacrament also gets its own nav entry, not just a grid tile." },
-    { "page": "Liturgical Groups", "menu_ref": "Liturgical Groups", "type": "category_grid", "category": "Liturgical Groups Items", "particle": "joomla_articles", "member_menu_items": "none", "members": ["Altar Servers", "Lectors", "Ushers", "EMHC", "Music Ministry", "Sacristans"], "notes": "EMHC: if interested in joining, contact the parish. Sacristans: must be invited to join." },
-    { "page": "Organization Groups", "menu_ref": "Organization Groups", "type": "category_grid", "category": "Organization Groups Items", "particle": "joomla_articles", "member_menu_items": "none", "members": ["KofC", "Prayer Group", "Primrose Seniors", "Walking with a Purpose (Bible Study)", "Men's Prayer Breakfast", "Catholic Daughters of America & BLAZE (Junior Catholic Daughters of America)", "CYO", "Angel Dusters", "SVDP", "Devotional Groups", "Respect Life", "Elder Care"], "notes": "Pull contact info from Bulletin for: KofC, Men's Prayer Breakfast, Catholic Daughters of America & BLAZE, SVDP, Devotional Groups, Elder Care. Devotional Groups includes Divine Mercy. Respect Life included per client decision on 2026-07-07." }
+    {
+      "page": "Our Staff",
+      "menu_ref": "Our Staff",
+      "type": "category_grid",
+      "category": "Staff Items",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "notes": "Only partial staff details available (extensions for sr, mccormick, betty, janice); full roster with names/positions/emails/photos needed."
+    },
+    {
+      "page": "Student Activities",
+      "menu_ref": "Student Activities",
+      "type": "category_grid",
+      "category": "Student Activities Items",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "members": [
+        "PYM & Kids Care Club",
+        "Investigators Science Club",
+        "Student Council",
+        "Robotics",
+        "St. Patrick's Day Parade",
+        "Summer Camp",
+        "Garden Club",
+        "Drama Club",
+        "Boardgames Club",
+        "Cores",
+        "Choirs",
+        "Art Club",
+        "Blaze",
+        "Athletics",
+        "Knitting Club"
+      ],
+      "notes": "CYO excluded from grid members — it is a child external_url linking to the parish website instead."
+    }
   ],
   "open_questions": [
-    "Does Father want a personalized 'Welcome from the Pastor' message created?",
-    "Is there a more in-depth history about the St. Katherine connection to include in 'Our History & Values'?",
-    "Need new staff images for 'Our Staff' grid; Fr. Sunny is missing from the current staff list.",
-    "Need the Parish Registration Form (fillable PDF) from Sr. Guia for 'Join the Parish' and the Parish Registration quicklink.",
-    "Need updated photos for the Adoration Chapel page.",
-    "Need CalendarWiz embed link/credentials for the Calendar page (contact Colleen Sharp for the online parish calendar link).",
-    "Sacrament forms/booklets/requirements for Baptism, Confirmation, Marriage, and Funerals are still being gathered by Sr. Guia — status unclear.",
-    "Need the diocese URL to link from the 'Holy Orders' page.",
-    "Need contact information for all Liturgical Groups and Organization Groups ministries (to be gathered from Sr. Guia and the bulletin).",
-    "Need Prep Classes information, booklets, forms, and requirements from the Deacon.",
-    "Real target URL needed for 'PYM & Child Care' redirect — built with placeholder target '#'; update before launch.",
-    "Real target URLs needed for hiddenmenu quicklinks: Parish Registration, Donate, Request Sacramental Form, School — all built with placeholder target '#'; update before launch.",
-    "Sponsors page intentionally excluded from this build — client confirmed it will reuse the existing site's Sponsors menu item, which uses a specific required format and must not be altered. Needs to be manually linked/copied into the new mainmenu after Phase 4.",
-    "Confirm no YouTube channel/module is needed going forward, per Sr. Guia's note that it will no longer be maintained."
+    "Our Staff: need full staff roster (names, positions, emails, photos) — only partial extension info given (sr ext 200, mccormick 223, betty 221, janice 220).",
+    "Calendar: need the external target URL for the digital calendar (requested in Solutio Building Notes).",
+    "Parish News: need the redirect target URL (likely parish site news section).",
+    "Home & School: need the Instagram URL.",
+    "FACTS Management: need the exact FACTS platform URL.",
+    "Facts Family Portal: need the exact FACTS platform URL.",
+    "Financial Aid & Tuition: no annotation given — confirm intended content source (pull/generate/existing).",
+    "School Supports (under Give): no annotation given — confirm intended content source.",
+    "Parish (hiddenmenu/quicklink): need the parish/church site homepage URL.",
+    "Facts quicklink: confirm whether it should point to FACTS Management or Facts Family Portal.",
+    "Sponsors and Social Media Icons: confirm whether Sponsors should mirror the parish site's pattern (View Directory / Sponsor This Site); these are footer/module elements, not menu items, per the source document.",
+    "CYO: need the exact parish website URL for the club link.",
+    "Student Activities: confirmed classification as category_grid (clubs list convention) — please confirm this is the desired treatment since the source document did not explicitly label it 'grid'."
   ],
   "assumptions": [
-    "Home classified as single_article with category 'Page Content' and content_source 'existing' (default homepage; no description given in source).",
-    "Our Staff classified as category_grid (staff/team pages are always grids, never single_article), category 'Staff'.",
-    "Default category 'Page Content' applied to all single_article items not otherwise categorized.",
-    "Client decision (2026-07-07): Sacraments & Liturgies reclassified from a plain heading with 9 individual single_article children to a grid landing page (category 'Sacraments') using the heading+grids edge case, with member_menu_items 'listed' — each sacrament keeps its own sub-menu item AND is a grid tile.",
-    "Client decision (2026-07-07): Liturgical Groups and Organization Groups reclassified from plain headings with individual single_article children to two standard category_grid pages (member_menu_items 'none'); ministry/club titles preserved as grid member article titles only, not menu items.",
-    "Client decision (2026-07-07): Respect Life included as an Organization Groups grid member (source PDF had asked 'Do we want this?').",
-    "Client decision (2026-07-07): Sponsors excluded from this build entirely — reuses existing site's special Sponsors menu item setup; not to be rebuilt or altered here.",
-    "Client decision (2026-07-07): all 5 external_url items with no source URL (PYM & Child Care, Parish Registration, Donate, Request Sacramental Form, School) built with placeholder target '#' rather than skipped; flagged in open_questions for pre-launch fix.",
-    "Bulletin quicklink referenced via menu_item pointing to the existing 'Bulletin' mainmenu item under News & Events rather than a separate hidden entry, since it is already a visible nav page.",
-    "PYM & Child Care redirect target assumed to point to the same destination as the School quicklink, pending confirmation.",
-    "'Euchrastic Adoration' corrected to 'Eucharistic Adoration' as an obvious typo fix.",
-    "Client decision (2026-07-07): existing forge-scaffold categories (Sacraments Items id 18, Staff Items id 30, Get Involved Items id 49, Page Content (Menu Item Needed) id 31) are NOT reused. All categories for this build are created fresh, nested under a new 'Shannon - StKat Philly' parent category for easy identification/cleanup. Naming follows the forge 'X Items' convention (e.g. 'Sacraments Items') but as new category records, not the existing IDs. 'Page Content' kept unsuffixed per the standard workflow default."
-  ],
-  "joomla_ids": {}
+    "Home classified as single_article with content_source 'existing' (default homepage; no annotation given).",
+    "Our Staff classified as category_grid per staff page convention (always a grid, never single_article).",
+    "Student Activities classified as category_grid per clubs/activities-list convention, even though the source document did not use the word 'grid'.",
+    "CYO kept as an external_url child of the Student Activities grid (exception to the 'no children' grid convention) per explicit note in the source document.",
+    "Items with explicit source URLs (Admission Requirements, New Student Enrollment, Re-Enrollment, Volunteer Information) classified as single_article with content_source 'pull', sourced from the specific URLs noted rather than the homepage, and NOT treated as external_url.",
+    "FACTS Management and Facts Family Portal classified as external_url pending exact FACTS platform URLs.",
+    "Calendar, Parish News, and Home & School (Instagram) classified as external_url with TBD targets pending URLs.",
+    "Default category 'Page Content' applied to all single_article items without an explicit category.",
+    "Financial Aid & Tuition and School Supports (under Give) defaulted to content_source 'generate' pending clarification since no annotation was given.",
+    "Give kept as a single_article (not a heading) with School Supports as a nested child, since Give itself has its own pull content plus a related sub-item.",
+    "Quicklinks module items mapped by title to existing mainmenu items where possible (Parent Resources, New Student Enrollment, Give); Parish added to hiddenmenu since no matching mainmenu item exists.",
+    "Sponsors and Social Media Icons excluded from the menu tree as footer/homepage module elements, not menu items.",
+    "Principal's Corner kept as single_article despite the 'this is news' annotation, since it is a single named page rather than a listing of many news entries."
+  ]
 }
