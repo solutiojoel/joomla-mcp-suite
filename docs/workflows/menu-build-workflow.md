@@ -16,7 +16,7 @@ Use your best judgment; add questions to `open_questions` when anything is uncle
 
 Most pages are single article menu items. The articles for each menu item get placed in a category named Page Content or something similar. Sub-sites have similarly named categories — create them if they don't exist (e.g. "School Page Content", "Church Page Content").
 
-**Grid pages** use Joomla Articles particle modules. Articles that appear on grid pages belong in their own named categories (e.g. "Sacrament Grid Items", "Staff Grid Items"). Grid pages are used when items will be changed frequently or added to by the client. Staff pages and All News pages are almost always grids.
+**Grid pages** use Joomla Articles particle modules. Articles that appear on grid pages belong in their own named categories, following the pattern **"{Section} Items"** — e.g. "Sacraments Items", "Council Items", "Staff Items". Never use the word "Grid" in a category name. Grid pages are used when items will be changed frequently or added to by the client. Staff pages and All News pages are almost always grids.
 
 **Grid sub-items:** If the PDF labels a parent item as a grid, any items listed beneath it are **articles that belong in the grid's category — not sub-menu items**. Do not create menu items for them. Capture their titles in the grid's `members` array and set `member_menu_items: "none"` — Phase 4 creates them as articles in the grid's category.
 
@@ -32,7 +32,7 @@ The team uses the word "separator" for non-navigable parent items. In the spec t
 Categories control what appears in Gantry 5 Joomla Articles particles:
 
 - **Page Content** — articles that are not grid members (standalone pages, section landing pages that aren't grids)
-- **Named section category** (e.g. `Ministries`, `Sponsors`) — articles that appear as tiles in a grid; the category name matches the grid's `category` field in the spec's `grids` array
+- **Named section category** (e.g. `Ministries Items`, `Sponsors Items`) — articles that appear as tiles in a grid; the category name matches the grid's `category` field in the spec's `grids` array. Always suffix `" Items"` — never the word "Grid" — in the category name.
 
 Articles must not be in the wrong category or they will appear (or fail to appear) in the wrong grid. When in doubt, check the spec's `grids` array: if a menu section has a `grids` entry, its child articles belong in that grid's named category, not `Page Content`.
 
@@ -105,7 +105,7 @@ Decide each node's `type` using these rules, in priority order:
 | Parent item with real sub-pages, labeled "separator", not itself a grid landing page | `heading` | "Separator" in team vocab → `heading` in spec → "Menu Heading" in Joomla. No content of its own. |
 | Parent item **labeled "grid"** with sub-items that are articles, not sub-pages | `category_grid` | Sub-items go into the grid's named category — **not menu items**. See `grids` construction below. |
 | **Staff / team / faculty page** — any page listing people | `category_grid` | **Always a grid.** Read `kb/staff-grid` and `kb/staff-pages` before classifying; flag open questions about layout variant |
-| **News page** — "All News", any page listing news articles as cards | `category_grid` | **Always a grid.** Default category name `News` unless the site uses another |
+| **News page** — "All News", any page listing news articles as cards | `category_grid` | **Always a grid.** Default category name `News Items` unless the site uses another |
 | Any other section of cards/tiles that clients will add to or change | `category_grid` | Grid members self-route via their category — no child menu items |
 | Plain leaf, "pull from website", normal page | `single_article` | **Default.** Article goes in the `Page Content` category |
 | "Redirect", "link to church", any off-site destination | `external_url` | Requires `target` |
@@ -133,7 +133,7 @@ Every `category_grid` item must have a corresponding entry in the top-level `gri
 | `page` | The menu item title |
 | `menu_ref` | The menu item title (same as `page`) |
 | `type` | Always `category_grid` |
-| `category` | Derive from the section name — e.g. "Ministries" → `"Ministries"`, "All News" → `"News"`. This is the Joomla category the particle filters on. |
+| `category` | Derive from the section name + `" Items"` — e.g. "Ministries" → `"Ministries Items"`, "All News" → `"News Items"`, "Sacraments" → `"Sacraments Items"`. **Never use the word "Grid"** in a category name. This is the Joomla category the particle filters on. |
 | `particle` | Always `joomla_articles` — all grids use the Joomla Articles particle |
 | `member_menu_items` | See rule below |
 | `members` | Article titles listed under the grid in the source doc (optional) — built as articles in the grid's category in Phase 4, never as menu items |
@@ -173,6 +173,8 @@ Build from the approved spec — mechanical, minimal interpretation:
 
 **Grid article categories:** articles that are grid members go in their grid's named category — not `Page Content`. Check the spec's `grids` array and each item's `category` field.
 
+**Quicklinks (`modules.toplinks`, `modules.under_rotator`) are NOT built in Phase 4.** These entries describe homepage module content, not menu structure. Phase 4's only job regarding a quicklink is to make sure its `menu_item` target exists — i.e. build the `hiddenmenu` item it points to. Do **not** create or update a `TopLinks` (or any other) Joomla module, and do not touch `joomla_module` for this spec block. The quicklink modules themselves are built later, in the Gantry design/homepage build (see `workflows/gantry-design-agent`), once real targets exist.
+
 Preserve parent/child nesting and ordering from the spec.
 
 **Alias collisions:** For any item flagged in the Pre-Phase 4 existing item check (step 3), pass an explicit `alias` with a site-specific suffix on create. If a create returns "not verified" (empty ID), do not retry the same call — see Common Pitfalls below.
@@ -201,6 +203,8 @@ This agent's scope ends when Phase 4 is complete and the skeleton is approved. S
 - `generate` → write new copy
 - `redirect` / `existing` / `none` → no article work
 
+**Quicklink modules are a separate, later step** — not this agent's and not the content agent's. Once `hiddenmenu` targets are real, the `modules.toplinks` / `modules.under_rotator` entries get built as homepage modules during the Gantry design/build workflow (`workflows/gantry-design-agent`), not during Phase 4 or Phase 5.
+
 ---
 
 ## Logging
@@ -223,6 +227,7 @@ Call `append_site_note` after Phase 4 completes, recording the spec filename and
 - [ ] Sub-menu items created with correct `parentId`
 - [ ] Heading items with a `grids` entry built as navigable Single Article (not plain heading)
 - [ ] Template style / Gantry outline assigned to all menu items
+- [ ] Quicklinks NOT built as modules — only their `hiddenmenu` targets created
 - [ ] `append_site_note` called after Phase 4 completes
 - [ ] Phase 5 handed off to content agent
 

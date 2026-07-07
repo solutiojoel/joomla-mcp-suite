@@ -22,7 +22,7 @@ interface RunSummary {
   agentName: string;
   model?: string;
   maxTurns?: number;
-  status: "running" | "success" | "failed" | "crashed" | "stalled";
+  status: "running" | "success" | "failed" | "crashed" | "stalled" | "stopping" | "stopped";
   startedAt: string;
   endedAt?: string;
   durationMs: number;
@@ -41,6 +41,10 @@ interface TimelineEvent {
   toolName?: string;
   toolInput?: unknown;
   isError?: boolean;
+}
+
+function stopFilePath(runId: string): string {
+  return path.join(LOG_DIR, `${runId}.stop`);
 }
 
 function readLines(file: string): Record<string, unknown>[] {
@@ -94,9 +98,15 @@ function summarizeRun(file: string): RunSummary | null {
 
   let status: RunSummary["status"];
   if (end) {
-    status = (end.success as boolean) ? "success" : "failed";
+    if (end.stopped) {
+      status = "stopped";
+    } else {
+      status = (end.success as boolean) ? "success" : "failed";
+    }
   } else if (errorLine) {
     status = "crashed";
+  } else if (fs.existsSync(stopFilePath(start.runId as string))) {
+    status = "stopping";
   } else {
     const age = Date.now() - new Date(lastActivityAt).getTime();
     status = age < STALL_THRESHOLD_MS ? "running" : "stalled";
@@ -136,7 +146,13 @@ function runDetail(file: string): { summary: RunSummary | null; timeline: Timeli
         text: `Started — agent=${l.agentName ?? "unknown"} model=${l.model ?? "?"} maxTurns=${l.maxTurns ?? "?"}\n\n${l.userMessage ?? ""}`,
       });
     } else if (l.type === "end") {
-      timeline.push({ ts, kind: "meta", text: `Ended — success=${l.success} turns=${l.turns}` });
+      timeline.push({
+        ts,
+        kind: "meta",
+        text: l.stopped
+          ? `Stopped by operator — turns=${l.turns}`
+          : `Ended — success=${l.success} turns=${l.turns}`,
+      });
     } else if (l.type === "error") {
       timeline.push({ ts, kind: "error", text: String(l.error) });
     } else if (l.type === "sdk_message") {
@@ -230,6 +246,11 @@ const HTML = `<!doctype html>
   .badge.failed { background: #f8514933; color: #f85149; }
   .badge.crashed { background: #f8514933; color: #f85149; }
   .badge.stalled { background: #9e6a0333; color: #d29922; }
+  .badge.stopping { background: #9e6a0333; color: #d29922; }
+  .badge.stopped { background: #6e768133; color: #8b949e; }
+  .stopbtn { background: #f8514922; border: 1px solid #f85149; color: #f85149; border-radius: 6px; padding: 2px 10px; font-size: 11px; cursor: pointer; }
+  .stopbtn:hover { background: #f8514944; }
+  .stopbtn:disabled { opacity: 0.5; cursor: default; }
   .meta-line { font-size: 12px; opacity: 0.65; margin-top: 4px; }
   .preview { font-size: 12px; opacity: 0.8; margin-top: 4px; }
   .runid { font-family: monospace; font-size: 11px; opacity: 0.5; }
@@ -278,6 +299,26 @@ function esc(s) {
   return String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 }
 
+function stopButtonHtml(summary) {
+  if (summary.status === "running" || summary.status === "stalled") {
+    return '<button class="stopbtn" data-stop="' + esc(summary.runId) + '">Stop</button>';
+  }
+  if (summary.status === "stopping") {
+    return '<button class="stopbtn" disabled>Stopping…</button>';
+  }
+  return "";
+}
+
+async function stopRun(runId) {
+  if (!confirm("Stop this run? The sub-agent will be aborted mid-task.")) return;
+  const res = await fetch("/api/runs/" + runId + "/stop", { method: "POST" });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    alert("Could not stop run: " + (body.error || res.status));
+  }
+  loadList();
+}
+
 async function loadList() {
   const res = await fetch("/api/runs");
   runs = await res.json();
@@ -312,7 +353,10 @@ function render() {
       <div class="row \${r.runId === selected ? "active" : ""}" data-id="\${r.runId}">
         <div class="row-top">
           <span class="agent">\${esc(r.agentName)}</span>
-          <span class="badge \${r.status}">\${r.status}</span>
+          <span style="display:flex;align-items:center;gap:6px;">
+            \${stopButtonHtml(r)}
+            <span class="badge \${r.status}">\${r.status}</span>
+          </span>
         </div>
         <div class="meta-line">\${fmtTime(r.startedAt)} · \${fmtDuration(r.durationMs)} · \${r.toolCalls} tool call(s)\${r.toolErrors ? " · " + r.toolErrors + " tool error(s)" : ""}\${r.turns ? " · " + r.turns + " turn(s)" : ""}</div>
         <div class="preview">\${esc(r.userMessagePreview)}</div>
@@ -335,6 +379,12 @@ function render() {
       loadDetail(selected);
     };
   }
+  for (const btn of list.querySelectorAll("[data-stop]")) {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      stopRun(btn.dataset.stop);
+    };
+  }
 }
 
 async function loadDetail(runId, silent) {
@@ -344,7 +394,7 @@ async function loadDetail(runId, silent) {
   const detail = document.getElementById("detail");
   const kindClass = (ev) => ev.kind + (ev.kind === "tool_result" && ev.isError ? " err" : "");
   detail.innerHTML =
-    '<h2>' + esc(summary.agentName) + ' <span class="badge ' + summary.status + '">' + summary.status + '</span></h2>' +
+    '<h2>' + esc(summary.agentName) + ' <span class="badge ' + summary.status + '">' + summary.status + '</span> ' + stopButtonHtml(summary) + '</h2>' +
     '<div class="meta-line">' + summary.runId + ' · model=' + esc(summary.model) + ' · ' + fmtDuration(summary.durationMs) + '</div><br/>' +
     timeline
       .map(
@@ -355,6 +405,10 @@ async function loadDetail(runId, silent) {
       </div>\`
       )
       .join("");
+  const detailStop = detail.querySelector("[data-stop]");
+  if (detailStop) {
+    detailStop.onclick = () => stopRun(detailStop.dataset.stop);
+  }
 }
 
 loadList();
@@ -375,6 +429,30 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/api/runs") {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(listRuns()));
+    return;
+  }
+
+  const stopMatch = url.pathname.match(/^\/api\/runs\/([a-zA-Z0-9-]+)\/stop$/);
+  if (stopMatch && req.method === "POST") {
+    const runId = stopMatch[1];
+    const file = path.join(LOG_DIR, `${runId}.jsonl`);
+    if (!fs.existsSync(file)) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "not found" }));
+      return;
+    }
+    const summary = summarizeRun(file);
+    if (summary && !["running", "stalled", "stopping"].includes(summary.status)) {
+      res.writeHead(409, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: `run already ${summary.status}` }));
+      return;
+    }
+    fs.writeFileSync(
+      stopFilePath(runId),
+      JSON.stringify({ requestedAt: new Date().toISOString(), via: "dashboard" })
+    );
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: true }));
     return;
   }
 

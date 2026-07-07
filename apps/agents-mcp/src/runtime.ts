@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createRunLog } from "@solutio/logging";
@@ -80,6 +81,23 @@ export async function runSubAgent(params: RunSubAgentParams): Promise<RunSubAgen
     userMessage: params.userMessage,
   });
 
+  // Cross-process stop signal: the dashboard writes logs/<runId>.stop and this
+  // poller aborts the SDK query. File-based so it works regardless of which
+  // process (MCP server, CLI runner) hosts the run.
+  const stopFile = path.join(logDir, `${runId}.stop`);
+  const abortController = new AbortController();
+  let stopRequested = false;
+  const stopPoll = setInterval(() => {
+    try {
+      if (fs.existsSync(stopFile)) {
+        stopRequested = true;
+        abortController.abort();
+      }
+    } catch {
+      /* ignore fs races */
+    }
+  }, 1500);
+
   const q = query({
     prompt: params.userMessage,
     options: {
@@ -96,6 +114,7 @@ export async function runSubAgent(params: RunSubAgentParams): Promise<RunSubAgen
       allowedTools: params.allowedTools,
       permissionMode: "bypassPermissions",
       allowDangerouslySkipPermissions: true,
+      abortController,
     },
   });
 
@@ -149,9 +168,25 @@ export async function runSubAgent(params: RunSubAgentParams): Promise<RunSubAgen
       }
     }
   } catch (err: unknown) {
+    if (stopRequested) {
+      await runLog.append({ type: "end", success: false, stopped: true, turns });
+      return { success: false, error: "Run stopped from the dashboard", runLogPath };
+    }
     const msg = err instanceof Error ? err.message : String(err);
     await runLog.append({ type: "error", error: msg });
     return { success: false, error: `Agent SDK error: ${msg}`, runLogPath };
+  } finally {
+    clearInterval(stopPoll);
+    try {
+      fs.rmSync(stopFile, { force: true });
+    } catch {
+      /* best-effort cleanup */
+    }
+  }
+
+  if (stopRequested && !finalResult) {
+    await runLog.append({ type: "end", success: false, stopped: true, turns });
+    return { success: false, error: "Run stopped from the dashboard", runLogPath };
   }
 
   if (!finalResult) {

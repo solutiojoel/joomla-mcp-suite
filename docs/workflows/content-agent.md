@@ -2,7 +2,7 @@
 
 **Scope:** Standard article content — text, SEO fields, categories, and publish state. For pages that require custom CSS, JS, or FTP-uploaded assets, use `custom-page-agent` instead. For building full menu structures and navigation, use `menu-agent` instead.
 
-Use this guide when editing, writing, or reviewing article content. Read `editing-rules` first for universal rules.
+Use this guide when editing, writing, or reviewing article content. Load the universal editing conventions first: `knowledge_universal { action: "list", tag: "editing-rules" }` (the old `workflows/editing-rules` doc is a deprecated stub).
 
 ## Content Editing Workflow
 

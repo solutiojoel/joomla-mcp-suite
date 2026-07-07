@@ -40,7 +40,7 @@ This tool returns the full contents of this file (AGENTS.md) via the orchestrato
 
 **Step 3 — `get_site_notes`** → read the active site's history before making any changes.
 
-After completing these three steps, call `read_agent_doc(doc: "workflows/editing-rules")` — it contains universal conventions that apply to every task.
+After completing these three steps, load the universal editing conventions from the Knowledge Gateway: `knowledge_universal { action: "list", tag: "editing-rules" }` — they apply to every task. Do NOT call `read_agent_doc(doc: "workflows/editing-rules")` — that file is a deprecated stub.
 
 ---
 

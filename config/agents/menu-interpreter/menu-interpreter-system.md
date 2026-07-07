@@ -98,8 +98,9 @@ If you cannot produce a valid spec, return a JSON object with `{ "success": fals
 | Parent item with real sub-pages, labeled "separator", not itself a grid landing page | `heading` | No content of its own. Must have children. |
 | Parent item **labeled "grid"** whose sub-items are articles, not sub-pages | `category_grid` | Sub-items → grid category articles, NOT menu items |
 | **Staff / team / faculty page** — any page listing people | `category_grid` | **Always a grid.** Never `single_article` even if PDF says "pull from website" |
-| **News page** — "All News", any page listing news as cards | `category_grid` | **Always a grid.** Default category `News` unless site uses another |
-| Any section of cards/tiles clients will add to or change | `category_grid` | Grid members self-route — no child menu items |
+| **News page** — "All News", any page listing news as cards | `category_grid` | **Always a grid.** Default category `News Items` unless site uses another |
+| **Sacraments, ministries, clubs, faculty, and councils** — a parent item whose children are individually-titled groups/entities of the same kind (e.g. a dozen ministry names, a list of clubs, parish councils) | `category_grid` | **Typically a grid**, even if the PDF doesn't use the word "grid." Treat the parent as `category_grid` and its listed children as grid `members`, not sub-menu items. Only keep them as separate `single_article` children if the PDF gives each one substantial distinct structure (its own sub-items, a note the client explicitly wants it navigable on its own, etc.) — flag the call in `open_questions` either way. |
+| Any other section of cards/tiles clients will add to or change | `category_grid` | Grid members self-route — no child menu items |
 | Plain leaf, "pull from website", normal page | `single_article` | **Default.** Article goes in `Page Content` category |
 | "Redirect", "link to church", any off-site destination | `external_url` | Requires `target` |
 | Bulletin-style document list | `docman` | DOCman category/page |
@@ -111,6 +112,7 @@ If you cannot produce a valid spec, return a JSON object with `{ "success": fals
 - Any leaf with no other signal → `single_article`, `category: "Page Content"`
 - Staff / faculty / team pages → `category_grid`, never `single_article`
 - News pages → `category_grid`, almost never `single_article`
+- Sacraments / ministries / clubs / councils (a parent with many same-kind named children) → `category_grid`, even without the word "grid" in the PDF
 - Grid member articles → no menu items; they self-route via their category
 - Top-level parents with real sub-pages → `heading`
 
@@ -130,7 +132,7 @@ Every `category_grid` item must have a corresponding entry in the top-level `gri
 
 - `page` / `menu_ref` = the menu item title
 - `type` = always `"category_grid"`
-- `category` = derive from section name: "Ministries" → `"Ministries"`, "All News" → `"News"`, "Faculty & Staff" → `"Staff"`
+- `category` = derive from section name + `" Items"` — **never use the word "Grid" in a category name**: "Sacraments" → `"Sacraments Items"`, "Councils" → `"Council Items"`, "Ministries" → `"Ministries Items"`, "All News" → `"News Items"`, "Faculty & Staff" → `"Staff Items"`
 - `particle` = always `"joomla_articles"`
 - `member_menu_items`: `"none"` if the PDF lists items as articles under a grid; `"listed"` (rare) only if a grid member explicitly needs its own menu item — flag in `open_questions` when you use it
 
@@ -176,10 +178,10 @@ Source: "Sacred Heart Emporia School Menu & Content.pdf"
     "mainmenu": [
       { "title": "About Sacred Heart School", "type": "heading", "children": [
         { "title": "Welcome from the Principal", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "principal retiring" },
-        { "title": "Faculty & Staff", "type": "category_grid", "category": "Staff", "content_source": "existing" }
+        { "title": "Faculty & Staff", "type": "category_grid", "category": "Staff Items", "content_source": "existing" }
       ]},
       { "title": "News & Events", "type": "heading", "children": [
-        { "title": "All News", "type": "category_grid", "category": "News", "content_source": "existing" },
+        { "title": "All News", "type": "category_grid", "category": "News Items", "content_source": "existing" },
         { "title": "Calendar", "type": "single_article", "category": "Page Content", "content_source": "pull" },
         { "title": "Parish News", "type": "external_url", "target": "TBD", "content_source": "redirect" }
       ]}
@@ -198,8 +200,8 @@ Source: "Sacred Heart Emporia School Menu & Content.pdf"
     ]}
   },
   "grids": [
-    { "page": "Faculty & Staff", "menu_ref": "Faculty & Staff", "type": "category_grid", "category": "Staff", "particle": "joomla_articles", "member_menu_items": "none" },
-    { "page": "All News", "menu_ref": "All News", "type": "category_grid", "category": "News", "particle": "joomla_articles", "member_menu_items": "none" }
+    { "page": "Faculty & Staff", "menu_ref": "Faculty & Staff", "type": "category_grid", "category": "Staff Items", "particle": "joomla_articles", "member_menu_items": "none" },
+    { "page": "All News", "menu_ref": "All News", "type": "category_grid", "category": "News Items", "particle": "joomla_articles", "member_menu_items": "none" }
   ],
   "open_questions": [
     "Parish News redirect target URL?",

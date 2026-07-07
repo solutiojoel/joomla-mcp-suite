@@ -1,0 +1,133 @@
+{
+  "site": "https://stkat-philly.solutiosoftware.com",
+  "source": "StKat-Philly Church Menu & Content.pdf",
+  "generated": "2026-07-07",
+  "menus": {
+    "mainmenu": [
+      {
+        "title": "Home",
+        "type": "single_article",
+        "category": "Page Content",
+        "content_source": "existing",
+        "notes": "No description given in source; assumed existing/default homepage."
+      },
+      {
+        "title": "About St. Katherine",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          { "title": "Welcome from the Pastor", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "Open question in source: does Father want a welcome message created for him?" },
+          { "title": "Our History & Values", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "Include mission. Open question: is there more in-depth history about the St. Katherine connection?" },
+          { "title": "Our Staff", "type": "category_grid", "category": "Staff Items", "content_source": "pull", "notes": "Fields: Image, Name, Position, Tel, Email, Bio. Fr. Sunny currently missing from list; new staff images needed." },
+          { "title": "Join the Parish", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "Convert registration form to fillable PDF. Sr. Guia to (re)upload Parish Registration Form." },
+          { "title": "Adoration Chapel", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Pull from website; send updated pictures." }
+        ]
+      },
+      {
+        "title": "News & Events",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          { "title": "Mass & Confession times", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Bulletin", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Bulletins managed by John and Patrick." },
+          { "title": "Calendar", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Embed CalendarWiz widget." },
+          { "title": "Mass Cards, Candles, & Bread & Wine Requests", "type": "single_article", "category": "Page Content", "content_source": "pull", "notes": "Pull content from bulletin." },
+          { "title": "Photo Gallery", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "New page to be added; no existing content." }
+        ]
+      },
+      {
+        "title": "Sacraments & Liturgies",
+        "type": "heading",
+        "content_source": "none",
+        "notes": "Grid landing page with sub-menu items pointing to grid member articles (member_menu_items: listed) per client decision — each sacrament keeps its own nav entry while also rendering as a tile on the Sacraments & Liturgies grid.",
+        "children": [
+          { "title": "Baptism", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Send forms and requirements." },
+          { "title": "Confession", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "For confession times, view bulletin. Confessions also available by appointment with Father." },
+          { "title": "Holy Eucharist", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Include communion to the homebound." },
+          { "title": "Confirmation", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Send forms and requirements. Include redirect note for adult sacraments to OCIA page." },
+          { "title": "Marriage", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Send forms, booklets and requirements." },
+          { "title": "Holy Orders", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Blurb about the call to talk to a priest. Include a link to the diocese (URL TBD)." },
+          { "title": "Anointing of the Sick", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Yearly event where 70+ attend a special mass for anointing; anyone can also receive if requested." },
+          { "title": "Eucharistic Adoration", "type": "single_article", "category": "Sacraments Items", "content_source": "pull", "notes": "Pull blurb from bulletin. Title typo 'Euchrastic' corrected to 'Eucharistic'." },
+          { "title": "Funerals", "type": "single_article", "category": "Sacraments Items", "content_source": "generate", "notes": "Contact the funeral director, who will make arrangements with the church. Send booklets." }
+        ]
+      },
+      {
+        "title": "Ministries: Get Involved",
+        "type": "heading",
+        "content_source": "none",
+        "notes": "Create content overall; get contact info from Sr. Guia.",
+        "children": [
+          { "title": "Liturgical Groups", "type": "category_grid", "category": "Liturgical Groups Items", "content_source": "none", "notes": "Gather contact information. Grid — members have no individual menu items." },
+          { "title": "Organization Groups", "type": "category_grid", "category": "Organization Groups Items", "content_source": "none", "notes": "Gather contact information. Grid — members have no individual menu items. Includes Respect Life per client decision." }
+        ]
+      },
+      {
+        "title": "Religious Education",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          { "title": "PYM & Child Care", "type": "external_url", "target": "#", "content_source": "redirect", "notes": "Placeholder target — redirect to School's info; real URL TBD, update before launch." },
+          { "title": "Prep Classes", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "Send information, booklets, forms, and requirements from Deacon." },
+          { "title": "Children's Liturgy", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "OCIA", "type": "single_article", "category": "Page Content", "content_source": "pull" },
+          { "title": "Virtus Requirements", "type": "single_article", "category": "Page Content", "content_source": "pull" }
+        ]
+      }
+    ],
+    "hiddenmenu": [
+      { "title": "Parish Registration", "type": "external_url", "target": "#", "content_source": "redirect", "notes": "Placeholder target — Sr. Guia has the registration form PDF and will (re)upload it; update before launch." },
+      { "title": "Donate", "type": "external_url", "target": "#", "content_source": "redirect", "notes": "Placeholder target — likely an external donation platform; update before launch." },
+      { "title": "Request Sacramental Form", "type": "external_url", "target": "#", "content_source": "redirect", "notes": "Placeholder target — sacrament forms still being gathered per Sr. Guia; update before launch." },
+      { "title": "School", "type": "external_url", "target": "#", "content_source": "redirect", "notes": "Placeholder target — also the destination for the PYM & Child Care redirect; update before launch." }
+    ]
+  },
+  "modules": {
+    "toplinks": {
+      "items": [
+        { "label": "Bulletin", "type": "single_article", "menu_item": "Bulletin" },
+        { "label": "Parish Registration", "type": "external_url", "menu_item": "Parish Registration" },
+        { "label": "Donate", "type": "external_url", "menu_item": "Donate" },
+        { "label": "Request Sacramental Form", "type": "external_url", "menu_item": "Request Sacramental Form" },
+        { "label": "School", "type": "external_url", "menu_item": "School" }
+      ]
+    }
+  },
+  "grids": [
+    { "page": "Our Staff", "menu_ref": "Our Staff", "type": "category_grid", "category": "Staff Items", "particle": "joomla_articles", "member_menu_items": "none", "notes": "Staff bios pulled from existing site; Fr. Sunny currently missing from listing and new staff images are needed." },
+    { "page": "Sacraments & Liturgies", "menu_ref": "Sacraments & Liturgies", "type": "category_grid", "category": "Sacraments Items", "particle": "joomla_articles", "member_menu_items": "listed", "members": ["Baptism", "Confession", "Holy Eucharist", "Confirmation", "Marriage", "Holy Orders", "Anointing of the Sick", "Eucharistic Adoration", "Funerals"], "notes": "member_menu_items is 'listed' (non-default) per client decision on 2026-07-07 — each sacrament also gets its own nav entry, not just a grid tile." },
+    { "page": "Liturgical Groups", "menu_ref": "Liturgical Groups", "type": "category_grid", "category": "Liturgical Groups Items", "particle": "joomla_articles", "member_menu_items": "none", "members": ["Altar Servers", "Lectors", "Ushers", "EMHC", "Music Ministry", "Sacristans"], "notes": "EMHC: if interested in joining, contact the parish. Sacristans: must be invited to join." },
+    { "page": "Organization Groups", "menu_ref": "Organization Groups", "type": "category_grid", "category": "Organization Groups Items", "particle": "joomla_articles", "member_menu_items": "none", "members": ["KofC", "Prayer Group", "Primrose Seniors", "Walking with a Purpose (Bible Study)", "Men's Prayer Breakfast", "Catholic Daughters of America & BLAZE (Junior Catholic Daughters of America)", "CYO", "Angel Dusters", "SVDP", "Devotional Groups", "Respect Life", "Elder Care"], "notes": "Pull contact info from Bulletin for: KofC, Men's Prayer Breakfast, Catholic Daughters of America & BLAZE, SVDP, Devotional Groups, Elder Care. Devotional Groups includes Divine Mercy. Respect Life included per client decision on 2026-07-07." }
+  ],
+  "open_questions": [
+    "Does Father want a personalized 'Welcome from the Pastor' message created?",
+    "Is there a more in-depth history about the St. Katherine connection to include in 'Our History & Values'?",
+    "Need new staff images for 'Our Staff' grid; Fr. Sunny is missing from the current staff list.",
+    "Need the Parish Registration Form (fillable PDF) from Sr. Guia for 'Join the Parish' and the Parish Registration quicklink.",
+    "Need updated photos for the Adoration Chapel page.",
+    "Need CalendarWiz embed link/credentials for the Calendar page (contact Colleen Sharp for the online parish calendar link).",
+    "Sacrament forms/booklets/requirements for Baptism, Confirmation, Marriage, and Funerals are still being gathered by Sr. Guia — status unclear.",
+    "Need the diocese URL to link from the 'Holy Orders' page.",
+    "Need contact information for all Liturgical Groups and Organization Groups ministries (to be gathered from Sr. Guia and the bulletin).",
+    "Need Prep Classes information, booklets, forms, and requirements from the Deacon.",
+    "Real target URL needed for 'PYM & Child Care' redirect — built with placeholder target '#'; update before launch.",
+    "Real target URLs needed for hiddenmenu quicklinks: Parish Registration, Donate, Request Sacramental Form, School — all built with placeholder target '#'; update before launch.",
+    "Sponsors page intentionally excluded from this build — client confirmed it will reuse the existing site's Sponsors menu item, which uses a specific required format and must not be altered. Needs to be manually linked/copied into the new mainmenu after Phase 4.",
+    "Confirm no YouTube channel/module is needed going forward, per Sr. Guia's note that it will no longer be maintained."
+  ],
+  "assumptions": [
+    "Home classified as single_article with category 'Page Content' and content_source 'existing' (default homepage; no description given in source).",
+    "Our Staff classified as category_grid (staff/team pages are always grids, never single_article), category 'Staff'.",
+    "Default category 'Page Content' applied to all single_article items not otherwise categorized.",
+    "Client decision (2026-07-07): Sacraments & Liturgies reclassified from a plain heading with 9 individual single_article children to a grid landing page (category 'Sacraments') using the heading+grids edge case, with member_menu_items 'listed' — each sacrament keeps its own sub-menu item AND is a grid tile.",
+    "Client decision (2026-07-07): Liturgical Groups and Organization Groups reclassified from plain headings with individual single_article children to two standard category_grid pages (member_menu_items 'none'); ministry/club titles preserved as grid member article titles only, not menu items.",
+    "Client decision (2026-07-07): Respect Life included as an Organization Groups grid member (source PDF had asked 'Do we want this?').",
+    "Client decision (2026-07-07): Sponsors excluded from this build entirely — reuses existing site's special Sponsors menu item setup; not to be rebuilt or altered here.",
+    "Client decision (2026-07-07): all 5 external_url items with no source URL (PYM & Child Care, Parish Registration, Donate, Request Sacramental Form, School) built with placeholder target '#' rather than skipped; flagged in open_questions for pre-launch fix.",
+    "Bulletin quicklink referenced via menu_item pointing to the existing 'Bulletin' mainmenu item under News & Events rather than a separate hidden entry, since it is already a visible nav page.",
+    "PYM & Child Care redirect target assumed to point to the same destination as the School quicklink, pending confirmation.",
+    "'Euchrastic Adoration' corrected to 'Eucharistic Adoration' as an obvious typo fix.",
+    "Client decision (2026-07-07): existing forge-scaffold categories (Sacraments Items id 18, Staff Items id 30, Get Involved Items id 49, Page Content (Menu Item Needed) id 31) are NOT reused. All categories for this build are created fresh, nested under a new 'Shannon - StKat Philly' parent category for easy identification/cleanup. Naming follows the forge 'X Items' convention (e.g. 'Sacraments Items') but as new category records, not the existing IDs. 'Page Content' kept unsuffixed per the standard workflow default."
+  ],
+  "joomla_ids": {}
+}

@@ -95,7 +95,7 @@ Third-party services connected to the site that require credentials, tokens, or 
 ## Change Log — What Triggers an Entry
 
 **Always write an entry when:**
-- A Freshdesk support ticket is resolved (required — see `freshdesk-agent.md`)
+- A Freshdesk support ticket is resolved (required — see the Support Agent Workflow in the Knowledge Gateway: `knowledge_universal { action: "list", tag: "workflow" }`)
 - Any content change was made (articles created/updated/deleted)
 - Any structural change was made (new menu items, modules, categories, outlines)
 - Any configuration change was made (reCAPTCHA, GA4, Business Directory passcode, site title/meta)

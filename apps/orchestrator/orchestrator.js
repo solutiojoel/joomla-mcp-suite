@@ -633,7 +633,7 @@ function buildServer(sessionCtx) {
             'Read any workflow guide or KB article referenced in the agent instructions. ' +
             'Use this whenever the session protocol says to read a doc — it works for agents ' +
             'that do not have the repository mounted locally. ' +
-            'Pass the doc name exactly as listed (e.g. "editing-rules", "kb/staff-grid"). ' +
+            'Pass the doc name exactly as listed (e.g. "workflows/menu-build-workflow", "kb/staff-grid"). ' +
             `Available docs: ${availableDocs.join(', ')}.`,
           inputSchema: {
             type: 'object',

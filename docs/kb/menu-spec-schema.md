@@ -91,7 +91,7 @@ A spec must pass all of these — fix or flag before building:
     "mainmenu": [
       { "title": "About Sacred Heart School", "type": "heading", "children": [
         { "title": "Welcome from the Principal", "type": "single_article", "category": "Page Content", "content_source": "generate", "notes": "principal retiring" },
-        { "title": "Faculty & Staff", "type": "category_grid", "category": "Staff", "content_source": "pull", "notes": "no teacher pages — staff pages are always grids" }
+        { "title": "Faculty & Staff", "type": "category_grid", "category": "Staff Items", "content_source": "pull", "notes": "no teacher pages — staff pages are always grids" }
       ]},
       { "title": "News & Events", "type": "heading", "children": [
         { "title": "Calendar", "type": "single_article", "content_source": "pull" },
@@ -113,8 +113,8 @@ A spec must pass all of these — fix or flag before building:
     ]}
   },
   "grids": [
-    { "page": "Faculty & Staff", "menu_ref": "Faculty & Staff", "type": "category_grid", "category": "Staff", "particle": "joomla_articles", "member_menu_items": "none" },
-    { "page": "All News", "menu_ref": "News & Events", "type": "category_grid", "category": "News", "particle": "joomla_articles", "member_menu_items": "none" }
+    { "page": "Faculty & Staff", "menu_ref": "Faculty & Staff", "type": "category_grid", "category": "Staff Items", "particle": "joomla_articles", "member_menu_items": "none" },
+    { "page": "All News", "menu_ref": "News & Events", "type": "category_grid", "category": "News Items", "particle": "joomla_articles", "member_menu_items": "none" }
   ],
   "open_questions": [
     "Parish News redirect target URL?",

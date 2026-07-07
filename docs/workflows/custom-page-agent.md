@@ -1,6 +1,6 @@
 # Joomla MCP — Custom Page Agent Guide
 
-**Scope:** Building or redesigning Joomla article pages that require custom CSS, JS, or FTP-uploaded assets. This is distinct from `content-agent` (which handles standard text/SEO edits) — use this guide any time a page needs a Raw Tags module, FTP file uploads, or a style guide. Read `editing-rules` first.
+**Scope:** Building or redesigning Joomla article pages that require custom CSS, JS, or FTP-uploaded assets. This is distinct from `content-agent` (which handles standard text/SEO edits) — use this guide any time a page needs a Raw Tags module, FTP file uploads, or a style guide. Load the universal editing conventions first: `knowledge_universal { action: "list", tag: "editing-rules" }` (the old `workflows/editing-rules` doc is a deprecated stub).
 
 ## Overview
 

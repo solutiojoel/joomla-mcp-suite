@@ -352,7 +352,7 @@ Direct file access to the site's server — useful for custom CSS/JS, service ke
 
 ### 🎫 Freshdesk Integration
 
-Read and update support tickets without leaving the agent workflow. Used during the support ticket resolution flow (see `docs/agents/freshdesk-agent.md`).
+Read and update support tickets without leaving the agent workflow. Used during the support ticket resolution flow (see the Support Agent Workflow in the Knowledge Gateway: `knowledge_universal { action: "list", tag: "workflow" }`).
 
 **`freshdesk_list_tickets`** — Lists open tickets with filters for status, priority, and assignee.
 

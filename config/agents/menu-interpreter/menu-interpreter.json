@@ -8,5 +8,5 @@
     "allow": ["joomla_workspace_write"],
     "downstreams": ["joomla-mcp"]
   },
-  "docs": { "allow": ["menu-build/*", "global/*"] }
+  "docs": { "allow": [] }
 }

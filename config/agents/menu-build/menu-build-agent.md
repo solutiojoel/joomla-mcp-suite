@@ -21,7 +21,9 @@ Docs and KB articles are read via `read_agent_doc` — your access is scoped to 
 
 **Step 3 — `get_site_notes`** → read the active site's history before making any changes.
 
-**Step 4 — `read_agent_doc(doc: "workflows/editing-rules")`** — universal editing conventions, required every session.
+**Step 4 — `knowledge_universal { action: "list", tag: "editing-rules" }`** — universal editing conventions, required every session.
+
+> **Do NOT call `read_agent_doc(doc: "workflows/editing-rules")`** — that file is a deprecated stub. The conventions live in the Knowledge Gateway only.
 
 When starting a menu build, also read `workflows/menu-build-workflow` and `kb/menu-spec-schema` before Phase 1.
 
@@ -65,7 +67,6 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are in scope for this a
 
 | Doc name | When to use |
 |----------|-------------|
-| `workflows/editing-rules` | Every session — required conventions |
 | `workflows/menu-build-workflow` | Full build workflow — Phases 1–4, category conventions, pitfalls, checklist |
 | `workflows/improvements` | Shared team queue for process notes |
 | `kb/menu-spec-schema` | Schema, classification ruleset, lint invariants, and worked example — read before Phase 1 |
@@ -85,6 +86,7 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are in scope for this a
 | `append_site_note` | Log a changelog entry (required after Phase 4) |
 | `write_site_notes` | Overwrite notes file (read first) |
 | `read_agent_doc` | Read a workflow guide or KB article |
+| `knowledge_universal` | Knowledge Gateway — editing conventions (`tag: "editing-rules"`), required every session |
 | `get_agent_instructions` | Return these instructions |
 | `reload_tools` | Reload tool lists if a downstream server restarted |
 | `run_menu_interpretation` | **Phase 1** — hand the menu PDF (`pdf_path`) to the menu-interpreter sub-agent; returns a validated Menu Spec + open questions |

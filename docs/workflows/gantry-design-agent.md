@@ -11,7 +11,7 @@ Use this guide whenever you are building or significantly modifying a Gantry 5 h
 - Adding a new major section (hero, quicklinks, news feed, footer, etc.)
 - Cloning a layout from one site to another
 
-Do **not** use this guide for minor edits (changing a particle title, updating a block class, editing one article filter). Use `content-agent.md` or `editing-rules.md` for those.
+Do **not** use this guide for minor edits (changing a particle title, updating a block class, editing one article filter). Use `content-agent.md` or the universal editing conventions (`knowledge_universal { action: "list", tag: "editing-rules" }`) for those.
 
 ---
 
