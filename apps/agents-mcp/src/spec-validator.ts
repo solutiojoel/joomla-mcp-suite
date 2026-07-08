@@ -51,7 +51,7 @@ function typeOf(v: unknown): string {
   return typeof v;
 }
 
-function walkSchema(node: any, sch: any, root: any, pathStr: string, errors: string[]): void {
+export function walkSchema(node: any, sch: any, root: any, pathStr: string, errors: string[]): void {
   if (!sch) return;
   if (sch.$ref) {
     walkSchema(node, resolveRef(sch.$ref, root), root, pathStr, errors);

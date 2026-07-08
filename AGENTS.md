@@ -129,6 +129,7 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 | `kb/teacher-pages` | Teacher/classroom pages with sidebar nav and user groups |
 | `kb/grid-layout` | Grid layout pages using Joomla Articles particle module |
 | `kb/menu-spec-schema` | Menu Spec JSON schema, classification ruleset, and worked example for menu builds |
+| `kb/content-schematic-schema` | Content Schematic schema, node-key rules, status lifecycle, and re-derive sync rule (menu build Phase 3.5 / content build input) |
 | `kb/content-standards` | Formatting rules, images, links, tables — applies to all content work |
 | `kb/css-table-classes` | CSS table classes, button classes, site fonts/colors |
 | `kb/site-config` | Site title, meta, timezone, reCAPTCHA, GA4, Webmaster Verification |
@@ -193,10 +194,12 @@ No server code changes or container rebuild needed — `read_agent_doc` scans th
 
 ## graphify
 
+**Only applies when the `graphify` CLI is installed and `graphify-out/graph.json` exists.** Not every team machine has graphify set up — if either is missing, skip this section entirely and never attempt to run `graphify`.
+
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
 
 Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- For codebase questions, first run `graphify query "<question>"`. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

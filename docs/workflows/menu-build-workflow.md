@@ -6,7 +6,9 @@ The contract between phases is the **Menu Spec** — see `kb/menu-spec-schema` f
 
 **Phase 1 is delegated.** Interpretation runs in the **menu-interpreter sub-agent** via the `run_menu_interpretation` tool — a separate context window that reads the PDF, classifies it, and returns a validated spec. Do **not** interpret the PDF yourself in-session; your job is to hand off the document, then review the returned spec, resolve its open questions with the user, and build. (Manual interpretation per the Classification Reference below is the fallback only if the interpreter is unavailable.)
 
-**Structure first, content second.** Phases 1–4 produce the menu skeleton. The spec carries `content_source` annotations so the content agent can drive Phase 5 without re-interpretation.
+**Phase 4 is also delegated.** Once the spec is approved and the Pre-Phase-4 confirmation is done, the actual build runs in the **menu-builder sub-agent** via the `run_menu_build` tool — a separate context window (Haiku) that mechanically creates categories, articles, and menu items from the spec. By Phase 4 every interpretation decision is already made, so this is pure execution, not judgment.
+
+**Structure first, content second.** Phases 1–4 produce the menu skeleton. The spec carries `content_source` annotations, and **Phase 3.5** turns the approved spec into a **Content Schematic** — the content agent's Phase 5 input contract. The schematic's structure is *derived deterministically from the spec* (never authored), so it always lines up 1:1 with the finished skeleton; the content-interpreter sub-agent (`run_content_interpretation`) then fills it with the per-page content details from the same client PDF. See `kb/content-schematic-schema`.
 
 ---
 
@@ -152,7 +154,7 @@ Every `category_grid` item must have a corresponding entry in the top-level `gri
 
 Before writing a single menu item, present the following to the user and wait for explicit go-ahead:
 
-1. **Menu targets** — call `joomla_menu list` to see what exists, then **create fresh menus for this build — never use or alter any existing menus on the site.** Propose client-derived names (e.g. `School Menu` / `School Hidden Menu` for a school site, `Church Menu` / `Church Hidden Menu` for a church site) and create them before building any items. Map spec keys (`mainmenu`, `hiddenmenu`) to the new menus' `menuType` slugs and record the IDs in the spec's `joomla_ids` block.
+1. **Menu targets** — call `joomla_menu list` to see what exists, then **create fresh menus for this build — never use or alter any existing menus on the site.** Propose client-derived names (e.g. `School Menu` / `School Hidden Menu` for a school site, `Church Menu` / `Church Hidden Menu` for a church site) and create them before building any items. Map spec keys (`mainmenu`, `hiddenmenu`) to the new menus' `menuType` slugs in **`joomla_ids.menu_map`** (e.g. `{ "mainmenu": "school-menu", "hiddenmenu": "school-hidden-menu" }`) and persist the spec with `joomla_workspace_write`. **This mapping is required** — `run_menu_build` (Phase 4) refuses to run without it and never creates menus itself.
 2. **Category targets** — list every distinct category in the spec and whether it already exists in Joomla. Flag any that need to be created.
 3. **Alias collision check** — Joomla aliases are **globally unique across all menus**, including trashed items. Call `joomla_menu_item(action: "list")` on all existing menus (not just the new ones) and scan for titles matching spec items. Any match means the default alias is already taken — those creates will need an explicit `alias` param with a site-specific suffix (e.g. `news-events-she`). Derive the suffix from the site URL or a short site code.
 4. **Summary item count** — e.g. "30 menu items, 28 placeholder articles, 1 grid."
@@ -161,29 +163,78 @@ Ask: *"Confirm targets above and approve Phase 4 build?"* Do not proceed until t
 
 ---
 
-## Phase 4 — Build the Menu Skeleton
+## Phase 3.5 — Content Schematic (derive + interpret; parallel with Phase 4)
 
-Build from the approved spec — mechanical, minimal interpretation:
+The spec's structure is now frozen — Phase 4 only fills `joomla_ids` and never adds or removes nodes. That makes this the moment to produce the **Content Schematic** (see `kb/content-schematic-schema` for the schema, node keys, status lifecycle, and lint invariants).
 
-- `heading` → menu item, `itemType: "heading"` — the tool converts this to Joomla's Separator type automatically. **Exception:** if a `grids` entry names this item as its `menu_ref`, build it as a navigable Single Article instead — the grid landing page article is what the heading links to. Children still nest under it as sub-items.
-- `single_article` → **Single Article** menu item; ensure the article exists in its category. Empty placeholder article is fine — content is Phase 5.
-- `category_grid` → Single Article menu item for the page title **plus** a Joomla Articles particle module per `kb/grid-layout`. **Do not** create menu items for grid members unless `member_menu_items: "listed"`.
-- `external_url` → **External URL** menu item.
-- `docman` → DOCman category/page per the DOCman convention.
+1. **Derive the scaffold** (deterministic, instant):
+
+   ```
+   derive_content_schematic { site_url, spec: { ...approved spec... } }
+   ```
+
+   One entry per content-bearing node (single articles, grid landings, grid members, category landings, docman). Persists `{site-slug}-content-schematic.json` to the workspace and returns the add/update/orphan diff plus validation.
+
+2. **Fill it from the PDF** — launch the content-interpreter sub-agent with the **same PDF from Phase 1**; it can run in parallel with `run_menu_build` since both consume the frozen spec:
+
+   ```
+   run_content_interpretation {
+     site_url,
+     pdf_path: "C:\\path\\to\\Client-Menu.pdf",   ← the Phase 1 document
+     spec: { ...approved spec... }
+   }
+   ```
+
+   The sub-agent re-reads the PDF in its own context window and fills each entry's `instructions`, `source_url`, `copy`, `assets`, and `features`. It **cannot change structure** — the scaffold is derived internally from the spec you pass, and the harness hard-fails the run on any node-key mismatch. The result is schema/lint/cross-lint validated before being returned. Standalone runner for tuning/debugging: `npm run interpret-content -w apps/agents-mcp`.
+
+3. **Review** the schematic's `open_questions` with the user alongside (or after) the Phase 4 result — missing pull URLs and `needs_input` entries are content facts the client must supply. They do **not** block Phase 4.
+
+**The sync rule (standing, not optional):** any time the menu spec is edited after a schematic exists — reclassification, added/removed pages, resolved TBDs — re-run `derive_content_schematic` with the updated spec and the existing schematic. The merge preserves everything the interpreter/human filled in, adds new nodes as `todo`, and marks removed nodes `orphaned`. A title rename shows up as orphaned + new `todo`; copy the content across by hand. Hand-edited schematics are re-checked with `npm run validate-schematic -w apps/agents-mcp -- <schematic.json> <spec.json>`.
+
+**Gate:** `run_content_interpretation` returned `success: true`; schematic `open_questions` presented to the user (resolution can defer to Phase 5).
+
+---
+
+## Phase 4 — Build the Menu Skeleton (delegated to `run_menu_build`)
+
+**Phase 4 is delegated.** Once the Pre-Phase-4 confirmation is approved and `joomla_ids.menu_map` is populated, hand the spec to the **menu-builder sub-agent** via `run_menu_build` — a separate context window (Claude Agent SDK, Haiku) that mechanically creates categories, placeholder articles, and menu items. Do **not** build these one tool call at a time in-session; by this point every interpretation decision is already made, so Phase 4 is pure execution and well suited to a cheaper, faster model.
+
+```
+run_menu_build {
+  site_url: "https://example.com",
+  spec: { ...the approved spec JSON... },
+  spec_filename: "example-menu-spec.json",       ← optional, defaults from site hostname
+  default_template_style_id: "12"                 ← optional, Gantry outline applied to items without their own
+}
+```
+
+The builder applies these rules (full detail in its system prompt, `config/agents/menu-builder/menu-builder-system.md`):
+
+- `heading` → menu item, `itemType: "heading"` — the tool converts this to Joomla's Separator type automatically. **Exception:** if a `grids` entry names this item as its `menu_ref`, it builds a navigable Single Article instead — the grid landing page article is what the heading links to. Children still nest under it as sub-items.
+- `single_article` → **Single Article** menu item; ensures the article exists in its category (empty placeholder is fine — content is Phase 5).
+- `category_grid` → Single Article menu item pointing to a landing article titled `"{title} (landing)"` in `Page Content` (never the grid's own category). Grid `members` are created as articles in the grid's named category — **no menu items** unless `member_menu_items: "listed"`. The builder does **not** create the grid's particle module — that stays a manual step; every grid needing one is listed in the returned `build_notes` (see `kb/grid-layout`).
+- `external_url` → **External URL** menu item, or skipped (logged in `build_notes`) if `target` is still `"TBD"`.
+- `docman` → skipped — out of the builder's scope; logged in `build_notes` for manual DOCman setup per the DOCman convention.
+
+It is idempotent — it searches for an existing category/article/menu item by title before creating, so a re-run after a partial failure resumes cleanly. It never creates or alters menus (only the Pre-Phase-4 step does that) and never touches quicklink/particle modules.
 
 **Grid article categories:** articles that are grid members go in their grid's named category — not `Page Content`. Check the spec's `grids` array and each item's `category` field.
 
-**Quicklinks (`modules.toplinks`, `modules.under_rotator`) are NOT built in Phase 4.** These entries describe homepage module content, not menu structure. Phase 4's only job regarding a quicklink is to make sure its `menu_item` target exists — i.e. build the `hiddenmenu` item it points to. Do **not** create or update a `TopLinks` (or any other) Joomla module, and do not touch `joomla_module` for this spec block. The quicklink modules themselves are built later, in the Gantry design/homepage build (see `workflows/gantry-design-agent`), once real targets exist.
+**Quicklinks (`modules.toplinks`, `modules.under_rotator`) are NOT built in Phase 4.** These entries describe homepage module content, not menu structure. Phase 4's only job regarding a quicklink is to make sure its `menu_item` target exists — i.e. build the `hiddenmenu` item it points to (the builder does this as an ordinary menu item). Do **not** create or update a `TopLinks` (or any other) Joomla module, and do not touch `joomla_module` for this spec block. The quicklink modules themselves are built later, in the Gantry design/homepage build (see `workflows/gantry-design-agent`), once real targets exist.
 
-Preserve parent/child nesting and ordering from the spec.
+**Alias collisions:** the builder retries once with a site-specific alias suffix on an unverified create, per its Handling Failures rules — mirrors the Common Pitfalls entry below. It never deletes a live or trashed item to resolve a collision; unresolved cases are logged in `build_notes`.
 
-**Alias collisions:** For any item flagged in the Pre-Phase 4 existing item check (step 3), pass an explicit `alias` with a site-specific suffix on create. If a create returns "not verified" (empty ID), do not retry the same call — see Common Pitfalls below.
+**Read the result:** `run_menu_build` returns `{ success: true, joomla_ids, summary, build_notes }` or `{ success: false, error, joomla_ids?, build_notes?, partial?, run_log }`. Review `build_notes` for anything skipped (TBD targets, docman items) and for grids still needing a particle module — build those manually per `kb/grid-layout` before calling Phase 4 complete. `joomla_ids` (categories/articles/menu_items) is persisted back into the spec's workspace file automatically.
 
-**Gate:** every spec node exists in Joomla; grids render.
+**Mandatory post-Phase-4 re-derive:** once `run_menu_build` returns, call `derive_content_schematic` again with the post-build spec (now carrying `joomla_ids.articles`) and the existing schematic. This stamps each entry's `joomla_article_id` so the content agent can target articles by ID instead of title search. It is deterministic and near-free — do not skip it.
+
+**Gate:** every spec node exists in Joomla (or is accounted for in `build_notes`); grids render once their particle modules are added; the schematic has been re-derived against the post-build spec.
 
 ---
 
 ## Common Pitfalls
+
+The menu-builder sub-agent (`run_menu_build`) applies the alias-collision and nested-set guidance below automatically and logs anything it can't resolve to `build_notes`. This table is the reference for **manual follow-up** on those logged items, or for direct tool use outside the builder (Phase 5 content work, one-off fixes).
 
 | Issue | Resolution |
 |---|---|
@@ -197,11 +248,11 @@ Preserve parent/child nesting and ordering from the spec.
 
 ## Phase 5 — Hand Off (out of scope for this agent)
 
-This agent's scope ends when Phase 4 is complete and the skeleton is approved. Switch to the content agent to drive Phase 5 using each node's `content_source` field:
+This agent's scope ends when Phase 4 is complete, the skeleton is approved, and the Content Schematic has been re-derived against the post-build spec. The hand-off artifact set is **two workspace files**: `{site-slug}-menu-spec.json` (structure + `joomla_ids`) and `{site-slug}-content-schematic.json` (per-page content plan). Switch to the content agent to drive Phase 5 from the schematic — each entry carries the article ID, category, `content_source`, and the PDF's per-page `instructions`/`copy`/`source_url`:
 
-- `pull` → copy from the existing site
-- `generate` → write new copy
-- `redirect` / `existing` / `none` → no article work
+- `pull` → copy from the `source_url`
+- `generate` → write new copy per `instructions`
+- `redirect` / `existing` / `none` → no article work (these nodes have no schematic entry or arrive `blocked`)
 
 **Quicklink modules are a separate, later step** — not this agent's and not the content agent's. Once `hiddenmenu` targets are real, the `modules.toplinks` / `modules.under_rotator` entries get built as homepage modules during the Gantry design/build workflow (`workflows/gantry-design-agent`), not during Phase 4 or Phase 5.
 
@@ -209,7 +260,7 @@ This agent's scope ends when Phase 4 is complete and the skeleton is approved. S
 
 ## Logging
 
-Call `append_site_note` after Phase 4 completes, recording the spec filename and any deferred `open_questions`.
+Call `append_site_note` after Phase 4 completes, recording the spec filename, the schematic filename, the `run_menu_build` summary, and any deferred `build_notes` / `open_questions` (from both the spec and the schematic).
 
 ---
 
@@ -219,17 +270,17 @@ Call `append_site_note` after Phase 4 completes, recording the spec filename and
 - [ ] PDF saved locally and interpreted via `run_menu_interpretation` (not in-session)
 - [ ] `open_questions` resolved with the user; spec updated and re-validated
 - [ ] Menu Spec validated (zero schema + lint errors) before Phase 4
-- [ ] Pre-Phase 4 confirmation presented and approved (menus, categories, item count)
-- [ ] Categories created with correct names and parent assignments
-- [ ] All placeholder articles created and assigned to correct categories
-- [ ] Grid member articles in named section category, not Page Content
-- [ ] Top-level menu items created (note IDs for parentId assignment)
-- [ ] Sub-menu items created with correct `parentId`
-- [ ] Heading items with a `grids` entry built as navigable Single Article (not plain heading)
-- [ ] Template style / Gantry outline assigned to all menu items
+- [ ] Pre-Phase 4 confirmation presented and approved (menus created, `joomla_ids.menu_map` populated, categories, item count)
+- [ ] Content Schematic derived (`derive_content_schematic`) after Pre-Phase-4 approval
+- [ ] `run_content_interpretation` called with the same Phase-1 PDF (parallel with the build is fine); returned `success: true`
+- [ ] `run_menu_build` called with the approved spec (not built one tool call at a time in-session)
+- [ ] `run_menu_build` returned `success: true`; `build_notes` reviewed for skipped items (TBD targets, docman)
+- [ ] Every grid in `build_notes` has its particle module built manually per `kb/grid-layout`
+- [ ] Heading items with a `grids` entry built as navigable Single Article (not plain heading) — verify in the result
 - [ ] Quicklinks NOT built as modules — only their `hiddenmenu` targets created
+- [ ] Schematic re-derived after Phase 4 (`joomla_article_id`s stamped) — and after ANY later spec edit
 - [ ] `append_site_note` called after Phase 4 completes
-- [ ] Phase 5 handed off to content agent
+- [ ] Phase 5 handed off to content agent with both workspace files (menu spec + content schematic)
 
 ---
 
@@ -237,6 +288,8 @@ Call `append_site_note` after Phase 4 completes, recording the spec filename and
 
 - Interpretation is isolated in one specialized sub-agent with a hard-constrained system prompt; the schema removes interpretation degrees of freedom and the worked example anchors output.
 - `open_questions` / `assumptions` surface guesses instead of letting them vary silently.
-- All determinism lives in validate/lint/build — the interpreter self-validates, `run_menu_interpretation` re-validates, `npm run validate -w apps/agents-mcp` re-checks hand-edited specs, and `test-menu-spec.cjs` is the regression net for the validator itself.
-- Every run leaves a JSONL transcript (`apps/agents-mcp/logs/`), and the standalone runner (`npm run interpret`) reproduces any run outside the orchestrator.
+- Phase 4 is isolated the same way: the menu-builder sub-agent (`run_menu_build`) has no interpretation discretion — it executes a fixed procedure (search-then-create, per-type build steps, alias-collision retry) against an already-approved spec, on Haiku since there's no classification judgment left to make.
+- All determinism lives in validate/lint/build — the interpreter self-validates, `run_menu_interpretation` re-validates, `npm run validate -w apps/agents-mcp` re-checks hand-edited specs, `test-menu-spec.cjs` is the regression net for the validator itself, and the builder's idempotent search-before-create makes a partial-failure re-run safe.
+- The Content Schematic follows the same split: its structure is a pure function of the spec (`derive_content_schematic` — no LLM), only the PDF content extraction is delegated to the content-interpreter sub-agent, and the harness enforces the structure lock (node-key-set equality) plus schema/lint/cross-lint on every run (`schematic.test.ts` and `test-content-schematic.cjs` are the regression nets).
+- Every run leaves a JSONL transcript (`apps/agents-mcp/logs/`), and the standalone runners (`npm run interpret`, `npm run build-menu`) reproduce any run outside the orchestrator.
 - Bit-for-bit LLM reproducibility is not guaranteed; these levers are what make the output consistent enough to trust.

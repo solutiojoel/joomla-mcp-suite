@@ -5,7 +5,9 @@ interpretation is the only step where an LLM has discretion, so it is isolated i
 **menu-interpreter sub-agent** (invoked via the `run_menu_interpretation` tool) and
 constrained hard: fixed field names, fixed enum values, preserved source ordering, and
 mandatory `open_questions` / `assumptions`. Everything downstream (validate, lint,
-build) is mechanical and testable.
+build) is mechanical and testable — including the Phase 4 build itself, which is
+delegated to the **menu-builder sub-agent** (`run_menu_build`, Haiku) once the spec is
+approved. See `workflows/menu-build-workflow.md` Phase 4 for the contract.
 
 - **Format:** JSON. Schema: [config/agents/menu-build/menu-spec.schema.json](../../../../config/agents/menu-build/menu-spec.schema.json).
 - **Validator/lint:** `run_menu_interpretation` validates automatically; for hand edits run `npm run validate -w apps/agents-mcp -- <spec.json>` (exit 0 = valid). `test-menu-spec.cjs` only regression-tests the validator against fixtures — it does not read your spec.
@@ -39,6 +41,15 @@ reorder, or invent items. When the PDF is silent on something, **flag it in
   "joomla_ids": { }               // filled during Pre-Phase-4/Phase 4 — created menu/category/item IDs (not from the interpreter)
 }
 ```
+
+### `joomla_ids` — not produced by the interpreter
+
+Populated in two stages, both after interpretation:
+
+- **Pre-Phase-4 confirmation** (human-in-the-loop, done by the menu-build agent): creates the fresh site menus and writes `joomla_ids.menu_map`, mapping each `spec.menus` key to the **real** Joomla `menuType` slug — e.g. `{ "mainmenu": "school-menu", "hiddenmenu": "school-hidden-menu" }`. This is **required** before calling `run_menu_build` — the builder refuses to run without it and never creates menus itself.
+- **Phase 4 build** (`run_menu_build`, the menu-builder sub-agent): fills in `joomla_ids.categories`, `joomla_ids.articles`, and `joomla_ids.menu_items`, each an object keyed by title with the created Joomla ID as the value. These make a re-run resume idempotently (the builder searches before creating).
+
+A `menuItem` may also carry an optional `templateStyleId` (Gantry outline ID) — set during Pre-Phase-4, not by the interpreter. If omitted, `run_menu_build`'s `default_template_style_id` argument applies, then the site default.
 
 `mainmenu` = the visible nav. `hiddenmenu` = items that need a routable URL but are not
 shown in nav — the common home for redirect/external targets that a quicklink points at.
@@ -129,4 +140,4 @@ A spec must pass all of these — fix or flag before building:
 }
 ```
 
-Related: [kb/grid-layout](grid-layout.md), [kb/staff-grid](staff-grid.md), [menu-build-workflow](../menu-build-workflow.md).
+Related: [kb/grid-layout](grid-layout.md), [kb/staff-grid](staff-grid.md), [kb/content-schematic-schema](content-schematic-schema.md) (the Content Schematic derived from this spec in Phase 3.5), [menu-build-workflow](../menu-build-workflow.md).

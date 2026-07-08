@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://solutiosoftware.com/schemas/content-schematic.json",
+  "title": "Content Schematic",
+  "description": "Input contract for the content-build pass (Phase 5). Derived deterministically from the approved Menu Spec (deriveContentSchematic / derive_content_schematic), enriched by the content-interpreter sub-agent (run_content_interpretation) from the client PDF. Structure is owned by the derivation — entries are keyed 1:1 to content-bearing Menu Spec nodes and may never be added/removed/rekeyed by hand or by the interpreter. See docs/kb/content-schematic-schema.md.",
+  "type": "object",
+  "required": ["site", "entries"],
+  "additionalProperties": false,
+  "properties": {
+    "site": { "type": "string", "description": "Active site URL this schematic targets." },
+    "source": { "type": "string", "description": "Client PDF filename the content details come from." },
+    "menu_spec_file": { "type": "string", "description": "Workspace filename of the Menu Spec this schematic was derived from." },
+    "generated": { "type": "string", "description": "Date the schematic was first derived (YYYY-MM-DD)." },
+    "derived_at": { "type": "string", "description": "Timestamp of the most recent derive/merge (ISO 8601). Updated by every re-derive." },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" }
+    },
+    "open_questions": {
+      "type": "array",
+      "description": "Content facts the PDF didn't provide — pull URLs, missing copy, ambiguous instructions. Same convention as the Menu Spec.",
+      "items": { "type": "string" }
+    },
+    "assumptions": {
+      "type": "array",
+      "description": "Defaults the content-interpreter applied, made reviewable.",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "entryKind": {
+      "type": "string",
+      "enum": ["single_article", "grid_landing", "grid_member", "category_landing", "docman"]
+    },
+    "entryStatus": {
+      "type": "string",
+      "enum": ["todo", "filled", "needs_input", "blocked", "done", "orphaned"]
+    },
+    "contentSource": {
+      "type": "string",
+      "enum": ["pull", "generate", "redirect", "existing", "none"]
+    },
+    "entry": {
+      "type": "object",
+      "required": ["node_key", "kind", "title", "content_source", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "node_key": { "type": "string", "description": "Stable key linking this entry to its Menu Spec node. Menu nodes: '<menu>:<title path>' joined with '/' (e.g. 'mainmenu:About Us/Our Staff'). Grid members: 'grid:<page>/<member title>'. Assigned by the derivation — never edit." },
+        "kind": { "$ref": "#/$defs/entryKind" },
+        "title": { "type": "string", "description": "Article/page title (the grid member title for grid_member entries)." },
+        "menu_path": { "type": "string", "description": "Human-readable menu location; for grid members, the grid page's path." },
+        "category": { "type": "string", "description": "Joomla category the article lives in (from the spec node / grid)." },
+        "content_source": { "$ref": "#/$defs/contentSource" },
+        "joomla_article_id": { "type": "string", "description": "Joomla article ID, stamped from spec.joomla_ids.articles by the post-Phase-4 re-derive. Content-build falls back to a title search when absent." },
+        "spec_notes": { "type": "string", "description": "Verbatim copy of the spec node's notes field (derive-owned)." },
+        "instructions": { "type": "string", "description": "Rich per-page directive extracted from the client PDF by the content-interpreter." },
+        "source_url": { "type": "string", "description": "Concrete URL to pull content from (content_source: pull). 'TBD' allowed only with a matching open_questions entry." },
+        "copy": { "type": "string", "description": "Verbatim or near-verbatim copy the PDF supplies for this page." },
+        "assets": {
+          "type": "array",
+          "description": "Images/documents/media the PDF references for this page.",
+          "items": { "type": "string" }
+        },
+        "features": {
+          "type": "array",
+          "description": "Special page features beyond plain article text — widgets, forms, calendars, galleries, staff grids.",
+          "items": {
+            "type": "object",
+            "required": ["kind"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "type": "string", "description": "Feature slug, e.g. 'calendar-feed', 'quick-gallery', 'jotform'. Free string — the KB set grows." },
+              "kb_ref": { "type": "string", "description": "docs/kb reference that covers building this feature, e.g. 'kb/ministry-platform-widget'." },
+              "notes": { "type": "string" }
+            }
+          }
+        },
+        "status": { "$ref": "#/$defs/entryStatus" },
+        "notes": { "type": "string", "description": "Freeform working notes (any stage)." }
+      }
+    }
+  }
+}

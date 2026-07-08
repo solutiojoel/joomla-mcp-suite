@@ -434,8 +434,13 @@ const tools = [
   },
   {
     name: "joomla_fileman_list_files",
-    description: "List FILEman files.",
-    inputSchema: { type: "object", properties: {} },
+    description: "List FILEman files and subfolders via the FILEman JSON API. Paths are relative to the FILEman container root (typically images/stories).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        folder: { type: "string", description: "Container-relative folder to list (e.g. 'staff'). Omit for the root folder." },
+      },
+    },
   },
   {
     name: "joomla_redirects_list",
@@ -1380,7 +1385,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
       case "joomla_fileman_list_files": {
         const login = await ensureLoggedIn();
         if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
-        const result = await joomla.listFilemanFiles();
+        const result = await joomla.listFilemanFiles(args?.folder as string | undefined);
         return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 

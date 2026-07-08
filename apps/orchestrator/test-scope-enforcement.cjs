@@ -93,6 +93,7 @@ check('support ALLOWED freshdesk_get_ticket (freshdesk_* wildcard)', () => expec
 // menu-build: can write workspace + run the sub-agent; cannot touch users/admin/design.
 check('menu-build ALLOWED joomla_workspace_write',     () => expectAccess(menuBuild, 'menu-build', 'joomla_workspace_write', true, null));
 check('menu-build ALLOWED run_menu_interpretation',    () => expectAccess(menuBuild, 'menu-build', 'run_menu_interpretation', true, null));
+check('menu-build ALLOWED run_menu_build',             () => expectAccess(menuBuild, 'menu-build', 'run_menu_build', true, null));
 check('menu-build ALLOWED joomla_docman_category (joomla_docman_* wildcard)', () => expectAccess(menuBuild, 'menu-build', 'joomla_docman_category', true, null));
 check('menu-build DENIED joomla_user (deny)',          () => expectAccess(menuBuild, 'menu-build', 'joomla_user', false, 'scope'));
 check('menu-build DENIED gantry_layout_add (scope)',   () => expectAccess(menuBuild, 'menu-build', 'gantry_layout_add', false, 'scope'));

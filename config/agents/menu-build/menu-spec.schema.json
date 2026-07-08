@@ -41,7 +41,7 @@
     },
     "joomla_ids": {
       "type": "object",
-      "description": "Filled in during the Pre-Phase-4 confirmation and the Phase 4 build — created Joomla IDs (menus by menuType slug, categories, key menu items) keyed by name. Not produced by the interpreter.",
+      "description": "Filled in during the Pre-Phase-4 confirmation and the Phase 4 build. Not produced by the interpreter. Expected shape: { menu_map: { <spec menus key>: <real Joomla menuType slug> } (required before run_menu_build), categories: { <title>: <id> }, articles: { <title>: <id> }, menu_items: { <title>: <id> } } — the categories/articles/menu_items maps are populated by the menu-builder sub-agent (run_menu_build) as it builds, and let a re-run resume idempotently.",
       "additionalProperties": true
     }
   },
@@ -65,6 +65,7 @@
         "target": { "type": "string", "description": "Destination URL for external_url items. Use 'TBD' if unknown (and add an open_question)." },
         "content_source": { "$ref": "#/$defs/contentSource" },
         "notes": { "type": "string" },
+        "templateStyleId": { "type": "string", "description": "Gantry outline ID for this item's menu item. Optional — set during Pre-Phase-4 confirmation, not by the interpreter. Falls back to run_menu_build's default_template_style_id, then the site default, when omitted." },
         "children": {
           "type": "array",
           "items": { "$ref": "#/$defs/menuItem" }

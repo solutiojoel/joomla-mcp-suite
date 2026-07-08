@@ -29,6 +29,10 @@ When starting a menu build, also read `workflows/menu-build-workflow` and `kb/me
 
 **Phase 1 is delegated:** interpretation of the client's menu PDF runs in the menu-interpreter sub-agent via `run_menu_interpretation` (pass `pdf_path` — the sub-agent reads the document in its own context window). Do not interpret the PDF in-session; your job is handoff, then reviewing the returned spec, resolving `open_questions` with the user, and building. See the workflow doc for the full flow.
 
+**Phase 4 is also delegated:** once the Pre-Phase-4 confirmation is approved and `joomla_ids.menu_map` is populated, hand the approved spec to the menu-builder sub-agent via `run_menu_build`. It mechanically creates categories, placeholder articles, and menu items — you no longer build these one tool call at a time in-session. It never creates menus itself and never creates grid particle modules; both stay your job (menus in Pre-Phase-4, particle modules from `build_notes` after the build). See the workflow doc's Phase 4 section for the full contract.
+
+**Phase 3.5 — Content Schematic (required part of every menu build):** right after the Pre-Phase-4 confirmation is approved, call `derive_content_schematic` (deterministic, instant) to create the schematic scaffold from the approved spec, then launch `run_content_interpretation` with the **same PDF** from Phase 1 — it can run in parallel with `run_menu_build`. After Phase 4 completes, call `derive_content_schematic` **again** with the post-build spec (stamps `joomla_article_id`s). **Standing rule: any time you edit the menu spec after a schematic exists, re-run `derive_content_schematic`** — that is what keeps the content plan in sync with the skeleton. See the workflow doc's Phase 3.5 section and `kb/content-schematic-schema`.
+
 ---
 
 ## Changelog — Write Immediately After Every Change
@@ -70,6 +74,7 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are in scope for this a
 | `workflows/menu-build-workflow` | Full build workflow — Phases 1–4, category conventions, pitfalls, checklist |
 | `workflows/improvements` | Shared team queue for process notes |
 | `kb/menu-spec-schema` | Schema, classification ruleset, lint invariants, and worked example — read before Phase 1 |
+| `kb/content-schematic-schema` | Content Schematic schema, node-key rules, status lifecycle, and the re-derive sync rule — read before Phase 3.5 |
 | `kb/grid-layout` | Grid layout page setup (Joomla Articles particle) — read when a `category_grid` is in spec |
 | `kb/staff-grid` | Staff/team grid setup (contentarray particle) — read when Faculty & Staff is a grid |
 | `kb/staff-pages` | All staff page layout variants (grid, teacherbox, table, contact form) — read before classifying any staff/faculty section |
@@ -90,11 +95,14 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are in scope for this a
 | `get_agent_instructions` | Return these instructions |
 | `reload_tools` | Reload tool lists if a downstream server restarted |
 | `run_menu_interpretation` | **Phase 1** — hand the menu PDF (`pdf_path`) to the menu-interpreter sub-agent; returns a validated Menu Spec + open questions |
-| `joomla_workspace_write` | Save Menu Spec JSON to workspace (used for hand edits; the interpreter saves its own output) |
-| `joomla_article` | Create or update placeholder articles |
-| `joomla_category` | Create or manage categories |
-| `joomla_menu` | List menus |
-| `joomla_menu_item` | Create or update menu items |
+| `run_menu_build` | **Phase 4** — hand the approved spec (with `joomla_ids.menu_map` populated) to the menu-builder sub-agent; returns `joomla_ids`, a build `summary`, and `build_notes` (skipped items, grid particle modules still needed) |
+| `derive_content_schematic` | **Phase 3.5 + after every spec edit** — deterministically derive/re-derive the Content Schematic from the spec (no LLM); merging preserves filled content, adds new nodes as `todo`, orphans removed ones. Run after Pre-Phase-4 approval, after Phase 4 (stamps article IDs), and after any later spec edit |
+| `run_content_interpretation` | **Phase 3.5** — hand the same PDF from Phase 1 plus the approved spec to the content-interpreter sub-agent; fills the schematic's content fields (instructions, pull URLs, copy, assets, features). Can run in parallel with `run_menu_build` |
+| `joomla_workspace_write` | Save Menu Spec JSON to workspace (used for hand edits during Phase 3; the interpreter and builder sub-agents save their own output) |
+| `joomla_article` | Create or update placeholder articles (rarely needed directly now that `run_menu_build` handles Phase 4) |
+| `joomla_category` | Create or manage categories (rarely needed directly now that `run_menu_build` handles Phase 4) |
+| `joomla_menu` | List menus; create the fresh Phase-4 menus during Pre-Phase-4 confirmation |
+| `joomla_menu_item` | Create or update menu items (rarely needed directly now that `run_menu_build` handles Phase 4; still used for one-off fixes and re-parenting) |
 | `joomla_backend_inventory` | Inventory of articles, categories, menus, modules |
 | `joomla_bulk_checkin` | Check in locked items |
 

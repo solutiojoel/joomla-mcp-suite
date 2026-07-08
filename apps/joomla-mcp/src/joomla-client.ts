@@ -1898,16 +1898,11 @@ export class JoomlaClient {
 
     // POST to the task-specific URL so Joomla routes correctly regardless of POST body parsing
     const mediaFolderUrl = this.getAdminUrl(`index.php?option=com_media&folder=${encodeURIComponent(parentFolder)}`);
-    const { html: pageHtml, token } = await this.getPage(mediaFolderUrl);
-    // Capture a snippet of the page HTML for debugging checkbox/form structure
-    const cbMatch = pageHtml.match(/cb\d[^>]*>[\s\S]{0,200}/g);
-    const htmlDebugSnippet = cbMatch ? cbMatch.slice(0, 5).join("\n") : pageHtml.substring(0, 500);
-    // Post to the base form action (matching how adminForm actually submits),
-    // with task + folder in the POST body — matching how Joomla JS builds the request.
+    const { token } = await this.getPage(mediaFolderUrl);
+    // Both J3 controllers (file.delete and folder.delete) read rm[] entries
+    // relative to the parent folder passed in `folder`.
     const task = isFolder ? "folder.delete" : "file.delete";
-    const payload: FormDataMap = isFolder
-      ? { task, folder: data.path.replace(/\/+$/, ""), cb1: "0" }
-      : { task, folder: parentFolder, "rm[]": [name] };
+    const payload: FormDataMap = { task, folder: parentFolder, "rm[]": [name] };
     if (token) payload[token.name] = token.value;
     else if (this.tokenName) payload[this.tokenName] = "1";
 
@@ -1946,7 +1941,6 @@ export class JoomlaClient {
         httpStatus: status,
         payloadSent: payload,
         redirectLocation,
-        htmlDebugSnippet,
         verification: { attempted: true, deleted },
       },
     };
@@ -2188,10 +2182,12 @@ export class JoomlaClient {
       title: data.title,
       docman_category_id: data.categoryId,
       storage_type: data.storageType ?? "file",
+      // DOCman leaves access "0" when omitted, which hides the document on the
+      // frontend — default new documents to Public like the admin UI does.
+      access: data.access ?? "1",
     };
     if (data.storagePath !== undefined) payload.storage_path = data.storagePath;
     if (data.description !== undefined) payload.description = data.description;
-    if (data.access !== undefined) payload.access = data.access;
     if (data.enabled !== undefined) payload.enabled = data.enabled;
     const result = await this.docmanApiCall("index.php?option=com_docman&view=document&format=json", "POST", payload);
     if (!result.success) return { success: false, message: result.error || "Failed to create document" };
@@ -2269,8 +2265,78 @@ export class JoomlaClient {
     return { success: true, message: "Category deleted", data: { id } };
   }
 
-  async listFilemanFiles(): Promise<JoomlaResponse> {
-    return this.inspectAdminList("index.php?option=com_fileman");
+  async listFilemanFiles(folder?: string): Promise<JoomlaResponse> {
+    // FILEman's admin page is a Koowa JS app with no static table — scraping it
+    // always yields 0 rows. Use its JSON API instead (same pattern as DOCman).
+    if (!this.tokenName) {
+      await this.getPage(this.getAdminUrl("index.php?option=com_fileman"));
+    }
+    const baseUrl = this.config.baseUrl.replace(/\/$/, "");
+    const additionalHeaders: Record<string, string> = {
+      "Origin": baseUrl,
+      "Referer": this.getAdminUrl("index.php?option=com_fileman"),
+      "Accept": "application/json",
+    };
+    const fetchJson = async (path: string) => {
+      const result = await this.request(this.getAdminUrl(path), { additionalHeaders });
+      let entities: Array<Record<string, unknown>> = [];
+      try {
+        const json = JSON.parse(result.body) as Record<string, unknown>;
+        entities = (json.entities || []) as Array<Record<string, unknown>>;
+      } catch {
+        // non-JSON body falls through with empty entities; status carries the error
+      }
+      return { status: result.status, entities };
+    };
+
+    const cleanFolder = (folder || "").replace(/^\/+|\/+$/g, "");
+    const [files, folders] = await Promise.all([
+      fetchJson(`index.php?option=com_fileman&view=files&folder=${encodeURIComponent(cleanFolder)}&format=json&limit=500`),
+      fetchJson("index.php?option=com_fileman&view=folders&format=json&limit=500"),
+    ]);
+
+    // FILEman answers 410 for a folder that doesn't exist in the container
+    if (files.status === 410) {
+      return { success: false, message: `FILEman folder not found: "${cleanFolder}"` };
+    }
+    if (files.status >= 400) {
+      return { success: false, message: `FILEman API error (HTTP ${files.status}) listing "${cleanFolder || "root"}"` };
+    }
+
+    // The folders view returns every folder in the container — keep direct children only
+    const prefix = cleanFolder ? `${cleanFolder}/` : "";
+    const subfolders = folders.entities
+      .map((e) => ({
+        name: String(e.name ?? ""),
+        path: String(e.path ?? ""),
+        fileCount: e.file_count ?? null,
+      }))
+      .filter((f) => {
+        if (!f.path.startsWith(prefix)) return false;
+        const rest = f.path.slice(prefix.length);
+        return rest.length > 0 && !rest.includes("/");
+      });
+
+    const fileList = files.entities.map((e) => {
+      const meta = (e.metadata || {}) as Record<string, unknown>;
+      const modifiedTs = typeof meta.modified_date === "number" ? meta.modified_date : null;
+      return {
+        name: String(e.name ?? ""),
+        path: e.path ?? (cleanFolder ? `${cleanFolder}/${e.name}` : e.name),
+        folder: e.folder ?? cleanFolder,
+        type: e.type ?? null,
+        size: meta.size ?? null,
+        extension: meta.extension ?? null,
+        mimetype: meta.mimetype ?? null,
+        modified: modifiedTs ? new Date(modifiedTs * 1000).toISOString() : null,
+      };
+    });
+
+    return {
+      success: true,
+      message: `Found ${fileList.length} file(s) and ${subfolders.length} subfolder(s) in "${cleanFolder || "root"}"`,
+      data: { folder: cleanFolder || "root", files: fileList, subfolders },
+    };
   }
 
   async listRedirects(): Promise<JoomlaResponse> {

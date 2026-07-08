@@ -36,3 +36,19 @@ _Logged by: local_
 - News & Events ordering fixed to position 2 (after About Sacred Heart School ID 185)
 **Notes:** Forge `mainmenu` is a shared template menu — all items must go in the site-specific `shannon` menu. Trashed items hold their aliases in Joomla — a deleted item blocks the same alias until permanently purged; use a fresh suffix on retry. Phase 5 (content) and grid module configuration are pending.
 _Logged by: local_
+
+### 2026-07-08 — Joomla MCP tool audit (Docman / media / fileman / screenshot)
+**Requested by:** internal (Jeremy) | **Ticket:** none
+**Changes:**
+- Test artifacts created and fully cleaned up: DOCman category "ZZ-MCP-AUDIT Test Category" (ID 4, deleted), DOCman document "ZZ-MCP-AUDIT Test Document" (ID 6, deleted), media folder images/stories/zz-mcp-audit (deleted via direct POST — the joomla_media folder-delete payload is broken, see notes)
+- No content, menu, or config changes
+**Notes:** Audit findings: (1) com_media file uploads on this site are rejected server-side with non-core message "Cannot upload at this time" — joomla_media upload/rename/move are all blocked here; FILEman (Joomlatools) is installed and its JSON API (index.php?option=com_fileman&view=files&folder=<path>&format=json) works for listing. (2) FILEman container "fileman-files" = images/stories = com_media root on this site. (3) joomla_media delete with type:folder sends the wrong payload (folder=<target>, cb1:0); correct J3 payload is folder=<parent> + rm[]=[name] — verified working. (4) DOCman JSON tools all pass (list/get/create/update/delete). (5) Frontend screenshot tool passed desktop/tablet/mobile including 404 handling.
+_Logged by: local_
+
+### 2026-07-08 — joomla-mcp bug fixes verified (follow-up to tool audit)
+**Requested by:** internal (Jeremy) | **Ticket:** none
+**Changes:**
+- Verified three joomla-mcp code fixes against this site (all test artifacts removed): media folder zz-mcp-audit2 created and deleted via joomla_media (folder-delete payload now folder=<parent> + rm[]=[name] — works); DOCman doc ID 7 created without access param → now defaults to access "1" (Public) — deleted after check; joomla_fileman_list_files now uses the FILEman JSON API (root/subfolder/missing-folder all correct, returns size/mimetype/modified metadata)
+- No lasting content changes
+**Notes:** com_media file upload (and therefore joomla_media rename/move) remains blocked on this site by the server-side "Cannot upload at this time" rejection — separate issue, likely FILEman/Koowa intercepting com_media uploads. FILEman upload API route still undetermined.
+_Logged by: local_
