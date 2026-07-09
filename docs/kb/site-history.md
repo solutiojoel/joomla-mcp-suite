@@ -1,18 +1,25 @@
-# KB — Site History & Change Log System
+# KB — Site History & Audit Notes System
 
-Every site has a dedicated notes file at `docs/sites/[sitecode].solutiosoftware.com.md` (or the live domain if the site has launched). This file is the authoritative record of the site's state and history. Agents read it at session start and write to it at session end — always, not just when something unusual is found.
+Every site has two separate records:
+
+1. **Site notes** (`get_site_notes` / `write_site_notes`) — persistent site intelligence. Read at session start. Contains only facts that remain true over time.
+2. **Audit notes** (`knowledge_client { tag: "audit" }`) — per-session records of what was done. Never loaded at session start. Retrieved on-demand when investigating.
 
 ---
 
-## Two-Layer Structure
+## Site Notes — Persistent Facts Only
 
-Each site file has two clearly separated sections:
+The site notes file lives at `docs/sites/[sitecode].solutiosoftware.com.md`. It answers one question: *"What do I need to know before touching this site?"*
 
-### Layer 1 — Persistent Site Intelligence (top of file)
-Facts that remain true over time. Updated in-place using `write_site_notes` when they change. This section answers: *"What do I need to know before touching this site?"*
+**What belongs here:**
+- Quirks and warnings (things that cause breakage if an agent doesn't know them)
+- Key IDs (menus, outlines, categories, modules — looked up constantly)
+- Active integrations (third-party services needing credentials or annual maintenance)
 
-### Layer 2 — Change Log (bottom of file)
-Dated entries appended newest-first using `append_site_note`. This section answers: *"What has happened to this site and when?"*
+**What does NOT belong here:**
+- Changelog entries (what was done in past sessions)
+- Investigation notes
+- Step-by-step records of agent actions
 
 ---
 
@@ -37,7 +44,7 @@ Use this exact structure when creating a new site file:
 ## 🔗 Key IDs
 
 | Item | ID |
-|------|----|
+|------|-----|
 | Main Menu | — |
 | Hidden Menu | — |
 | Base Outline | — |
@@ -52,12 +59,6 @@ Use this exact structure when creating a new site file:
 ## 🔌 Active Integrations
 
 - *(none logged yet)*
-
----
-
-## 📅 Change Log
-
-*(No entries yet — first entry will appear below after the first session)*
 ```
 
 ---
@@ -88,109 +89,77 @@ Third-party services connected to the site that require credentials, tokens, or 
 - AcyMail (if newsletter is active)
 - Google Analytics (GA4 Property ID, measurement ID)
 - reCAPTCHA (whether enabled)
-- Elfsight, Flocknote, LPI Bulletin Widget, etc.
 
 ---
 
-## Change Log — What Triggers an Entry
+## Updating Site Notes
 
-**Always write an entry when:**
-- A Freshdesk support ticket is resolved (required — see the Support Agent Workflow in the Knowledge Gateway: `knowledge_universal { action: "list", tag: "workflow" }`)
-- Any content change was made (articles created/updated/deleted)
-- Any structural change was made (new menu items, modules, categories, outlines)
-- Any configuration change was made (reCAPTCHA, GA4, Business Directory passcode, site title/meta)
-- Any FTP file was uploaded (custom CSS, JS, images, service keys)
-- A site was launched or redesign went live
-
-**Write a shorter entry when:**
-- The session involved only investigation with no changes made
-- Something important was discovered that future agents need to know (add to Quirks too)
-
-**Skip the changelog only when:**
-- Nothing was changed and nothing new was learned about the site
-
----
-
-## Change Log Entry Format
-
-Append entries using `append_site_note`. Each entry must follow this format:
-
-```
-### YYYY-MM-DD — [Ticket #XXXXX | ] [Brief title of what was done]
-**Requested by:** [Name / email / "internal"] | **Ticket:** [#XXXXX or "none"]
-**Changes:**
-- [Specific thing changed — include IDs where relevant]
-- [Another specific thing changed]
-**Notes:** [Anything non-obvious, quirks found, client preferences noted, follow-up needed]
-```
-
-### Good Entry Examples
-
-```
-### 2026-06-04 — Ticket #35412 | Staff page — added 3 members, removed 1
-**Requested by:** Janet Kowalski (jkowalski@stexample.com) | **Ticket:** #35412
-**Changes:**
-- Article 47 (/about/staff) — added Fr. Marcus Reyes, Deacon Tom Hill, Mary Johnson to alternaterowsm table
-- Article 44 (Fr. Bob Smithson) — unpublished per client request (retired); menu item 203 hidden
-- New staff linked via mailto: tags (email addresses provided in ticket)
-**Notes:** Client asked about adding photos — referred to training docs. No photos added this session.
-```
-
-```
-### 2026-05-15 — Grid layout built for Faith Formation section
-**Requested by:** Internal (site build) | **Ticket:** none
-**Changes:**
-- Category "Faith Formation Items" (ID 35) created with 8 articles (IDs 175–182)
-- Gantry 5 Particle module created (ID 88) — Joomla Articles particle, position CONTENT-BOTTOM-A
-- Module assigned to menu item 167 (Faith Formation landing page)
-- Module class suffix: grid-tiles grid-square grid-tiles-mobile
-**Notes:** Grid outline (ID 34) confirmed existing and correctly configured before build.
-```
-
-```
-### 2026-04-02 — reCAPTCHA enabled
-**Requested by:** Internal (pre-training audit) | **Ticket:** none
-**Changes:**
-- reCAPTCHA v2 checkbox enabled via plugin — site key and secret key loaded from Google Cloud project
-- From Email set to office@stexample.com in Site Config (required for password reset emails)
-**Notes:** Domains registered: stexample.com and sitecode.solutiosoftware.com
-```
-
-### Entry Anti-Patterns to Avoid
-
-❌ Too vague — agents can't act on this:
-> "Updated some staff articles per client request."
-
-❌ No IDs — next agent has to search for everything:
-> "Fixed the menu item that was broken."
-
-❌ Missing the requester — no accountability trail:
-> "Added a new module to the homepage."
-
-✅ Specific, with IDs, with requester — complete record:
-> "Article 47 (/about/staff) — updated alternaterowsm table: added Fr. Marcus Reyes; menu item 203 (Fr. Bob Smithson) hidden at client request (retired). Ticket #35412, Janet Kowalski."
-
----
-
-## Updating the Persistent Section
-
-When a persistent fact changes (e.g. a new integration is added, a quirk is resolved, IDs are discovered):
+When a persistent fact changes (new integration added, quirk resolved, IDs discovered):
 
 1. Call `get_site_notes` to load the current file.
 2. Edit the relevant section in context.
 3. Call `write_site_notes` with the full updated content.
-4. Then append a changelog entry noting what changed.
 
-Do **not** update persistent facts by appending — the persistent section must remain clean and current, not accumulate outdated entries.
+Do **not** use `append_site_note` for changelog entries — that tool is deprecated for this purpose. All session records go in audit notes.
+
+---
+
+## Audit Notes — Per-Session Records
+
+Every session that touches a site must write one audit note to the Knowledge Gateway at session end. This is the single record combining what changed (changelog summary) and how it was done (detailed steps).
+
+### Writing an Audit Note
+
+```
+knowledge_client {
+  action: "create",
+  site_code: "SITECODE",
+  topic: "audit: YYYY-MM-DD — [brief description of session, e.g. Ticket #35412 | Staff page update]",
+  content: "...",
+  tags: ["audit"]
+}
+```
+
+### Audit Note Content Format
+
+```
+**Requested by:** [Name / email / "internal"] | **Ticket:** [#XXXXX or "none"]
+**Summary of changes:**
+- [What was changed — include IDs]
+- [Another change]
+
+**Session detail:**
+[What was investigated before making changes, what tools were called, what was changed and in what order, any errors encountered and how resolved, decisions made and why, what was NOT done and why]
+```
+
+### Good Audit Note Example
+
+```
+**Requested by:** Janet Kowalski (jkowalski@stexample.com) | **Ticket:** #35412
+**Summary of changes:**
+- Article 47 (/about/staff) — added Fr. Marcus Reyes, Deacon Tom Hill, Mary Johnson to alternaterowsm table
+- Article 44 (Fr. Bob Smithson) — unpublished; menu item 203 hidden
+
+**Session detail:**
+Ticket requested adding 3 new staff and removing 1. Read article 47 first to understand existing table structure (alternaterowsm, 2-column). Added three new rows for the new staff members with mailto: links from ticket. For Fr. Bob Smithson — client said "retired" so chose unpublish over delete to preserve URL history. Hidden menu item 203 so it no longer appears in nav. Client asked about photos during ticket conversation — not in scope for this session, referred to training docs.
+```
+
+### When to Write an Audit Note
+
+Write one at the end of **every session** that touched the site — including investigation-only sessions. Even if nothing changed, record what was looked at and what was found.
+
+### Retrieving Audit Notes
+
+Audit notes are **never loaded at session start**. Retrieve only when investigating a problem or auditing past work:
+
+```
+knowledge_client { action: "list", site_code: "SITECODE", tag: "audit" }
+```
 
 ---
 
 ## At Session End — Required Steps
 
-Before closing any session on a site, in this order:
-
-1. **Update persistent facts** if anything was discovered (new IDs, new quirk, new integration). Use `write_site_notes`.
-2. **Append a changelog entry** using `append_site_note`. Even if the session was investigative-only, note what was looked at and what was found.
-3. Announce to the user that the site log has been updated.
-
-This is not optional. The site file is the memory of the site between sessions. If it isn't written, the next agent starts blind.
+1. **Update site notes** if any persistent fact changed (new IDs, new quirk, new integration). Use `write_site_notes`.
+2. **Write one audit note** using `knowledge_client { action: "create", tags: ["audit"] }` — always, for every session that touched the site.
+3. Announce to the user that the audit note has been written.

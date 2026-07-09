@@ -541,21 +541,15 @@ function buildServer(sessionCtx) {
       {
         name: 'append_site_note',
         description:
-          'REQUIRED after every session that makes changes to a site. ' +
-          'Appends a structured changelog entry to the active site\'s history file in docs/sites/. ' +
-          'Call this immediately after completing work — do not wait until the end of the conversation. ' +
-          'Format the note as a structured markdown entry:\n' +
-          '### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]\n' +
-          '**Requested by:** [Name / email / \'internal\'] | **Ticket:** [#XXXXX or \'none\']\n' +
-          '**Changes:**\n' +
-          '- [specific change with IDs]\n' +
-          '**Notes:** [anything non-obvious, or \'No follow-up needed\']\n\n' +
-          'Also call this when you discover a persistent site fact (quirk, key ID, integration) — ' +
-          'use a plain paragraph instead of the ### header for those entries.',
+          'Appends a plain-text note to the active site\'s notes file in docs/sites/. ' +
+          'Use this ONLY for persistent site facts that future agents need before touching the site: ' +
+          'newly discovered quirks, warnings, key IDs, or integrations. ' +
+          'Do NOT use this for changelog entries, session summaries, or audit records — ' +
+          'those belong in knowledge_client with tag: "audit".',
         inputSchema: {
           type: 'object',
           properties: {
-            note: { type: 'string', description: 'The full changelog entry or discovery note to append.' },
+            note: { type: 'string', description: 'The persistent site fact to append (quirk, key ID, integration).' },
           },
           required: ['note'],
         },

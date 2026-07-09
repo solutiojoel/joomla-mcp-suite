@@ -45,31 +45,29 @@ After completing these three steps, load the universal editing conventions from 
 
 ---
 
-## Changelog — Write Immediately After Every Change
+## Session End (Required)
 
-**Do not wait until the end of the session.** Call `append_site_note` immediately after completing any change — the conversation may end before a "session close" step happens.
+At the end of every session that touched a site, in this order:
 
-After every meaningful action (article updated, module created, menu item changed, CSS deployed, config updated, ticket resolved), call:
+**1. Update site notes** — if any persistent fact changed (new IDs discovered, new quirk found, new integration added), call `get_site_notes`, edit the relevant section, and call `write_site_notes`. Site notes contain **only** persistent facts: quirks & warnings, key IDs, active integrations. Do not append changelog entries to site notes.
+
+**2. Write one audit note** — always, for every session that touched the site:
 
 ```
-append_site_note(note: "### YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]
-**Requested by:** [Name / email / 'internal'] | **Ticket:** [#XXXXX or 'none']
-**Changes:**
-- [specific change with IDs]
-**Notes:** [anything non-obvious, or 'No follow-up needed']")
+knowledge_client {
+  action: "create",
+  site_code: "SITECODE",
+  topic: "audit: YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]",
+  content: "**Requested by:** [Name / email / 'internal'] | **Ticket:** [#XXXXX or 'none']\n**Summary of changes:**\n- [specific change with IDs]\n\n**Session detail:**\n[Step-by-step: what was investigated, every action taken, errors and how resolved, decisions made]",
+  tags: ["audit"]
+}
 ```
 
-If the session was investigation-only (no changes), still log what was looked at and what was found before responding to the user.
+Audit notes are **never loaded at session start** — they exist for accountability and debugging only. Retrieve with `knowledge_client { action: "list", site_code: "SITECODE", tag: "audit" }` when investigating a problem.
 
 See `read_agent_doc(doc: "kb/site-history")` for the full format spec and examples.
 
-## Session End (Also Required)
-
-At the end of any session where persistent facts changed (new key IDs discovered, new quirk found, new integration added):
-
-**1. Update persistent facts** — call `get_site_notes`, update the relevant section, call `write_site_notes` with the full updated content.
-
-**2. Review for process improvements** (when applicable — not required every session) — replay the session's steps and check: did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered mid-task? Did a tool behave unexpectedly? If yes, call `read_agent_doc(doc: "workflows/improvements")` and append an entry. This is a shared team queue — only log when something genuinely useful was found.
+**3. Review for process improvements** (when applicable — not required every session) — did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered? If yes, call `read_agent_doc(doc: "workflows/improvements")` and append an entry.
 
 ---
 

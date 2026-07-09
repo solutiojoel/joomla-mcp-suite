@@ -641,7 +641,7 @@ export class JoomlaClient {
   private async postPage(
     url: string,
     formData: FormDataMap
-  ): Promise<{ status: number; html: string; redirected: boolean }> {
+  ): Promise<{ status: number; html: string; redirected: boolean; redirectUrl?: string }> {
     // First, get the page to ensure we have a fresh token
     const pageResult = await this.getPage(url);
 
@@ -661,7 +661,7 @@ export class JoomlaClient {
       contentType: "application/x-www-form-urlencoded",
     });
 
-    // Follow redirect
+    // Follow redirect — capture the redirect URL so callers can extract IDs from it
     if (result.status === 302 || result.status === 303) {
       const location = result.headers.get("location") || url;
       const redirectUrl = this.resolveUrl(location);
@@ -670,6 +670,7 @@ export class JoomlaClient {
         status: redirectResult.status,
         html: redirectResult.body,
         redirected: true,
+        redirectUrl,
       };
     }
 
@@ -2584,14 +2585,33 @@ export class JoomlaClient {
 
     const result = await this.postPage(newArticleUrl, formData);
 
-    const successMsg = result.html.includes("Article saved") || result.html.includes("The article has been saved");
+    // Accept a redirect (302/303) as a success signal — Joomla 3 always redirects on save,
+    // and the destination page (article list) may not contain "Article saved" text.
+    const successMsg = result.redirected || result.html.includes("Article saved") || result.html.includes("The article has been saved");
     const errorMsg = this.extractAlertMessage(result.html);
 
     let createdId = "";
     if (successMsg) {
-      const listed = await this.listArticles();
-      const found = this.findLatestByTitle((listed.data || []) as Array<Record<string, string>>, data.title);
-      createdId = found?.id || "";
+      // Fastest path: Joomla sometimes redirects to the edit form with ?id=<newId> — grab it directly.
+      const idFromRedirect = result.redirectUrl?.match(/[?&]id=(\d+)/)?.[1] ?? "";
+      createdId = idFromRedirect;
+
+      if (!createdId) {
+        // Fallback: scan the category list. Narrow to the target category so we don't
+        // pick up an unrelated article with the same title.
+        const listed = await this.listArticles(data.categoryId);
+        const found = this.findLatestByTitle((listed.data || []) as Array<Record<string, string>>, data.title);
+        createdId = found?.id || "";
+      }
+
+      if (!createdId) {
+        // One retry after a short delay — handles the DB commit timing window where
+        // the article exists on the server but hasn't propagated to the list view yet.
+        await new Promise((r) => setTimeout(r, 600));
+        const listedRetry = await this.listArticles(data.categoryId);
+        const foundRetry = this.findLatestByTitle((listedRetry.data || []) as Array<Record<string, string>>, data.title);
+        createdId = foundRetry?.id || "";
+      }
     }
     const verify = createdId ? await this.getArticle(createdId) : null;
     const article = ((verify?.data || {}) as Record<string, string>);
@@ -2930,14 +2950,29 @@ export class JoomlaClient {
     };
 
     const result = await this.postPage(newCatUrl, formData);
-    const successMsg = result.html.includes("Category saved") || result.html.includes("has been saved");
+    // Accept a redirect (302/303) as a success signal — same pattern as createArticle.
+    const successMsg = result.redirected || result.html.includes("Category saved") || result.html.includes("has been saved");
     const errorMsg = this.extractAlertMessage(result.html);
 
     let createdId = "";
     if (successMsg) {
-      const listed = await this.listCategories(ext);
-      const found = this.findLatestByTitle((listed.data || []) as Array<Record<string, string>>, data.title);
-      createdId = found?.id || "";
+      // Fastest path: extract the category ID from the redirect URL if present.
+      const idFromRedirect = result.redirectUrl?.match(/[?&]id=(\d+)/)?.[1] ?? "";
+      createdId = idFromRedirect;
+
+      if (!createdId) {
+        const listed = await this.listCategories(ext);
+        const found = this.findLatestByTitle((listed.data || []) as Array<Record<string, string>>, data.title);
+        createdId = found?.id || "";
+      }
+
+      if (!createdId) {
+        // One retry after a short delay — handles DB commit timing window.
+        await new Promise((r) => setTimeout(r, 600));
+        const listedRetry = await this.listCategories(ext);
+        const foundRetry = this.findLatestByTitle((listedRetry.data || []) as Array<Record<string, string>>, data.title);
+        createdId = foundRetry?.id || "";
+      }
     }
     const verify = createdId ? await this.getCategory(createdId) : null;
     const category = ((verify?.data || {}) as Record<string, string>);

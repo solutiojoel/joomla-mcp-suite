@@ -18,6 +18,17 @@ A grid layout has two parts:
 
 ---
 
+## Prerequisites — Confirm or Create a Category
+
+The grid's particle module must point at a category. Before building the module, check whether an appropriate category already exists:
+
+- If an existing category is the right fit (e.g., a Staff category already scoped to this grid), use it — note its ID.
+- If no suitable category exists, create a new one: **Content → Categories → New**. Title it descriptively (e.g., `Ministries Items`, `Staff Items`), parent root (`/`), and note the new category ID.
+
+Do **not** create a new category if one already serves this purpose — duplicate categories cause articles to appear in the wrong places.
+
+---
+
 ## Step-by-Step: Create the Grid Module
 
 1. Go to **Module Manager** → New → **Gantry 5 Particle**.
@@ -46,7 +57,7 @@ A grid layout has two parts:
 Used on grid pages where a secondary navigation sidebar is needed.
 
 1. Go to **Module Manager** → New → **Gantry 5 Particle**.
-2. Title: `[Page Name] - Side Menu`. Show Title: **Hide**. Position: `SideBar A` (under Clarity).
+2. Title: `[Page Name] - Side Menu`. Show Title: **Hide**. Position: `SideBar A` (position name may vary by template — check the site's active Gantry template for the correct sidebar position).
 3. Click **Pick a Particle** → select **Block Content**.
 4. **Settings tab:** Change Content Source to **Joomla**.
 5. **Articles tab:** Select the category. Clear "Number of Articles". Order by: **Ordering**.
@@ -59,4 +70,6 @@ Used on grid pages where a secondary navigation sidebar is needed.
 
 ## Verify the Grid Outline
 
-Before starting, confirm the Grid Outline exists in Gantry. It should be a named outline (e.g., "Grid") with the appropriate layout. If it doesn't exist, create it before building the module.
+Before starting, confirm that a Grid-type outline exists in Gantry for this site. The outline name varies by site template — for example, it may be named `Studius - #Grid`, `Grid`, or similar. Check **Gantry → Outlines** to find the correct name.
+
+Assign the correct `templateStyleId` for this outline when creating the Single Article menu item (do not rely on the default template style — the grid position `CONTENT-BOTTOM-A` only renders correctly under the grid outline). If no grid outline exists, create one before building the module.
