@@ -510,6 +510,23 @@ const tools = [
     },
   },
   {
+    name: "joomla_workspace_read",
+    description:
+      "Read back a file previously written with joomla_workspace_write from the " +
+      "/app/workspace/ directory. Use this to fetch a persisted artifact instead of " +
+      "having a model re-emit its full content. Path must be relative and must not contain '..'.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: {
+          type: "string",
+          description: "Relative file path under /app/workspace/ (e.g. 'blueprints/home.json'). Must not contain '..'.",
+        },
+      },
+      required: ["path"],
+    },
+  },
+  {
     name: "joomla_verify_frontend_content",
     description:
       "Verify that specific text strings are present or absent in a frontend page's " +
@@ -1442,6 +1459,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
               mimeType: "image/png",
             },
           ],
+          isError: false,
+        };
+      }
+
+      case "joomla_workspace_read": {
+        const relPath = args?.path as string;
+        if (!relPath) return { content: [{ type: "text", text: "Error: path is required" }], isError: true };
+        if (relPath.includes("..") || path.isAbsolute(relPath))
+          return { content: [{ type: "text", text: "Error: path must be relative and must not contain '..'" }], isError: true };
+        const workspaceDir = path.join(process.cwd(), "workspace");
+        const srcPath = path.join(workspaceDir, relPath);
+        if (!srcPath.startsWith(workspaceDir + path.sep) && srcPath !== workspaceDir)
+          return { content: [{ type: "text", text: "Error: resolved path escapes workspace directory" }], isError: true };
+        if (!fs.existsSync(srcPath))
+          return { content: [{ type: "text", text: `Error: no file at workspace path '${relPath}'` }], isError: true };
+        const fileContent = fs.readFileSync(srcPath, "utf8");
+        return {
+          content: [{ type: "text", text: fileContent }],
           isError: false,
         };
       }

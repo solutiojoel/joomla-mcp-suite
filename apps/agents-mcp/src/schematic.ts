@@ -29,7 +29,15 @@ export interface SchematicEntry {
   copy?: string;
   assets?: string[];
   features?: Array<{ kind: string; kb_ref?: string; notes?: string }>;
-  status: "todo" | "filled" | "needs_input" | "blocked" | "done" | "orphaned";
+  /** Workspace path of the fetched source markdown (fetch_source_content). */
+  source_file?: string;
+  /** Workspace path of the final page HTML (content-writer harness). */
+  content_file?: string;
+  /** True when the writer generated the page from scratch — flag for review. */
+  draft?: boolean;
+  /** ISO timestamp the HTML was applied to the Joomla article (apply_content). */
+  applied_at?: string;
+  status: "todo" | "filled" | "needs_input" | "blocked" | "written" | "done" | "orphaned";
   notes?: string;
 }
 

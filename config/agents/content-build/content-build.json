@@ -1,0 +1,37 @@
+{
+  "name": "content-build",
+  "description": "Content building — Content Schematic → written pages on the Joomla skeleton (Phase 5). Resolves open questions, fetches old-site content, writes house-style HTML via the content-writer sub-agent, and applies it to the live articles.",
+  "instructions": "content-build-agent.md",
+  "tools": {
+    "allow": [
+      "set_active_site", "get_active_site", "get_agent_instructions",
+      "get_site_notes", "append_site_note", "write_site_notes",
+      "read_agent_doc", "reload_tools",
+      "knowledge_universal",
+      "derive_content_schematic", "run_content_interpretation",
+      "discover_source_urls", "fetch_source_content",
+      "run_content_build", "apply_content",
+      "joomla_article", "joomla_category",
+      "joomla_media", "joomla_bulk_checkin",
+      "joomla_get_frontend_*", "joomla_verify_frontend_content",
+      "joomla_backend_inventory",
+      "joomla_docman_*",
+      "joomla_workspace_write", "joomla_workspace_read"
+    ],
+    "deny": [
+      "joomla_submit_admin_form", "joomla_permissions",
+      "joomla_user*", "joomla_group*",
+      "joomla_component_inspect",
+      "joomla_inspect_admin_form", "joomla_inspect_admin_list"
+    ],
+    "_rules_comment": "Argument-level rules for this agent. Same format as toolRules in tool-policy.json.",
+    "rules": {}
+  },
+  "docs": {
+    "allow": [
+      "workflows/content-build-workflow",
+      "workflows/improvements",
+      "kb/*"
+    ]
+  }
+}

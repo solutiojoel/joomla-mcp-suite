@@ -9,9 +9,57 @@ import { createLogger } from "@solutio/logging";
 import { runMenuInterpreter } from "./agents/menu-interpreter.js";
 import { runMenuBuilder } from "./agents/menu-builder.js";
 import { runContentInterpreter } from "./agents/content-interpreter.js";
+import { runContentWriter } from "./agents/content-writer.js";
 import { deriveContentSchematic, ContentSchematic } from "./schematic.js";
 import { validateSchematic } from "./schematic-validator.js";
+import { fetchSourceContent, discoverSourceUrls } from "./content-fetch.js";
+import { applyContent, ApplyReport } from "./content-apply.js";
 import { connectDownstreams } from "./bridge.js";
+
+function siteSlug(siteUrl: string): string {
+  return new URL(siteUrl).hostname.replace(/^www\./, "").split(".")[0];
+}
+
+function statusSummary(schematic: ContentSchematic): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const e of schematic.entries) counts[e.status] = (counts[e.status] ?? 0) + 1;
+  return counts;
+}
+
+/** Bridge + schematic loader shared by the content-build tools. The schematic
+ *  can stay server-side: when the caller doesn't pass one, it is read from the
+ *  site workspace — the main session only ever sees manifests. */
+async function contentBuildContext(siteUrl: string, schematicFilename?: string, passed?: unknown) {
+  const slug = siteSlug(siteUrl);
+  const filename = schematicFilename || `${slug}-content-schematic.json`;
+  const { executor } = await connectDownstreams(["joomla-mcp"], siteUrl, [
+    "joomla_workspace_read",
+    "joomla_workspace_write",
+    "joomla_article",
+  ]);
+
+  let schematic: ContentSchematic;
+  if (passed && typeof passed === "object") {
+    schematic = passed as ContentSchematic;
+  } else {
+    const loaded = await executor("joomla_workspace_read", { path: filename });
+    if (typeof loaded === "string") {
+      throw new Error(`workspace file '${filename}' is not valid schematic JSON`);
+    }
+    schematic = loaded as ContentSchematic;
+  }
+  if (!Array.isArray(schematic.entries)) {
+    throw new Error(`schematic '${filename}' has no entries array`);
+  }
+
+  const persist = () =>
+    executor("joomla_workspace_write", {
+      path: filename,
+      content: JSON.stringify(schematic, null, 2),
+    });
+
+  return { slug, filename, executor, schematic, persist };
+}
 
 const TOOLS = [
   {
@@ -154,6 +202,92 @@ const TOOLS = [
           type: "string",
           description: "Original filename of the source PDF, recorded as the schematic's source field. Defaults to the pdf_path basename.",
         },
+      },
+    },
+  },
+  {
+    name: "discover_source_urls",
+    description:
+      "Content-build Phase 2 helper: deterministically proposes source URLs for schematic entries that need one (content_source pull/existing without a real URL) — no LLM involved. " +
+      "Fetches the OLD site's sitemap.xml (falling back to homepage links) and fuzzy-matches entry titles against URL slugs and link text. " +
+      "Proposals are candidates for the human to confirm — NEVER write them into the schematic without confirmation. " +
+      "Reads the schematic from the site workspace unless one is passed. " +
+      "Returns { success, proposals: [{ node_key, title, candidates: [{ url, score, matched }] }], source, pages_scanned }.",
+    inputSchema: {
+      type: "object",
+      required: ["site_url", "base_url"],
+      properties: {
+        site_url: { type: "string", description: "The active (new) site URL — locates the workspace schematic." },
+        base_url: { type: "string", description: "The OLD site's base URL to scan for existing content (e.g. https://www.oldparishsite.org)." },
+        schematic: { type: "object", description: "Content Schematic to match against. Omit to load {slug}-content-schematic.json from the workspace." },
+        schematic_filename: { type: "string", description: "Workspace schematic filename override." },
+        max_candidates: { type: "number", description: "Max candidate URLs per entry. Default 3." },
+      },
+    },
+  },
+  {
+    name: "fetch_source_content",
+    description:
+      "Content-build Phase 3: deterministically fetches every eligible entry's old-site page (content_source pull/existing, status filled, http source_url), " +
+      "extracts the main content with Readability, converts it to markdown with Turndown, and saves it to the workspace as {slug}-source/{nn}-{title}.md — no LLM involved, raw HTML never enters a context window. " +
+      "Stamps source_file on each entry, records page image URLs in assets, flips failed fetches to needs_input with an open question, and persists the schematic. " +
+      "Reads the schematic from the site workspace unless one is passed; returns only the manifest (not the schematic). " +
+      "Returns { success, report: { fetched, failed, skipped }, status_summary, schematic_filename }.",
+    inputSchema: {
+      type: "object",
+      required: ["site_url"],
+      properties: {
+        site_url: { type: "string", description: "The active site URL (e.g. https://example.com)." },
+        schematic: { type: "object", description: "Content Schematic to operate on. Omit to load {slug}-content-schematic.json from the workspace." },
+        schematic_filename: { type: "string", description: "Workspace schematic filename override." },
+        refetch: { type: "boolean", description: "Re-fetch entries that already have a source_file. Default false." },
+      },
+    },
+  },
+  {
+    name: "run_content_build",
+    description:
+      "Content-build Phase 4: writes final Joomla article HTML for every writable entry and (by default) auto-applies it to the skeleton after each batch. " +
+      "Writable = status 'filled' with a fetched source_file or client copy, or content_source 'generate' with instructions (drafted and flagged draft: true for review). " +
+      "Runs the content-writer sub-agent (Sonnet) per batch of ~8 entries in a fresh context window — page content flows through workspace files, never through your context. " +
+      "The harness validates every claimed file and stamps content_file/draft/status 'written'; the deterministic apply stage then updates each Joomla article (status 'done'), " +
+      "REFUSING to overwrite an article that already has real content unless force is set. Idempotent: re-runs pick up where the statuses left off. " +
+      "Reads the schematic from the site workspace unless one is passed; returns manifests only. " +
+      "Returns { success, write: { batches, written, failed, not_writable, drafts }, apply: { applied, skipped, failed }, status_summary }.",
+    inputSchema: {
+      type: "object",
+      required: ["site_url"],
+      properties: {
+        site_url: { type: "string", description: "The active site URL (e.g. https://example.com)." },
+        schematic: { type: "object", description: "Content Schematic to operate on. Omit to load {slug}-content-schematic.json from the workspace." },
+        schematic_filename: { type: "string", description: "Workspace schematic filename override." },
+        batch_size: { type: "number", description: "Entries per content-writer run. Default 8." },
+        node_keys: { type: "array", items: { type: "string" }, description: "Explicit subset of node_keys to write (also unlocks re-writing 'written' entries)." },
+        apply: { type: "boolean", description: "Auto-apply each batch to Joomla after writing. Default true." },
+        force: { type: "boolean", description: "Apply even over articles that already have real content. Default false." },
+        dry_run: { type: "boolean", description: "Report the batch plan (and apply plan) without running the writer or touching Joomla." },
+      },
+    },
+  },
+  {
+    name: "apply_content",
+    description:
+      "Standalone deterministic apply stage (also runs automatically inside run_content_build): pushes each 'written' entry's HTML file into its Joomla article — no LLM involved. " +
+      "Resolves the article by stamped joomla_article_id (title-lookup fallback, '{title} (landing)' for grid landings), verifies the article title matches, " +
+      "and refuses to overwrite real (non-placeholder) content unless force is set. Success → status 'done' + applied_at; failures stay 'written' for a re-run. " +
+      "Use dry_run first to see the full plan; use node_keys+force to re-apply specific pages. " +
+      "Reads the schematic from the site workspace unless one is passed. " +
+      "Returns { success, report: { applied, would_apply, skipped, failed }, status_summary }.",
+    inputSchema: {
+      type: "object",
+      required: ["site_url"],
+      properties: {
+        site_url: { type: "string", description: "The active site URL (e.g. https://example.com)." },
+        schematic: { type: "object", description: "Content Schematic to operate on. Omit to load {slug}-content-schematic.json from the workspace." },
+        schematic_filename: { type: "string", description: "Workspace schematic filename override." },
+        node_keys: { type: "array", items: { type: "string" }, description: "Explicit subset to apply (also unlocks re-applying 'done' entries)." },
+        force: { type: "boolean", description: "Overwrite articles that already have real content. Default false." },
+        dry_run: { type: "boolean", description: "Report the plan without updating Joomla." },
       },
     },
   },
@@ -335,6 +469,215 @@ function buildServer(): Server {
           content: [{ type: "text" as const, text: JSON.stringify(result) }],
           isError: !result.success,
         };
+      }
+
+      case "discover_source_urls": {
+        console.error(`[discover_source_urls] starting`);
+        const site_url = request.params.arguments?.site_url as string;
+        const base_url = request.params.arguments?.base_url as string;
+        try {
+          if (!site_url) throw new Error("site_url is required");
+          if (!base_url) throw new Error("base_url is required (the OLD site to scan)");
+          const ctx = await contentBuildContext(
+            site_url,
+            request.params.arguments?.schematic_filename as string | undefined,
+            request.params.arguments?.schematic
+          );
+          const result = await discoverSourceUrls(ctx.schematic, base_url, {
+            maxCandidates: request.params.arguments?.max_candidates as number | undefined,
+          });
+          console.error(
+            `[discover_source_urls] done: ${result.proposals.length} proposals from ${result.pages_scanned} ${result.source} pages`
+          );
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ success: true, ...result }) }],
+          };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err.message : String(err);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ success: false, error }) }],
+            isError: true,
+          };
+        }
+      }
+
+      case "fetch_source_content": {
+        console.error(`[fetch_source_content] starting`);
+        const site_url = request.params.arguments?.site_url as string;
+        try {
+          if (!site_url) throw new Error("site_url is required");
+          const ctx = await contentBuildContext(
+            site_url,
+            request.params.arguments?.schematic_filename as string | undefined,
+            request.params.arguments?.schematic
+          );
+          let count = 0;
+          const report = await fetchSourceContent(ctx.schematic, {
+            slug: ctx.slug,
+            refetch: request.params.arguments?.refetch === true,
+            writeWorkspaceFile: async (path, content) => {
+              await ctx.executor("joomla_workspace_write", { path, content });
+              count++;
+              await sendProgress(count, count + 1);
+            },
+          });
+          await ctx.persist();
+          console.error(
+            `[fetch_source_content] done: ${report.fetched.length} fetched, ${report.failed.length} failed, ${report.skipped.length} skipped`
+          );
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({
+                  success: report.failed.length === 0,
+                  report,
+                  status_summary: statusSummary(ctx.schematic),
+                  schematic_filename: ctx.filename,
+                }),
+              },
+            ],
+          };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err.message : String(err);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ success: false, error }) }],
+            isError: true,
+          };
+        }
+      }
+
+      case "run_content_build": {
+        console.error(`[run_content_build] starting`);
+        const site_url = request.params.arguments?.site_url as string;
+        const doApply = request.params.arguments?.apply !== false;
+        const force = request.params.arguments?.force === true;
+        const dry_run = request.params.arguments?.dry_run === true;
+        try {
+          if (!site_url) throw new Error("site_url is required");
+          const ctx = await contentBuildContext(
+            site_url,
+            request.params.arguments?.schematic_filename as string | undefined,
+            request.params.arguments?.schematic
+          );
+
+          const applyReports: ApplyReport[] = [];
+          const writeResult = await runContentWriter(
+            {
+              site_url,
+              schematic: ctx.schematic,
+              schematic_filename: ctx.filename,
+              batch_size: request.params.arguments?.batch_size as number | undefined,
+              node_keys: request.params.arguments?.node_keys as string[] | undefined,
+              dry_run,
+            },
+            sendProgress,
+            (event) => {
+              if (event.type === "tool_use") {
+                console.error(`[run_content_build] writer tool: ${event.toolName}`);
+              }
+            },
+            doApply && !dry_run
+              ? async (writtenKeys, batch, total) => {
+                  if (writtenKeys.length === 0) return;
+                  console.error(`[run_content_build] applying batch ${batch}/${total} (${writtenKeys.length} entries)`);
+                  applyReports.push(
+                    await applyContent(ctx.schematic, {
+                      executor: ctx.executor,
+                      schematic_filename: ctx.filename,
+                      node_keys: writtenKeys,
+                      force,
+                    })
+                  );
+                }
+              : undefined
+          );
+
+          const apply: ApplyReport = { applied: [], would_apply: [], skipped: [], failed: [] };
+          for (const r of applyReports) {
+            apply.applied.push(...r.applied);
+            apply.would_apply.push(...r.would_apply);
+            apply.skipped.push(...r.skipped);
+            apply.failed.push(...r.failed);
+          }
+
+          const success = writeResult.success && apply.failed.length === 0;
+          console.error(
+            `[run_content_build] done: ${writeResult.written.length} written, ${apply.applied.length} applied, ${writeResult.failed.length + apply.failed.length} failed, ${writeResult.drafts.length} drafts`
+          );
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({
+                  success,
+                  error: writeResult.error,
+                  write: {
+                    batches: writeResult.batches,
+                    written: writeResult.written,
+                    failed: writeResult.failed,
+                    not_attempted: writeResult.not_attempted,
+                    not_writable: writeResult.not_writable,
+                    drafts: writeResult.drafts,
+                  },
+                  apply: doApply ? apply : "skipped (apply: false)",
+                  status_summary: statusSummary(ctx.schematic),
+                  schematic_filename: ctx.filename,
+                }),
+              },
+            ],
+            isError: !success,
+          };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err.message : String(err);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ success: false, error }) }],
+            isError: true,
+          };
+        }
+      }
+
+      case "apply_content": {
+        console.error(`[apply_content] starting`);
+        const site_url = request.params.arguments?.site_url as string;
+        try {
+          if (!site_url) throw new Error("site_url is required");
+          const ctx = await contentBuildContext(
+            site_url,
+            request.params.arguments?.schematic_filename as string | undefined,
+            request.params.arguments?.schematic
+          );
+          const report = await applyContent(ctx.schematic, {
+            executor: ctx.executor,
+            schematic_filename: ctx.filename,
+            node_keys: request.params.arguments?.node_keys as string[] | undefined,
+            force: request.params.arguments?.force === true,
+            dry_run: request.params.arguments?.dry_run === true,
+          });
+          console.error(
+            `[apply_content] done: ${report.applied.length} applied, ${report.would_apply.length} planned, ${report.skipped.length} skipped, ${report.failed.length} failed`
+          );
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({
+                  success: report.failed.length === 0,
+                  report,
+                  status_summary: statusSummary(ctx.schematic),
+                  schematic_filename: ctx.filename,
+                }),
+              },
+            ],
+            isError: report.failed.length > 0,
+          };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err.message : String(err);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ success: false, error }) }],
+            isError: true,
+          };
+        }
       }
 
       default:

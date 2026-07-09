@@ -22,6 +22,7 @@ Do this before any other tool call — the active scope controls which tools are
 |-----------|-------------|
 | Support tickets, Freshdesk triage | `support` |
 | Menu build (PDF → spec → Joomla skeleton) | `menu-build` |
+| Content build (schematic → written pages on the skeleton) | `content-build` |
 | Everything else (design, content, config, investigation) | `super_shannon` |
 
 **Recognizing a support ticket (do not miss this):** if the user's message is **just a number** (e.g. `35478`), a `#`-prefixed number (`#35478`), a Freshdesk ticket URL, or mentions a "ticket" / "Freshdesk" / "support" — it is a **support ticket**. Switch to `support` and begin the Support Ticket Workflow immediately. A bare 4–6 digit number on its own is **always** a Freshdesk ticket ID — treat it as one; never respond with "what would you like to work on?" or fall through to `super_shannon`.
@@ -109,6 +110,7 @@ Call `read_agent_doc(doc: "<name>")` with the name from the first column:
 | `workflows/editing-rules` | **Moved to Knowledge Gateway.** Use `knowledge_universal { action: "list", tag: "editing-rules" }` instead. |
 | `workflows/freshdesk-agent` | **Deprecated — archived only.** Use `knowledge_universal { tag: "triage" \| "workflow" }` instead. |
 | `workflows/menu-build-workflow` | Menu build — PDF → Menu Spec → Joomla skeleton (Phases 1–4). Category conventions, pitfalls, and checklist included. |
+| `workflows/content-build-workflow` | Content build — Content Schematic → written pages on the skeleton (Phase 5). Open-question resolution, deterministic fetch, batched writer, auto-apply. |
 | `workflows/content-agent` | Standard article text, SEO, and publish state edits |
 | `workflows/custom-page-agent` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
 | `workflows/gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |

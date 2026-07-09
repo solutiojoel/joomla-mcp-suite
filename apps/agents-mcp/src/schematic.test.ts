@@ -213,6 +213,32 @@ check("merge: filled fields preserved, derive-owned refreshed with article IDs",
   assert(m.joomla_article_id === "103", `member ID ${m.joomla_article_id}`);
 });
 
+check("merge: content-build stage fields and 'written'/'done' statuses survive re-derive", () => {
+  const staged: ContentSchematic = JSON.parse(JSON.stringify(merged.schematic));
+  const w = staged.entries.find((e) => e.node_key === "mainmenu:About Us/Our Staff")!;
+  w.source_file = "stmarys-source/02-our-staff.md";
+  w.content_file = "stmarys-html/02-our-staff.html";
+  w.status = "written";
+  const d = staged.entries.find((e) => e.node_key === "mainmenu:About Us/History")!;
+  d.content_file = "stmarys-html/03-history.html";
+  d.draft = true;
+  d.applied_at = "2026-07-09T12:00:00Z";
+  d.status = "done";
+
+  const again = deriveContentSchematic(editedSpec, staged, { now: new Date("2026-07-09T13:00:00Z") });
+  const byKey2 = new Map(again.schematic.entries.map((e) => [e.node_key, e]));
+  const w2 = byKey2.get("mainmenu:About Us/Our Staff")!;
+  assert(w2.source_file === "stmarys-source/02-our-staff.md", "source_file lost");
+  assert(w2.content_file === "stmarys-html/02-our-staff.html", "content_file lost");
+  assert(w2.status === "written", `status ${w2.status}`);
+  const d2 = byKey2.get("mainmenu:About Us/History")!;
+  assert(d2.draft === true, "draft flag lost");
+  assert(d2.applied_at === "2026-07-09T12:00:00Z", "applied_at lost");
+  assert(d2.status === "done", `status ${d2.status}`);
+  const v = validateSchematic(again.schematic as unknown as Record<string, unknown>, editedSpec);
+  assert(v.valid, [...v.schema_errors, ...v.lint_errors].join("; "));
+});
+
 check("merge result passes cross-lint against the edited spec", () => {
   const v = validateSchematic(merged.schematic as unknown as Record<string, unknown>, editedSpec);
   assert(v.valid, [...v.schema_errors, ...v.lint_errors].join("; "));

@@ -33,8 +33,12 @@ which preserves all filled-in content fields.
    `joomla_article_id` from `spec.joomla_ids.articles` onto each entry.
 4. **Re-derive after ANY later spec edit (standing rule).** New spec nodes appear as
    `todo` entries; removed nodes become `orphaned` (content preserved for salvage).
-5. **Content build (Phase 5, future content-build agent).** Works the entries,
-   flipping `status` to `done`.
+5. **Content build (Phase 5, content-build agent).** Works the entries through the
+   fetch → write → apply pipeline (see
+   [content-build-workflow](../workflows/content-build-workflow.md)):
+   `fetch_source_content` stamps `source_file`; the content-writer sub-agent's harness
+   stamps `content_file`/`draft` and flips `filled` → `written`; `apply_content`
+   pushes the HTML into the Joomla article and flips `written` → `done` + `applied_at`.
 
 ## Which spec nodes get entries
 
@@ -58,12 +62,19 @@ cross-lint — never edit them.
 |---|---|---|
 | **Derivation** | `node_key`, `kind`, `title`, `menu_path`, `category`, `content_source`, `spec_notes`, `joomla_article_id` | Refreshed from the spec on every re-derive. |
 | **content-interpreter / human** | `instructions`, `source_url`, `copy`, `assets`, `features`, `notes` | Preserved verbatim by every re-derive. |
+| **content-build stages (deterministic harnesses, never the LLM)** | `source_file` (fetch), `content_file` + `draft` (writer harness), `applied_at` (apply) | Preserved verbatim by every re-derive. |
 | **All stages** | `status` | New → `todo` (`docman` → `blocked`); existing → preserved; node removed from spec → `orphaned`. |
 
 `status` values: `todo` (scaffold only) · `filled` (interpreter populated it) ·
 `needs_input` (has an unresolved open question) · `blocked` (can't be built by the
-content agent — docman, missing prerequisite) · `done` (content-build pass complete) ·
+content agent — docman, missing prerequisite) · `written` (final HTML produced in the
+workspace, apply pending or failed) · `done` (applied to the Joomla article) ·
 `orphaned` (spec node no longer exists; content kept for human salvage or deletion).
+
+Phase-5 flow: `filled` → `written` → `done`. Fetch failures knock an entry back to
+`needs_input` (with an open question); apply failures leave it `written` so a re-run
+picks it up. `draft: true` marks pages the writer generated from scratch
+(`content_source: "generate"`) — review them before handoff.
 
 **Known limitation — renames:** a Phase-3 title rename looks like remove+add to the
 merge: the old entry goes `orphaned` (content intact), the new one appears as `todo`.

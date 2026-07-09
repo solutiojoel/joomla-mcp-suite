@@ -5,7 +5,7 @@
   "instructions": "content-interpreter-system.md",
   "model": "claude-sonnet-5",
   "tools": {
-    "allow": ["joomla_workspace_write"],
+    "allow": ["joomla_workspace_write", "joomla_workspace_read"],
     "downstreams": ["joomla-mcp"]
   },
   "docs": { "allow": [] }

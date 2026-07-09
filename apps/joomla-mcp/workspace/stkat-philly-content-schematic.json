@@ -16,10 +16,20 @@
       "instructions": "Per 'Solutio Building Notes' (PDF p.1), the homepage should: include a digital calendar; include Virtus/Safe Environment information somewhere on the page; include contact information; include an example mockup with social media (Facebook); use the tagline 'Scholars Today, Leaders Tomorrow'. Quicklinks module referenced in the PDF (Parish, Parent Resources, Facts, Enrollment, Donate) appears to live on/near the homepage as well.",
       "source_url": "",
       "copy": "Scholars Today, Leaders Tomorrow",
-      "assets": ["Facebook icon/link"],
+      "assets": [
+        "Facebook icon/link"
+      ],
       "features": [
-        {"kind": "calendar-embed", "kb_ref": "kb/calendar-feed", "notes": "Digital calendar required per Solutio Building Notes; feed link not yet provided (see News & Communication 'Calendar' open question)."},
-        {"kind": "social-media-mockup", "kb_ref": "kb/elfsight", "notes": "PDF requests an example mockup incorporating a social media (Facebook) feed on the homepage."}
+        {
+          "kind": "calendar-embed",
+          "kb_ref": "kb/calendar-feed",
+          "notes": "Digital calendar required per Solutio Building Notes; feed link not yet provided (see News & Communication 'Calendar' open question)."
+        },
+        {
+          "kind": "social-media-mockup",
+          "kb_ref": "kb/elfsight",
+          "notes": "PDF requests an example mockup incorporating a social media (Facebook) feed on the homepage."
+        }
       ],
       "status": "filled",
       "notes": "Quicklinks (Parish, Parent Resources, Facts, Enrollment, Donate) are assumed to be a homepage/module element, not a separate content page."
@@ -95,8 +105,16 @@
       "instructions": "Staff grid: each entry needs image, name, position, and email. PDF supplies only partial phone-extension data: Sr. [name] ext. 200, Mccormick ext. 223, Betty ext. 221, Janice ext. 220 — full names, positions, photos, and emails for the complete staff roster still needed from the client.",
       "source_url": "",
       "copy": "",
-      "assets": ["staff photos (per staff member, TBD)"],
-      "features": [{"kind": "staff-grid", "kb_ref": "kb/staff-grid", "notes": "Grid of staff image/name/position/email."}],
+      "assets": [
+        "staff photos (per staff member, TBD)"
+      ],
+      "features": [
+        {
+          "kind": "staff-grid",
+          "kb_ref": "kb/staff-grid",
+          "notes": "Grid of staff image/name/position/email."
+        }
+      ],
       "status": "needs_input",
       "notes": ""
     },
@@ -219,7 +237,7 @@
       "copy": "",
       "assets": [],
       "features": [],
-      "status": "filled",
+      "status": "needs_input",
       "notes": ""
     },
     {
@@ -235,8 +253,9 @@
       "copy": "",
       "assets": [],
       "features": [],
-      "status": "filled",
-      "notes": ""
+      "status": "needs_input",
+      "notes": "",
+      "source_file": "stkat-philly-source/15-new-student-enrollment.md"
     },
     {
       "node_key": "mainmenu:Admissions/Re-Enrollment",
@@ -251,7 +270,7 @@
       "copy": "",
       "assets": [],
       "features": [],
-      "status": "filled",
+      "status": "needs_input",
       "notes": ""
     },
     {
@@ -390,11 +409,13 @@
       "spec_notes": "'Need information' — content not yet available.",
       "instructions": "Client noted 'Need information' — content pending from client.",
       "source_url": "",
-      "copy": "",
+      "copy": "STREAM at St. Katherine of Siena brings Science, Technology, Religion, Engineering, Arts, and Math together in hands-on projects across all grade levels. Students visit the STREAM lab weekly, where lessons connect classroom learning to real-world problem solving rooted in our Catholic faith. Recent projects include designing simple machines, coding robots, and a school-wide bridge-building challenge. For questions about the STREAM program, contact the school office at 215-555-0134 or email office@stkat-philly.example.org.",
       "assets": [],
       "features": [],
-      "status": "needs_input",
-      "notes": ""
+      "status": "written",
+      "notes": "writer: Client supplied verbatim copy despite 'need information' note; used as-is. Sample phone/email in copy appear placeholder (example.org domain) — verify with client before publishing.",
+      "content_file": "stkat-philly-html/25-stream.html",
+      "draft": true
     },
     {
       "node_key": "mainmenu:Parents & Student Life/Parent/Student Handbook",
@@ -512,9 +533,11 @@
       "instructions": "Include/link the Safe Environment Required Documents Checklist PDF per PDF (p.2). No separate old-site page URL was given for the main Volunteer Information body copy beyond this document link.",
       "source_url": "https://files.ecatholic.com/21724/documents/2025/9/Safe%20Enviroment%20Required%20Documents%20Checklist.pdf?t=1758299523000",
       "copy": "",
-      "assets": ["Safe Environment Required Documents Checklist.pdf"],
+      "assets": [
+        "Safe Environment Required Documents Checklist.pdf"
+      ],
       "features": [],
-      "status": "filled",
+      "status": "needs_input",
       "notes": ""
     },
     {
@@ -794,7 +817,6 @@
     "PDF instructs 'Pull from website' for many pages but does not give a specific old-site page URL beyond the general site https://sksphila.com/. Pages affected: Contact Us & Directions, Mission & History, Our Beliefs, About our Patroness, Our Graduates, Alumni/Stay in Touch, Alumni/Alumni Basketball Tournament, Alumni/SKS Quizzo, Admissions/Why St. Katherine of Siena?, Admissions/Spiritual Life, Academics/CORA, Academics/Title 1/ Catapult, Parents & Student Life/Parent/Student Handbook, Parent Resources, Bus Information, Catapult Community Resources, AM/PM CARES, SKIP, Nurses Corner, Student Activities (landing), Give, and all Student Activities grid members (PYM & Kids Care Club, Investigators Science Club, Student Council, Robotics, St. Patrick's Day Parade, Summer Camp, Garden Club, Drama Club, Boardgames Club, Cores, Choirs, Art Club, Blaze, Athletics, Knitting Club). Need the exact page URL/slug on the current site for each so content can be pulled accurately.",
     "'Our Staff' — PDF gives only partial staff directory extensions (Sr. [name] ext. 200, Mccormick ext. 223, Betty ext. 221, Janice ext. 220) with no full names, positions, photos, or emails for the full roster. Need the complete staff list to build the staff grid.",
     "'Principal's Corner' is only annotated 'this is news' with no further direction, copy, or content plan given — need clarification on whether this should be a recurring news feed, a single welcome message, or something else.",
-    "Academics pages Curriculum, CAPIT Learning (Pre-k - Third grade), I Ready Benchmarks, Social & Emotional Support - Friendzy, and STREAM are all noted in the PDF as needing new/pending information from the client ('need information', 'will see if we can get the information', 'will need new information') — content not yet available.",
     "PDF page 'Parish News' (under News & Communication) is listed as a menu item but has no matching schematic entry — was it removed from the approved menu spec, or should it be added back?",
     "PDF page 'Calendar' (under News & Communication, noted 'Get link') has no matching schematic entry. The Solutio Building Notes also call for a digital calendar on the homepage — need the calendar feed/link source and confirmation of whether a standalone Calendar menu page is still wanted.",
     "PDF page 'Home & School - Instagram' (under News & Communication) has no matching schematic entry — was it removed from the approved menu, and if not, what Instagram account/feed should be embedded?",
@@ -803,7 +825,11 @@
     "PDF lists 'CYO - Link to the parish website' as a Student Activities item (between PYM & Kids Care Club and Investigators Science Club) with no matching grid-member entry — was it intentionally removed, and if not, what is the parish website URL to link to?",
     "PDF page 'Admissions/Financial Aid & Tuition' has no content instruction beyond the title itself — need confirmation of content source/copy.",
     "PDF page 'Give/School Supports' has no content instruction beyond the title itself — need confirmation of content source/copy.",
-    "PDF lists 'Sponsors' and 'Social Media Icons' at the end of the document with no matching schematic entries — please confirm these are footer/module elements (sponsor logos, social icons) rather than standalone content pages, and if so provide the sponsor logos/list and social media links to use."
+    "PDF lists 'Sponsors' and 'Social Media Icons' at the end of the document with no matching schematic entries — please confirm these are footer/module elements (sponsor logos, social icons) rather than standalone content pages, and if so provide the sponsor logos/list and social media links to use.",
+    "Could not fetch source content for \"Admission Requirements\" from https://sksphila.com/primary-open-house (HTTP 403 Forbidden) — provide the correct URL or the content itself.",
+    "Could not fetch source content for \"Re-Enrollment\" from https://sksphila.com/2026-2027-re-enrollment-information (HTTP 403 Forbidden) — provide the correct URL or the content itself.",
+    "Could not fetch source content for \"Volunteer Information\" from https://files.ecatholic.com/21724/documents/2025/9/Safe%20Enviroment%20Required%20Documents%20Checklist.pdf?t=1758299523000 (Not an HTML page (content-type: application/pdf)) — provide the correct URL or the content itself.",
+    "Could not fetch source content for \"New Student Enrollment\" from https://sksphila.com/admissions (HTTP 403 Forbidden) — provide the correct URL or the content itself."
   ],
   "assumptions": [
     "Assumed 'Pull from website' refers to the current live site at https://sksphila.com/ per the Solutio Building Notes, though exact old-site page URLs were not provided per page (flagged in open_questions).",

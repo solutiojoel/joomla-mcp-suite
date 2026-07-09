@@ -34,7 +34,7 @@
     },
     "entryStatus": {
       "type": "string",
-      "enum": ["todo", "filled", "needs_input", "blocked", "done", "orphaned"]
+      "enum": ["todo", "filled", "needs_input", "blocked", "written", "done", "orphaned"]
     },
     "contentSource": {
       "type": "string",
@@ -75,6 +75,10 @@
             }
           }
         },
+        "source_file": { "type": "string", "description": "Workspace path of the fetched source markdown (stamped by fetch_source_content), e.g. 'stmarys-source/03-welcome.md'." },
+        "content_file": { "type": "string", "description": "Workspace path of the final page HTML (stamped by the content-writer harness), e.g. 'stmarys-html/03-welcome.html'." },
+        "draft": { "type": "boolean", "description": "True when the writer generated the page from scratch (content_source: generate) — flag for human review." },
+        "applied_at": { "type": "string", "description": "Timestamp the HTML was applied to the Joomla article (ISO 8601). Set by apply_content on success." },
         "status": { "$ref": "#/$defs/entryStatus" },
         "notes": { "type": "string", "description": "Freeform working notes (any stage)." }
       }

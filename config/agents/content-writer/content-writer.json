@@ -1,0 +1,12 @@
+{
+  "name": "content-writer",
+  "hidden": true,
+  "description": "Content-build write stage: transforms fetched source markdown (and drafts generate-pages) into final Joomla-ready article HTML per the Solutio house style. Runs per batch in a fresh context window on the Claude Agent SDK. Writes one HTML file per entry to the site workspace and returns only a compact status JSON — page content never flows through the caller's context. The harness (not this agent) stamps content_file/draft/status into the schematic.",
+  "instructions": "content-writer-system.md",
+  "model": "claude-sonnet-5",
+  "tools": {
+    "allow": ["joomla_workspace_write", "joomla_workspace_read"],
+    "downstreams": ["joomla-mcp"]
+  },
+  "docs": { "allow": [] }
+}

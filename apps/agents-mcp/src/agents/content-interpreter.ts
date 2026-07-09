@@ -125,7 +125,8 @@ export async function runContentInterpreter(
     "The scaffold's entry set is final — derived from the human-approved Menu Spec.",
     "Fill the content fields per your system prompt. Never add, remove, or rekey entries.",
     `1. Persist the filled schematic with joomla_workspace_write (path: "${schematicFilename}").`,
-    "2. Then return the complete schematic JSON as your final text response (no prose, no code fences).",
+    "2. Then reply with a short confirmation only (e.g. \"done\") — do NOT repeat the schematic JSON in your final response.",
+    "If you cannot produce a valid schematic, skip the write and reply with { \"success\": false, \"error\": \"reason\" } instead.",
   ];
 
   const result = await runSubAgent({
@@ -147,30 +148,50 @@ export async function runContentInterpreter(
     return { success: false, error: result.error, run_log: result.runLogPath };
   }
 
+  // The model may still self-report failure in its final text instead of writing
+  // the file (e.g. "I couldn't produce a valid schematic") — check that first.
   const rawResult = result.result;
-  let filled: Record<string, unknown> | null = null;
-
-  if (typeof rawResult === "object" && rawResult !== null) {
-    filled = rawResult as Record<string, unknown>;
-  } else if (typeof rawResult === "string") {
-    try {
-      filled = JSON.parse(rawResult);
-    } catch {
-      return {
-        success: false,
-        error: "Sub-agent returned non-JSON final response",
-        partial_schematic: rawResult,
-        run_log: result.runLogPath,
-      };
+  const asFailure = (val: unknown): { error: string } | null => {
+    if (typeof val === "object" && val !== null && (val as Record<string, unknown>).success === false) {
+      const err = (val as Record<string, unknown>).error;
+      return { error: typeof err === "string" ? err : "Sub-agent reported failure" };
     }
+    if (typeof val === "string") {
+      try {
+        return asFailure(JSON.parse(val));
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+  const reportedFailure = asFailure(rawResult);
+  if (reportedFailure) {
+    return {
+      success: false,
+      error: reportedFailure.error,
+      partial_schematic: rawResult,
+      run_log: result.runLogPath,
+    };
+  }
+
+  // Read the persisted schematic back from the workspace rather than trusting the
+  // model to repeat the full (potentially large) JSON a second time in its final
+  // response — halves output-token generation for the run's largest artifact.
+  let filled: Record<string, unknown> | null = null;
+  try {
+    const read = await executor("joomla_workspace_read", { path: schematicFilename });
+    filled = typeof read === "string" ? JSON.parse(read) : (read as Record<string, unknown>);
+  } catch (err) {
+    return {
+      success: false,
+      error: `Could not read persisted schematic from workspace: ${err instanceof Error ? err.message : String(err)}`,
+      run_log: result.runLogPath,
+    };
   }
 
   if (!filled) {
-    return { success: false, error: "Sub-agent returned an empty result", run_log: result.runLogPath };
-  }
-
-  if (filled.success === false && typeof filled.error === "string") {
-    return { success: false, error: filled.error, partial_schematic: filled, run_log: result.runLogPath };
+    return { success: false, error: "Workspace schematic file was empty", run_log: result.runLogPath };
   }
 
   // Structure lock: the returned entry set must equal the scaffold's exactly.

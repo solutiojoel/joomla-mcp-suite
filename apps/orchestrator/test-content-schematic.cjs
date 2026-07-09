@@ -157,6 +157,30 @@ const VALID = {
       title: 'Bulletins',
       content_source: 'none',
       status: 'blocked'
+    },
+    {
+      node_key: 'mainmenu:About Us/History',
+      kind: 'single_article',
+      title: 'History',
+      category: 'Page Content',
+      content_source: 'pull',
+      source_url: 'https://old.stmarys.example.org/history',
+      joomla_article_id: '104',
+      source_file: 'stmarys-source/05-history.md',
+      content_file: 'stmarys-html/05-history.html',
+      applied_at: '2026-07-09T12:00:00Z',
+      status: 'done'
+    },
+    {
+      node_key: 'mainmenu:Welcome New Parishioners',
+      kind: 'single_article',
+      title: 'Welcome New Parishioners',
+      category: 'Page Content',
+      content_source: 'generate',
+      instructions: 'Draft a welcome page for new parishioners.',
+      content_file: 'stmarys-html/06-welcome-new-parishioners.html',
+      draft: true,
+      status: 'written'
     }
   ],
   open_questions: ['Jane Smith — no bio on current site; ask client'],
@@ -258,7 +282,11 @@ check('schema declares entry/status/kind enums', () => {
   assert(schema.$defs && schema.$defs.entry, 'no $defs.entry');
   assert(schema.$defs.entryKind.enum.includes('grid_member'), 'entryKind enum incomplete');
   assert(schema.$defs.entryStatus.enum.includes('orphaned'), 'entryStatus enum incomplete');
+  assert(schema.$defs.entryStatus.enum.includes('written'), 'entryStatus enum missing written');
   assert(schema.properties.entries.items.$ref === '#/$defs/entry', 'entries not $ref entry');
+  for (const f of ['source_file', 'content_file', 'draft', 'applied_at']) {
+    assert(schema.$defs.entry.properties[f], `entry schema missing content-build field '${f}'`);
+  }
 });
 
 console.log(failures === 0 ? '\nAll checks passed.' : `\n${failures} check(s) FAILED.`);

@@ -72,6 +72,6 @@ You have access to a workspace-write tool (it may appear as `joomla_workspace_wr
 
    Derive `site-slug` from the site URL hostname (e.g. `stmarys.org` → `stmarys`). The site context is attached automatically — pass only `path` (bare filename, no directories) and `content`. The user message may specify the exact filename — use it if given.
 
-2. Return the same schematic JSON as your final text response — no prose before or after it, no code fences.
+2. Reply with a short confirmation only (e.g. "done") — do **not** repeat the schematic JSON in your final response. The caller reads the persisted file back; restating it wastes output tokens.
 
-If you cannot produce a valid schematic, return `{ "success": false, "error": "reason" }`.
+If you cannot produce a valid schematic, skip the write and return `{ "success": false, "error": "reason" }` as your final text instead.

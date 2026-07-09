@@ -5888,10 +5888,76 @@ export class JoomlaClient {
 
     const uploadedPath = targetFolder ? `${targetFolder}/${fileName}` : fileName;
 
+    if (isSuccess) {
+      return {
+        success: true,
+        message: `Uploaded: ${uploadedPath}`,
+        data: { fileName, fileSize: fileContent.length, targetFolder, uploadedPath },
+      };
+    }
+
+    // Some sites (FILEman/Koowa-guarded media roots) reject the plain com_media
+    // upload form with a non-core "Cannot upload at this time" message. Retry
+    // through FILEman's own JSON API, which uses a different upload route.
+    const filemanResult = await this.uploadFilemanFile(fileContent, fileName, targetFolder);
+    if (filemanResult.success) return filemanResult;
+
     return {
-      success: isSuccess,
-      message: isSuccess ? `Uploaded: ${uploadedPath}` : (errorMsg || `Upload failed (HTTP ${result.status})`),
-      data: { fileName, fileSize: fileContent.length, targetFolder, uploadedPath },
+      success: false,
+      message: `com_media upload failed: ${errorMsg || `HTTP ${result.status}`}; FILEman fallback also failed: ${filemanResult.message}`,
+      data: { fileName, fileSize: fileContent.length, targetFolder, uploadedPath, comMediaError: errorMsg, filemanError: filemanResult.message },
+    };
+  }
+
+  // FILEman (Joomlatools com_files) guards com_media uploads on some sites and
+  // rejects them with a non-core error. Its own admin UI uploads through a
+  // separate Koowa REST route instead — reverse-engineered from FILEman's
+  // files.min.js/uploader.min.js: POST multipart to view=file with
+  // container=<container slug>, _action=add, folder=<container-relative path>,
+  // and the file itself under field name "file" (plupload's default
+  // file_data_name). Origin/Referer headers stand in for the csrf_token field,
+  // same as the existing docmanApiCall/listFilemanFiles calls.
+  private async uploadFilemanFile(fileContent: Buffer, fileName: string, targetFolder: string): Promise<JoomlaResponse> {
+    if (!this.tokenName) {
+      await this.getPage(this.getAdminUrl("index.php?option=com_fileman"));
+    }
+    const baseUrl = this.config.baseUrl.replace(/\/$/, "");
+    const additionalHeaders: Record<string, string> = {
+      "Origin": baseUrl,
+      "Referer": this.getAdminUrl("index.php?option=com_fileman"),
+      "Accept": "application/json",
+    };
+
+    const cleanFolder = targetFolder.replace(/^\/+|\/+$/g, "");
+    const formData = new FormData();
+    formData.append("_action", "add");
+    formData.append("csrf_token", "");
+    formData.append("folder", cleanFolder);
+    formData.append("container", "fileman-files");
+    const blob = new Blob([new Uint8Array(fileContent)], { type: this.getMimeType(fileName) });
+    formData.append("file", blob, fileName);
+
+    const uploadUrl = this.getAdminUrl("index.php?option=com_fileman&routed=1&view=file&container=fileman-files");
+    const result = await this.request(uploadUrl, { method: "POST", body: formData, additionalHeaders });
+
+    const uploadedPath = cleanFolder ? `${cleanFolder}/${fileName}` : fileName;
+
+    if (result.status >= 400) {
+      return { success: false, message: `FILEman upload failed (HTTP ${result.status})`, data: { fileName, targetFolder: cleanFolder, uploadedPath } };
+    }
+
+    // Verify by re-listing rather than trusting the POST response shape —
+    // matches the verification pattern used elsewhere in this file (delete,
+    // create_folder).
+    const listing = await this.listFilemanFiles(cleanFolder);
+    const listingData = (listing.data || {}) as Record<string, unknown>;
+    const files = (listingData.files || []) as Array<Record<string, unknown>>;
+    const uploaded = files.some((f) => String(f.name || "") === fileName);
+
+    return {
+      success: uploaded,
+      message: uploaded ? `Uploaded via FILEman: ${uploadedPath}` : "FILEman upload submitted, but the file was not verified in the listing",
+      data: { fileName, fileSize: fileContent.length, targetFolder: cleanFolder, uploadedPath, route: "fileman" },
     };
   }
 
