@@ -46,7 +46,7 @@ Takes an interpreted Content Schematic from `filled`/`needs_input` to `done` on 
 1. Collect every entry's `features[]` (the interpreter recorded kind + `kb_ref`). Work them interactively one at a time — read the named KB (`kb/calendar-feed`, `kb/quick-galleries`, `kb/popup`, `kb/elfsight`, `kb/staff-grid`, …) and build per its guide. These are NOT automated.
 2. Spot-check a few live pages (`joomla_get_frontend_page_info` / `joomla_verify_frontend_content`): content present, headings/links/tables per `kb/content-standards`, no old-site debris.
 3. Skim the `draft: true` pages with the user (or list them for later review).
-4. `append_site_note` changelog — pages applied (with article IDs), drafts pending review, features built.
+4. Write an audit note (`knowledge_client { action: "create", tags: ["audit"] }` — see `kb/site-history`) — pages applied (with article IDs), drafts pending review, features built. Update site notes via `write_site_notes` if a persistent fact surfaced (new IDs, quirks); do not use `append_site_note`, which is deprecated for changelog entries.
 5. Hand over the punch list: remaining `needs_input`/`blocked` entries (client-facing questions), unmigrated `assets` images, and any skipped-needs-force articles.
 
 ---
@@ -64,4 +64,4 @@ Takes an interpreted Content Schematic from `filled`/`needs_input` to `done` on 
 - [ ] Drafts (`draft: true`) reviewed or handed to the client
 - [ ] Features from `features[]` built per their KBs
 - [ ] Spot-checks passed on live pages
-- [ ] `append_site_note` written
+- [ ] Audit note written; site notes updated via `write_site_notes` if new IDs/quirks surfaced

@@ -38,6 +38,8 @@ Categories control what appears in Gantry 5 Joomla Articles particles:
 
 Articles must not be in the wrong category or they will appear (or fail to appear) in the wrong grid. When in doubt, check the spec's `grids` array: if a menu section has a `grids` entry, its child articles belong in that grid's named category, not `Page Content`.
 
+**Reuse an existing Page Content category — don't create a new one for the main site.** Most sites already ship with a category that serves this role (it may not be titled exactly `Page Content` — e.g. `Page Content (Menu Item Needed)`). During the Pre-Phase-4 confirmation, check the existing category list for one that already functions as the site's general standalone-page bucket and target it in the spec instead of creating a fresh `Page Content` category. Only create a **new** Page Content category when the build is for a genuinely new sub-site (its own outline/section, e.g. a school or ministry sub-site sharing the parent Joomla install) — sub-sites get their own distinctly-named category (e.g. `School Page Content`) so their standalone pages don't mix with the main site's.
+
 ---
 
 ## Phase 1 — Interpret (PDF → Menu Spec, via `run_menu_interpretation`)
@@ -155,7 +157,7 @@ Every `category_grid` item must have a corresponding entry in the top-level `gri
 Before writing a single menu item, present the following to the user and wait for explicit go-ahead:
 
 1. **Menu targets** — call `joomla_menu list` to see what exists, then **create fresh menus for this build — never use or alter any existing menus on the site.** Propose client-derived names (e.g. `School Menu` / `School Hidden Menu` for a school site, `Church Menu` / `Church Hidden Menu` for a church site) and create them before building any items. Map spec keys (`mainmenu`, `hiddenmenu`) to the new menus' `menuType` slugs in **`joomla_ids.menu_map`** (e.g. `{ "mainmenu": "school-menu", "hiddenmenu": "school-hidden-menu" }`) and persist the spec with `joomla_workspace_write`. **This mapping is required** — `run_menu_build` (Phase 4) refuses to run without it and never creates menus itself.
-2. **Category targets** — list every distinct category in the spec and whether it already exists in Joomla. Flag any that need to be created.
+2. **Category targets** — list every distinct category in the spec and whether it already exists in Joomla. For `Page Content`, check for an existing category that already serves as the site's general standalone-page bucket (title may not match exactly, e.g. `Page Content (Menu Item Needed)`) and reuse it — only create a new `Page Content`-style category when building a genuinely new sub-site. Flag any other categories that need to be created.
 3. **Alias collision check** — Joomla aliases are **globally unique across all menus**, including trashed items. Call `joomla_menu_item(action: "list")` on all existing menus (not just the new ones) and scan for titles matching spec items. Any match means the default alias is already taken — those creates will need an explicit `alias` param with a site-specific suffix (e.g. `news-events-she`). Derive the suffix from the site URL or a short site code.
 4. **Summary item count** — e.g. "30 menu items, 28 placeholder articles, 1 grid."
 
@@ -260,7 +262,7 @@ This agent's scope ends when Phase 4 is complete, the skeleton is approved, and 
 
 ## Logging
 
-Call `append_site_note` after Phase 4 completes, recording the spec filename, the schematic filename, the `run_menu_build` summary, and any deferred `build_notes` / `open_questions` (from both the spec and the schematic).
+After Phase 4 completes, write an audit note (`knowledge_client { action: "create", tags: ["audit"] }` — see `kb/site-history`) recording the spec filename, the schematic filename, the `run_menu_build` summary, and any deferred `build_notes` / `open_questions` (from both the spec and the schematic). If the build surfaced a persistent fact (new menu/outline/category IDs, a quirk), also update site notes via `write_site_notes` — do not use `append_site_note`, which is deprecated for changelog entries.
 
 ---
 
@@ -279,7 +281,7 @@ Call `append_site_note` after Phase 4 completes, recording the spec filename, th
 - [ ] Heading items with a `grids` entry built as navigable Single Article (not plain heading) — verify in the result
 - [ ] Quicklinks NOT built as modules — only their `hiddenmenu` targets created
 - [ ] Schematic re-derived after Phase 4 (`joomla_article_id`s stamped) — and after ANY later spec edit
-- [ ] `append_site_note` called after Phase 4 completes
+- [ ] Audit note written after Phase 4 completes; site notes updated via `write_site_notes` if new IDs/quirks surfaced
 - [ ] Phase 5 handed off to content agent with both workspace files (menu spec + content schematic)
 
 ---

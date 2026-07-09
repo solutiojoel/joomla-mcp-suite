@@ -20,8 +20,11 @@ entries are addressed by an explicit `site_code` argument.
   on client `create`/`list`.
 - **Gateway vs. local docs:** The `docs/workflows/*` and `docs/kb/*` guides (read via
   `read_agent_doc`) remain the canonical procedural reference and are unaffected. Per-site
-  history still lives in site notes (`get_site_notes` / `append_site_note`). The gateway is an
-  additional, networked store — not a replacement for either.
+  history is now split two ways (see `kb/site-history`): persistent facts live in site notes
+  (`get_site_notes` / `write_site_notes`), and per-session changelog records are written as
+  audit notes via `knowledge_client { tags: ["audit"] }` — the gateway *is* where site history
+  lives for that half, not merely an additional store. `append_site_note` is deprecated for
+  changelog entries.
 - **Self-improving vs. `workflows/improvements`:** `docs/workflows/improvements.md` stays the
   human-readable team queue for process fixes. Use `knowledge_self_improving` for concise,
   machine-applied per-tool instruction text. `version` increments automatically on update;

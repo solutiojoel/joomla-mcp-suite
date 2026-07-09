@@ -18,6 +18,14 @@ A grid layout has two parts:
 
 ---
 
+## Inspecting an Existing Grid's Particle Settings
+
+Grids on this platform are always **Gantry 5 Particle modules** — never layout-embedded particles. To read an existing grid's configuration (category, display settings, class suffix) before copying its pattern for a new grid, use `joomla_module get` with the module's ID. The full particle config comes back as JSON in `params.particle`.
+
+Do **not** use `gantry_particle_inspect` for this — it looks up a particle by outline id + particle name/position inside a layout design, and has no path for looking up a particle by Joomla module ID. Passing a `moduleId` to it fails with `Particle "undefined" not found in outline "..."`. Reserve `gantry_particle_inspect` for particles placed directly in an outline's layout (e.g. via `gantry_layout_design`), not for grid modules.
+
+---
+
 ## Prerequisites — Confirm or Create a Category
 
 The grid's particle module must point at a category. Before building the module, check whether an appropriate category already exists:

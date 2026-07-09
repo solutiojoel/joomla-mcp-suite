@@ -235,14 +235,23 @@ async function createClient(label, url, token) {
  * that each progress notification emitted by agents-mcp resets the clock.
  * maxTotalTimeout is the hard cap regardless of progress — 30 min, sized
  * for a long PDF interpretation (chunked reads + up to 30 turns).
+ *
+ * Agent calls are never retried here: our timeout is a client-transport
+ * limit only, not a cancellation — the agent's job keeps running
+ * server-side after we give up waiting on it. Retrying would start a
+ * second, fully concurrent run against the same live site while the
+ * first is still in flight (this is exactly how a menu build produced
+ * duplicate categories/articles). Surface the error immediately instead
+ * and let the caller check live state before deciding to retry by hand.
  */
 async function callDownstream(ds, toolName, toolArgs) {
   const isAgentCall = ds.label === 'agents-mcp';
   const callOptions = isAgentCall
     ? { timeout: 600_000, resetTimeoutOnProgress: true, maxTotalTimeout: 1_800_000 }
     : undefined;
+  const maxAttempts = isAgentCall ? 1 : 2;
 
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     let client;
     try {
       client = await createClient(ds.label, ds.url, ds.token);
@@ -251,7 +260,7 @@ async function callDownstream(ds, toolName, toolArgs) {
       return result;
     } catch (err) {
       if (client) client.close().catch(() => { });
-      if (attempt === 2) throw err;
+      if (attempt === maxAttempts) throw err;
       log(`${ds.label} call failed (attempt ${attempt}), retrying - ${err.message}`);
     }
   }
