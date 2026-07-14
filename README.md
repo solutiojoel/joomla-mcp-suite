@@ -87,6 +87,7 @@ http://localhost:18302/mcp
 | `18304` | External | Gantry Mockup Brief Builder web app |
 | `18300` | Internal | Joomla MCP server |
 | `18301` | Internal | Gantry MCP server |
+| `18310` | Tailnet | Agent-runtime + Solutio AI Dashboard *(planned — see below)* |
 
 ### Build Without Compose
 
@@ -157,6 +158,18 @@ If reachable via `curl` but not from a browser-based MCP client, allow Tailscale
 ```bash
 sudo iptables -I DOCKER-USER -i tailscale0 -j ACCEPT
 ```
+
+---
+
+## 🖥️ Solutio AI Dashboard (planned)
+
+The next phase adds a web frontend for the team, backed by a new `apps/agent-runtime` service (port `18310`) that runs AI chat sessions and sub-agent jobs against the orchestrator and exposes a plain REST + SSE API. The frontend is developed externally and served by the runtime as static files; the whole stack self-hosts on a Windows box over Tailscale. Design docs:
+
+| Doc | Contents |
+|---|---|
+| [`docs/agent-runtime-architecture.md`](docs/agent-runtime-architecture.md) | System schematic — components, identity chain, session/job models, KB bridge, deployment |
+| [`docs/agent-runtime-api.md`](docs/agent-runtime-api.md) | The REST/SSE contract the frontend is built against |
+| [`docs/agent-runtime-implementation-plan.md`](docs/agent-runtime-implementation-plan.md) | Build phases 0–5 |
 
 ---
 
