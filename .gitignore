@@ -8,3 +8,4 @@ apps/gantry-mcp/discovery/
 apps/gantry-mcp/exports/
 apps/gantry-mcp/backups/
 config/users.json
+config/users.json.bak

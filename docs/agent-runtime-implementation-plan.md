@@ -6,9 +6,11 @@
 
 ---
 
-## Phase 0 — Hardening & enablers (small, do first)
+## Phase 0 — Hardening & enablers (small, do first) — ✅ shipped 2026-07-14
 
 Prereqs for anything multi-user; each is independently landable.
+
+> **Status:** all three items landed and verified (healthz + hashed-token auth + allowedAgents switching, 13/13 acceptance checks). `config/users.json` keys are now `sha256:` digests; existing tokens keep working. Token **rotation** is prepared but not executed — run `node scripts/hash-tokens.js --rotate` when ready to distribute new tokens to all 7 users (old ones die on the next orchestrator restart/`reload_tools`).
 
 1. **`/healthz` on every MCP server** — add to `startHttpServer` in `packages/mcp-transport/src/index.ts` (unauthenticated `GET /healthz` → `{ ok: true, name, version }`; today any non-`/mcp` path 404s). Every app using `runServer` gets it for free; the runtime's own `/healthz` aggregates them.
 2. **Hash + rotate orchestrator tokens** — `resolveSessionContext()` in `apps/orchestrator/orchestrator.js` compares `sha256(presentedToken)` against hashed keys in `config/users.json` (accept plaintext keys for one release as migration fallback). Add `scripts/hash-tokens.js` (hash-in-place + print new random tokens). Rotate all 7 live tokens; update `config/users.example.json` and each user's client config.

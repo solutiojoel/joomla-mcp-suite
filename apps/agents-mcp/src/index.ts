@@ -693,6 +693,7 @@ function buildServer(): Server {
 
 runServer({
   buildServer,
+  serverInfo: { name: "agents-mcp", version: "0.1.0" },
   logger: createLogger("agents-mcp"),
 }).catch((error) => {
   console.error("Fatal error:", error);

@@ -18,11 +18,21 @@ const SITE_URL = process.argv[3] || 'https://shannon.forge.solutiosoftware.com';
 
 // The test exercises tools across all four downstreams, so it needs a token
 // whose agent has unrestricted scope. super_shannon (allow: ["*"]) is that agent.
+// config/users.json stores sha256 digests, not plaintext tokens, so the token
+// must be supplied via ORCHESTRATOR_TEST_TOKEN (any leftover plaintext
+// super_shannon key in users.json still works as a fallback).
 function privilegedToken() {
+  if (process.env.ORCHESTRATOR_TEST_TOKEN) return process.env.ORCHESTRATOR_TEST_TOKEN;
   const usersPath = path.join(__dirname, '..', '..', 'config', 'users.json');
   const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-  const entry = Object.entries(users).find(([, v]) => v.agent === 'super_shannon');
-  if (!entry) throw new Error('no super_shannon token in config/users.json');
+  const entry = Object.entries(users).find(
+    ([k, v]) => v.agent === 'super_shannon' && !k.startsWith('sha256:')
+  );
+  if (!entry) {
+    throw new Error(
+      'set ORCHESTRATOR_TEST_TOKEN to a super_shannon bearer token (users.json keys are hashed)'
+    );
+  }
   return entry[0];
 }
 

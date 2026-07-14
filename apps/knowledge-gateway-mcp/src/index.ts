@@ -275,6 +275,7 @@ function buildServer(): Server {
 
 runServer({
   buildServer,
+  serverInfo: { name: "knowledge-gateway-mcp", version: "1.0.0" },
   logger: createLogger("knowledge-gateway-mcp"),
 }).catch((error) => {
   console.error("Fatal error:", error);
