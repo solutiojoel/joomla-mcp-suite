@@ -76,7 +76,8 @@ Also: `config/runtime-users.example.json`, `scripts/start-agent-runtime.ps1`, re
 
 ## Phase 5 — The spare box
 
-1. **Cloudflare setup** (one-time, in Jeremy's own free Cloudflare account — first register the dedicated dashboard domain there via Cloudflare Registrar, ~$10/yr; the company domain lives in the software developers' account and is not usable here):
+1. **Cloudflare setup** (one-time, in Jeremy's own free Cloudflare account; the company domain lives in the software developers' account and is not usable here):
+   - Onboard the dashboard domain (Jeremy's existing Namecheap domain): add it to the Cloudflare account (Free plan), confirm the imported DNS records match Namecheap's (MX/email forwarding especially, if the domain is in use), then switch the domain's nameservers at Namecheap to the two Cloudflare assigns. Wait for Cloudflare to mark the zone active.
    - Zero Trust → create a tunnel; install `cloudflared` on the box as a Windows service with the tunnel token; add a public hostname `dashboard.<company-domain>` → `http://localhost:18310`.
    - Zero Trust → Access → application for that hostname; policy = allow-list of employee emails (One-Time PIN and/or Google login). Add a **service token** for the Replit dev environment while the frontend is being built.
 2. **`docs/deploy-selfhosted.md` runbook:** install Node 22 + Git + Tailscale (admin access only) + `cloudflared` → clone repo → copy `.env` files + `config/*.json` → `npm ci` + build → tunnel + Access per step 1 → smoke test.
