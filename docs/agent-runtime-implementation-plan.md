@@ -76,12 +76,15 @@ Also: `config/runtime-users.example.json`, `scripts/start-agent-runtime.ps1`, re
 
 ## Phase 5 — The spare box
 
-1. **`docs/deploy-selfhosted.md` runbook:** install Node 22 + Git + Tailscale → join tailnet, note MagicDNS name → clone repo → copy `.env` files + `config/*.json` → `npm ci` + build → smoke test.
-2. **`scripts/setup-scheduled-tasks.ps1`:** registers Task Scheduler entries — at-boot start for the full suite + agent-runtime, on-failure restart, nightly backup task (`workspace/`, `apps/agent-runtime/data/`, `config/`, `apps/agents-mcp/logs/` → second drive).
-3. **Network hygiene:** bind or firewall all internal ports (9300–9306, 3506, 3507, 18305) to localhost + the Tailscale interface; only 18310 is user-facing.
-4. Migrate operation from Jeremy's dev machine; deploy the frontend's static build into the runtime's public dir.
+1. **Cloudflare setup** (one-time, in the Cloudflare dashboard — domain DNS must already live in the Cloudflare account):
+   - Zero Trust → create a tunnel; install `cloudflared` on the box as a Windows service with the tunnel token; add a public hostname `dashboard.<company-domain>` → `http://localhost:18310`.
+   - Zero Trust → Access → application for that hostname; policy = allow-list of employee emails (One-Time PIN and/or Google login). Add a **service token** for the Replit dev environment while the frontend is being built.
+2. **`docs/deploy-selfhosted.md` runbook:** install Node 22 + Git + Tailscale (admin access only) + `cloudflared` → clone repo → copy `.env` files + `config/*.json` → `npm ci` + build → tunnel + Access per step 1 → smoke test.
+3. **`scripts/setup-scheduled-tasks.ps1`:** registers Task Scheduler entries — at-boot start for the full suite + agent-runtime, on-failure restart, nightly backup task (`workspace/`, `apps/agent-runtime/data/`, `config/`, `apps/agents-mcp/logs/` → second drive). `cloudflared` runs as its own Windows service.
+4. **Network hygiene:** bind or firewall **all** ports — internal (9300–9306, 3506, 3507, 18305) *and* 18310 — to localhost (+ the Tailscale interface for admin). Nothing listens on LAN/WAN; the only user path is browser → Cloudflare Access → tunnel → localhost:18310.
+5. Migrate operation from Jeremy's dev machine; deploy the frontend's static build into the runtime's public dir.
 
-**Verify:** reboot the box → everything comes back with no human touch; dashboard reachable from another tailnet device; internal ports unreachable from the LAN; backup task produces a restorable copy; run one real menu-build job start-to-finish on the box.
+**Verify:** reboot the box → everything (including the tunnel) comes back with no human touch; `https://dashboard.<company-domain>` prompts for the Access email login from any network, then loads the dashboard; a non-allow-listed email is refused at the Cloudflare edge; all ports (incl. 18310) unreachable from the LAN directly; a long chat turn and a job stream survive >2 min through the tunnel (keepalives working); backup task produces a restorable copy; run one real menu-build job start-to-finish on the box.
 
 ---
 

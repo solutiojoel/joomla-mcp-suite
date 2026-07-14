@@ -87,7 +87,7 @@ http://localhost:18302/mcp
 | `18304` | External | Gantry Mockup Brief Builder web app |
 | `18300` | Internal | Joomla MCP server |
 | `18301` | Internal | Gantry MCP server |
-| `18310` | Tailnet | Agent-runtime + Solutio AI Dashboard *(planned — see below)* |
+| `18310` | Cloudflare Tunnel | Agent-runtime + Solutio AI Dashboard *(planned — see below)* |
 
 ### Build Without Compose
 
@@ -163,7 +163,7 @@ sudo iptables -I DOCKER-USER -i tailscale0 -j ACCEPT
 
 ## 🖥️ Solutio AI Dashboard (planned)
 
-The next phase adds a web frontend for the team, backed by a new `apps/agent-runtime` service (port `18310`) that runs AI chat sessions and sub-agent jobs against the orchestrator and exposes a plain REST + SSE API. The frontend is developed externally and served by the runtime as static files; the whole stack self-hosts on a Windows box over Tailscale. Design docs:
+The next phase adds a web frontend for the team, backed by a new `apps/agent-runtime` service (port `18310`) that runs AI chat sessions and sub-agent jobs against the orchestrator and exposes a plain REST + SSE API. The frontend is developed externally and served by the runtime as static files; the whole stack self-hosts on a Windows box, published to the team via a Cloudflare Tunnel + Cloudflare Access login at a company domain (Tailscale stays for admin access only). Design docs:
 
 | Doc | Contents |
 |---|---|

@@ -1,7 +1,7 @@
 # Solutio AI Dashboard — Frontend API Contract (v1)
 
 > **Audience:** the frontend developer. This is the complete surface the dashboard is built against — nothing else on the box should be called directly.
-> **Base URL:** `http://<box>.tailXXXX.ts.net:18310/api` (final hostname supplied when the box is set up). During frontend development on Replit, mock these endpoints or test live over Tailscale.
+> **Base URL:** `https://dashboard.<company-domain>/api` (final hostname supplied when the box is set up; served through a Cloudflare Tunnel). **Cloudflare Access** sits in front of the whole hostname — in a browser it's a one-time email login the frontend never has to handle. For live API testing *from Replit* during development, request a Cloudflare Access **service token** (a `CF-Access-Client-Id`/`CF-Access-Client-Secret` header pair) from Jeremy and send it on every request; otherwise mock the endpoints from this doc.
 > **Companion docs:** [`agent-runtime-architecture.md`](agent-runtime-architecture.md) (how it works inside), [`agent-runtime-implementation-plan.md`](agent-runtime-implementation-plan.md) (delivery order — §1 below marks which endpoints arrive in which phase).
 > **Status:** contract for a service not yet built. Shapes here are binding; additive changes (new fields, new endpoints) may occur, breaking changes will be versioned.
 
@@ -10,7 +10,7 @@
 ## 1. Ground rules
 
 - **Auth:** every endpoint except `POST /api/auth/login` and `GET /healthz` requires `Authorization: Bearer <JWT>` (obtained from login). The two SSE endpoints *also* accept `?token=<JWT>` because `EventSource` cannot set headers.
-- **Content type:** JSON in/out (`application/json`), except file upload (`multipart/form-data`) and SSE streams (`text/event-stream`).
+- **Content type:** JSON in/out (`application/json`), except file upload (`multipart/form-data`) and SSE streams (`text/event-stream`). Quiet SSE streams carry `: ping` comment keepalives (~25 s) so the Cloudflare proxy doesn't idle them out — `EventSource` ignores comments automatically, and reconnects replay anything missed regardless.
 - **Errors:** always `{ "error": { "code": "<machine_code>", "message": "<human message>" } }` with an appropriate HTTP status. Codes worth handling specially: `unauthorized` (401 — token missing/expired → redirect to login), `forbidden` (403), `not_found` (404), `validation` (400 — message says which field), `limit_exceeded` (429 — see sessions/jobs), `upstream_unavailable` (502 — orchestrator or gateway down).
 - **Timestamps:** ISO-8601 UTC strings. **IDs:** opaque strings (`sess_…`, `job_…`, `file_…`).
 - **Frontend delivery:** the runtime serves the built frontend as static files at `/` (SPA fallback included). Because the app and API share an origin, there is **no CORS** to deal with in production. Develop wherever you like; ship a static build.
