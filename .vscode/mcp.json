@@ -1,9 +1,11 @@
 {
   "servers": {
     "orchestrator": {
-      "type": "stdio",
-      "command": "node",
-      "args": ["c:\\Users\\Jeremy\\code-projects\\joomla-mcp-suite\\apps\\orchestrator\\orchestrator.js"]
+      "type": "http",
+      "url": "${JOOMLA_MCP_SUITE_URL:-http://localhost:9302}/mcp",
+      "headers": {
+        "Authorization": "Bearer ${JOOMLA_MCP_SUITE_TOKEN:-}"
+      }
     }
   }
 }

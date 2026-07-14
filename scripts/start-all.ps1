@@ -1,4 +1,4 @@
-# Start all MCP services in separate terminal windows.
+  # Start all MCP services in separate terminal windows.
 # Run from anywhere -- the script resolves paths relative to itself.
 #
 # Ports:
