@@ -1,2 +1,25 @@
+# Site: shannon.forge.solutiosoftware.com
 
-**[2026-07-09 18:36 UTC | local]** Catholic Jokes grid page added on Hidden Menu (menu item id 174, alias catholic-jokes, templateStyleId 34 #Grid) → article 174 (landing, cat 31). Grid module id 149 "Catholic Jokes Grid" (content-bottom-a) pulls category 54 "Catholic Jokes Items". 6 sample joke articles seeded (ids 175-180) — replace with real content/images as needed.
+**Live domain:** (none — internal sandbox only)
+**Site code:** shannon.forge
+**Launched:** (not applicable — sandbox)
+**Type:** Sandbox / Test
+
+---
+
+## ⚠️ Quirks & Warnings
+
+- This is a Solutio-internal sandbox used to test and audit joomla-mcp tools — it is not a client site. Expect stray test users, articles, and other artifacts left behind from tool audits. Site was rebuilt from scratch 2026-07-10.
+
+## 🔗 Key IDs
+
+| Item | ID |
+|------|-----|
+| Basic Editor group | 12 |
+| Email Admin group | 13 |
+| Guest group | 9 |
+| Registered group | 2 |
+
+## 🔌 Active Integrations
+
+- *(none logged yet)*

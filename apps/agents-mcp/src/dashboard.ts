@@ -293,7 +293,8 @@ function fmtDuration(ms) {
   return m + "m " + (s % 60) + "s";
 }
 function fmtTime(iso) {
-  return new Date(iso).toLocaleTimeString();
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " " + d.toLocaleTimeString();
 }
 function esc(s) {
   return String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));

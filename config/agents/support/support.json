@@ -13,12 +13,13 @@
       "joomla_redirects_list", "joomla_site_config_inspect",
       "joomla_backend_inventory",
       "joomla_user*", "joomla_group*",
+      "joomla_docman_*",
       "freshdesk_*",
       "knowledge_*"
     ],
     "deny": [
       "joomla_submit_admin_form", "joomla_permissions",
-      "joomla_docman_*", "joomla_fileman_*",
+      "joomla_fileman_*",
       "joomla_workspace_write", "joomla_component_inspect",
       "joomla_inspect_admin_form", "joomla_inspect_admin_list"
     ]

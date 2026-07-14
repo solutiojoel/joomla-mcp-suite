@@ -2565,7 +2565,10 @@ export class JoomlaClient {
 
     const formData: Record<string, string> = {
       ...this.extractFormFields(html),
-      task: "article.save",
+      // "apply" (not "save") redirects back to the edit form with &id=<new> in the URL —
+      // "save" redirects to the list view with no id, forcing every create through the
+      // flaky title-scan fallback below. Apply gives a reliable id on the fast path.
+      task: "article.apply",
       "jform[title]": data.title,
       "jform[alias]": data.alias || "",
       "jform[catid]": data.categoryId,
@@ -2939,7 +2942,8 @@ export class JoomlaClient {
 
     const formData: Record<string, string> = {
       ...this.extractFormFields(html),
-      task: "category.save",
+      // See createArticle: "apply" gives a reliable &id= on redirect, "save" doesn't.
+      task: "category.apply",
       "jform[title]": data.title,
       "jform[alias]": data.alias || "",
       "jform[parent_id]": data.parentId || "1",
@@ -3851,7 +3855,8 @@ export class JoomlaClient {
     const existingModule = this.parseModuleForm(html);
     const formData: FormDataMap = {
       ...this.extractFormFields(html, "module-form"),
-      task: "module.save",
+      // See createArticle: "apply" gives a reliable &id= on redirect, "save" doesn't.
+      task: "module.apply",
       "jform[title]": data.title,
       "jform[position]": data.position ?? String(existingModule.position || ""),
       "jform[published]": data.published ?? "1",
@@ -3885,12 +3890,17 @@ export class JoomlaClient {
     Object.assign(formData, data.fieldOverrides || {});
 
     const result = await this.postPage(addUrl, formData);
-    const successMsg = /module saved|has been saved/i.test(result.html);
+    const successMsg = result.redirected || /module saved|has been saved/i.test(result.html);
     const errorMsg = this.extractAlertMessage(result.html);
-    const listResult = await this.listModules(data.clientId || "0");
-    const modules = Array.isArray(listResult.data) ? listResult.data as Array<Record<string, string>> : [];
-    const savedEntry = this.findLatestByTitle(modules, data.title);
-    const savedId = String(savedEntry?.id || "");
+    const idFromRedirect = result.redirectUrl?.match(/[?&]id=(\d+)/)?.[1] ?? "";
+    let savedEntry: Record<string, string> | null = null;
+    let savedId = idFromRedirect;
+    if (!savedId) {
+      const listResult = await this.listModules(data.clientId || "0");
+      const modules = Array.isArray(listResult.data) ? listResult.data as Array<Record<string, string>> : [];
+      savedEntry = this.findLatestByTitle(modules, data.title);
+      savedId = String(savedEntry?.id || "");
+    }
     const verify = savedId ? await this.getModule(savedId) : null;
     const module = ((verify?.data || {}) as Record<string, unknown>);
     const expectedModuleType = String(existingModule.moduleType || "").toLowerCase();
@@ -3911,7 +3921,7 @@ export class JoomlaClient {
         moduleType: String(module.moduleType || existingModule.moduleType || ""),
         verification: {
           attempted: true,
-          foundInList: !!savedEntry,
+          foundInList: !!savedId,
           readbackSucceeded: !!verify?.success,
           titleMatches,
           moduleTypeMatches,
@@ -4834,7 +4844,10 @@ export class JoomlaClient {
 
     const formData: Record<string, string> = {
       ...this.extractFormFields(html, "item-form"),
-      task: "menu.save",
+      // See createArticle: "apply" gives a reliable &id= on redirect, "save" doesn't.
+      // (com_menus menu records are usually addressed by menutype rather than id, so
+      // this may not resolve here — the list-scan below stays as the fallback.)
+      task: "menu.apply",
       "jform[title]": data.title,
       "jform[menutype]": menuType,
       "jform[description]": data.description || "",
@@ -4843,18 +4856,21 @@ export class JoomlaClient {
     };
 
     const result = await this.postPage(url, formData);
-    const successMsg = /menu saved|has been saved|item saved/i.test(result.html);
+    const successMsg = result.redirected || /menu saved|has been saved|item saved/i.test(result.html);
     const errorMsg = this.extractAlertMessage(result.html);
+    const idFromRedirect = result.redirectUrl?.match(/[?&]id=(\d+)/)?.[1] ?? "";
     const listResult = await this.listMenus();
     const menus = Array.isArray(listResult.data) ? listResult.data as Array<Record<string, string>> : [];
-    const savedMenu = menus.find((menu) => menu.title === data.title && menu.menuType === menuType);
+    const savedMenu = idFromRedirect
+      ? menus.find((menu) => menu.id === idFromRedirect)
+      : menus.find((menu) => menu.title === data.title && menu.menuType === menuType);
     const verified = !!savedMenu;
 
     return {
       success: verified,
       message: verified ? "Menu saved" : (errorMsg ?? successMsg ? "Menu save submitted, but creation was not verified" : "Unknown result"),
       data: {
-        id: String(savedMenu?.id || ""),
+        id: String(savedMenu?.id || idFromRedirect || ""),
         title: data.title,
         menuType,
         verification: {
@@ -5118,7 +5134,8 @@ export class JoomlaClient {
     const formData: Record<string, string> = {
       ...this.extractFormFields(html),
       ...this.extractFormFields(typedHtml),
-      task: "item.save",
+      // See createArticle: "apply" gives a reliable &id= on redirect, "save" doesn't.
+      task: "item.apply",
       "jform[title]": data.title,
       "jform[alias]": data.alias || "",
       "jform[menutype]": data.menuType,
@@ -5154,13 +5171,17 @@ export class JoomlaClient {
     const errorMsg = this.extractAlertMessage(result.html);
     let savedId = "";
     if (successMsg) {
-      // Search by title so Joomla filters server-side — listing all items hits the default
-      // page limit and misses newly created items at the end of a long menu.
-      const itemsResult = await this.listMenuItems(data.menuType, data.title);
-      const items = Array.isArray(itemsResult.data) ? itemsResult.data as Array<Record<string, string>> : [];
-      const exactMatches = items.filter((item) => this.decodeHtmlEntities(item.title) === this.decodeHtmlEntities(data.title));
-      const listItem = exactMatches[exactMatches.length - 1];
-      savedId = listItem?.id || "";
+      savedId = result.redirectUrl?.match(/[?&]id=(\d+)/)?.[1] ?? "";
+      if (!savedId) {
+        // Fallback: search by title so Joomla filters server-side — listing all items
+        // hits the default page limit and misses newly created items at the end of a
+        // long menu.
+        const itemsResult = await this.listMenuItems(data.menuType, data.title);
+        const items = Array.isArray(itemsResult.data) ? itemsResult.data as Array<Record<string, string>> : [];
+        const exactMatches = items.filter((item) => this.decodeHtmlEntities(item.title) === this.decodeHtmlEntities(data.title));
+        const listItem = exactMatches[exactMatches.length - 1];
+        savedId = listItem?.id || "";
+      }
       // Rebuild the menu nested set (lft/rgt) after each create so the tree stays
       // consistent and subsequent creates don't corrupt the published-state display.
       await this.rebuildMenuTree();
@@ -6146,6 +6167,10 @@ export class JoomlaClient {
     // block=0 means enabled, block=1 means blocked. Find the checked radio.
     const blockedRadioValue = $('input[name="jform[block]"][checked]').attr("value") ?? "0";
     const blocked = blockedRadioValue === "1";
+    // requireReset=1 means the user must set a new password on next login. Same
+    // radio pattern as block above — read the checked value, not just presence.
+    const requireResetRadioValue = $('input[name="jform[requireReset]"][checked]').attr("value") ?? "0";
+    const requireReset = requireResetRadioValue === "1";
     const groups: Array<{ id: string; name: string }> = [];
     $('input[name="jform[groups][]"][checked]').each((_, el) => {
       const $el = $(el);
@@ -6156,7 +6181,7 @@ export class JoomlaClient {
     return {
       success: true,
       message: "User retrieved",
-      data: { id, name, username, email, blocked, groups },
+      data: { id, name, username, email, blocked, requireReset, groups },
     };
   }
 
@@ -6205,9 +6230,15 @@ export class JoomlaClient {
     }
 
     const verify = await this.getUser(createdId);
+    const expectedRequireReset = data.requireReset !== false;
+    const requireResetVerified = (verify.data as Record<string, unknown> | undefined)?.requireReset === expectedRequireReset;
+    let message = verify.success ? `User created (ID: ${createdId})` : "User may have been created but readback failed";
+    if (verify.success && !requireResetVerified) {
+      message += ` — WARNING: requireReset did not save as requested (expected ${expectedRequireReset}); set it manually via joomla_submit_admin_form`;
+    }
     return {
       success: verify.success,
-      message: verify.success ? `User created (ID: ${createdId})` : "User may have been created but readback failed",
+      message,
       data: verify.data,
     };
   }
@@ -6263,9 +6294,16 @@ export class JoomlaClient {
     if (errorMsg) return { success: false, message: errorMsg };
 
     const verify = await this.getUser(id);
+    let message = verify.success ? "User updated" : "User form submitted but readback failed";
+    if (verify.success && data.requireReset !== undefined) {
+      const requireResetVerified = (verify.data as Record<string, unknown> | undefined)?.requireReset === data.requireReset;
+      if (!requireResetVerified) {
+        message += ` — WARNING: requireReset did not save as requested (expected ${data.requireReset}); set it manually via joomla_submit_admin_form`;
+      }
+    }
     return {
       success: verify.success,
-      message: verify.success ? "User updated" : "User form submitted but readback failed",
+      message,
       data: verify.data,
     };
   }
