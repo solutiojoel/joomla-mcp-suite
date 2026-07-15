@@ -12,7 +12,24 @@
       "Bash(node --check apps/orchestrator/orchestrator.js)",
       "Bash(node scripts/hash-tokens.js)",
       "Bash(HTTP_PORT=9392 node apps/orchestrator/orchestrator.js)",
-      "Bash(node apps/orchestrator/test-phase0.tmp.cjs)"
+      "Bash(node apps/orchestrator/test-phase0.tmp.cjs)",
+      "Bash(node -e \"const s=require\\('./apps/ftp-mcp/ftp-sites.json'\\); const k=Object.keys\\(s\\); console.log\\(Array.isArray\\(s\\)?'array':'object', k.length\\); console.log\\(JSON.stringify\\(Array.isArray\\(s\\)?s[0]:s[k[0]],null,1\\).slice\\(0,600\\)\\); console.log\\('first keys:', k.slice\\(0,5\\).join\\(', '\\)\\)\")",
+      "Bash(export SCRATCH)",
+      "Bash(SCRATCH=C:/Users/Jeremy/AppData/Local/Temp/claude/c--Users-Jeremy-code-projects-joomla-mcp-suite/b8a6a674-076f-459f-8dbe-2d8ddf93a004/scratchpad node -e ' *)",
+      "Bash(HTTP_PORT=9392 node orchestrator.js)",
+      "Bash(AGENT_RUNTIME_PORT=18311 RUNTIME_JWT_SECRET=p1-test-jwt-secret RUNTIME_ENC_KEY=p1-test-enc-key ORCHESTRATOR_URL=http://127.0.0.1:9392/mcp RUNTIME_USERS_PATH=\"C:/Users/Jeremy/AppData/Local/Temp/claude/c--Users-Jeremy-code-projects-joomla-mcp-suite/b8a6a674-076f-459f-8dbe-2d8ddf93a004/scratchpad/p1-runtime-users.json\" node dist/index.js)",
+      "Bash(node \"C:/Users/Jeremy/AppData/Local/Temp/claude/c--Users-Jeremy-code-projects-joomla-mcp-suite/b8a6a674-076f-459f-8dbe-2d8ddf93a004/scratchpad/p1-acceptance.cjs\")",
+      "Bash(node dist/index.js)",
+      "Bash(node scripts/runtime-user-tool.js hash-password 'try-me')",
+      "Bash(RUNTIME_ENC_KEY=abc node scripts/runtime-user-tool.js encrypt-token 'secret-token-value')",
+      "Bash(node -e \"const u=require\\('./config/users.json'\\); console.log\\(Object.entries\\(u\\).map\\(\\([k,v]\\)=>[k.slice\\(0,14\\)+'…', v.user||v.name||JSON.stringify\\(v\\).slice\\(0,80\\)]\\)\\)\")",
+      "Bash(node \"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\p2-setup.cjs\")",
+      "Bash(node -e \"console.log\\('registry entries:', Object.keys\\(require\\('./config/users.json'\\)\\).length\\)\")",
+      "Bash(node \"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\p2-accept-a.cjs\")",
+      "Bash(curl -s http://127.0.0.1:18311/healthz)",
+      "Bash(node \"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\p2-accept-replay.cjs\")",
+      "Bash(node \"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\p2-accept-b.cjs\")",
+      "Bash(P2_DATA_DIR=\"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\data\" node \"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\p2-accept-c.cjs\")"
     ],
     "additionalDirectories": [
       "\\tmp"
