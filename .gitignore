@@ -9,3 +9,5 @@ apps/gantry-mcp/exports/
 apps/gantry-mcp/backups/
 config/users.json
 config/users.json.bak
+config/runtime-users.json
+apps/agent-runtime/data/

@@ -20,7 +20,9 @@ Prereqs for anything multi-user; each is independently landable.
 
 ---
 
-## Phase 1 — Scaffold `apps/agent-runtime` (the frontend dev can integrate from here)
+## Phase 1 — Scaffold `apps/agent-runtime` (the frontend dev can integrate from here) — ✅ shipped 2026-07-15
+
+> **Status:** landed and verified (26/26 acceptance checks: login/JWT/`/api/me`, per-user catalog filtering with live scoped tools+prompts, `/api/sites` from ftp-sites.json, aggregated `/healthz`, static hosting + SPA fallback, error envelope). Deviations from the sketch below: the store uses Node's built-in `node:sqlite` instead of better-sqlite3 (identical sync API, no native build step), and per-user Claude tokens are encrypted with AES-256-GCM under `RUNTIME_ENC_KEY` via `scripts/runtime-user-tool.js` (which also generates bcrypt password hashes). `jobs/catalog.json` intentionally doesn't exist yet — catalog returns `jobs: []` until Phase 3. To run: create `config/runtime-users.json` from the example, set `RUNTIME_JWT_SECRET` + `RUNTIME_ENC_KEY`, then `scripts/start-agent-runtime.ps1`.
 
 New workspace app: TypeScript + Express, port **18310** (`AGENT_RUNTIME_PORT`). Same build toolchain as agents-mcp (tsc → CJS, dynamic `import()` for the ESM-only Agent SDK later).
 

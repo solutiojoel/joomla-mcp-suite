@@ -1,0 +1,27 @@
+{
+  "_comment": [
+    "Dashboard user registry for apps/agent-runtime — copy to config/runtime-users.json (gitignored).",
+    "Keyed by login email. Read fresh on every request, so edits apply without a restart.",
+    "passwordHash:      node scripts/runtime-user-tool.js hash-password '<password>'",
+    "claudeOauthToken:  node scripts/runtime-user-tool.js encrypt-token '<CLAUDE_CODE_OAUTH_TOKEN>'  (optional — omit to use the shared credential)",
+    "orchestratorToken: the user's PLAINTEXT orchestrator bearer token (the same one their Claude client uses; config/users.json stores only its sha256 digest)",
+    "allowedAgents:     chat agents this user may start besides defaultAgent; a user with super_shannon access can start any non-hidden agent"
+  ],
+  "jeremy@solutiosoftware.com": {
+    "displayName": "Jeremy",
+    "role": "admin",
+    "passwordHash": "$2b$12$replace-me-with-generated-hash",
+    "orchestratorToken": "tok_their_orchestrator_bearer_token",
+    "claudeOauthToken": "enc:v1:...:...:...",
+    "defaultAgent": "super_shannon",
+    "allowedAgents": []
+  },
+  "tori@solutiosoftware.com": {
+    "displayName": "Tori",
+    "role": "member",
+    "passwordHash": "$2b$12$replace-me-with-generated-hash",
+    "orchestratorToken": "tok_their_orchestrator_bearer_token",
+    "defaultAgent": "menu-build",
+    "allowedAgents": ["content-build", "support"]
+  }
+}
