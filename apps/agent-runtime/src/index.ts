@@ -7,6 +7,8 @@ import express, {
 } from "express";
 import { authRouter, authMiddleware, meRouter } from "./auth";
 import { catalogRouter } from "./catalog";
+import { sessionsRouter } from "./sessions/routes";
+import { shutdownAllSessions, startSessionLifecycle } from "./sessions/manager";
 import { ApiError, sendError } from "./http";
 import { orchestratorUrl } from "./mcp";
 import "./store"; // opens the SQLite database and ensures the schema exists
@@ -54,6 +56,7 @@ app.use(authRouter); // POST /api/auth/login (public)
 app.use("/api", (req, res, next) => authMiddleware(req, res, next));
 app.use(meRouter);
 app.use(catalogRouter);
+app.use(sessionsRouter);
 
 // Unknown /api routes get the JSON envelope, not the SPA fallback.
 app.use("/api", (req: Request, res: Response) => {
@@ -89,4 +92,13 @@ app.listen(PORT, HOST, () => {
   if (!process.env.RUNTIME_JWT_SECRET) {
     console.warn("[agent-runtime] WARNING: RUNTIME_JWT_SECRET is not set — logins will fail");
   }
+  startSessionLifecycle();
 });
+
+// Sessions survive restarts via SDK resume; just stop the subprocesses cleanly.
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.on(signal, () => {
+    shutdownAllSessions();
+    process.exit(0);
+  });
+}

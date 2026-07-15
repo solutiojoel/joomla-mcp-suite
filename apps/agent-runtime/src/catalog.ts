@@ -60,6 +60,11 @@ function agentsForUser(user: RuntimeUser): AgentCard[] {
   return visible.filter((a) => allowed.includes(a.id));
 }
 
+/** Agent ids this user may start a chat session as (used by POST /api/sessions). */
+export function agentIdsForUser(user: RuntimeUser): string[] {
+  return agentsForUser(user).map((a) => a.id);
+}
+
 /** Job catalog is data, not code — populated in Phase 3 (jobs/catalog.json). */
 function listJobs(): unknown[] {
   if (!fs.existsSync(JOBS_CATALOG_PATH)) return [];
