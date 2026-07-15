@@ -3,10 +3,10 @@ import path from "node:path";
 import { Router, type Request, type Response } from "express";
 import { withOrchestrator } from "./mcp";
 import { agentSetFor, type RuntimeUser } from "./users";
+import { jobCards } from "./jobs/catalog";
 
 const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 const AGENTS_DIR = path.join(REPO_ROOT, "config", "agents");
-const JOBS_CATALOG_PATH = path.join(__dirname, "..", "jobs", "catalog.json");
 
 interface AgentCard {
   id: string;
@@ -65,17 +65,6 @@ export function agentIdsForUser(user: RuntimeUser): string[] {
   return agentsForUser(user).map((a) => a.id);
 }
 
-/** Job catalog is data, not code — populated in Phase 3 (jobs/catalog.json). */
-function listJobs(): unknown[] {
-  if (!fs.existsSync(JOBS_CATALOG_PATH)) return [];
-  try {
-    const parsed = JSON.parse(fs.readFileSync(JOBS_CATALOG_PATH, "utf8"));
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 export const catalogRouter = Router();
 
 catalogRouter.get("/api/catalog", async (req: Request, res: Response) => {
@@ -110,7 +99,7 @@ catalogRouter.get("/api/catalog", async (req: Request, res: Response) => {
       `[catalog] orchestrator unavailable for ${user.email}: ${(err as Error).message}`
     );
   }
-  res.json({ agents: agentsForUser(user), jobs: listJobs(), tools, prompts });
+  res.json({ agents: agentsForUser(user), jobs: jobCards(), tools, prompts });
 });
 
 // ── Sites ──────────────────────────────────────────────────────────────────

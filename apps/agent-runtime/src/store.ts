@@ -48,6 +48,7 @@ db.exec(`
     progress_json TEXT,
     result_json   TEXT,
     error_json    TEXT,
+    seq           INTEGER NOT NULL DEFAULT 0,      -- per-job monotonic event counter
     created_at    TEXT NOT NULL,
     started_at    TEXT,
     finished_at   TEXT
@@ -64,6 +65,13 @@ db.exec(`
     uploaded_at  TEXT NOT NULL
   );
 `);
+
+// Phase-1 databases predate the jobs.seq column — add it in place.
+try {
+  db.exec("ALTER TABLE jobs ADD COLUMN seq INTEGER NOT NULL DEFAULT 0");
+} catch {
+  /* column already exists */
+}
 
 export function newId(prefix: "sess" | "job" | "file"): string {
   return `${prefix}_${crypto.randomBytes(8).toString("hex")}`;
@@ -153,7 +161,110 @@ export function listStaleSessions(cutoffIso: string, statuses: string[]): Sessio
     .all(...statuses, cutoffIso) as unknown as SessionRow[];
 }
 
-// ── Files (rows are written by Phase 3; message attachments read them now) ──
+// ── Jobs ────────────────────────────────────────────────────────────────────
+
+export type JobStatus = "queued" | "running" | "succeeded" | "failed" | "stopped";
+
+export interface JobRow {
+  id: string;
+  user_email: string;
+  type: string;
+  status: JobStatus;
+  input_json: string | null;
+  run_id: string | null;
+  progress_json: string | null;
+  result_json: string | null;
+  error_json: string | null;
+  seq: number;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+}
+
+export function createJobRow(params: {
+  userEmail: string;
+  type: string;
+  input: Record<string, unknown>;
+}): JobRow {
+  const id = newId("job");
+  db.prepare(
+    `INSERT INTO jobs (id, user_email, type, status, input_json, seq, created_at)
+     VALUES (?, ?, ?, 'queued', ?, 0, ?)`
+  ).run(id, params.userEmail, params.type, JSON.stringify(params.input), nowIso());
+  return getJobRow(id)!;
+}
+
+export function getJobRow(id: string): JobRow | null {
+  const row = db.prepare("SELECT * FROM jobs WHERE id = ?").get(id);
+  return (row as unknown as JobRow) ?? null;
+}
+
+export function listJobRows(filter: {
+  userEmail?: string; // omit for admin "everyone's jobs"
+  status?: string;
+  type?: string;
+}): JobRow[] {
+  const where: string[] = [];
+  const args: unknown[] = [];
+  if (filter.userEmail) {
+    where.push("user_email = ?");
+    args.push(filter.userEmail);
+  }
+  if (filter.status) {
+    where.push("status = ?");
+    args.push(filter.status);
+  }
+  if (filter.type) {
+    where.push("type = ?");
+    args.push(filter.type);
+  }
+  const sql = `SELECT * FROM jobs${where.length ? ` WHERE ${where.join(" AND ")}` : ""} ORDER BY created_at DESC`;
+  return db.prepare(sql).all(...(args as never[])) as unknown as JobRow[];
+}
+
+/** Queued or running jobs for the per-user limit (1 active job per user). */
+export function countActiveJobs(userEmail: string): number {
+  const row = db
+    .prepare("SELECT COUNT(*) AS n FROM jobs WHERE user_email = ? AND status IN ('queued','running')")
+    .get(userEmail) as { n: number };
+  return Number(row.n);
+}
+
+export function updateJob(
+  id: string,
+  fields: Partial<{
+    status: JobStatus;
+    run_id: string | null;
+    progress_json: string | null;
+    result_json: string | null;
+    error_json: string | null;
+    started_at: string | null;
+    finished_at: string | null;
+  }>
+): void {
+  const keys = Object.keys(fields) as Array<keyof typeof fields>;
+  if (keys.length === 0) return;
+  const sql = `UPDATE jobs SET ${keys.map((k) => `${k} = ?`).join(", ")} WHERE id = ?`;
+  db.prepare(sql).run(...(keys.map((k) => fields[k]) as never[]), id);
+}
+
+/** Atomically bump and return a job's event sequence counter. */
+export function nextJobSeq(jobId: string): number {
+  const row = db
+    .prepare("UPDATE jobs SET seq = seq + 1 WHERE id = ? RETURNING seq")
+    .get(jobId) as { seq: number } | undefined;
+  if (!row) throw new Error(`unknown job: ${jobId}`);
+  return Number(row.seq);
+}
+
+/** Jobs left queued/running by a previous process (runtime restart mid-job). */
+export function listOrphanedJobs(): JobRow[] {
+  return db
+    .prepare("SELECT * FROM jobs WHERE status IN ('queued','running')")
+    .all() as unknown as JobRow[];
+}
+
+// ── Files ───────────────────────────────────────────────────────────────────
 
 export interface FileRow {
   id: string;
@@ -163,6 +274,21 @@ export interface FileRow {
   content_type: string;
   path: string;
   uploaded_at: string;
+}
+
+export function insertFileRow(params: {
+  id: string;
+  userEmail: string;
+  name: string;
+  size: number;
+  contentType: string;
+  path: string;
+}): FileRow {
+  db.prepare(
+    `INSERT INTO files (id, user_email, name, size, content_type, path, uploaded_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(params.id, params.userEmail, params.name, params.size, params.contentType, params.path, nowIso());
+  return getFileRow(params.id, params.userEmail)!;
 }
 
 export function getFileRow(id: string, userEmail: string): FileRow | null {

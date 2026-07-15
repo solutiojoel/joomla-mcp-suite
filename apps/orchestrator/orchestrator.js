@@ -252,12 +252,18 @@ async function createClient(label, url, token) {
  * first is still in flight (this is exactly how a menu build produced
  * duplicate categories/articles). Surface the error immediately instead
  * and let the caller check live state before deciding to retry by hand.
+ *
+ * `onprogress` (optional) receives each downstream progress notification —
+ * used to relay agents-mcp heartbeats up to OUR caller when they asked for
+ * progress (see the CallTool handler).
  */
-async function callDownstream(ds, toolName, toolArgs) {
+async function callDownstream(ds, toolName, toolArgs, onprogress) {
   const isAgentCall = ds.label === 'agents-mcp';
   const callOptions = isAgentCall
-    ? { timeout: 600_000, resetTimeoutOnProgress: true, maxTotalTimeout: 1_800_000 }
-    : undefined;
+    ? { timeout: 600_000, resetTimeoutOnProgress: true, maxTotalTimeout: 1_800_000, onprogress }
+    : onprogress
+      ? { onprogress }
+      : undefined;
   const maxAttempts = isAgentCall ? 1 : 2;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -793,8 +799,25 @@ function buildServer(sessionCtx) {
     return { tools: [...filteredOwnTools, ...downstreamTools] };
   });
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
     const { name, arguments: args = {} } = request.params;
+
+    // Progress relay: when OUR caller sent a progressToken (e.g. the
+    // agent-runtime job worker), forward each downstream progress
+    // notification upstream so long agents-mcp calls stay observable and
+    // the caller's resetTimeoutOnProgress keeps working end-to-end.
+    const callerProgressToken = request.params._meta?.progressToken;
+    const relayProgress = callerProgressToken === undefined ? undefined : (p) => {
+      extra.sendNotification({
+        method: 'notifications/progress',
+        params: {
+          progressToken: callerProgressToken,
+          progress: p.progress,
+          ...(p.total !== undefined ? { total: p.total } : {}),
+          ...(p.message !== undefined ? { message: p.message } : {}),
+        },
+      }).catch(() => { });
+    };
 
     // Re-read the agent definition so per-agent scope/rule edits apply mid-session.
     agentDef = loadAgentDef(currentAgent);
@@ -1127,7 +1150,7 @@ function buildServer(sessionCtx) {
     // ── Servers with inject: null need no active site (e.g. freshdesk-mcp) ──
     if (ds.inject === null) {
       try {
-        return await callDownstream(ds, name, args);
+        return await callDownstream(ds, name, args, relayProgress);
       } catch (err) {
         return { isError: true, content: [{ type: 'text', text: `${ds.label} error: ${err.message}` }] };
       }
@@ -1146,7 +1169,7 @@ function buildServer(sessionCtx) {
 
     const dsArgs = { ...args, [ds.inject]: activeSiteUrl };
     try {
-      return await callDownstream(ds, name, dsArgs);
+      return await callDownstream(ds, name, dsArgs, relayProgress);
     } catch (err) {
       // joomla-mcp auth error → re-login and retry once
       if (ds.label === 'joomla-mcp' && /401|403|login|csrf|cookie|session/i.test(err.message)) {

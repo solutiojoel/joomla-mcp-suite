@@ -170,9 +170,10 @@ For the "just send the document to the interpreter" flow. LLM jobs run **minutes
 // request — "type" is a catalog job id; "input" must satisfy its inputSchema
 { "type": "run_menu_interpretation",
   "input": { "site_url": "https://stmatthewparish.org", "pdf_file": "file_abc123" } }
-// 202
+// 202 — status is "queued", or already "running" when capacity was free
 { "id": "job_51d0", "type": "run_menu_interpretation", "status": "queued", "createdAt": "…" }
-// 400 validation | 429 limit_exceeded (1 running job per user; job was NOT queued)
+// 400 validation | 403 forbidden (job needs an agent your account lacks)
+// 429 limit_exceeded (1 active job per user; job was NOT queued)
 ```
 
 ### GET /api/jobs?status=&type=
