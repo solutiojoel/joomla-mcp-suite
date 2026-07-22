@@ -29,10 +29,27 @@
       "Bash(curl -s http://127.0.0.1:18311/healthz)",
       "Bash(node \"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\p2-accept-replay.cjs\")",
       "Bash(node \"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\p2-accept-b.cjs\")",
-      "Bash(P2_DATA_DIR=\"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\data\" node \"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\p2-accept-c.cjs\")"
+      "Bash(P2_DATA_DIR=\"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\data\" node \"C:\\\\Users\\\\Jeremy\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\\\b8a6a674-076f-459f-8dbe-2d8ddf93a004\\\\scratchpad\\\\p2-accept-c.cjs\")",
+      "mcp__orchestrator__ftp_read_file",
+      "mcp__orchestrator__gantry_styles_list",
+      "mcp__orchestrator__ftp_upload_file",
+      "mcp__orchestrator__joomla_module_type",
+      "mcp__orchestrator__joomla_site_config_inspect",
+      "mcp__orchestrator__write_site_notes",
+      "mcp__orchestrator__ftp_mkdir",
+      "WebFetch(domain:stanne.solutiosoftware.com)",
+      "mcp__orchestrator__joomla_redirects_list",
+      "Bash(base64 -w0 \"/c/Users/Jeremy/Downloads/school-donation \\(1\\).png\" > \"/c/Users/Jeremy/AppData/Local/Temp/claude/c--Users-Jeremy-code-projects-joomla-mcp-suite/5fe0139d-eacc-4977-aa8f-f8d0370c44ed/scratchpad/school-donation-b64.txt\" *)",
+      "mcp__orchestrator__ftp_upload_local_file",
+      "mcp__orchestrator__joomla_submit_admin_form",
+      "mcp__orchestrator__joomla_backend_inventory",
+      "WebFetch(domain:holycrossdover.org)",
+      "mcp__orchestrator__joomla_group",
+      "Bash(node -e \"const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%'; let s=''; for\\(let i=0;i<14;i++\\) s+=c[Math.floor\\(Math.random\\(\\)*c.length\\)]; console.log\\(s\\)\")"
     ],
     "additionalDirectories": [
-      "\\tmp"
+      "\\tmp",
+      "C:\\Users\\Jeremy\\AppData\\Local\\Temp\\claude\\c--Users-Jeremy-code-projects-joomla-mcp-suite\\5fe0139d-eacc-4977-aa8f-f8d0370c44ed\\scratchpad"
     ]
   },
   "hooks": {
