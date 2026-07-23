@@ -1,0 +1,380 @@
+{
+  "site": "https://menu-content-build.forge.solutiosoftware.com/",
+  "source": "OLPH-Wichita.pdf",
+  "generated": "2026-07-09",
+  "menus": {
+    "mainmenu": [
+      {
+        "title": "Incio | Home",
+        "type": "single_article",
+        "category": "Page Content",
+        "content_source": "generate",
+        "notes": "Homepage; no explicit content instructions provided in source document."
+      },
+      {
+        "title": "Sobre Nosotros | About Us",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "Bienvenidos a OLPH",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "Video provided by Father to be embedded."
+          },
+          {
+            "title": "Contáctanos y Horario de Oficina | Contact Us & Office Hours",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Equipo de Misión Parroquial | Parish Mission Team",
+            "type": "category_grid",
+            "category": "Staff Items",
+            "content_source": "pull",
+            "notes": "Staff/team page — always a grid. Each member: image, position, phone, email, bio; pull from website and Facebook bios."
+          },
+          {
+            "title": "Inscríbete en la parroquia | Join the Parish",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Send Flocknote parish registration link — exact URL not provided in source."
+          },
+          {
+            "title": "Nuestra Misión | Our Mission",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Entorno Seguro | Safe Environment",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Link to diocese — URL not provided in source."
+          }
+        ]
+      },
+      {
+        "title": "Sacramentos | Sacraments",
+        "type": "heading",
+        "content_source": "none",
+        "notes": "Kept as heading with individual children rather than a category_grid because each sacrament carries substantial distinct instructions (specific redirects, cross-links, blurbs) rather than being uniform grid cards. Flagged for review.",
+        "children": [
+          {
+            "title": "Solicitar un Certificado Sacramental | Request Sacramental Records",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "Send form & email process for requesting sacramental records."
+          },
+          {
+            "title": "Bautismo | Baptism",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "Create and Parish will review."
+          },
+          {
+            "title": "Confesión | Confession",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate"
+          },
+          {
+            "title": "Santa Misa | Holy Mass",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "Link/redirect content to 'Visitar a los Enfermos' (Visit to the Sick) ministry page; include blurb about Funeral Mass, Quinceañera Mass, and 25th+ anniversary Masses."
+          },
+          {
+            "title": "Confirmación | Confirmation",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "Create and Parish will review; include link to OCIA page."
+          },
+          {
+            "title": "Matrimonio | Marriage",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "Create and Parish will review."
+          },
+          {
+            "title": "Órdenes Sagradas y Vocaciones | Holy Order & Vocations",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Link to diocese vocations page — URL not provided in source."
+          },
+          {
+            "title": "Unción de los Enfermos | Anointing of the Sick",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "generate",
+            "notes": "Create and Parish will review; include link to Funerals page."
+          }
+        ]
+      },
+      {
+        "title": "Vida Parroquial | Parish Life",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "Ministerio Liderazgo | Leadership Ministry",
+            "type": "category_grid",
+            "category": "Leadership Ministry Items",
+            "content_source": "generate",
+            "notes": "Members created and reviewed by Parish.",
+            "children": [
+              {
+                "title": "Escuela de Evangelización | School of Evangelization",
+                "type": "alias",
+                "content_source": "none",
+                "notes": "Redirect to main menu item 'School of Evangelization | Escuela de Evangelización' — not a grid member article."
+              }
+            ]
+          },
+          {
+            "title": "Liturgia | Liturgy",
+            "type": "category_grid",
+            "category": "Liturgy Items",
+            "content_source": "generate",
+            "notes": "Members created and reviewed by Parish; Funerales requires funeral home to contact parish first."
+          },
+          {
+            "title": "Finanzas | Finance",
+            "type": "heading",
+            "content_source": "none",
+            "notes": "Only one sub-item listed (Contadores); kept as heading + single article rather than a grid due to insufficient member count.",
+            "children": [
+              {
+                "title": "Contadores",
+                "type": "single_article",
+                "category": "Page Content",
+                "content_source": "generate"
+              }
+            ]
+          },
+          {
+            "title": "Mantenimiento | Maintenance",
+            "type": "category_grid",
+            "category": "Maintenance Ministry Items",
+            "content_source": "generate",
+            "notes": "Only two members listed (Limpieza, Jardineria); classified as grid per ministries convention — flagged for review."
+          },
+          {
+            "title": "Formacion en la Fe | Faith Formation",
+            "type": "category_grid",
+            "category": "Faith Formation Items",
+            "content_source": "generate",
+            "notes": "Catequistas includes sacrament prep; Quinceañera keeps an existing fillable PDF form (Lupita) — may need DOCman/file handling rather than a standard grid article; Funerales requires funeral home to contact parish first."
+          }
+        ]
+      },
+      {
+        "title": "School of Evangelization | Escuela de Evangelización",
+        "type": "single_article",
+        "category": "Page Content",
+        "content_source": "generate",
+        "notes": "Target of alias from Vida Parroquial > Ministerio Liderazgo > Escuela de Evangelización."
+      },
+      {
+        "title": "Parish Events | Eventos Parroquiales",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "Horarios de Misa | Mass Times",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Boletín | Bulletin",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull"
+          },
+          {
+            "title": "Calendario | Calendar",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Get link from parish."
+          },
+          {
+            "title": "Inscribirse en Flocknote | Flocknote Sign up",
+            "type": "external_url",
+            "target": "https://ourladyofperpetualhelp61.flocknote.com/give",
+            "content_source": "redirect",
+            "notes": "URL given in source document is identical to Donaciones en Línea's giving link — please confirm the correct Flocknote signup URL, as this looks like a copy-paste error."
+          },
+          {
+            "title": "Marian Celebrations",
+            "type": "single_article",
+            "category": "Page Content",
+            "content_source": "pull",
+            "notes": "Pull from website (OLPH and Guadalupe celebrations)."
+          },
+          {
+            "title": "Daily Readings",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Link to website — specific URL not provided."
+          },
+          {
+            "title": "Saint of the Day",
+            "type": "external_url",
+            "target": "TBD",
+            "content_source": "redirect",
+            "notes": "Link to website — specific URL not provided."
+          }
+        ]
+      }
+    ],
+    "hiddenmenu": []
+  },
+  "modules": {
+    "toplinks": {
+      "items": [
+        {
+          "label": "Únase a la Parroquia | Join the Parish",
+          "type": "external_url",
+          "menu_item": "Inscríbete en la parroquia | Join the Parish",
+          "notes": "Assumed to reference the same action as the 'Inscríbete en la parroquia' menu item despite differing Spanish wording — please confirm."
+        },
+        {
+          "label": "Boletín | Bulletin",
+          "type": "single_article",
+          "menu_item": "Boletín | Bulletin"
+        },
+        {
+          "label": "Donaciones en Línea | Online Giving",
+          "type": "external_url",
+          "target": "https://ourladyofperpetualhelp61.flocknote.com/give"
+        },
+        {
+          "label": "Catequistas | Catechists",
+          "type": "external_url",
+          "target": "TBD",
+          "notes": "Catechists content will be a grid member article under 'Faith Formation Items' with no dedicated menu item; direct article URL needed once created."
+        }
+      ]
+    }
+  },
+  "grids": [
+    {
+      "page": "Equipo de Misión Parroquial | Parish Mission Team",
+      "menu_ref": "Equipo de Misión Parroquial | Parish Mission Team",
+      "type": "category_grid",
+      "category": "Staff Items",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "notes": "Members: image, position, phone, email, bio — pulled from website and Facebook bios."
+    },
+    {
+      "page": "Ministerio Liderazgo | Leadership Ministry",
+      "menu_ref": "Ministerio Liderazgo | Leadership Ministry",
+      "type": "category_grid",
+      "category": "Leadership Ministry Items",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "members": [
+        "Jovenes | Youth",
+        "Mariano | Marian",
+        "Visitar a los Enfermos | Visit to the Sick",
+        "Hospitalidad | Hospitality",
+        "Colaboradores | Collaborators"
+      ],
+      "notes": "Escuela de Evangelización is not a grid member — it is an alias/redirect to the top-level 'School of Evangelization' menu item."
+    },
+    {
+      "page": "Liturgia | Liturgy",
+      "menu_ref": "Liturgia | Liturgy",
+      "type": "category_grid",
+      "category": "Liturgy Items",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "members": [
+        "Adoración Eucarística | Eucharistic Adoration",
+        "Ministros Eucarísticos | Eucharistic Ministers",
+        "Sacristanes | Sacristans",
+        "Monaguillos | Altar Servers",
+        "Ujieres | Ushers",
+        "Coros | Choirs",
+        "Funerales | Funerals"
+      ],
+      "notes": "Funerales: Contact the funeral home; they will contact the parish. Note this title also appears under Faith Formation Items — possible duplication in source document."
+    },
+    {
+      "page": "Mantenimiento | Maintenance",
+      "menu_ref": "Mantenimiento | Maintenance",
+      "type": "category_grid",
+      "category": "Maintenance Ministry Items",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "members": [
+        "Limpieza | Church Cleaning Ministry",
+        "Jardinería | Landscaping Ministry"
+      ]
+    },
+    {
+      "page": "Formacion en la Fe | Faith Formation",
+      "menu_ref": "Formacion en la Fe | Faith Formation",
+      "type": "category_grid",
+      "category": "Faith Formation Items",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "members": [
+        "Catequistas | Catechists",
+        "Totus Tuus",
+        "Iniciación Cristiana para Adultos: OCIA | Adult Becoming Catholic: OCIA",
+        "Bautismo | Baptism Preparation",
+        "Preparación Matrimonial | Marriage Preparation",
+        "Quinceañera",
+        "Funerales | Funerals"
+      ],
+      "notes": "Catequistas includes sacrament prep. Quinceañera keeps an existing fillable PDF form (Lupita) — may need DOCman/file handling instead of a standard article. Funerales duplicates the Liturgy Items entry — possible duplication in source document."
+    }
+  ],
+  "open_questions": [
+    "What is the Flocknote parish registration link for 'Inscríbete en la parroquia | Join the Parish'?",
+    "What is the diocese link for 'Entorno Seguro | Safe Environment'?",
+    "What is the diocese vocations link for 'Órdenes Sagradas y Vocaciones | Holy Order & Vocations'?",
+    "What is the calendar link for 'Calendario | Calendar' — parish was to provide this?",
+    "The 'Inscribirse en Flocknote | Flocknote Sign up' URL in the source document is identical to the Donaciones en Línea (Online Giving) URL — please confirm the correct Flocknote signup URL.",
+    "What is the destination URL for 'Daily Readings'?",
+    "What is the destination URL for 'Saint of the Day'?",
+    "Once the Catequistas article exists under Faith Formation Items, what direct URL should the 'Catequistas | Catechists' quicklink use (it has no dedicated menu item)?",
+    "Does 'Únase a la Parroquia | Join the Parish' (quicklink) refer to the same target as 'Inscríbete en la parroquia | Join the Parish' (menu item)? Wording differs in Spanish.",
+    "Confirm classification: should Sacramentos | Sacraments remain individual heading children, or should it instead be treated as a category_grid like the ministry sections?",
+    "Confirm classification: Ministerio Liderazgo, Liturgia, Mantenimiento, and Formacion en la Fe were classified as category_grid per the ministries/clubs convention even though the source document never uses the word 'grid' — please confirm this is correct.",
+    "Is it acceptable for the 'Escuela de Evangelización' alias to sit as a child under the 'Ministerio Liderazgo' category_grid instead of being a plain sibling menu item?",
+    "Finanzas | Finance has only one sub-item (Contadores) — confirm whether this should stay as heading + single article, or whether more Finance ministries are expected (which would justify a grid).",
+    "Mantenimiento | Maintenance has only two listed members (Limpieza, Jardinería) — confirm grid classification is still desired despite the small count.",
+    "Should 'Quinceañera' (existing fillable PDF form) be built as a DOCman/file page instead of a standard grid article?",
+    "'Funerales | Funerals' appears identically under both Liturgia and Formacion en la Fe — is this an intentional duplicate or a documentation error?",
+    "What is the content plan for the 'Incio | Home' homepage — no instructions were given in the source document?",
+    "The 'Social Media Icons (Facebook, Instagram, & Youtube)' section has no corresponding module slot in the current schema (toplinks/under_rotator only) — how should these be represented/built?"
+  ],
+  "assumptions": [
+    "Default category 'Page Content' applied to all single_article items not explicitly categorized.",
+    "Default content_source 'generate' applied to leaf items with no explicit source instruction (e.g., Confesión, Contadores, Incio/Home).",
+    "Equipo de Misión Parroquial | Parish Mission Team classified as category_grid (staff/team pages are always a grid, never single_article), category 'Staff Items'.",
+    "Ministerio Liderazgo, Liturgia, Mantenimiento, and Formacion en la Fe classified as category_grid per the sacraments/ministries/clubs/councils convention, even though the document never uses the word 'grid'.",
+    "Sacramentos | Sacraments kept as a heading with individually classified children rather than a category_grid, because each sacrament has substantial distinct content instructions (specific redirects, cross-links, blurbs) rather than uniform grid cards.",
+    "Grid categories named per convention: section name + ' Items' (e.g., 'Leadership Ministry Items', 'Liturgy Items', 'Faith Formation Items', 'Maintenance Ministry Items').",
+    "Minor typos fixed in titles: 'Sacrastanes' → 'Sacristanes', 'Jardineria' → 'Jardinería'.",
+    "'Únase a la Parroquia' quicklink assumed to reference the 'Inscríbete en la parroquia | Join the Parish' menu item, despite differing Spanish wording.",
+    "Social Media Icons section noted but not mapped to any module in this spec, since the schema only defines 'toplinks' and 'under_rotator' module slots.",
+    "'under_rotator' module omitted entirely since the source document describes no homepage rotator quicklinks."
+  ]
+}

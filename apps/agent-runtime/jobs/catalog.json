@@ -1,0 +1,189 @@
+[
+  {
+    "id": "run_menu_interpretation",
+    "title": "Interpret a menu document",
+    "description": "Menu PDF → validated Menu Spec JSON (menu-interpreter sub-agent). Provide the uploaded PDF (preferred) or the raw menu text.",
+    "kind": "llm",
+    "subAgent": "menu-interpreter",
+    "agentScopes": ["menu-build"],
+    "stoppable": true,
+    "produces": ["menu-spec"],
+    "inputSchema": {
+      "type": "object",
+      "required": ["site_url"],
+      "properties": {
+        "site_url": { "type": "string", "format": "site-url", "description": "The site the spec belongs to (workspace destination)." },
+        "pdf_file": { "type": "string", "format": "runtime-file-id", "x-tool-arg": "pdf_path", "description": "Menu PDF — upload via POST /api/files first." },
+        "menu_text": { "type": "string", "description": "Raw text of the menu document, if already extracted. Ignored when pdf_file is set." },
+        "source_filename": { "type": "string", "description": "Original filename recorded as the spec's source. Defaults to the uploaded file's name." }
+      }
+    }
+  },
+  {
+    "id": "run_menu_build",
+    "title": "Build the menu skeleton",
+    "description": "Approved Menu Spec → Joomla categories, placeholder articles, and menu items (menu-builder sub-agent). Requires joomla_ids.menu_map in the spec.",
+    "kind": "llm",
+    "subAgent": "menu-builder",
+    "agentScopes": ["menu-build"],
+    "stoppable": true,
+    "produces": ["menu-spec"],
+    "inputSchema": {
+      "type": "object",
+      "required": ["site_url", "spec"],
+      "properties": {
+        "site_url": { "type": "string", "format": "site-url" },
+        "spec": { "type": "object", "description": "The full approved Menu Spec JSON with joomla_ids.menu_map populated." },
+        "spec_filename": { "type": "string", "description": "Workspace filename to persist the updated spec to." },
+        "default_template_style_id": { "type": "string", "description": "Gantry outline ID applied to every created menu item unless a spec item overrides it." }
+      }
+    }
+  },
+  {
+    "id": "derive_content_schematic",
+    "title": "Derive the content schematic",
+    "description": "Deterministically derive (or re-derive/merge) the Content Schematic from a Menu Spec — run after any spec edit and after the skeleton build. No LLM involved.",
+    "kind": "deterministic",
+    "subAgent": null,
+    "agentScopes": ["menu-build", "content-build"],
+    "stoppable": false,
+    "produces": ["content-schematic"],
+    "inputSchema": {
+      "type": "object",
+      "required": ["site_url", "spec"],
+      "properties": {
+        "site_url": { "type": "string", "format": "site-url" },
+        "spec": { "type": "object", "description": "The approved Menu Spec JSON to derive from." },
+        "schematic": { "type": "object", "description": "Existing schematic to merge into, when re-deriving." },
+        "schematic_filename": { "type": "string" }
+      }
+    }
+  },
+  {
+    "id": "run_content_interpretation",
+    "title": "Interpret content from the source document",
+    "description": "Fills the Content Schematic's content fields from the client PDF (content-interpreter sub-agent). Structure stays locked to the approved spec.",
+    "kind": "llm",
+    "subAgent": "content-interpreter",
+    "agentScopes": ["menu-build", "content-build"],
+    "stoppable": true,
+    "produces": ["content-schematic"],
+    "inputSchema": {
+      "type": "object",
+      "required": ["site_url", "pdf_file", "spec"],
+      "properties": {
+        "site_url": { "type": "string", "format": "site-url" },
+        "pdf_file": { "type": "string", "format": "runtime-file-id", "x-tool-arg": "pdf_path", "description": "The client menu/content PDF — upload via POST /api/files first." },
+        "spec": { "type": "object", "description": "The full approved Menu Spec JSON (post-Phase-3)." },
+        "schematic": { "type": "object", "description": "Existing schematic to merge into before interpreting." },
+        "schematic_filename": { "type": "string" },
+        "source_filename": { "type": "string", "description": "Recorded as the schematic's source. Defaults to the uploaded file's name." }
+      }
+    }
+  },
+  {
+    "id": "discover_source_urls",
+    "title": "Discover old-site source URLs",
+    "description": "Proposes old-site URLs for schematic entries that need one, by scanning the old site's sitemap and fuzzy-matching titles. Proposals need human confirmation. No LLM involved.",
+    "kind": "deterministic",
+    "subAgent": null,
+    "agentScopes": ["content-build"],
+    "stoppable": false,
+    "produces": [],
+    "inputSchema": {
+      "type": "object",
+      "required": ["site_url", "base_url"],
+      "properties": {
+        "site_url": { "type": "string", "format": "site-url", "description": "The active (new) site — locates the workspace schematic." },
+        "base_url": { "type": "string", "description": "The OLD site's base URL to scan (e.g. https://www.oldparishsite.org)." },
+        "schematic": { "type": "object" },
+        "schematic_filename": { "type": "string" },
+        "max_candidates": { "type": "number", "description": "Max candidate URLs per entry. Default 3." }
+      }
+    }
+  },
+  {
+    "id": "fetch_source_content",
+    "title": "Fetch old-site page content",
+    "description": "Fetches every eligible entry's old-site page, extracts the main content, and saves it as workspace markdown. No LLM involved.",
+    "kind": "deterministic",
+    "subAgent": null,
+    "agentScopes": ["content-build"],
+    "stoppable": false,
+    "produces": ["source-md"],
+    "inputSchema": {
+      "type": "object",
+      "required": ["site_url"],
+      "properties": {
+        "site_url": { "type": "string", "format": "site-url" },
+        "schematic": { "type": "object" },
+        "schematic_filename": { "type": "string" },
+        "refetch": { "type": "boolean", "description": "Re-fetch entries that already have a source file. Default false." }
+      }
+    }
+  },
+  {
+    "id": "run_content_build",
+    "title": "Write and apply page content",
+    "description": "Writes final Joomla article HTML for every writable entry (content-writer sub-agent, batched) and auto-applies it to the skeleton. Idempotent across re-runs.",
+    "kind": "llm",
+    "subAgent": "content-writer",
+    "agentScopes": ["content-build"],
+    "stoppable": true,
+    "produces": ["article-html", "content-schematic"],
+    "inputSchema": {
+      "type": "object",
+      "required": ["site_url"],
+      "properties": {
+        "site_url": { "type": "string", "format": "site-url" },
+        "schematic": { "type": "object" },
+        "schematic_filename": { "type": "string" },
+        "batch_size": { "type": "number", "description": "Entries per content-writer run. Default 8." },
+        "node_keys": { "type": "array", "items": { "type": "string" }, "description": "Explicit subset of node_keys to write." },
+        "apply": { "type": "boolean", "description": "Auto-apply each batch to Joomla after writing. Default true." },
+        "force": { "type": "boolean", "description": "Apply even over articles that already have real content. Default false." },
+        "dry_run": { "type": "boolean", "description": "Report the plan without running the writer or touching Joomla." }
+      }
+    }
+  },
+  {
+    "id": "apply_content",
+    "title": "Apply written content to Joomla",
+    "description": "Pushes each written entry's HTML into its Joomla article. Refuses to overwrite real content unless force is set. No LLM involved.",
+    "kind": "deterministic",
+    "subAgent": null,
+    "agentScopes": ["content-build"],
+    "stoppable": false,
+    "produces": [],
+    "inputSchema": {
+      "type": "object",
+      "required": ["site_url"],
+      "properties": {
+        "site_url": { "type": "string", "format": "site-url" },
+        "schematic": { "type": "object" },
+        "schematic_filename": { "type": "string" },
+        "node_keys": { "type": "array", "items": { "type": "string" } },
+        "force": { "type": "boolean", "description": "Overwrite articles that already have real content. Default false." },
+        "dry_run": { "type": "boolean", "description": "Report the plan without updating Joomla." }
+      }
+    }
+  },
+  {
+    "id": "agent_ping",
+    "title": "Agent transport ping (admin smoke test)",
+    "description": "Sleeps 90 seconds emitting a progress heartbeat every 10s — validates the runtime → orchestrator → agents-mcp progress chain end-to-end.",
+    "kind": "llm",
+    "subAgent": null,
+    "agentScopes": ["super_shannon"],
+    "stoppable": false,
+    "hidden": true,
+    "produces": [],
+    "inputSchema": {
+      "type": "object",
+      "required": ["site_url"],
+      "properties": {
+        "site_url": { "type": "string", "format": "site-url", "description": "Any site URL — agents-mcp tools are site-scoped." }
+      }
+    }
+  }
+]

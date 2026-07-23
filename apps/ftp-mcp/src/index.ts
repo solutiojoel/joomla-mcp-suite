@@ -207,6 +207,7 @@ function buildServer(): Server {
 
 runServer({
   buildServer,
+  serverInfo: { name: "ftp-mcp", version: "1.0.0" },
   logger: createLogger("ftp-mcp"),
 }).catch((error) => {
   console.error("Fatal error:", error);

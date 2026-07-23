@@ -12,11 +12,12 @@
     "apps/ftp-mcp",
     "apps/agents-mcp",
     "apps/knowledge-gateway-mcp",
-    "apps/dashboard"
+    "apps/dashboard",
+    "apps/agent-runtime"
   ],
   "scripts": {
     "build:packages": "npm run build --workspace=@solutio/mcp-downstream-client --workspace=@solutio/mcp-transport --workspace=@solutio/logging",
-    "build:apps": "npm run build --workspace=apps/joomla-mcp --workspace=apps/freshdesk-mcp --workspace=apps/ftp-mcp --workspace=apps/agents-mcp --workspace=apps/knowledge-gateway-mcp --if-present",
+    "build:apps": "npm run build --workspace=apps/joomla-mcp --workspace=apps/freshdesk-mcp --workspace=apps/ftp-mcp --workspace=apps/agents-mcp --workspace=apps/knowledge-gateway-mcp --workspace=apps/agent-runtime --if-present",
     "build": "npm run build:packages && npm run build:apps",
     "test": "npm run test --workspaces --if-present"
   },

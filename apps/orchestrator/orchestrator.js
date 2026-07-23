@@ -33,6 +33,7 @@ const {
 } = require('@modelcontextprotocol/sdk/types.js');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const kb = require('./kb.js');
 const { createLogger } = require('@solutio/logging');
 
@@ -96,7 +97,9 @@ function getDownstream(label) {
 }
 
 // ─── User registry ────────────────────────────────────────────────────────────
-// config/users.json maps bearer tokens → { user, agent }.
+// config/users.json maps bearer tokens → { user, agent, allowedAgents? }.
+// Keys are "sha256:<hex>" digests of the token (run scripts/hash-tokens.js);
+// bare plaintext keys are still accepted as a migration fallback for one release.
 // If the file is absent, falls back to the single ORCHESTRATOR_TOKEN env var.
 
 const USERS_JSON_PATH = path.join(__dirname, '..', '..', 'config', 'users.json');
@@ -113,20 +116,26 @@ function loadUsersRegistry() {
 
 let usersRegistry = loadUsersRegistry();
 
-// Resolve an inbound Authorization header → session context { user, agent }.
-// Returns null if the token is invalid (caller should 401).
+// Resolve an inbound Authorization header → session context
+// { user, agent, allowedAgents }. Returns null if the token is invalid
+// (caller should 401).
 function resolveSessionContext(authHeader) {
   const provided = (authHeader || '').startsWith('Bearer ') ? authHeader.slice(7) : '';
 
   if (usersRegistry) {
-    const entry = usersRegistry[provided];
+    const digest = crypto.createHash('sha256').update(provided).digest('hex');
+    const entry = usersRegistry[`sha256:${digest}`] || usersRegistry[provided];
     if (!entry) return null;
-    return { user: entry.user, agent: entry.agent || 'super_shannon' };
+    return {
+      user: entry.user,
+      agent: entry.agent || 'super_shannon',
+      allowedAgents: Array.isArray(entry.allowedAgents) ? entry.allowedAgents : [],
+    };
   }
 
   // Fallback: single-token mode (no users.json)
   if (ORCHESTRATOR_TOKEN && provided !== ORCHESTRATOR_TOKEN) return null;
-  return { user: 'local', agent: 'super_shannon' };
+  return { user: 'local', agent: 'super_shannon', allowedAgents: [] };
 }
 
 // ─── Session state ────────────────────────────────────────────────────────────
@@ -243,12 +252,18 @@ async function createClient(label, url, token) {
  * first is still in flight (this is exactly how a menu build produced
  * duplicate categories/articles). Surface the error immediately instead
  * and let the caller check live state before deciding to retry by hand.
+ *
+ * `onprogress` (optional) receives each downstream progress notification —
+ * used to relay agents-mcp heartbeats up to OUR caller when they asked for
+ * progress (see the CallTool handler).
  */
-async function callDownstream(ds, toolName, toolArgs) {
+async function callDownstream(ds, toolName, toolArgs, onprogress) {
   const isAgentCall = ds.label === 'agents-mcp';
   const callOptions = isAgentCall
-    ? { timeout: 600_000, resetTimeoutOnProgress: true, maxTotalTimeout: 1_800_000 }
-    : undefined;
+    ? { timeout: 600_000, resetTimeoutOnProgress: true, maxTotalTimeout: 1_800_000, onprogress }
+    : onprogress
+      ? { onprogress }
+      : undefined;
   const maxAttempts = isAgentCall ? 1 : 2;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -404,10 +419,29 @@ async function runCssAssetSmokeTest(site, args) {
 // ─── Server builder ───────────────────────────────────────────────────────────
 
 function buildServer(sessionCtx) {
-  const { user = 'local', agent = 'super_shannon' } = sessionCtx || {};
+  const { user = 'local', agent = 'super_shannon', allowedAgents = [] } = sessionCtx || {};
   let currentAgent = agent;
   let agentDef = loadAgentDef(agent);
   let activeSiteUrl = null;
+
+  // Agents this session may switch to. A scope whose tools.allow permits
+  // switch_agent (super_shannon) can reach any non-hidden agent; otherwise the
+  // user's allowedAgents list from config/users.json applies — plus their
+  // default agent so they can always switch back. The set is derived from the
+  // session (not the currently active scope), so a support user allowed
+  // ["menu-build"] can still return to support after switching away.
+  const sessionAgents = [...new Set([agent, ...allowedAgents])];
+  function switchableAgents() {
+    const visible = listAvailableAgents().map(a => a.name);
+    const { globalDeny } = loadGlobalPolicy();
+    const scopeAllows = kb.resolveToolAccess(agentDef, 'switch_agent', {
+      globalDeny,
+      mandatory: MANDATORY_OWN_TOOLS,
+      hidden: HIDDEN_JOOMLA_TOOLS,
+    }).allowed;
+    if (scopeAllows) return visible;
+    return sessionAgents.filter(n => visible.includes(n));
+  }
 
   const server = new Server(
     { name: 'orchestrator', version: '1.0.0' },
@@ -669,8 +703,7 @@ function buildServer(sessionCtx) {
         inputSchema: { type: 'object', properties: {} },
       },
       (() => {
-        const agents = listAvailableAgents();
-        const agentNames = agents.map(a => a.name);
+        const agentNames = switchableAgents();
         return {
           name: 'switch_agent',
           description:
@@ -738,9 +771,17 @@ function buildServer(sessionCtx) {
 
     // Filter own tools via the shared precedence helper (mandatory bypass →
     // hidden → global deny → agent scope). Same helper backs CallTool below.
-    const filteredOwnTools = ownTools.filter(
-      t => kb.resolveToolAccess(agentDef, t.name, accessOpts).allowed
-    );
+    // switch_agent gets a per-user override: a scope-denied agent still sees it
+    // when the user's allowedAgents give them somewhere to switch to (the enum
+    // above is already restricted to that set). A global deny still hides it.
+    const filteredOwnTools = ownTools.filter(t => {
+      const access = kb.resolveToolAccess(agentDef, t.name, accessOpts);
+      if (access.allowed) return true;
+      if (t.name === 'switch_agent' && access.code === 'scope') {
+        return switchableAgents().some(n => n !== currentAgent);
+      }
+      return false;
+    });
 
     // Aggregate downstream tools in registry order; first server to expose a
     // name wins (handles freshdesk/ftp overlap with joomla-mcp during migration).
@@ -758,8 +799,25 @@ function buildServer(sessionCtx) {
     return { tools: [...filteredOwnTools, ...downstreamTools] };
   });
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
     const { name, arguments: args = {} } = request.params;
+
+    // Progress relay: when OUR caller sent a progressToken (e.g. the
+    // agent-runtime job worker), forward each downstream progress
+    // notification upstream so long agents-mcp calls stay observable and
+    // the caller's resetTimeoutOnProgress keeps working end-to-end.
+    const callerProgressToken = request.params._meta?.progressToken;
+    const relayProgress = callerProgressToken === undefined ? undefined : (p) => {
+      extra.sendNotification({
+        method: 'notifications/progress',
+        params: {
+          progressToken: callerProgressToken,
+          progress: p.progress,
+          ...(p.total !== undefined ? { total: p.total } : {}),
+          ...(p.message !== undefined ? { message: p.message } : {}),
+        },
+      }).catch(() => { });
+    };
 
     // Re-read the agent definition so per-agent scope/rule edits apply mid-session.
     agentDef = loadAgentDef(currentAgent);
@@ -946,22 +1004,35 @@ function buildServer(sessionCtx) {
     }
 
     if (name === 'switch_agent') {
+      const targetAgent = args.agent;
+      if (!targetAgent) {
+        return { isError: true, content: [{ type: 'text', text: 'agent is required' }] };
+      }
+
       // Enforce agent scope so restricted agents (support, menu-build) cannot
-      // re-call switch_agent to self-elevate.
+      // re-call switch_agent to self-elevate — with a per-user override: a
+      // scope-denied agent may still switch within the session's allowedAgents
+      // (from config/users.json), never beyond it.
       const { globalDeny: swGlobalDeny } = loadGlobalPolicy();
       const swAccess = kb.resolveToolAccess(agentDef, 'switch_agent', {
         globalDeny: swGlobalDeny,
         mandatory: MANDATORY_OWN_TOOLS,
         hidden: HIDDEN_JOOMLA_TOOLS,
       });
-      if (!swAccess.allowed) {
-        return { isError: true, content: [{ type: 'text', text: `Tool 'switch_agent' is not available to the '${currentAgent}' agent.` }] };
+      const userOverride = swAccess.code === 'scope' && sessionAgents.includes(targetAgent);
+      if (!swAccess.allowed && !userOverride) {
+        const reachable = switchableAgents().filter(n => n !== currentAgent);
+        return {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: reachable.length
+              ? `Switching to '${targetAgent}' is not permitted for this account. Available: ${reachable.join(', ')}.`
+              : `Tool 'switch_agent' is not available to the '${currentAgent}' agent.`,
+          }],
+        };
       }
 
-      const targetAgent = args.agent;
-      if (!targetAgent) {
-        return { isError: true, content: [{ type: 'text', text: 'agent is required' }] };
-      }
       let defPath = path.join(AGENTS_CONFIG_DIR, `${targetAgent}.json`);
       if (!fs.existsSync(defPath)) defPath = path.join(AGENTS_CONFIG_DIR, targetAgent, `${targetAgent}.json`);
       if (!fs.existsSync(defPath)) {
@@ -971,8 +1042,14 @@ function buildServer(sessionCtx) {
           content: [{ type: 'text', text: `Unknown agent: '${targetAgent}'. Available: ${available}` }],
         };
       }
+      const targetDef = loadAgentDef(targetAgent);
+      if (targetDef.hidden) {
+        // Hidden agents are sub-agent scopes that run inside agents-mcp; no
+        // interactive session should adopt them, super_shannon included.
+        return { isError: true, content: [{ type: 'text', text: `Agent '${targetAgent}' is internal and cannot be switched to.` }] };
+      }
       currentAgent = targetAgent;
-      agentDef     = loadAgentDef(targetAgent);
+      agentDef     = targetDef;
       log(`session switched agent: ${user} → ${currentAgent}`);
       return {
         content: [{
@@ -1073,7 +1150,7 @@ function buildServer(sessionCtx) {
     // ── Servers with inject: null need no active site (e.g. freshdesk-mcp) ──
     if (ds.inject === null) {
       try {
-        return await callDownstream(ds, name, args);
+        return await callDownstream(ds, name, args, relayProgress);
       } catch (err) {
         return { isError: true, content: [{ type: 'text', text: `${ds.label} error: ${err.message}` }] };
       }
@@ -1092,7 +1169,7 @@ function buildServer(sessionCtx) {
 
     const dsArgs = { ...args, [ds.inject]: activeSiteUrl };
     try {
-      return await callDownstream(ds, name, dsArgs);
+      return await callDownstream(ds, name, dsArgs, relayProgress);
     } catch (err) {
       // joomla-mcp auth error → re-login and retry once
       if (ds.label === 'joomla-mcp' && /401|403|login|csrf|cookie|session/i.test(err.message)) {
@@ -1123,6 +1200,7 @@ function buildServer(sessionCtx) {
 
 runServer({
   buildServer,
+  serverInfo: { name: 'orchestrator', version: '1.0.0' },
   authenticate: (req) => resolveSessionContext(req.headers['authorization'] || ''),
   cors: true,
   stdioContext: { user: 'local', agent: 'super_shannon' },

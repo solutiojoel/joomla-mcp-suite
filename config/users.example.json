@@ -1,5 +1,15 @@
 {
-  "tok_jeremy_xxxx":  { "user": "jeremy@solutiosoftware.com",  "agent": "super_shannon" },
-  "tok_coworker_xx":  { "user": "coworker@solutiosoftware.com", "agent": "super_shannon" },
-  "tok_support_01":   { "user": "support1@solutiosoftware.com", "agent": "support" }
+  "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08": {
+    "user": "jeremy@solutiosoftware.com",
+    "agent": "super_shannon"
+  },
+  "sha256:60303ae22b998861bce3b28f33eec1be758a213c86c93c076dbe9f558c11c752": {
+    "user": "support1@solutiosoftware.com",
+    "agent": "support",
+    "allowedAgents": ["menu-build", "content-build"]
+  },
+  "tok_plaintext_migration_fallback": {
+    "user": "legacy@solutiosoftware.com",
+    "agent": "support"
+  }
 }

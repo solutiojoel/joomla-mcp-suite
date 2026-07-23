@@ -1753,6 +1753,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
 
 runServer({
   buildServer,
+  serverInfo: { name: "joomla-mcp", version: "1.0.0" },
   logger: createLogger("joomla-mcp"),
 }).catch((error) => {
   console.error("Fatal error:", error);

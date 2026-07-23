@@ -216,6 +216,7 @@ function buildServer(): Server {
 
 runServer({
   buildServer,
+  serverInfo: { name: "freshdesk-mcp", version: "1.0.0" },
   logger: createLogger("freshdesk-mcp"),
 }).catch((error) => {
   console.error("Fatal error:", error);

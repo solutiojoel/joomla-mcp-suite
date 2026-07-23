@@ -34,12 +34,19 @@ export interface CorsOptions {
   origin?: string;
 }
 
+export interface ServerInfo {
+  name?: string;
+  version?: string;
+}
+
 export interface StartHttpOptions {
   port: number;
   /** Bind host. Defaults to process.env.HTTP_HOST || "0.0.0.0". */
   host?: string;
   /** MCP endpoint path. Defaults to "/mcp". */
   path?: string;
+  /** Reported by the unauthenticated GET /healthz route. */
+  serverInfo?: ServerInfo;
   /**
    * Build a fresh MCP Server for a new session. Receives the value returned by
    * `authenticate` (or undefined when there is no auth), so a server can scope
@@ -98,6 +105,23 @@ export async function startHttpServer(options: StartHttpOptions): Promise<http.S
       if (preflightHandled) return;
     }
 
+    const urlPath = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`).pathname;
+
+    // Liveness probe — deliberately unauthenticated so monitors and the
+    // agent-runtime health aggregator can poll without a bearer token.
+    if (urlPath === "/healthz") {
+      if (req.method !== "GET") {
+        res.writeHead(405);
+        res.end();
+        return;
+      }
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ ok: true, name: options.serverInfo?.name, version: options.serverInfo?.version })
+      );
+      return;
+    }
+
     let context: unknown;
     if (options.authenticate) {
       context = options.authenticate(req);
@@ -108,7 +132,6 @@ export async function startHttpServer(options: StartHttpOptions): Promise<http.S
       }
     }
 
-    const urlPath = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`).pathname;
     if (urlPath !== path) {
       res.writeHead(404);
       res.end("Not found");
