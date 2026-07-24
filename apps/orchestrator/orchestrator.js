@@ -293,7 +293,12 @@ async function loadToolMap(ds) {
 
 async function loadDownstreamTools() {
   await Promise.all(DOWNSTREAMS.map(ds =>
-    loadToolMap(ds).catch(err => log(`WARNING: could not load ${ds.label} tools - ${err.message}`))
+    loadToolMap(ds)
+      .then(() => { ds.lastToolError = null; ds.lastToolLoadAt = new Date().toISOString(); })
+      .catch(err => {
+        ds.lastToolError = err.message;
+        log(`WARNING: could not load ${ds.label} tools - ${err.message}`);
+      })
   ));
 }
 
@@ -414,6 +419,110 @@ async function runCssAssetSmokeTest(site, args) {
   }
 
   return { pass: emitted && steps.every(s => s.ok !== false), steps };
+}
+
+// ─── Status collector ────────────────────────────────────────────────────────
+// Probes each downstream's unauthenticated /healthz (plus the site-builder UI)
+// and reports reachability, latency, cached tool counts, and the last
+// tool-load error. Read-only; exposes no tool names, config, or secrets.
+
+async function probeUrl(url, timeoutMs = 4000) {
+  const started = Date.now();
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+    return { up: res.status < 500, httpStatus: res.status, latencyMs: Date.now() - started };
+  } catch (err) {
+    return { up: false, error: err && err.message ? err.message : String(err), latencyMs: Date.now() - started };
+  }
+}
+
+async function collectStatus() {
+  const services = await Promise.all(DOWNSTREAMS.map(async (ds) => {
+    const healthUrl = ds.url.replace(/\/mcp\/?$/, '') + '/healthz';
+    const probe = await probeUrl(healthUrl);
+    const toolCount = ds.toolMap.size;
+    // Degraded: server answers its health probe but the orchestrator could not
+    // load its tools (e.g. protocol/handshake failure).
+    const degraded = probe.up && (toolCount === 0 || !!ds.lastToolError);
+    return {
+      name: ds.label,
+      status: probe.up ? (degraded ? 'degraded' : 'up') : 'down',
+      latencyMs: probe.latencyMs,
+      toolCount,
+      lastToolLoadAt: ds.lastToolLoadAt || null,
+      error: probe.up ? (ds.lastToolError || null) : (probe.error || `HTTP ${probe.httpStatus}`),
+    };
+  }));
+
+  // Site-builder UI is not an MCP server; a plain HTTP probe is enough.
+  const sbPort = process.env.SITE_BUILDER_PORT || '18303';
+  const sbProbe = await probeUrl(`http://127.0.0.1:${sbPort}/`);
+  services.push({
+    name: 'site-builder',
+    status: sbProbe.up ? 'up' : 'down',
+    latencyMs: sbProbe.latencyMs,
+    toolCount: null,
+    lastToolLoadAt: null,
+    error: sbProbe.up ? null : (sbProbe.error || `HTTP ${sbProbe.httpStatus}`),
+  });
+
+  return {
+    orchestrator: { name: 'orchestrator', version: '1.0.0', status: 'up', uptimeSeconds: Math.round(process.uptime()) },
+    generatedAt: new Date().toISOString(),
+    totalTools: DOWNSTREAMS.reduce((n, d) => n + d.toolMap.size, 0),
+    services,
+  };
+}
+
+function renderStatusHtml(status) {
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const dot = { up: '#22c55e', degraded: '#f59e0b', down: '#ef4444' };
+  const rows = status.services.map((s) => `
+      <tr>
+        <td><span class="dot" style="background:${dot[s.status] || '#6b7280'}"></span>${esc(s.name)}</td>
+        <td class="st st-${esc(s.status)}">${esc(s.status.toUpperCase())}</td>
+        <td>${s.latencyMs != null ? s.latencyMs + ' ms' : '—'}</td>
+        <td>${s.toolCount != null ? s.toolCount : '—'}</td>
+        <td class="err">${esc(s.error || '')}</td>
+      </tr>`).join('');
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="15">
+<title>Joomla MCP Suite — Status</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 2rem; }
+  h1 { font-size: 1.3rem; margin: 0 0 .25rem; }
+  .sub { color: #94a3b8; font-size: .85rem; margin-bottom: 1.5rem; }
+  table { border-collapse: collapse; width: 100%; max-width: 960px; }
+  th, td { text-align: left; padding: .55rem .75rem; border-bottom: 1px solid #1e293b; font-size: .9rem; }
+  th { color: #94a3b8; font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+  .dot { display: inline-block; width: .65rem; height: .65rem; border-radius: 50%; margin-right: .5rem; vertical-align: baseline; }
+  .st-up { color: #22c55e; } .st-degraded { color: #f59e0b; } .st-down { color: #ef4444; }
+  .err { color: #f87171; font-size: .8rem; max-width: 22rem; word-break: break-word; }
+  .foot { margin-top: 1.25rem; color: #64748b; font-size: .8rem; }
+  code { background: #1e293b; padding: .1rem .35rem; border-radius: .25rem; }
+</style>
+</head>
+<body>
+  <h1>Joomla MCP Suite</h1>
+  <div class="sub">
+    Orchestrator up ${esc(String(status.orchestrator.uptimeSeconds))}s ·
+    ${esc(String(status.totalTools))} tools loaded ·
+    ${esc(status.generatedAt)} · auto-refreshes every 15s
+  </div>
+  <table>
+    <thead><tr><th>Service</th><th>Status</th><th>Latency</th><th>Tools</th><th>Error</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="foot">
+    MCP endpoint: <code>POST /mcp</code> (Bearer token required) ·
+    Machine-readable: <code>GET /status.json</code>
+  </div>
+</body>
+</html>`;
 }
 
 // ─── Server builder ───────────────────────────────────────────────────────────
@@ -1203,6 +1312,23 @@ runServer({
   serverInfo: { name: 'orchestrator', version: '1.0.0' },
   authenticate: (req) => resolveSessionContext(req.headers['authorization'] || ''),
   cors: true,
+  extraGetRoutes: {
+    '/': async (_req, res) => {
+      const status = await collectStatus();
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(renderStatusHtml(status));
+    },
+    '/status': async (_req, res) => {
+      const status = await collectStatus();
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(renderStatusHtml(status));
+    },
+    '/status.json': async (_req, res) => {
+      const status = await collectStatus();
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(status, null, 2));
+    },
+  },
   stdioContext: { user: 'local', agent: 'super_shannon' },
   logger: log,
   onStart: async () => {

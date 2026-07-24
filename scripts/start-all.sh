@@ -105,7 +105,10 @@ wait_for_port 127.0.0.1 "${ORCHESTRATOR_PORT}"
 # Replit's domain proxy routes external traffic to local port 9303 (legacy
 # platform port mapping). Forward it to the orchestrator so the public URL
 # always reaches the /mcp endpoint, unless something else already owns 9303.
-if [ "${FRESHDESK_MCP_PORT}" != "9303" ] && [ "${ORCHESTRATOR_PORT}" != "9303" ]; then
+if [ "${DISABLE_9303_FORWARDER:-0}" != "1" ] && [ "${FRESHDESK_MCP_PORT}" != "9303" ] && [ "${ORCHESTRATOR_PORT}" != "9303" ]; then
+  # Delay so Replit's workflow port detection latches onto the orchestrator's
+  # waitForPort (5000) before a second public port appears.
+  sleep 15
   node -e '
     const net = require("net");
     const target = Number(process.env.ORCHESTRATOR_PORT || 9302);

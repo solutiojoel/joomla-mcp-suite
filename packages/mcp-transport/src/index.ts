@@ -63,6 +63,12 @@ export interface StartHttpOptions {
   logger?: Logger;
   /** Hook run once before the server starts listening (e.g. warm caches). */
   onStart?: () => Promise<void> | void;
+  /**
+   * Extra unauthenticated GET routes served alongside /healthz — e.g. a status
+   * dashboard. Map of pathname → handler. Handlers must write the full
+   * response. Only GET requests are dispatched here.
+   */
+  extraGetRoutes?: Record<string, (req: http.IncomingMessage, res: http.ServerResponse) => void | Promise<void>>;
 }
 
 function applyCors(req: http.IncomingMessage, res: http.ServerResponse, opts: CorsOptions): boolean {
@@ -119,6 +125,25 @@ export async function startHttpServer(options: StartHttpOptions): Promise<http.S
       res.end(
         JSON.stringify({ ok: true, name: options.serverInfo?.name, version: options.serverInfo?.version })
       );
+      return;
+    }
+
+    // Extra unauthenticated GET routes (status pages etc.) — like /healthz,
+    // these bypass the bearer-token gate and expose only what the handler writes.
+    const extraRoute = options.extraGetRoutes?.[urlPath];
+    if (extraRoute) {
+      if (req.method !== "GET") {
+        res.writeHead(405);
+        res.end();
+        return;
+      }
+      try {
+        await extraRoute(req, res);
+      } catch (err) {
+        log(`extra route ${urlPath} failed: ${err instanceof Error ? err.message : String(err)}`);
+        if (!res.headersSent) res.writeHead(500, { "Content-Type": "application/json" });
+        if (!res.writableEnded) res.end(JSON.stringify({ error: "Internal error" }));
+      }
       return;
     }
 
