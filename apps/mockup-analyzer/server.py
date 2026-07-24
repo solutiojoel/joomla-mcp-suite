@@ -40,14 +40,12 @@ HERE = Path(__file__).parent
 
 # ---------------------------------------------------------------------------
 # Transport: HTTP if HTTP_PORT / MOCKUP_MCP_PORT is set, else stdio.
-# Map the orchestrator's HTTP_PORT convention to FASTMCP_PORT so FastMCP
-# picks it up automatically. Also force host=0.0.0.0 for container use.
+# Pass host and port directly to the FastMCP constructor.
 # ---------------------------------------------------------------------------
-_http_port = os.environ.get('HTTP_PORT') or os.environ.get('MOCKUP_MCP_PORT')
-if _http_port and 'FASTMCP_PORT' not in os.environ:
-    os.environ['FASTMCP_PORT'] = str(_http_port)
-if 'FASTMCP_HOST' not in os.environ:
-    os.environ['FASTMCP_HOST'] = '0.0.0.0'
+_http_port_str = os.environ.get('HTTP_PORT') or os.environ.get('MOCKUP_MCP_PORT')
+_mcp_port = int(_http_port_str) if _http_port_str else 8000
+_mcp_host = '0.0.0.0'
+
 VOCAB_PATH = HERE.parent / 'synthesizer' / 'output' / 'design-vocabulary.json'
 LIB_PATH   = HERE.parent / 'template-indexer' / 'template-library.json'
 BUILDER    = HERE.parent / 'gantry-builder' / 'build.py'
@@ -60,6 +58,8 @@ mcp = FastMCP(
         'then get_design_vocabulary, then load_mockup_image, then analyze the '
         'image yourself and call save_layout_plan with the result.'
     ),
+    host=_mcp_host,
+    port=_mcp_port,
 )
 
 # ---------------------------------------------------------------------------
@@ -348,6 +348,6 @@ def save_layout_plan(
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    transport = 'streamable-http' if os.environ.get('FASTMCP_PORT') else 'stdio'
+    transport = 'streamable-http' if _http_port_str else 'stdio'
     print(f'mockup-analyzer starting ({transport})', file=sys.stderr)
     mcp.run(transport=transport)

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Resolve the repo root regardless of where the script is called from.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 export JOOMLA_MCP_PORT="${JOOMLA_MCP_PORT:-9300}"
 export GANTRY_MCP_PORT="${GANTRY_MCP_PORT:-9301}"
 export ORCHESTRATOR_PORT="${ORCHESTRATOR_PORT:-9302}"
@@ -43,32 +46,32 @@ wait_for_port() {
 }
 
 (
-  cd /workspace/apps/joomla-mcp
+  cd "$ROOT/apps/joomla-mcp"
   HTTP_PORT="${JOOMLA_MCP_PORT}" node dist/index.js
 ) &
 
 (
-  cd /workspace/apps/gantry-mcp
+  cd "$ROOT/apps/gantry-mcp"
   HTTP_PORT="${GANTRY_MCP_PORT}" node mcp-server.js
 ) &
 
 (
-  cd /workspace/apps/freshdesk-mcp
+  cd "$ROOT/apps/freshdesk-mcp"
   HTTP_PORT="${FRESHDESK_MCP_PORT}" node dist/index.js
 ) &
 
 (
-  cd /workspace/apps/ftp-mcp
+  cd "$ROOT/apps/ftp-mcp"
   HTTP_PORT="${FTP_MCP_PORT}" node dist/index.js
 ) &
 
 (
-  cd /workspace/apps/mockup-analyzer
+  cd "$ROOT/apps/mockup-analyzer"
   HTTP_PORT="${MOCKUP_MCP_PORT}" python3 server.py
 ) &
 
 (
-  cd /workspace/apps/knowledge-gateway-mcp
+  cd "$ROOT/apps/knowledge-gateway-mcp"
   HTTP_PORT="${KNOWLEDGE_GATEWAY_MCP_PORT}" node dist/index.js
 ) &
 
@@ -80,12 +83,12 @@ wait_for_port 127.0.0.1 "${MOCKUP_MCP_PORT}"
 wait_for_port 127.0.0.1 "${KNOWLEDGE_GATEWAY_MCP_PORT}"
 
 (
-  cd /workspace/apps/orchestrator
+  cd "$ROOT/apps/orchestrator"
   HTTP_PORT="${ORCHESTRATOR_PORT}" node orchestrator.js
 ) &
 
 (
-  cd /workspace/apps/gantry-mcp
+  cd "$ROOT/apps/gantry-mcp"
   SITE_BUILDER_PORT="${SITE_BUILDER_PORT}" \
   GANTRY_MCP_URL="http://127.0.0.1:${GANTRY_MCP_PORT}/mcp" \
   JOOMLA_MCP_URL="http://127.0.0.1:${JOOMLA_MCP_PORT}/mcp" \
