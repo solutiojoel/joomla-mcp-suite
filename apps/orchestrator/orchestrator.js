@@ -73,7 +73,17 @@ function loadDownstreams() {
   }
   // Default to the shared registry (label + inject); URLs derive from the
   // registry port on DOWNSTREAM_HOST unless a config/env override is present.
-  if (!defs) defs = dsRegistry.DOWNSTREAM_DEFAULTS.map(d => ({ label: d.label, inject: d.inject }));
+  //
+  // Opt-in downstreams: agents-mcp is not launched by scripts/start-all.sh, so
+  // including it by default made every boot log a spurious "could not load
+  // agents-mcp tools" warning. It only joins the routing table when explicitly
+  // configured — via config/downstreams.json or an AGENTS_MCP_URL env var.
+  const OPT_IN_LABELS = ['agents-mcp'];
+  if (!defs) {
+    defs = dsRegistry.DOWNSTREAM_DEFAULTS
+      .filter(d => !OPT_IN_LABELS.includes(d.label) || process.env[`${dsRegistry.envPrefix(d.label)}_URL`])
+      .map(d => ({ label: d.label, inject: d.inject }));
+  }
 
   return defs.map(d => {
     const prefix = dsRegistry.envPrefix(d.label);
