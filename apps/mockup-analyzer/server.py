@@ -44,7 +44,7 @@ HERE = Path(__file__).parent
 # ---------------------------------------------------------------------------
 _http_port_str = os.environ.get('HTTP_PORT') or os.environ.get('MOCKUP_MCP_PORT')
 _mcp_port = int(_http_port_str) if _http_port_str else 8000
-_mcp_host = '0.0.0.0'
+_mcp_host = os.environ.get('FASTMCP_HOST', '0.0.0.0')
 
 VOCAB_PATH = HERE.parent / 'synthesizer' / 'output' / 'design-vocabulary.json'
 LIB_PATH   = HERE.parent / 'template-indexer' / 'template-library.json'

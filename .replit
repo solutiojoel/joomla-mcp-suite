@@ -22,18 +22,23 @@ args = "Start application"
 name = "Start application"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "bash scripts/start-all.sh"
-waitForPort = 9302
+waitForPort = 5000
 
 [[ports]]
 localPort = 9300
 externalPort = 3003
+exposeLocalhost = true
 
 [[ports]]
 localPort = 9301
 externalPort = 3000
+exposeLocalhost = true
 
 [[ports]]
 localPort = 9302
@@ -46,18 +51,22 @@ externalPort = 80
 [[ports]]
 localPort = 9304
 externalPort = 3002
+exposeLocalhost = true
 
 [[ports]]
 localPort = 9305
 externalPort = 4200
+exposeLocalhost = true
 
 [[ports]]
 localPort = 9306
 externalPort = 3001
+exposeLocalhost = true
 
 [[ports]]
 localPort = 18303
 externalPort = 5000
+exposeLocalhost = true
 
 [[ports]]
 localPort = 19300

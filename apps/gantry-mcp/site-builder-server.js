@@ -787,8 +787,9 @@ app.post('/api/rebuild', (req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-app.listen(PORT, '0.0.0.0', () => {
-  process.stderr.write('[site-builder] ready on http://0.0.0.0:' + PORT + '\n');
+const HOST = process.env.SITE_BUILDER_HOST || process.env.HTTP_HOST || '0.0.0.0';
+app.listen(PORT, HOST, () => {
+  process.stderr.write('[site-builder] ready on http://' + HOST + ':' + PORT + '\n');
   process.stderr.write('[site-builder] Gantry MCP: ' + GANTRY_URL + '\n');
   process.stderr.write('[site-builder] Joomla MCP: ' + JOOMLA_URL + '\n');
 });

@@ -1206,8 +1206,13 @@ runServer({
   stdioContext: { user: 'local', agent: 'super_shannon' },
   logger: log,
   onStart: async () => {
-    log('loading tools from downstream servers...');
-    await loadDownstreamTools();
+    // Load downstream tools in the background so the HTTP port opens
+    // immediately (Replit's port detection times out otherwise). Tool maps
+    // are also refreshed on demand when a call hits a stale/missing entry.
+    log('loading tools from downstream servers (background)...');
+    loadDownstreamTools()
+      .then(() => log('downstream tool warm-up complete'))
+      .catch((err) => log(`downstream tool warm-up failed: ${err && err.message ? err.message : err}`));
   },
 }).catch((err) => {
   log(`fatal: ${err && err.message ? err.message : err}`);

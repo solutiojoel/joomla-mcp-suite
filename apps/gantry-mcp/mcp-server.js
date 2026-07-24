@@ -3169,7 +3169,7 @@ async function startHttp(port) {
     }
   });
 
-  await new Promise((resolve) => httpServer.listen(port, '0.0.0.0', resolve));
+  await new Promise((resolve) => httpServer.listen(port, process.env.HTTP_HOST || '0.0.0.0', resolve));
   console.error('Gantry MCP Server running on HTTP port ' + port);
 }
 

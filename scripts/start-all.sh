@@ -6,12 +6,17 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 export JOOMLA_MCP_PORT="${JOOMLA_MCP_PORT:-9300}"
 export GANTRY_MCP_PORT="${GANTRY_MCP_PORT:-9301}"
-export ORCHESTRATOR_PORT="${ORCHESTRATOR_PORT:-9302}"
-export FRESHDESK_MCP_PORT="${FRESHDESK_MCP_PORT:-9303}"
+export ORCHESTRATOR_PORT="${ORCHESTRATOR_PORT:-5000}"
+export FRESHDESK_MCP_PORT="${FRESHDESK_MCP_PORT:-9307}"
 export FTP_MCP_PORT="${FTP_MCP_PORT:-9304}"
 export MOCKUP_MCP_PORT="${MOCKUP_MCP_PORT:-9305}"
 export KNOWLEDGE_GATEWAY_MCP_PORT="${KNOWLEDGE_GATEWAY_MCP_PORT:-9306}"
 export SITE_BUILDER_PORT="${SITE_BUILDER_PORT:-18303}"
+
+# Internal servers bind loopback only; the orchestrator alone is exposed
+# publicly so Replit's domain proxy always routes to it.
+export HTTP_HOST="${HTTP_HOST:-127.0.0.1}"
+export FASTMCP_HOST="${FASTMCP_HOST:-127.0.0.1}"
 
 # Force orchestrator to talk to services running in the same container.
 export JOOMLA_MCP_URL="${JOOMLA_MCP_URL:-http://127.0.0.1:${JOOMLA_MCP_PORT}/mcp}"
@@ -84,7 +89,7 @@ wait_for_port 127.0.0.1 "${KNOWLEDGE_GATEWAY_MCP_PORT}"
 
 (
   cd "$ROOT/apps/orchestrator"
-  HTTP_PORT="${ORCHESTRATOR_PORT}" node orchestrator.js
+  HTTP_HOST=0.0.0.0 HTTP_PORT="${ORCHESTRATOR_PORT}" node orchestrator.js
 ) &
 
 (
@@ -96,6 +101,22 @@ wait_for_port 127.0.0.1 "${KNOWLEDGE_GATEWAY_MCP_PORT}"
 ) &
 
 wait_for_port 127.0.0.1 "${ORCHESTRATOR_PORT}"
+
+# Replit's domain proxy routes external traffic to local port 9303 (legacy
+# platform port mapping). Forward it to the orchestrator so the public URL
+# always reaches the /mcp endpoint, unless something else already owns 9303.
+if [ "${FRESHDESK_MCP_PORT}" != "9303" ] && [ "${ORCHESTRATOR_PORT}" != "9303" ]; then
+  node -e '
+    const net = require("net");
+    const target = Number(process.env.ORCHESTRATOR_PORT || 9302);
+    net.createServer((c) => {
+      const u = net.connect(target, "127.0.0.1");
+      c.pipe(u).pipe(c);
+      c.on("error", () => u.destroy());
+      u.on("error", () => c.destroy());
+    }).listen(9303, "0.0.0.0", () => console.log("[forwarder] 0.0.0.0:9303 -> 127.0.0.1:" + target));
+  ' &
+fi
 
 # Exit container if any one process exits unexpectedly.
 wait -n
