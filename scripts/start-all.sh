@@ -26,6 +26,15 @@ export FTP_MCP_URL="${FTP_MCP_URL:-http://127.0.0.1:${FTP_MCP_PORT}/mcp}"
 export MOCKUP_MCP_URL="${MOCKUP_MCP_URL:-http://127.0.0.1:${MOCKUP_MCP_PORT}/mcp}"
 export KNOWLEDGE_GATEWAY_MCP_URL="${KNOWLEDGE_GATEWAY_MCP_URL:-http://127.0.0.1:${KNOWLEDGE_GATEWAY_MCP_PORT}/mcp}"
 
+# Self-check: the workflow's waitForPort 5000 only resolves when .replit maps
+# localPort 5000 (explicit [[ports]] entries disable Replit's auto-detection).
+# The platform has previously reverted this mapping; warn loudly if it's gone.
+if ! grep -qE '^\s*localPort\s*=\s*5000\b' "$ROOT/.replit" 2>/dev/null; then
+  echo "WARNING: .replit is missing the 'localPort = 5000' port mapping." >&2
+  echo "WARNING: Workflow port detection will time out ('didn't open port 5000')." >&2
+  echo "WARNING: Re-add a [[ports]] entry with localPort = 5000 to .replit." >&2
+fi
+
 cleanup() {
   echo "Stopping child processes..."
   jobs -p | xargs -r kill || true
