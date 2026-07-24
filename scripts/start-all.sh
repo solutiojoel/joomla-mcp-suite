@@ -33,17 +33,18 @@ cleanup() {
 
 trap cleanup SIGTERM SIGINT
 
+# Fast polling (0.2s) with an overall timeout (default 60s).
 wait_for_port() {
   local host="$1"
   local port="$2"
-  local retries="${3:-60}"
-  local i
+  local timeout="${3:-60}"
+  local deadline=$((SECONDS + timeout))
 
-  for ((i = 1; i <= retries; i++)); do
+  while ((SECONDS < deadline)); do
     if bash -c "</dev/tcp/${host}/${port}" >/dev/null 2>&1; then
       return 0
     fi
-    sleep 1
+    sleep 0.2
   done
 
   echo "Timed out waiting for ${host}:${port}" >&2
@@ -80,13 +81,9 @@ wait_for_port() {
   HTTP_PORT="${KNOWLEDGE_GATEWAY_MCP_PORT}" node dist/index.js
 ) &
 
-wait_for_port 127.0.0.1 "${JOOMLA_MCP_PORT}"
-wait_for_port 127.0.0.1 "${GANTRY_MCP_PORT}"
-wait_for_port 127.0.0.1 "${FRESHDESK_MCP_PORT}"
-wait_for_port 127.0.0.1 "${FTP_MCP_PORT}"
-wait_for_port 127.0.0.1 "${MOCKUP_MCP_PORT}"
-wait_for_port 127.0.0.1 "${KNOWLEDGE_GATEWAY_MCP_PORT}"
-
+# The orchestrator opens fresh per-call connections to downstream MCP
+# servers, so it does not need them to be up before it starts. Launch it
+# (and the site builder) immediately and let everything come up in parallel.
 (
   cd "$ROOT/apps/orchestrator"
   HTTP_HOST=0.0.0.0 HTTP_PORT="${ORCHESTRATOR_PORT}" node orchestrator.js
@@ -100,15 +97,38 @@ wait_for_port 127.0.0.1 "${KNOWLEDGE_GATEWAY_MCP_PORT}"
   node site-builder-server.js
 ) &
 
-wait_for_port 127.0.0.1 "${ORCHESTRATOR_PORT}"
+# Wait for all service ports in parallel; fail fast if any never comes up.
+wait_pids=()
+for port in \
+  "${JOOMLA_MCP_PORT}" \
+  "${GANTRY_MCP_PORT}" \
+  "${FRESHDESK_MCP_PORT}" \
+  "${FTP_MCP_PORT}" \
+  "${MOCKUP_MCP_PORT}" \
+  "${KNOWLEDGE_GATEWAY_MCP_PORT}" \
+  "${ORCHESTRATOR_PORT}"; do
+  wait_for_port 127.0.0.1 "${port}" &
+  wait_pids+=($!)
+done
+
+for pid in "${wait_pids[@]}"; do
+  if ! wait "${pid}"; then
+    echo "A service failed to become ready; shutting down." >&2
+    cleanup
+    exit 1
+  fi
+done
+
+echo "All services ready."
 
 # Replit's domain proxy routes external traffic to local port 9303 (legacy
 # platform port mapping). Forward it to the orchestrator so the public URL
 # always reaches the /mcp endpoint, unless something else already owns 9303.
+# A short guard delay (replacing the old fixed 15s sleep) gives Replit's
+# port detector a head start to latch onto 5000 before a second public port
+# appears. This does not slow startup: 5000 is already serving by now.
 if [ "${DISABLE_9303_FORWARDER:-0}" != "1" ] && [ "${FRESHDESK_MCP_PORT}" != "9303" ] && [ "${ORCHESTRATOR_PORT}" != "9303" ]; then
-  # Delay so Replit's workflow port detection latches onto the orchestrator's
-  # waitForPort (5000) before a second public port appears.
-  sleep 15
+  sleep "${FORWARDER_GUARD_DELAY:-5}"
   node -e '
     const net = require("net");
     const target = Number(process.env.ORCHESTRATOR_PORT || 9302);

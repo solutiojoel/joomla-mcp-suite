@@ -1,0 +1,1 @@
+- [Replit port detection](replit-port-detection.md) — explicit [[ports]] disables auto-detection; waitForPort 5000 needs its own mapping, and the platform reverts .replit port edits.
