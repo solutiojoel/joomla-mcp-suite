@@ -430,7 +430,8 @@ async function probeUrl(url, timeoutMs = 4000) {
   const started = Date.now();
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
-    return { up: res.status < 500, httpStatus: res.status, latencyMs: Date.now() - started };
+    // Only a clean 200 counts as healthy; anything else is reported as-is.
+    return { up: res.status === 200, httpStatus: res.status, latencyMs: Date.now() - started };
   } catch (err) {
     return { up: false, error: err && err.message ? err.message : String(err), latencyMs: Date.now() - started };
   }
@@ -440,6 +441,22 @@ async function collectStatus() {
   const services = await Promise.all(DOWNSTREAMS.map(async (ds) => {
     const healthUrl = ds.url.replace(/\/mcp\/?$/, '') + '/healthz';
     const probe = await probeUrl(healthUrl);
+    // Self-heal: the orchestrator may have started before this downstream
+    // (startup is parallel now), leaving its tool map empty. If the server is
+    // reachable but we have no tools, retry the load (throttled to 15s).
+    if (probe.up && ds.toolMap.size === 0) {
+      const now = Date.now();
+      if (!ds._lastToolAttempt || now - ds._lastToolAttempt > 15_000) {
+        ds._lastToolAttempt = now;
+        try {
+          await loadToolMap(ds);
+          ds.lastToolError = null;
+          ds.lastToolLoadAt = new Date().toISOString();
+        } catch (err) {
+          ds.lastToolError = err.message;
+        }
+      }
+    }
     const toolCount = ds.toolMap.size;
     // Degraded: server answers its health probe but the orchestrator could not
     // load its tools (e.g. protocol/handshake failure).
@@ -450,7 +467,9 @@ async function collectStatus() {
       latencyMs: probe.latencyMs,
       toolCount,
       lastToolLoadAt: ds.lastToolLoadAt || null,
-      error: probe.up ? (ds.lastToolError || null) : (probe.error || `HTTP ${probe.httpStatus}`),
+      error: probe.up
+        ? (ds.lastToolError ? 'tool load failed' : null)
+        : (probe.httpStatus ? `health check returned HTTP ${probe.httpStatus}` : 'unreachable'),
     };
   }));
 
@@ -463,7 +482,7 @@ async function collectStatus() {
     latencyMs: sbProbe.latencyMs,
     toolCount: null,
     lastToolLoadAt: null,
-    error: sbProbe.up ? null : (sbProbe.error || `HTTP ${sbProbe.httpStatus}`),
+    error: sbProbe.up ? null : (sbProbe.httpStatus ? `health check returned HTTP ${sbProbe.httpStatus}` : 'unreachable'),
   });
 
   return {
