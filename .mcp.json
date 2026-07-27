@@ -1,11 +1,3 @@
 {
-  "mcpServers": {
-    "orchestrator": {
-      "type": "http",
-      "url": "${JOOMLA_MCP_SUITE_URL:-http://localhost:9302}/mcp",
-      "headers": {
-        "Authorization": "Bearer ${JOOMLA_MCP_SUITE_TOKEN:-}"
-      }
-    }
-  }
+  "mcpServers": {}
 }

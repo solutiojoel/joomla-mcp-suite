@@ -45,7 +45,10 @@
       "mcp__orchestrator__joomla_backend_inventory",
       "WebFetch(domain:holycrossdover.org)",
       "mcp__orchestrator__joomla_group",
-      "Bash(node -e \"const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%'; let s=''; for\\(let i=0;i<14;i++\\) s+=c[Math.floor\\(Math.random\\(\\)*c.length\\)]; console.log\\(s\\)\")"
+      "Bash(node -e \"const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%'; let s=''; for\\(let i=0;i<14;i++\\) s+=c[Math.floor\\(Math.random\\(\\)*c.length\\)]; console.log\\(s\\)\")",
+      "Bash(claude mcp *)",
+      "Bash(node -e \"const c=require\\(process.env.USERPROFILE+'/.claude.json'\\); const p=c.projects&&c.projects['c:\\\\\\\\\\\\\\\\Users\\\\\\\\\\\\\\\\Jeremy\\\\\\\\\\\\\\\\code-projects\\\\\\\\\\\\\\\\joomla-mcp-suite']; const keys=Object.keys\\(c.projects||{}\\).filter\\(k=>k.toLowerCase\\(\\).includes\\('joomla'\\)\\); console.log\\('project keys:',keys\\); for\\(const k of keys\\){const s=\\(c.projects[k].mcpServers\\)||{}; console.log\\(k,'->',JSON.stringify\\(Object.fromEntries\\(Object.entries\\(s\\).map\\(\\([n,v]\\)=>[n,{type:v.type,url:v.url}]\\)\\),null,1\\)\\)}\")",
+      "Bash(node -e \"const c=require\\(process.env.USERPROFILE+'/.claude.json'\\); const e=c.projects['C:/Users/Jeremy/code-projects/joomla-mcp-suite'].mcpServers['joomla-suite']; const r={...e}; if\\(r.headers\\){r.headers=Object.fromEntries\\(Object.entries\\(r.headers\\).map\\(\\([k,v]\\)=>[k, String\\(v\\).slice\\(0,20\\)+'...']\\)\\)} r.url=r.url.slice\\(0,60\\)+'...'; console.log\\(JSON.stringify\\(r,null,1\\)\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",
