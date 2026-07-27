@@ -45,7 +45,10 @@ export class FtpClient {
   }
 
   private loadSites(): Record<string, FtpSiteConfig> {
-    const configPath = process.env.FTP_SITES_PATH || path.join(process.cwd(), "ftp-sites.json");
+    // Default to the app's own ftp-sites.json (compiled file lives in dist/,
+    // so one level up is the app root). cwd is unreliable: in single-process
+    // mode the orchestrator runs from the repo root.
+    const configPath = process.env.FTP_SITES_PATH || path.join(__dirname, "..", "ftp-sites.json");
     if (!fs.existsSync(configPath)) return {};
     try {
       return JSON.parse(fs.readFileSync(configPath, "utf8")) as Record<string, FtpSiteConfig>;
