@@ -698,8 +698,85 @@ function renderStatusHtml(status) {
   </table>
   <div class="foot">
     MCP endpoint: <code>POST /mcp</code> (Bearer token required) ·
-    Machine-readable: <code>GET /status.json</code>
+    Machine-readable: <code>GET /status.json</code> ·
+    <a href="/connect" style="color:#38bdf8">How to connect →</a>
   </div>
+</body>
+</html>`;
+}
+
+// Connection instructions page. PUBLIC and unauthenticated, like the status
+// page — it must NEVER contain real token values, only placeholders. The base
+// URL is derived from the request Host header so the page is correct on both
+// the dev URL and the published domain.
+function renderConnectHtml(req) {
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const host = String(req.headers['x-forwarded-host'] || req.headers['host'] || 'shannon-mcp.replit.app').split(',')[0].trim();
+  const base = `https://${esc(host)}`;
+  const isDeployed = !!process.env.REPLIT_DEPLOYMENT;
+  const mcpUrl = `${base}/mcp${isDeployed ? '?project-protection-bypass=&lt;REPLIT_ACCESS_TOKEN&gt;' : ''}`;
+  const bypassNote = isDeployed ? `
+  <h2>1. Get the two tokens</h2>
+  <p>You need <strong>two</strong> tokens (ask the project owner for both):</p>
+  <ul>
+    <li><strong>Orchestrator token</strong> — the suite's own bearer token (goes in the <code>Authorization</code> header).</li>
+    <li><strong>Replit access token</strong> — this app is published privately, so outside callers also need a Replit external access token. Because the <code>Authorization</code> header is already taken, it goes in the URL as <code>?project-protection-bypass=&lt;token&gt;</code>. The owner creates these in Replit → Publishing → Adjust settings → Security → External access tokens (Production environment).</li>
+  </ul>` : `
+  <h2>1. Get the token</h2>
+  <p>Ask the project owner for the <strong>orchestrator bearer token</strong>. (On the published app a second, Replit access token is also required — see the published version of this page.)</p>`;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joomla MCP Suite — Connect</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 2rem; max-width: 860px; }
+  h1 { font-size: 1.3rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.05rem; margin: 1.75rem 0 .5rem; color: #f1f5f9; }
+  p, li { font-size: .92rem; line-height: 1.55; color: #cbd5e1; }
+  code { background: #1e293b; padding: .1rem .35rem; border-radius: .25rem; font-size: .85em; word-break: break-all; }
+  pre { background: #1e293b; padding: .9rem 1rem; border-radius: .5rem; overflow-x: auto; font-size: .82rem; line-height: 1.5; }
+  .warn { background: #422006; border: 1px solid #a16207; border-radius: .5rem; padding: .7rem 1rem; font-size: .85rem; color: #fde68a; }
+  a { color: #38bdf8; }
+  .sub { color: #94a3b8; font-size: .85rem; margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+  <h1>Connect to the Joomla MCP Suite</h1>
+  <div class="sub">MCP endpoint: <code>${mcpUrl}</code> · <a href="/">← status</a></div>
+  <div class="warn">Never paste real tokens into chats, docs, or commits. Everything below uses <code>&lt;PLACEHOLDERS&gt;</code> — substitute your own values locally.</div>
+  ${bypassNote}
+  <h2>2. Claude Code (CLI)</h2>
+  <pre>claude mcp add joomla-suite \\
+  --transport http \\
+  "${mcpUrl}" \\
+  --header "Authorization: Bearer &lt;ORCHESTRATOR_TOKEN&gt;"</pre>
+  <p>Add <code>--scope user</code> to make it available in all your projects.</p>
+  <h2>3. Claude Desktop / claude.ai / other MCP clients</h2>
+  <p>Settings → Connectors → <em>Add custom connector</em>, or JSON config:</p>
+  <pre>{
+  "mcpServers": {
+    "joomla-suite": {
+      "type": "http",
+      "url": "${mcpUrl}",
+      "headers": {
+        "Authorization": "Bearer &lt;ORCHESTRATOR_TOKEN&gt;"
+      }
+    }
+  }
+}</pre>
+  <h2>4. Verify</h2>
+  <ul>
+    <li>Ask your agent to list tools — you should see ~115 (joomla, gantry, freshdesk, ftp, knowledge-gateway, mockup-analyzer).</li>
+    <li>Call <code>set_active_site</code> with your site URL before using site-specific tools.</li>
+  </ul>
+  <h2>Good to know</h2>
+  <ul>
+    <li><strong>Cold starts:</strong> the published app sleeps when idle; the first request after a pause takes a few seconds.</li>
+    <li><strong>Sessions reset on wake:</strong> your client reconnects automatically, but re-run <code>set_active_site</code> after an idle period.</li>
+    <li><strong>Teammates:</strong> everyone can share the same two tokens, or the owner can mint a separate Replit access token per person (easier to revoke individually).</li>
+  </ul>
 </body>
 </html>`;
 }
@@ -1501,6 +1578,10 @@ runServer({
       const status = await collectStatus();
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
       res.end(renderStatusHtml(status));
+    },
+    '/connect': async (req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(renderConnectHtml(req));
     },
     '/status.json': async (_req, res) => {
       const status = await collectStatus();
