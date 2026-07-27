@@ -9,8 +9,19 @@ import { createLogger } from "@solutio/logging";
 import { FreshdeskClient, FreshdeskResponse } from "./freshdesk-client.js";
 
 // Freshdesk client (optional — tools fail gracefully if not configured)
+// Accept FRESHDESK_DOMAIN as a bare subdomain ("yourcompany"), a full
+// hostname ("yourcompany.freshdesk.com"), or a URL, and normalize to the
+// full hostname the API client expects (it builds https://<domain>/api/v2).
+function normalizeFreshdeskDomain(raw: string): string {
+  const host = raw
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/.*$/, "");
+  if (!host) return "";
+  return host.includes(".") ? host : `${host}.freshdesk.com`;
+}
 const freshdeskConfig = {
-  domain: process.env.FRESHDESK_DOMAIN ?? "",
+  domain: normalizeFreshdeskDomain(process.env.FRESHDESK_DOMAIN ?? ""),
   apiKey: process.env.FRESHDESK_API_KEY ?? "",
 };
 const freshdesk =
