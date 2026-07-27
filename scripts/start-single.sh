@@ -10,7 +10,19 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 export INPROCESS_DOWNSTREAMS=1
 export HTTP_HOST="${HTTP_HOST_OVERRIDE:-0.0.0.0}"
-export HTTP_PORT="${ORCHESTRATOR_PORT:-5000}"
+
+if [ -n "${REPLIT_DEPLOYMENT:-}" ]; then
+  # Production (Autoscale): listen where the platform routes external :80
+  # traffic. Replit sets PORT in deployments; fall back to the .replit
+  # [[ports]] entry mapped to externalPort 80 (localPort 9303). Do NOT
+  # hardcode 5000 here — in .replit it maps to externalPort 8008, so a
+  # server on 5000 never receives the health check and promote fails
+  # silently at "Creating Autoscale service".
+  export HTTP_PORT="${PORT:-9303}"
+else
+  # Dev workspace: workflow/webview expects port 5000.
+  export HTTP_PORT="${ORCHESTRATOR_PORT:-5000}"
+fi
 
 # Dev-only: Replit's domain proxy maps external 80 → local 9303 in the
 # workspace, so keep the tiny TCP forwarder there. Deployments route straight
