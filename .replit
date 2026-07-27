@@ -67,3 +67,7 @@ exposeLocalhost = true
 localPort = 18303
 externalPort = 5000
 exposeLocalhost = true
+
+[deployment]
+deploymentTarget = "cloudrun"
+run = ["bash", "scripts/start-all.sh"]
