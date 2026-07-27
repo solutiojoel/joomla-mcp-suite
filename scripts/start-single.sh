@@ -18,6 +18,8 @@ CHROMIUM_BIN="$(command -v chromium || true)"
 if [ -n "$CHROMIUM_BIN" ]; then
   export PUPPETEER_EXECUTABLE_PATH="${PUPPETEER_EXECUTABLE_PATH:-$CHROMIUM_BIN}"
   export CHROME_PATH="${CHROME_PATH:-$CHROMIUM_BIN}"   # cdp-inspector uses CHROME_PATH
+else
+  echo "[start-single] WARNING: no 'chromium' binary found on PATH and PUPPETEER_EXECUTABLE_PATH is ${PUPPETEER_EXECUTABLE_PATH:-unset}; browser automation launches will fail." >&2
 fi
 
 if [ -n "${REPLIT_DEPLOYMENT:-}" ]; then

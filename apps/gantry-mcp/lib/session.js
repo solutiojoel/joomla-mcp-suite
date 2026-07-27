@@ -8,25 +8,48 @@ const { normalizeSite, resolveCreds, waitForAny, sleep, snap } = require('./util
  * Launch puppeteer with sane defaults.
  */
 async function launch(opts = {}) {
-  const headless = opts.headless ?? false; // visible by default per user preference
+  // Default: headful (visible) when a display is available, otherwise headless.
+  // Callers can still force either mode by passing opts.headless explicitly.
+  const hasDisplay = Boolean(process.env.DISPLAY || process.env.WAYLAND_DISPLAY);
+  const headless = opts.headless ?? !hasDisplay;
+  if (opts.headless === false && !hasDisplay) {
+    console.warn(
+      '[gantry-mcp] Headful browser requested but no display is available (DISPLAY unset); ' +
+        'the launch will likely fail. Consider omitting headless:false in this environment.'
+    );
+  }
   const slowMo = Number(opts.slowMo ?? process.env.GANTRY_SLOWMO ?? 0);
   const userDataDir =
     opts.userDataDir ||
     process.env.GANTRY_USER_DATA_DIR ||
     path.resolve(__dirname, '..', '.puppeteer-profile');
 
-  const browser = await puppeteer.launch({
-    headless: headless ? 'new' : false,
-    slowMo,
-    defaultViewport: null, // use real window size when headful
-    userDataDir,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--start-maximized',
-    ],
-  });
-  return browser;
+  try {
+    const browser = await puppeteer.launch({
+      headless: headless ? 'new' : false,
+      slowMo,
+      defaultViewport: null, // use real window size when headful
+      userDataDir,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--start-maximized',
+      ],
+    });
+    return browser;
+  } catch (err) {
+    const msg = String((err && err.message) || err);
+    if (/Could not find|executablePath|Browser was not found|Failed to launch/i.test(msg)) {
+      console.warn(
+        '[gantry-mcp] Chromium launch failed. Could not resolve a usable Chromium binary. ' +
+          `PUPPETEER_EXECUTABLE_PATH=${process.env.PUPPETEER_EXECUTABLE_PATH || '(unset)'}. ` +
+          'Ensure Chromium is installed and PUPPETEER_EXECUTABLE_PATH points to it ' +
+          '(scripts/start-single.sh sets this automatically when `chromium` is on PATH). ' +
+          `Original error: ${msg}`
+      );
+    }
+    throw err;
+  }
 }
 
 /**
