@@ -69,5 +69,6 @@ externalPort = 5000
 exposeLocalhost = true
 
 [deployment]
-deploymentTarget = "cloudrun"
+deploymentTarget = "vm"
 run = ["bash", "scripts/start-all.sh"]
+build = ["bash", "-c", "npm run build && python3 -m pip install 'mcp[cli]' pyyaml"]
