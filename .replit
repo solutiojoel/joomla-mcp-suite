@@ -75,4 +75,4 @@ exposeLocalhost = true
 [deployment]
 deploymentTarget = "autoscale"
 run = ["bash", "scripts/start-single.sh"]
-build = ["bash", "-c", "npm run build && python3 -m pip install 'mcp[cli]' pyyaml"]
+build = ["bash", "-c", "npm run build"]
