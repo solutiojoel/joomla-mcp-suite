@@ -11,6 +11,15 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export INPROCESS_DOWNSTREAMS=1
 export HTTP_HOST="${HTTP_HOST_OVERRIDE:-0.0.0.0}"
 
+# Puppeteer: use the system (Nix) Chromium instead of a downloaded Chrome —
+# the puppeteer-managed download isn't present in this environment. Resolve
+# the path dynamically so Nix store path changes don't break it.
+CHROMIUM_BIN="$(command -v chromium || true)"
+if [ -n "$CHROMIUM_BIN" ]; then
+  export PUPPETEER_EXECUTABLE_PATH="${PUPPETEER_EXECUTABLE_PATH:-$CHROMIUM_BIN}"
+  export CHROME_PATH="${CHROME_PATH:-$CHROMIUM_BIN}"   # cdp-inspector uses CHROME_PATH
+fi
+
 if [ -n "${REPLIT_DEPLOYMENT:-}" ]; then
   # Production (Autoscale): listen where the platform routes external :80
   # traffic. Replit sets PORT in deployments; fall back to the .replit
