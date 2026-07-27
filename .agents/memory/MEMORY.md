@@ -1,2 +1,3 @@
 - [Replit port detection](replit-port-detection.md) — explicit [[ports]] disables auto-detection; waitForPort 5000 needs its own mapping, and the platform reverts .replit port edits.
 - [Status dashboard](status-dashboard.md) — public page must stay sanitized; health is reachability-based (some servers 404 /healthz); empty tool maps at boot are normal and self-heal.
+- [Single-process mode](single-process-mode.md) — INPROCESS_DOWNSTREAMS=1 hosts Node servers in-process for Autoscale; entry points need require.main guards; stdio children must not see PORT vars.

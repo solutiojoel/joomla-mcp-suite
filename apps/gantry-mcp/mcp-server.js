@@ -3187,7 +3187,14 @@ async function main() {
   else await startStdio();
 }
 
-main().catch((err) => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+// Only auto-start a transport when executed directly (node mcp-server.js).
+// The orchestrator requires this module for in-process hosting and calls
+// buildServer() itself.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('Fatal error:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = { buildServer };

@@ -61,6 +61,39 @@ const ORCHESTRATOR_TOKEN = process.env.ORCHESTRATOR_TOKEN || '';
 const dsRegistry = require('@solutio/mcp-downstream-client');
 const DOWNSTREAM_HOST = process.env.DOWNSTREAM_HOST || 'host.docker.internal';
 
+// ─── In-process hosting (single-process mode) ────────────────────────────────
+// When INPROCESS_DOWNSTREAMS=1, the orchestrator hosts the Node downstream
+// servers in this process via the SDK's InMemoryTransport (no HTTP, no ports)
+// and runs the Python mockup-analyzer as a stdio child process. This is the
+// mode used in production (Autoscale runs one container with one web process).
+// Each module below exports buildServer() and has no side effects on require.
+
+const INPROC = process.env.INPROCESS_DOWNSTREAMS === '1';
+
+const INPROC_MODULES = {
+  'joomla-mcp': path.join(__dirname, '..', 'joomla-mcp', 'dist', 'index.js'),
+  'gantry-mcp': path.join(__dirname, '..', 'gantry-mcp', 'mcp-server.js'),
+  'freshdesk-mcp': path.join(__dirname, '..', 'freshdesk-mcp', 'dist', 'index.js'),
+  'ftp-mcp': path.join(__dirname, '..', 'ftp-mcp', 'dist', 'index.js'),
+  'knowledge-gateway-mcp': path.join(__dirname, '..', 'knowledge-gateway-mcp', 'dist', 'index.js'),
+};
+
+// Downstreams that run as stdio child processes in single-process mode.
+const STDIO_CHILDREN = {
+  'mockup-analyzer': {
+    command: 'python3',
+    args: ['server.py'],
+    cwd: path.join(__dirname, '..', 'mockup-analyzer'),
+  },
+};
+
+function downstreamMode(label) {
+  if (!INPROC) return 'http';
+  if (INPROC_MODULES[label]) return 'inproc';
+  if (STDIO_CHILDREN[label]) return 'stdio';
+  return 'http';
+}
+
 function loadDownstreams() {
   const cfgPath = path.join(__dirname, '..', '..', 'config', 'downstreams.json');
   let defs = null;
@@ -95,6 +128,7 @@ function loadDownstreams() {
       url,
       token: process.env[`${prefix}_TOKEN`] || d.token || '',
       inject: d.inject !== undefined ? d.inject : dsRegistry.getInject(d.label),
+      mode: downstreamMode(d.label), // 'http' | 'inproc' | 'stdio'
       toolMap: new Map(), // tool name → tool definition
     };
   });
@@ -232,16 +266,104 @@ function loadGlobalPolicy() {
 // and don't auto-reconnect, which makes the proxy flaky. Fresh-per-call is
 // slightly slower (one extra round-trip for initialize) but always reliable.
 
-async function createClient(label, url, token) {
+async function createClient(ds) {
+  // In-process: build a fresh downstream Server and wire it to a fresh Client
+  // over a linked in-memory pair. Cheap (no network, no process spawn) and the
+  // downstream's module-level session caches (Joomla/Gantry logins) persist
+  // across calls because the module itself is required once.
+  if (ds.mode === 'inproc') {
+    const { InMemoryTransport } = require('@modelcontextprotocol/sdk/inMemory.js');
+    const mod = require(INPROC_MODULES[ds.label]);
+    const factory = mod.buildServer || (mod.default && mod.default.buildServer);
+    if (typeof factory !== 'function') throw new Error(`${ds.label}: module does not export buildServer()`);
+    const server = factory();
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    const client = new Client(
+      { name: `orchestrator→${ds.label}`, version: '1.0.0' },
+      { capabilities: {} }
+    );
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    // Keep the server handle so releaseClient can tear down BOTH ends
+    // explicitly — relying on transport-close propagation alone risks
+    // accumulating per-call Server objects under high call volume.
+    client._inprocServer = server;
+    return client;
+  }
+
+  if (ds.mode === 'stdio') {
+    return getStdioClient(ds);
+  }
+
   const client = new Client(
-    { name: `orchestrator→${label}`, version: '1.0.0' },
+    { name: `orchestrator→${ds.label}`, version: '1.0.0' },
     { capabilities: {} }
   );
-  const transport = new StreamableHTTPClientTransport(new URL(url), {
-    requestInit: token ? { headers: { Authorization: `Bearer ${token}` } } : {},
+  const transport = new StreamableHTTPClientTransport(new URL(ds.url), {
+    requestInit: ds.token ? { headers: { Authorization: `Bearer ${ds.token}` } } : {},
   });
   await client.connect(transport);
   return client;
+}
+
+// ─── Stdio child clients ─────────────────────────────────────────────────────
+// Unlike HTTP/in-memory clients (fresh per call), a stdio client owns a child
+// process, so we keep ONE persistent client per downstream and respawn lazily
+// after a failure. `_persistent` tells callDownstream/loadToolMap not to close.
+
+const stdioClients = new Map(); // label → Promise<Client>
+
+function getStdioClient(ds) {
+  let pending = stdioClients.get(ds.label);
+  if (!pending) {
+    pending = (async () => {
+      const { StdioClientTransport } = require('@modelcontextprotocol/sdk/client/stdio.js');
+      const def = STDIO_CHILDREN[ds.label];
+      // Strip the port vars so the child picks stdio mode, not HTTP.
+      const env = { ...process.env };
+      delete env.HTTP_PORT;
+      delete env.PORT;
+      delete env.MOCKUP_MCP_PORT;
+      const client = new Client(
+        { name: `orchestrator→${ds.label}`, version: '1.0.0' },
+        { capabilities: {} }
+      );
+      const transport = new StdioClientTransport({
+        command: def.command,
+        args: def.args,
+        cwd: def.cwd,
+        env,
+        stderr: 'inherit',
+      });
+      // Compare-and-delete: only remove the registry entry if it still refers
+      // to THIS client's promise. A stale onclose from an already-replaced
+      // client must never evict a newer one (respawn race).
+      transport.onclose = () => {
+        if (stdioClients.get(ds.label) === pending) stdioClients.delete(ds.label);
+      };
+      await client.connect(transport);
+      client._persistent = true;
+      return client;
+    })();
+    pending.catch(() => {
+      if (stdioClients.get(ds.label) === pending) stdioClients.delete(ds.label);
+    });
+    stdioClients.set(ds.label, pending);
+  }
+  return pending;
+}
+
+function invalidateStdioClient(label) {
+  const pending = stdioClients.get(label);
+  if (!pending) return;
+  stdioClients.delete(label);
+  pending.then(c => c.close().catch(() => { })).catch(() => { });
+}
+
+/** Close a per-call client; persistent (stdio) clients stay open. */
+function releaseClient(client) {
+  if (!client || client._persistent) return;
+  client.close().catch(() => { });
+  if (client._inprocServer) client._inprocServer.close().catch(() => { });
 }
 
 /**
@@ -279,12 +401,15 @@ async function callDownstream(ds, toolName, toolArgs, onprogress) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     let client;
     try {
-      client = await createClient(ds.label, ds.url, ds.token);
+      client = await createClient(ds);
       const result = await client.callTool({ name: toolName, arguments: toolArgs }, undefined, callOptions);
-      client.close().catch(() => { });
+      releaseClient(client);
       return result;
     } catch (err) {
-      if (client) client.close().catch(() => { });
+      releaseClient(client);
+      // A failed stdio call may mean the child died — drop it so the next
+      // attempt (or next call) respawns a fresh child.
+      if (ds.mode === 'stdio') invalidateStdioClient(ds.label);
       if (attempt === maxAttempts) throw err;
       log(`${ds.label} call failed (attempt ${attempt}), retrying - ${err.message}`);
     }
@@ -293,12 +418,19 @@ async function callDownstream(ds, toolName, toolArgs, onprogress) {
 
 /** Refresh one downstream's tool map. Throws on connection failure. */
 async function loadToolMap(ds) {
-  const client = await createClient(ds.label, ds.url, ds.token);
-  const { tools = [] } = await client.listTools();
-  client.close().catch(() => { });
-  ds.toolMap.clear();
-  tools.forEach(t => ds.toolMap.set(t.name, t));
-  log(`loaded ${ds.toolMap.size} tools from ${ds.label}`);
+  let client;
+  try {
+    client = await createClient(ds);
+    const { tools = [] } = await client.listTools();
+    releaseClient(client);
+    ds.toolMap.clear();
+    tools.forEach(t => ds.toolMap.set(t.name, t));
+    log(`loaded ${ds.toolMap.size} tools from ${ds.label}`);
+  } catch (err) {
+    releaseClient(client);
+    if (ds.mode === 'stdio') invalidateStdioClient(ds.label);
+    throw err;
+  }
 }
 
 async function loadDownstreamTools() {
@@ -450,12 +582,10 @@ async function probeUrl(url, timeoutMs = 4000) {
 
 async function collectStatus() {
   const services = await Promise.all(DOWNSTREAMS.map(async (ds) => {
-    const healthUrl = ds.url.replace(/\/mcp\/?$/, '') + '/healthz';
-    const probe = await probeUrl(healthUrl);
-    // Self-heal: the orchestrator may have started before this downstream
-    // (startup is parallel now), leaving its tool map empty. If the server is
-    // reachable but we have no tools, retry the load (throttled to 15s).
-    if (probe.reachable && ds.toolMap.size === 0) {
+    // Self-heal: retry an empty/failed tool load (throttled to 15s). Applies
+    // to every mode — in single-process mode this is also what (re)spawns the
+    // stdio child after a crash.
+    if (ds.toolMap.size === 0) {
       const now = Date.now();
       if (!ds._lastToolAttempt || now - ds._lastToolAttempt > 15_000) {
         ds._lastToolAttempt = now;
@@ -468,6 +598,24 @@ async function collectStatus() {
         }
       }
     }
+
+    if (ds.mode === 'inproc' || ds.mode === 'stdio') {
+      // Hosted in this process (or as our child): health is whether the tool
+      // map loaded, not an HTTP probe.
+      const toolCount = ds.toolMap.size;
+      const healthy = toolCount > 0;
+      return {
+        name: ds.label,
+        status: healthy ? 'up' : (ds.lastToolError ? 'down' : 'degraded'),
+        latencyMs: null,
+        toolCount,
+        lastToolLoadAt: ds.lastToolLoadAt || null,
+        error: healthy ? null : (ds.lastToolError ? 'tool load failed' : 'no tools loaded'),
+      };
+    }
+
+    const healthUrl = ds.url.replace(/\/mcp\/?$/, '') + '/healthz';
+    const probe = await probeUrl(healthUrl);
     const toolCount = ds.toolMap.size;
     // Degraded: server answers HTTP but the orchestrator could not load its
     // tools (e.g. protocol/handshake failure).
@@ -482,17 +630,20 @@ async function collectStatus() {
     };
   }));
 
-  // Site-builder UI is not an MCP server; a plain HTTP probe is enough.
-  const sbPort = process.env.SITE_BUILDER_PORT || '18303';
-  const sbProbe = await probeUrl(`http://127.0.0.1:${sbPort}/`);
-  services.push({
-    name: 'site-builder',
-    status: sbProbe.up ? 'up' : 'down',
-    latencyMs: sbProbe.latencyMs,
-    toolCount: null,
-    lastToolLoadAt: null,
-    error: sbProbe.up ? null : (sbProbe.httpStatus ? `health check returned HTTP ${sbProbe.httpStatus}` : 'unreachable'),
-  });
+  // Site-builder UI runs only in the multi-process dev stack; in
+  // single-process mode it is not part of the deployment.
+  if (!INPROC) {
+    const sbPort = process.env.SITE_BUILDER_PORT || '18303';
+    const sbProbe = await probeUrl(`http://127.0.0.1:${sbPort}/`);
+    services.push({
+      name: 'site-builder',
+      status: sbProbe.up ? 'up' : 'down',
+      latencyMs: sbProbe.latencyMs,
+      toolCount: null,
+      lastToolLoadAt: null,
+      error: sbProbe.up ? null : (sbProbe.httpStatus ? `health check returned HTTP ${sbProbe.httpStatus}` : 'unreachable'),
+    });
+  }
 
   return {
     orchestrator: { name: 'orchestrator', version: '1.0.0', status: 'up', uptimeSeconds: Math.round(process.uptime()) },

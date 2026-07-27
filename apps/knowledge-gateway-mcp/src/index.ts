@@ -130,7 +130,7 @@ const tools = [
   },
 ];
 
-function buildServer(): Server {
+export function buildServer(): Server {
   const server = new Server(
     { name: "knowledge-gateway-mcp", version: "1.0.0" },
     { capabilities: { tools: {} } }
@@ -273,7 +273,10 @@ function buildServer(): Server {
   return server;
 }
 
-runServer({
+// Only auto-start a transport when executed directly (node dist/index.js).
+// The orchestrator requires this module for in-process hosting and calls
+// buildServer() itself.
+if (require.main === module) runServer({
   buildServer,
   serverInfo: { name: "knowledge-gateway-mcp", version: "1.0.0" },
   logger: createLogger("knowledge-gateway-mcp"),

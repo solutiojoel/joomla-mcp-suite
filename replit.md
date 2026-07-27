@@ -4,27 +4,44 @@ A multi-server MCP orchestration suite that gives AI agents programmatic control
 
 ## Architecture
 
+**Single-process mode (default — dev workflow and production deployment):**
+
 ```
-scripts/start-all.sh  (single entrypoint)
-  ├── apps/joomla-mcp          port 9300  — Joomla admin automation (100+ tools)
-  ├── apps/gantry-mcp          port 9301  — Gantry 5 layout/style tools (42 tools)
-  ├── apps/freshdesk-mcp       port 9303  — Freshdesk ticket tools
-  ├── apps/ftp-mcp             port 9304  — FTP asset management
-  ├── apps/mockup-analyzer     port 9305  — Python/FastMCP image analysis
-  ├── apps/knowledge-gateway-mcp port 9306 — AI knowledge base gateway
-  ├── apps/orchestrator        port 9302  — Single /mcp endpoint (aggregates all)
-  └── apps/gantry-mcp          port 18303 — Site-builder web UI
+scripts/start-single.sh → node apps/orchestrator/orchestrator.js  (port 5000)
+  ├── joomla-mcp             hosted in-process (in-memory MCP transport)
+  ├── gantry-mcp             hosted in-process
+  ├── freshdesk-mcp          hosted in-process
+  ├── ftp-mcp                hosted in-process
+  ├── knowledge-gateway-mcp  hosted in-process
+  └── mockup-analyzer        Python stdio child process
 ```
 
-Agents connect to the **orchestrator** at `http://<host>:9302/mcp` with a bearer token matching `ORCHESTRATOR_TOKEN`.
+One web process, one port — this is what lets the suite publish as a Replit
+Autoscale deployment (scales to zero when idle, wakes on request).
+`INPROCESS_DOWNSTREAMS=1` activates this mode; each Node downstream exports
+`buildServer()` with no side effects on require.
+
+**Legacy multi-process mode** (`scripts/start-all.sh`) still works: each server
+gets its own loopback HTTP port (9300–9307) plus the site-builder UI on 18303.
+
+Agents connect to the **orchestrator** `/mcp` endpoint with a bearer token
+matching `ORCHESTRATOR_TOKEN`. Unauthenticated status dashboard at `/`,
+`/status`, `/status.json`.
+
+### Autoscale behavior change (by design)
+
+In production the app scales to zero when idle. In-memory session state —
+the MCP session, active site selection, and cached Joomla/Gantry logins —
+is lost when an idle instance is recycled. Clients must re-initialize their
+MCP session and call `set_active_site` again after a reconnect (most MCP
+clients handle the reconnect automatically). The first request after idle
+takes a few seconds (cold start).
 
 ## How to Run
 
-The "Start application" workflow runs `bash scripts/start-all.sh` automatically. It:
-1. Starts all downstream MCP servers in parallel
-2. Waits for each to be ready
-3. Starts the orchestrator (which proxies to all downstreams)
-4. Starts the site-builder UI
+The "Start application" workflow runs `bash scripts/start-single.sh`
+automatically. The deployment uses the same entry point (build:
+`npm run build && pip install 'mcp[cli]' pyyaml`).
 
 ## Required Environment Secrets
 

@@ -116,7 +116,7 @@ const tools = [
   },
 ];
 
-function buildServer(): Server {
+export function buildServer(): Server {
   const ftpClient = new FtpClient();
 
   const server = new Server(
@@ -205,7 +205,10 @@ function buildServer(): Server {
   return server;
 }
 
-runServer({
+// Only auto-start a transport when executed directly (node dist/index.js).
+// The orchestrator requires this module for in-process hosting and calls
+// buildServer() itself.
+if (require.main === module) runServer({
   buildServer,
   serverInfo: { name: "ftp-mcp", version: "1.0.0" },
   logger: createLogger("ftp-mcp"),

@@ -100,7 +100,7 @@ function normalizeUrl(url: string): string {
 }
 
 
-function buildServer(): Server {
+export function buildServer(): Server {
   // Create MCP server
   const server = new Server(
   {
@@ -1751,7 +1751,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
   return server;
 }
 
-runServer({
+// Only auto-start a transport when executed directly (node dist/index.js).
+// The orchestrator requires this module for in-process hosting and calls
+// buildServer() itself.
+if (require.main === module) runServer({
   buildServer,
   serverInfo: { name: "joomla-mcp", version: "1.0.0" },
   logger: createLogger("joomla-mcp"),
