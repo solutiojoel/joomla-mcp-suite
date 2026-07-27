@@ -440,8 +440,9 @@ async function probeUrl(url, timeoutMs = 4000) {
   const started = Date.now();
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
-    // Only a clean 200 counts as healthy; anything else is reported as-is.
-    return { up: res.status === 200, httpStatus: res.status, latencyMs: Date.now() - started };
+    // ok: clean 200. reachable: the HTTP server answered at all (some servers
+    // don't implement /healthz and 404 it — still proof of life).
+    return { up: res.status === 200, reachable: true, httpStatus: res.status, latencyMs: Date.now() - started };
   } catch (err) {
     return { up: false, error: err && err.message ? err.message : String(err), latencyMs: Date.now() - started };
   }
@@ -454,7 +455,7 @@ async function collectStatus() {
     // Self-heal: the orchestrator may have started before this downstream
     // (startup is parallel now), leaving its tool map empty. If the server is
     // reachable but we have no tools, retry the load (throttled to 15s).
-    if (probe.up && ds.toolMap.size === 0) {
+    if (probe.reachable && ds.toolMap.size === 0) {
       const now = Date.now();
       if (!ds._lastToolAttempt || now - ds._lastToolAttempt > 15_000) {
         ds._lastToolAttempt = now;
@@ -468,18 +469,16 @@ async function collectStatus() {
       }
     }
     const toolCount = ds.toolMap.size;
-    // Degraded: server answers its health probe but the orchestrator could not
-    // load its tools (e.g. protocol/handshake failure).
-    const degraded = probe.up && (toolCount === 0 || !!ds.lastToolError);
+    // Degraded: server answers HTTP but the orchestrator could not load its
+    // tools (e.g. protocol/handshake failure).
+    const degraded = probe.reachable && (toolCount === 0 || !!ds.lastToolError);
     return {
       name: ds.label,
-      status: probe.up ? (degraded ? 'degraded' : 'up') : 'down',
+      status: probe.reachable ? (degraded ? 'degraded' : 'up') : 'down',
       latencyMs: probe.latencyMs,
       toolCount,
       lastToolLoadAt: ds.lastToolLoadAt || null,
-      error: probe.up
-        ? (ds.lastToolError ? 'tool load failed' : null)
-        : (probe.httpStatus ? `health check returned HTTP ${probe.httpStatus}` : 'unreachable'),
+      error: probe.reachable ? (degraded ? 'tool load failed' : null) : 'unreachable',
     };
   }));
 
