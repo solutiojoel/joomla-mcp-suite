@@ -88,32 +88,78 @@ async function findConfigureUrl(base, themeName, jar) {
   if (res.status >= 400) {
     throw new Error(`Could not load Gantry themes page (${res.status})`);
   }
+  // Only treat the theme as a hard requirement when the caller actually named
+  // one. Defaulting to "studius" and then failing is wrong on the sites that
+  // run something else (rt_clarity, etc.) — there we should just use whatever
+  // theme is installed.
+  const explicit = Boolean(themeName);
   const requested = (themeName || 'studius').toLowerCase();
 
-  // Find the .theme.card whose text mentions the requested theme
-  // (matches "studius", "rt_studius", "Studius", etc.)
+  // Collect every configurable theme first, so that a miss can report the real
+  // options instead of a dead end.
   const cardRe = /<div\b[^>]*class="[^"]*\btheme\b[^"]*"[\s\S]*?<\/div>\s*<\/div>/gi;
+  const found = [];
   let match;
   while ((match = cardRe.exec(res.body))) {
     const card = match[0];
-    const lower = card.toLowerCase();
-    if (
-      !lower.includes(requested) &&
-      !lower.includes('rt_' + requested) &&
-      !lower.includes(requested.replace(/^rt_/, ''))
-    ) {
-      continue;
-    }
     // Configure URL is the href on the .button-primary <a>
     const aMatch = card.match(/<a[^>]*\bclass="[^"]*\bbutton-primary\b[^"]*"[^>]*\bhref="([^"]+)"/);
     if (!aMatch) continue;
     const href = aMatch[1].replace(/&amp;/g, '&');
     const configureUrl = href.startsWith('http') ? href : `${base}${href}`;
-    const theme = (configureUrl.match(/[?&]theme=([^&#]+)/) || [])[1] || 'rt_' + requested;
+    const theme = (configureUrl.match(/[?&]theme=([^&#]+)/) || [])[1] || null;
+    if (!theme) continue;
     const token = (configureUrl.match(/[?&]([a-f0-9]{32})=1/) || [])[1] || null;
-    return { configureUrl, theme, token };
+    found.push({ configureUrl, theme, token, cardText: card.toLowerCase() });
   }
-  throw new Error(`Could not find the "${requested}" theme on the Gantry themes page.`);
+
+  const matches = (entry) =>
+    entry.cardText.includes(requested) ||
+    entry.cardText.includes('rt_' + requested) ||
+    entry.cardText.includes(requested.replace(/^rt_/, ''));
+
+  const hit = found.find(matches);
+  if (hit) return { configureUrl: hit.configureUrl, theme: hit.theme, token: hit.token };
+
+  const pick = (entry) => ({ configureUrl: entry.configureUrl, theme: entry.theme, token: entry.token });
+
+  if (!explicit) {
+    // The caller did not name a theme, so the site's own theme is the right
+    // answer — not the "studius" default. Ask the frontend which template it
+    // actually renders with. Doing this here rather than in the tool layer is
+    // what breaks the chicken-and-egg: every Gantry tool needs a session before
+    // it can report anything, so a session that cannot resolve a theme leaves
+    // the caller with no way to discover the correct one.
+    const active = await detectFrontendTheme(base, jar);
+    if (active) {
+      const byFrontend = found.find((f) => f.theme.toLowerCase() === active.toLowerCase());
+      if (byFrontend) return pick(byFrontend);
+    }
+    if (found.length === 1) return pick(found[0]);
+  }
+
+  const available = found.map((f) => f.theme).join(', ') || '(none found)';
+  throw new Error(
+    `Could not find the "${requested}" theme on the Gantry themes page. ` +
+    `Available on this site: ${available}. ` +
+    `Pass one of those as the "theme" argument.`
+  );
+}
+
+/**
+ * Which template does the public site actually render with? Joomla emits its
+ * asset URLs as /templates/<name>/..., which is present even on themes that do
+ * not add a "template-<name>" body class.
+ */
+async function detectFrontendTheme(base, jar) {
+  try {
+    const res = await jarFetch(base, { method: 'GET' }, jar);
+    if (res.status >= 400) return null;
+    const m = res.body.match(/\/templates\/(rt_[a-z0-9_-]+)\//i);
+    return m ? m[1] : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

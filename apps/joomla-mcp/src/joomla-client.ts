@@ -313,11 +313,32 @@ export class JoomlaClient {
       : ($("option").first().attr("value") ?? "");
   }
 
-  private extractFormFields(html: string, formId = "adminForm"): Record<string, string> {
+  /**
+   * Scrape a form's current values so that a save POST can round-trip the
+   * fields the caller did not explicitly set.
+   *
+   * Names ending in "[]" carry multiple values — `jform[assigned][]` (module
+   * page assignments), `jform[groups][]` (user groups), `cid[]`. Collapsing
+   * those to a single value silently drops every selection but one: a module
+   * assigned to four menu items comes back assigned to one, and the save looks
+   * like it succeeded. So those accumulate into an array; every other name
+   * keeps last-write-wins, matching how a browser and PHP resolve duplicates.
+   */
+  private extractFormFields(html: string, formId = "adminForm"): FormDataMap {
     const $ = this.$c(html);
     const form = $(`form[id="${formId}"]`);
     const find = (sel: string) => form.length ? form.find(sel) : $(sel);
-    const fields: Record<string, string> = {};
+    const fields: FormDataMap = {};
+
+    const add = (name: string, value: string) => {
+      if (!name.endsWith("[]")) {
+        fields[name] = value;
+        return;
+      }
+      const existing = fields[name];
+      if (Array.isArray(existing)) existing.push(value);
+      else fields[name] = [value];
+    };
 
     find("input").each((_, el) => {
       const $el = $(el);
@@ -326,30 +347,42 @@ export class JoomlaClient {
       const type = ($el.attr("type") || "text").toLowerCase();
       if (type === "button" || type === "submit" || type === "reset") return;
       if ((type === "checkbox" || type === "radio") && !$el.is("[checked]")) return;
-      fields[name] = $el.attr("value") ?? "";
+      add(name, $el.attr("value") ?? "");
     });
 
     find("textarea").each((_, el) => {
       const $el = $(el);
       const name = $el.attr("name");
-      if (name) fields[name] = $el.text();
+      if (name) add(name, $el.text());
     });
 
     find("select").each((_, el) => {
       const $el = $(el);
       const name = $el.attr("name");
       if (!name) return;
-      const selected = $el.find("option[selected]").first();
-      fields[name] = selected.length
-        ? (selected.attr("value") ?? "")
-        : ($el.find("option").first().attr("value") ?? "");
+      const selected = $el.find("option[selected]");
+      if ($el.is("[multiple]")) {
+        // A multi-select submits every selected option, and nothing at all when
+        // none are selected — it does not fall back to the first option.
+        selected.each((__, opt) => add(name, $(opt).attr("value") ?? ""));
+        return;
+      }
+      add(name, selected.length
+        ? (selected.first().attr("value") ?? "")
+        : ($el.find("option").first().attr("value") ?? ""));
     });
 
     return fields;
   }
 
-  private getJFormField(fields: Record<string, string>, key: string, fallback = ""): string {
-    return fields[`jform[${key}]`] ?? fields[`jform_${key}`] ?? fallback;
+  private getJFormField(fields: FormDataMap, key: string, fallback = ""): string {
+    return this.firstValue(fields[`jform[${key}]`] ?? fields[`jform_${key}`], fallback);
+  }
+
+  /** Narrow a scraped form value to a single string, for fields known to be scalar. */
+  private firstValue(value: FormValue | undefined, fallback = ""): string {
+    if (value === undefined) return fallback;
+    return Array.isArray(value) ? (value[0] ?? fallback) : value;
   }
 
   private extractCheckedValues(html: string, name: string): string[] {
@@ -2600,10 +2633,11 @@ export class JoomlaClient {
     article.access = this.getJFormField(fields, "access", "1");
     article.note = this.getJFormField(fields, "note");
 
-    article.introImage = fields["jform[images][image_intro]"] ?? "";
-    article.introImageAlt = fields["jform[images][image_intro_alt]"] ?? "";
-    article.featuredImage = fields["jform[images][image_fulltext]"] || fields["hidden-image"] || "";
-    article.featuredImageAlt = fields["jform[images][image_fulltext_alt]"] ?? "";
+    article.introImage = this.firstValue(fields["jform[images][image_intro]"]);
+    article.introImageAlt = this.firstValue(fields["jform[images][image_intro_alt]"]);
+    article.featuredImage = this.firstValue(fields["jform[images][image_fulltext]"])
+      || this.firstValue(fields["hidden-image"]);
+    article.featuredImageAlt = this.firstValue(fields["jform[images][image_fulltext_alt]"]);
 
     return article;
   }
@@ -2628,7 +2662,7 @@ export class JoomlaClient {
       return { success: false, message: "Failed to extract CSRF token" };
     }
 
-    const formData: Record<string, string> = {
+    const formData: FormDataMap = {
       ...this.extractFormFields(html),
       // "apply" (not "save") redirects back to the edit form with &id=<new> in the URL —
       // "save" redirects to the list view with no id, forcing every create through the
@@ -2746,7 +2780,7 @@ export class JoomlaClient {
     }
 
     const content = data.content ?? existingArticle.content;
-    const formData: Record<string, string> = {
+    const formData: FormDataMap = {
       ...this.extractFormFields(html),
       task: "article.save",
       "jform[title]": data.title ?? existingArticle.title,
@@ -3005,7 +3039,7 @@ export class JoomlaClient {
       return { success: false, message: "Failed to extract CSRF token" };
     }
 
-    const formData: Record<string, string> = {
+    const formData: FormDataMap = {
       ...this.extractFormFields(html),
       // See createArticle: "apply" gives a reliable &id= on redirect, "save" doesn't.
       task: "category.apply",
@@ -3089,7 +3123,7 @@ export class JoomlaClient {
       return { success: false, message: "Failed to extract CSRF token" };
     }
 
-    const formData: Record<string, string> = {
+    const formData: FormDataMap = {
       ...this.extractFormFields(html),
       task: "category.save",
       "jform[title]": data.title ?? existingCategory.title,
@@ -3434,13 +3468,16 @@ export class JoomlaClient {
     const module: Record<string, unknown> = {};
     const params: Record<string, string> = {};
     const advanced: Record<string, string> = {};
-    const fieldOverrides: Record<string, string> = {};
+    // FormDataMap, not Record<string,string>: multi-valued names such as
+    // jform[assigned][] must be reported as the array they are. Flattening them
+    // here made `get` under-report a module's page assignments.
+    const fieldOverrides: FormDataMap = {};
 
     for (const [key, value] of Object.entries(fields)) {
       const paramsMatch = key.match(/^jform\[params\]\[([^\]]+)\]$/);
       const advancedMatch = key.match(/^jform\[advanced\]\[([^\]]+)\]$/);
-      if (paramsMatch) params[paramsMatch[1]] = value;
-      if (advancedMatch) advanced[advancedMatch[1]] = value;
+      if (paramsMatch) params[paramsMatch[1]] = this.firstValue(value);
+      if (advancedMatch) advanced[advancedMatch[1]] = this.firstValue(value);
       if (!paramsMatch && !advancedMatch) fieldOverrides[key] = value;
     }
 
@@ -4913,7 +4950,7 @@ export class JoomlaClient {
       return { success: false, message: "Failed to extract CSRF token" };
     }
 
-    const formData: Record<string, string> = {
+    const formData: FormDataMap = {
       ...this.extractFormFields(html, "item-form"),
       // See createArticle: "apply" gives a reliable &id= on redirect, "save" doesn't.
       // (com_menus menu records are usually addressed by menutype rather than id, so
@@ -5184,7 +5221,7 @@ export class JoomlaClient {
       return { success: false, message: "Failed to extract CSRF token" };
     }
 
-    const setTypeFormData: Record<string, string> = {
+    const setTypeFormData: FormDataMap = {
       ...this.extractFormFields(html),
       task: "item.setType",
       fieldtype: "type",
@@ -5202,7 +5239,7 @@ export class JoomlaClient {
     // base64 encoded JSON payload. Sending the encoded payload for system link types
     // causes Joomla to save the item with "Unknown" type.
     const jformType = Object.keys(type.request).length === 0 ? type.title : type.encoded;
-    const formData: Record<string, string> = {
+    const formData: FormDataMap = {
       ...this.extractFormFields(html),
       ...this.extractFormFields(typedHtml),
       // See createArticle: "apply" gives a reliable &id= on redirect, "save" doesn't.
@@ -5362,7 +5399,7 @@ export class JoomlaClient {
     let formBaseHtml = html;
     let effectiveToken = token;
     if (type) {
-      const setTypeFormData: Record<string, string> = {
+      const setTypeFormData: FormDataMap = {
         ...this.extractFormFields(html),
         task: "item.setType",
         fieldtype: "type",
@@ -5381,13 +5418,14 @@ export class JoomlaClient {
     const aliasLink = aliasTarget && (effectiveType === "alias" || data.itemType === "alias")
       ? `index.php?Itemid=${aliasTarget}`
       : undefined;
-    const formData: Record<string, string> = {
-      ...this.extractFormFields(formBaseHtml),
+    const baseFormFields = this.extractFormFields(formBaseHtml);
+    const formData: FormDataMap = {
+      ...baseFormFields,
       task: "item.save",
       "jform[title]": data.title ?? String(existing.title || ""),
       "jform[alias]": data.alias ?? String(existing.alias || ""),
       "jform[menutype]": data.menuType ?? String(existing.menuType || ""),
-      "jform[type]": type ? (this.extractFormFields(formBaseHtml)["jform[type]"] || type.title) : String(existing.type || ""),
+      "jform[type]": type ? (this.getJFormField(baseFormFields, "type") || type.title) : String(existing.type || ""),
       "jform[link]": data.link ?? aliasLink ?? (type ? this.buildLinkFromRequest(request) : String(existing.link || this.buildLinkFromRequest(request))),
       "jform[parent_id]": data.parentId ?? String(existing.parentId || "1"),
       "jform[published]": data.published ?? String(existing.published || "1"),

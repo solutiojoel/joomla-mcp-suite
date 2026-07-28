@@ -228,6 +228,53 @@ export class FtpClient {
     }
   }
 
+  /**
+   * The read-side alias of the write directory. Both paths address the same
+   * files on the server; `upload_path` accepts writes, `pub_path` serves reads
+   * and maps to https://<domain>/images/pub.
+   */
+  private pubPathFor(config: FtpSiteConfig): string {
+    return config.web_root + "/images/pub";
+  }
+
+  /**
+   * Containment check for the write guard. A bare `startsWith` is not a
+   * containment test: it lets "<upload_path>-other" through, and it lets
+   * "<upload_path>/../.." escape entirely. Normalise away "." / ".." and
+   * require the boundary to land on a path separator.
+   */
+  private isWithin(base: string, target: string): boolean {
+    const norm = (p: string): string => {
+      const out: string[] = [];
+      for (const seg of p.split("/")) {
+        if (!seg || seg === ".") continue;
+        if (seg === "..") out.pop();
+        else out.push(seg);
+      }
+      return "/" + out.join("/");
+    };
+    const b = norm(base);
+    const t = norm(target);
+    return t === b || t.startsWith(b === "/" ? "/" : b + "/");
+  }
+
+  /**
+   * Explain a refused write. Callers reach for `pub_path` because that is what
+   * they just read the file from, so name the alias and hand back the rewritten
+   * path rather than suggesting the config is wrong — it is not.
+   */
+  private refusalMessage(verb: string, remotePath: string, config: FtpSiteConfig): string {
+    const pubPath = this.pubPathFor(config);
+    if (this.isWithin(pubPath, remotePath)) {
+      const rewritten = config.upload_path + remotePath.slice(pubPath.length);
+      return `${verb} refused: "${remotePath}" is the read-only alias of the upload directory. ` +
+        `pub_path ("${pubPath}") and upload_path ("${config.upload_path}") are the same directory on the ` +
+        `server — read from pub_path, write to upload_path. Retry with "${rewritten}".`;
+    }
+    return `${verb} refused: "${remotePath}" is outside the allowed upload directory ` +
+      `"${config.upload_path}". Writes go to upload_path; the same files read back from "${pubPath}".`;
+  }
+
   async uploadFile(remotePath: string, content: string, domain: string): Promise<JoomlaResponse> {
     const conn = await this.connect(domain, "write");
     if ("error" in conn) return { success: false, message: conn.error };
@@ -236,11 +283,11 @@ export class FtpClient {
     const warnings: string[] = [];
 
     if (config.upload_path) {
-      if (!remotePath.startsWith(config.upload_path)) {
+      if (!this.isWithin(config.upload_path, remotePath)) {
         client.close();
         return {
           success: false,
-          message: `Upload refused: "${remotePath}" is outside the allowed upload directory "${config.upload_path}". Update upload_path in ftp-sites.json to change this restriction.`,
+          message: this.refusalMessage("Upload", remotePath, config),
         };
       }
     } else {
@@ -285,11 +332,11 @@ export class FtpClient {
 
     const { client, config } = conn;
 
-    if (config.upload_path && !remotePath.startsWith(config.upload_path)) {
+    if (config.upload_path && !this.isWithin(config.upload_path, remotePath)) {
       client.close();
       return {
         success: false,
-        message: `mkdir refused: "${remotePath}" is outside the allowed upload directory "${config.upload_path}".`,
+        message: this.refusalMessage("mkdir", remotePath, config),
       };
     }
 
@@ -309,11 +356,11 @@ export class FtpClient {
 
     const { client, config } = conn;
 
-    if (config.upload_path && !remotePath.startsWith(config.upload_path)) {
+    if (config.upload_path && !this.isWithin(config.upload_path, remotePath)) {
       client.close();
       return {
         success: false,
-        message: `Delete refused: "${remotePath}" is outside the allowed upload directory "${config.upload_path}".`,
+        message: this.refusalMessage("Delete", remotePath, config),
       };
     }
 
@@ -339,11 +386,11 @@ export class FtpClient {
     const warnings: string[] = [];
 
     if (config.upload_path) {
-      if (!remotePath.startsWith(config.upload_path)) {
+      if (!this.isWithin(config.upload_path, remotePath)) {
         client.close();
         return {
           success: false,
-          message: `Upload refused: "${remotePath}" is outside the allowed upload directory "${config.upload_path}". Update upload_path in ftp-sites.json to change this restriction.`,
+          message: this.refusalMessage("Upload", remotePath, config),
         };
       }
     } else {
@@ -395,8 +442,15 @@ export class FtpClient {
         host: config.host,
         web_root: config.web_root,
         upload_path: config.upload_path ?? "(not set — write access is unrestricted)",
-        pub_path: config.web_root + "/images/pub",
+        pub_path: this.pubPathFor(config),
         pub_url: `https://${domain}/images/pub`,
+        // Stated explicitly because the two paths look like different
+        // directories and are not: writing to pub_path is refused, and the
+        // natural conclusion — that the config is wrong — is incorrect.
+        note:
+          "upload_path and pub_path are the SAME directory behind a server-side FTP alias. " +
+          "Write with upload_path, read/list with pub_path, and serve from pub_url. " +
+          "Do not change upload_path to match pub_path.",
       },
     };
   }

@@ -2149,8 +2149,14 @@ const LEGACY_TOOLS = [
       const outlineMatch = html.match(/\boutline-(\d+)\b/);
       const outlineId = outlineMatch ? outlineMatch[1] : null;
 
-      // Also look for theme/template info
-      const themeMatch = html.match(/\btemplate-([a-z0-9_-]+)\b/i);
+      // Also look for theme/template info. Not every theme adds a
+      // "template-<name>" body class, so fall back to the asset paths Joomla
+      // always emits (/templates/rt_clarity/...), which is what made this
+      // report null on non-Studius sites.
+      const themeMatch =
+        html.match(/\btemplate-(rt_[a-z0-9_-]+)\b/i) ||
+        html.match(/\/templates\/(rt_[a-z0-9_-]+)\//i) ||
+        html.match(/\btemplate-([a-z0-9_-]+)\b/i);
       const detectedTheme = themeMatch ? themeMatch[1] : null;
 
       // Try to get a title from the <title> tag
