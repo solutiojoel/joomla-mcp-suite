@@ -140,6 +140,43 @@ function getDownstream(label) {
   return DOWNSTREAMS.find(d => d.label === label);
 }
 
+// ─── Downstream enable/disable toggles ───────────────────────────────────────
+// Persisted set of downstream labels whose tools are hidden from agents.
+// Toggled from the status page (authenticated POST /downstreams/toggle).
+// Disabling a server hides its tools from tools/list and blocks calls to
+// them; the server itself keeps running so re-enabling is instant.
+
+const DISABLED_JSON_PATH = path.join(__dirname, '..', '..', 'config', 'downstreams-disabled.json');
+
+function loadDisabledDownstreams() {
+  try {
+    if (fs.existsSync(DISABLED_JSON_PATH)) {
+      const arr = JSON.parse(fs.readFileSync(DISABLED_JSON_PATH, 'utf8'));
+      if (Array.isArray(arr)) return new Set(arr.filter(l => typeof l === 'string'));
+    }
+  } catch (err) {
+    log(`WARNING: failed to parse config/downstreams-disabled.json - ${err.message}`);
+  }
+  return new Set();
+}
+
+const disabledDownstreams = loadDisabledDownstreams();
+
+function isDownstreamDisabled(label) {
+  return disabledDownstreams.has(label);
+}
+
+function setDownstreamDisabled(label, disabled) {
+  if (disabled) disabledDownstreams.add(label);
+  else disabledDownstreams.delete(label);
+  try {
+    fs.writeFileSync(DISABLED_JSON_PATH, JSON.stringify([...disabledDownstreams], null, 2) + '\n');
+  } catch (err) {
+    log(`WARNING: failed to persist downstreams-disabled.json - ${err.message}`);
+  }
+  log(`downstream ${label} ${disabled ? 'DISABLED' : 'enabled'} via status page`);
+}
+
 // ─── User registry ────────────────────────────────────────────────────────────
 // config/users.json maps bearer tokens → { user, agent, allowedAgents? }.
 // Keys are "sha256:<hex>" digests of the token (run scripts/hash-tokens.js);
@@ -390,6 +427,12 @@ function releaseClient(client) {
  * progress (see the CallTool handler).
  */
 async function callDownstream(ds, toolName, toolArgs, onprogress) {
+  // Central disable gate: covers every call path, including orchestrator-owned
+  // composite tools (gantry_css_asset_smoke_test, gantry_reconnect, the
+  // set_active_site auto-login) that route around findToolDownstream.
+  if (isDownstreamDisabled(ds.label)) {
+    throw new Error(`${ds.label} is currently switched off on the status page`);
+  }
   const isAgentCall = ds.label === 'agents-mcp';
   const callOptions = isAgentCall
     ? { timeout: 600_000, resetTimeoutOnProgress: true, maxTotalTimeout: 1_800_000, onprogress }
@@ -444,9 +487,16 @@ async function loadDownstreamTools() {
   ));
 }
 
-/** Find the registry entry that owns a tool name (first match wins). */
+/** Find the registry entry that owns a tool name (first match wins).
+ * Disabled downstreams are skipped so their tools are uncallable. */
 function findToolDownstream(name) {
-  return DOWNSTREAMS.find(d => d.toolMap.has(name));
+  return DOWNSTREAMS.find(d => !isDownstreamDisabled(d.label) && d.toolMap.has(name));
+}
+
+/** True when a tool name belongs ONLY to disabled downstream(s). */
+function isToolOnDisabledDownstream(name) {
+  return !findToolDownstream(name) &&
+    DOWNSTREAMS.some(d => isDownstreamDisabled(d.label) && d.toolMap.has(name));
 }
 
 /**
@@ -582,6 +632,7 @@ async function probeUrl(url, timeoutMs = 4000) {
 
 async function collectStatus() {
   const services = await Promise.all(DOWNSTREAMS.map(async (ds) => {
+    const disabled = isDownstreamDisabled(ds.label);
     // Self-heal: retry an empty/failed tool load (throttled to 15s). Applies
     // to every mode — in single-process mode this is also what (re)spawns the
     // stdio child after a crash.
@@ -606,11 +657,13 @@ async function collectStatus() {
       const healthy = toolCount > 0;
       return {
         name: ds.label,
-        status: healthy ? 'up' : (ds.lastToolError ? 'down' : 'degraded'),
+        status: disabled ? 'disabled' : (healthy ? 'up' : (ds.lastToolError ? 'down' : 'degraded')),
         latencyMs: null,
         toolCount,
+        toggleable: true,
+        disabled,
         lastToolLoadAt: ds.lastToolLoadAt || null,
-        error: healthy ? null : (ds.lastToolError ? 'tool load failed' : 'no tools loaded'),
+        error: disabled ? null : (healthy ? null : (ds.lastToolError ? 'tool load failed' : 'no tools loaded')),
       };
     }
 
@@ -622,11 +675,13 @@ async function collectStatus() {
     const degraded = probe.reachable && (toolCount === 0 || !!ds.lastToolError);
     return {
       name: ds.label,
-      status: probe.reachable ? (degraded ? 'degraded' : 'up') : 'down',
+      status: disabled ? 'disabled' : (probe.reachable ? (degraded ? 'degraded' : 'up') : 'down'),
       latencyMs: probe.latencyMs,
       toolCount,
+      toggleable: true,
+      disabled,
       lastToolLoadAt: ds.lastToolLoadAt || null,
-      error: probe.reachable ? (degraded ? 'tool load failed' : null) : 'unreachable',
+      error: disabled ? null : (probe.reachable ? (degraded ? 'tool load failed' : null) : 'unreachable'),
     };
   }));
 
@@ -648,21 +703,26 @@ async function collectStatus() {
   return {
     orchestrator: { name: 'orchestrator', version: '1.0.0', status: 'up', uptimeSeconds: Math.round(process.uptime()) },
     generatedAt: new Date().toISOString(),
-    totalTools: DOWNSTREAMS.reduce((n, d) => n + d.toolMap.size, 0),
+    totalTools: DOWNSTREAMS.reduce((n, d) => n + (isDownstreamDisabled(d.label) ? 0 : d.toolMap.size), 0),
     services,
   };
 }
 
 function renderStatusHtml(status) {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const dot = { up: '#22c55e', degraded: '#f59e0b', down: '#ef4444' };
+  const dot = { up: '#22c55e', degraded: '#f59e0b', down: '#ef4444', disabled: '#64748b' };
   const rows = status.services.map((s) => `
-      <tr>
+      <tr${s.disabled ? ' class="row-disabled"' : ''}>
         <td><span class="dot" style="background:${dot[s.status] || '#6b7280'}"></span>${esc(s.name)}</td>
         <td class="st st-${esc(s.status)}">${esc(s.status.toUpperCase())}</td>
         <td>${s.latencyMs != null ? s.latencyMs + ' ms' : '—'}</td>
         <td>${s.toolCount != null ? s.toolCount : '—'}</td>
         <td class="err">${esc(s.error || '')}</td>
+        <td>${s.toggleable ? `
+          <label class="switch" title="${s.disabled ? 'Tools hidden from agents — click to re-enable' : 'Tools visible to agents — click to switch off'}">
+            <input type="checkbox" data-label="${esc(s.name)}" ${s.disabled ? '' : 'checked'} onchange="toggleServer(this)">
+            <span class="slider"></span>
+          </label>` : ''}</td>
       </tr>`).join('');
   return `<!DOCTYPE html>
 <html lang="en">
@@ -681,6 +741,15 @@ function renderStatusHtml(status) {
   .dot { display: inline-block; width: .65rem; height: .65rem; border-radius: 50%; margin-right: .5rem; vertical-align: baseline; }
   .st-up { color: #22c55e; } .st-degraded { color: #f59e0b; } .st-down { color: #ef4444; }
   .err { color: #f87171; font-size: .8rem; max-width: 22rem; word-break: break-word; }
+  .st-disabled { color: #64748b; }
+  .row-disabled td { opacity: .55; }
+  .switch { position: relative; display: inline-block; width: 2.4rem; height: 1.3rem; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; inset: 0; background: #475569; border-radius: 1.3rem; transition: .15s; }
+  .slider::before { content: ""; position: absolute; height: 1rem; width: 1rem; left: .15rem; top: .15rem; background: #e2e8f0; border-radius: 50%; transition: .15s; }
+  .switch input:checked + .slider { background: #22c55e; }
+  .switch input:checked + .slider::before { transform: translateX(1.1rem); }
+  .toast { position: fixed; bottom: 1rem; right: 1rem; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: .6rem 1rem; border-radius: .5rem; font-size: .85rem; display: none; max-width: 24rem; }
   .foot { margin-top: 1.25rem; color: #64748b; font-size: .8rem; }
   code { background: #1e293b; padding: .1rem .35rem; border-radius: .25rem; }
 </style>
@@ -693,7 +762,7 @@ function renderStatusHtml(status) {
     ${esc(status.generatedAt)} · auto-refreshes every 15s
   </div>
   <table>
-    <thead><tr><th>Service</th><th>Status</th><th>Latency</th><th>Tools</th><th>Error</th></tr></thead>
+    <thead><tr><th>Service</th><th>Status</th><th>Latency</th><th>Tools</th><th>Error</th><th>Agents see tools</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
   <div class="foot">
@@ -701,6 +770,53 @@ function renderStatusHtml(status) {
     Machine-readable: <code>GET /status.json</code> ·
     <a href="/connect" style="color:#38bdf8">How to connect →</a>
   </div>
+  <div class="foot" style="color:#94a3b8">
+    The switch hides a server's tools from all agents (requires the orchestrator token, asked once).
+    Agents with an open session may need to reconnect or call <code>reload_tools</code> to see the change.
+  </div>
+  <div id="toast" class="toast"></div>
+  <script>
+    function showToast(msg, isErr) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.borderColor = isErr ? '#ef4444' : '#334155';
+      t.style.display = 'block';
+      clearTimeout(t._h);
+      t._h = setTimeout(() => { t.style.display = 'none'; }, 4000);
+    }
+    async function toggleServer(input) {
+      const label = input.dataset.label;
+      const disabled = !input.checked;
+      let token = localStorage.getItem('orchToken') || '';
+      if (!token) {
+        token = prompt('Enter the orchestrator token to change server toggles:') || '';
+        if (!token) { input.checked = !input.checked; return; }
+        localStorage.setItem('orchToken', token);
+      }
+      input.disabled = true;
+      try {
+        const res = await fetch('/downstreams/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ label, disabled }),
+        });
+        if (res.status === 401) {
+          localStorage.removeItem('orchToken');
+          input.checked = !input.checked;
+          showToast('Invalid token — try again.', true);
+          return;
+        }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        showToast(label + (disabled ? ' switched OFF — agents no longer see its tools.' : ' switched ON — tools visible again.'));
+        setTimeout(() => location.reload(), 800);
+      } catch (err) {
+        input.checked = !input.checked;
+        showToast('Toggle failed: ' + err.message, true);
+      } finally {
+        input.disabled = false;
+      }
+    }
+  </script>
 </body>
 </html>`;
 }
@@ -1153,6 +1269,7 @@ function buildServer(sessionCtx) {
     const seen = new Set(filteredOwnTools.map(t => t.name));
     const downstreamTools = [];
     for (const ds of DOWNSTREAMS) {
+      if (isDownstreamDisabled(ds.label)) continue;
       for (const t of ds.toolMap.values()) {
         if (seen.has(t.name)) continue;
         if (!kb.resolveToolAccess(agentDef, t.name, accessOpts).allowed) continue;
@@ -1509,6 +1626,9 @@ function buildServer(sessionCtx) {
     }
 
     if (!ds) {
+      if (isToolOnDisabledDownstream(name)) {
+        return { isError: true, content: [{ type: 'text', text: `Tool '${name}' belongs to a server that is currently switched off on the status page.` }] };
+      }
       return { isError: true, content: [{ type: 'text', text: `Unknown tool: ${name}` }] };
     }
 
@@ -1587,6 +1707,28 @@ runServer({
       const status = await collectStatus();
       res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
       res.end(JSON.stringify(status, null, 2));
+    },
+  },
+  extraPostRoutes: {
+    // Authenticated toggle: hides/shows a downstream's tools for all agents.
+    '/downstreams/toggle': async (req, res) => {
+      const json = (code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); };
+      if (!resolveSessionContext(req.headers['authorization'] || '')) {
+        return json(401, { error: 'Unauthorized' });
+      }
+      let body = '';
+      for await (const chunk of req) {
+        body += chunk;
+        if (body.length > 4096) return json(413, { error: 'Payload too large' });
+      }
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); } catch { return json(400, { error: 'Invalid JSON' }); }
+      const { label, disabled } = parsed;
+      if (typeof label !== 'string' || typeof disabled !== 'boolean' || !getDownstream(label)) {
+        return json(400, { error: 'Expected { label: <known downstream>, disabled: <boolean> }' });
+      }
+      setDownstreamDisabled(label, disabled);
+      return json(200, { ok: true, label, disabled });
     },
   },
   stdioContext: { user: 'local', agent: 'super_shannon' },

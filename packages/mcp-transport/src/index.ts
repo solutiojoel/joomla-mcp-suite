@@ -69,6 +69,12 @@ export interface StartHttpOptions {
    * response. Only GET requests are dispatched here.
    */
   extraGetRoutes?: Record<string, (req: http.IncomingMessage, res: http.ServerResponse) => void | Promise<void>>;
+  /**
+   * Extra POST routes served alongside the MCP endpoint — e.g. admin actions.
+   * These bypass the built-in bearer-token gate, so handlers MUST perform
+   * their own authentication before mutating anything.
+   */
+  extraPostRoutes?: Record<string, (req: http.IncomingMessage, res: http.ServerResponse) => void | Promise<void>>;
 }
 
 function applyCors(req: http.IncomingMessage, res: http.ServerResponse, opts: CorsOptions): boolean {
@@ -130,6 +136,18 @@ export async function startHttpServer(options: StartHttpOptions): Promise<http.S
 
     // Extra unauthenticated GET routes (status pages etc.) — like /healthz,
     // these bypass the bearer-token gate and expose only what the handler writes.
+    const extraPostRoute = options.extraPostRoutes?.[urlPath];
+    if (extraPostRoute && req.method === "POST") {
+      try {
+        await extraPostRoute(req, res);
+      } catch (err) {
+        log(`extra POST route ${urlPath} failed: ${err instanceof Error ? err.message : String(err)}`);
+        if (!res.headersSent) res.writeHead(500, { "Content-Type": "application/json" });
+        if (!res.writableEnded) res.end(JSON.stringify({ error: "Internal error" }));
+      }
+      return;
+    }
+
     const extraRoute = options.extraGetRoutes?.[urlPath];
     if (extraRoute) {
       if (req.method !== "GET") {
