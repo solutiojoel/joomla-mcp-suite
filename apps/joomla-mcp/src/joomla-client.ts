@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import yaml from "js-yaml";
 import { load as cheerioLoad } from "cheerio";
 import puppeteer, { type Browser } from 'puppeteer';
+import { outboundHeaders, userAgentFor } from "./user-agent.js";
 
 export interface JoomlaConfig {
   baseUrl: string;
@@ -628,7 +629,7 @@ export class JoomlaClient {
   ): Promise<{ status: number; headers: Map<string, string>; body: string }> {
     await this.paceRequest();
     const headers: Record<string, string> = {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      ...outboundHeaders(url),
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     };
 
@@ -698,13 +699,17 @@ export class JoomlaClient {
 
   private async postPage(
     url: string,
-    formData: FormDataMap
+    formData: FormDataMap,
+    options?: { prefetchedHtml?: string }
   ): Promise<{ status: number; html: string; redirected: boolean; redirectUrl?: string }> {
-    // First, get the page to ensure we have a fresh token
-    const pageResult = await this.getPage(url);
+    // Get the page to ensure we have a fresh token — unless the caller already
+    // holds that exact page, in which case re-fetching is a wasted round trip.
+    // On a rate-limited host it is worse than wasted: it is the request that
+    // trips the limit, so the POST behind it fails too.
+    const html = options?.prefetchedHtml ?? (await this.getPage(url)).html;
 
     // Inject/refresh token
-    const token = this.extractCsrfToken(pageResult.html);
+    const token = this.extractCsrfToken(html);
     if (token) {
       formData[token.name] = token.value;
       this.tokenName = token.name;
@@ -2446,7 +2451,9 @@ export class JoomlaClient {
       [token.name]: token.value,
     };
 
-    const postResult = await this.postPage(loginUrl, formData);
+    // Reuse the login page we just fetched — postPage would otherwise GET it a
+    // second time, and that duplicate is what the host's rate limiter blocks.
+    const postResult = await this.postPage(loginUrl, formData, { prefetchedHtml: result.html });
 
     // Check success
     if (postResult.html.includes("mod-login-username") || postResult.html.includes("Empty password")) {
@@ -5668,7 +5675,7 @@ export class JoomlaClient {
         : `${this.getBaseUrl()}/${path}`;
 
     const response = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36" },
+      headers: outboundHeaders(url),
       redirect: "follow",
     });
     if (!response.ok) {
@@ -5871,7 +5878,7 @@ export class JoomlaClient {
 
     const page = await this._browser.newPage();
     try {
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36');
+      await page.setUserAgent(userAgentFor(url));
       await page.setViewport({ width, height });
 
       const cookieDomain = new URL(this.getBaseUrl()).hostname;

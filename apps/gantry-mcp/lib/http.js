@@ -11,6 +11,7 @@
  */
 
 const { URL } = require('url');
+const { outboundHeaders } = require('./user-agent');
 
 class CookieJar {
   constructor() {
@@ -142,7 +143,7 @@ async function jarFetch(url, options = {}, jar, opts = {}) {
     const headers = new Headers(currentOptions.headers || {});
     if (cookieHeader) headers.set('cookie', cookieHeader);
     if (!headers.has('user-agent')) {
-      headers.set('user-agent', 'gantry-cli/1.0 (Joomla Gantry5 automation)');
+      for (const [k, v] of Object.entries(outboundHeaders(currentUrl))) headers.set(k, v);
     }
 
     response = await pacedFetch(currentUrl, { ...currentOptions, headers });
