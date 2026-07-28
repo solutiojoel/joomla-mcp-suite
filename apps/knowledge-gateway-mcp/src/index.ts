@@ -128,6 +128,34 @@ const tools = [
       required: ["action"],
     },
   },
+  {
+    name: "agent_audit",
+    description:
+      "Record and retrieve agent session audit entries — what an agent did on a site, for accountability and debugging. " +
+      "This is where end-of-session audit notes belong; never put them in knowledge_client, which is loaded during normal work. " +
+      "action: list|get|create|delete. 'list' returns summaries only (id/site/agent/task/date) — use 'get' for the full narrative.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          enum: ["list", "get", "create", "delete"],
+          description: "list: summaries by filter; get: one record in full; create: log a session; delete: remove by id",
+        },
+        id: { type: "number", description: "Record id — required for get/delete" },
+        site_code: { type: "string", description: "Site slug, e.g. 'assumption-west' (filter on list; required on create)" },
+        agent_id: { type: "string", description: "Agent scope that did the work, e.g. 'super_shannon' (filter on list; required on create)" },
+        task: { type: "string", description: "Short title of what was done — required on create" },
+        original_request: { type: "string", description: "The user's request, verbatim where practical — create only" },
+        task_notes: { type: "string", description: "Full detail: changes with IDs, investigation, errors and resolutions, decisions — create only" },
+        user_id: { type: "string", description: "Who requested the work (name/email/'internal') — create only" },
+        full: { type: "boolean", description: "list only: return full bodies instead of summaries (costly — avoid unless needed)" },
+        limit: { type: "number", description: "Page size (list only)" },
+        offset: { type: "number", description: "Page offset (list only)" },
+      },
+      required: ["action"],
+    },
+  },
 ];
 
 export function buildServer(): Server {
@@ -257,6 +285,39 @@ export function buildServer(): Server {
             limit: args.limit as number | undefined,
             offset: args.offset as number | undefined,
           }));
+        }
+
+        case "agent_audit": {
+          if (!action) return err("Error: action is required");
+          if (needsId(action) && id === undefined) return err(`Error: id is required for action '${action}'`);
+          switch (action) {
+            case "list":
+              return ok(await gateway.listAgentAudit({
+                site_code: args.site_code as string | undefined,
+                agent_id: args.agent_id as string | undefined,
+                limit: args.limit as number | undefined,
+                offset: args.offset as number | undefined,
+                full: args.full as boolean | undefined,
+              }));
+            case "get":
+              return ok(await gateway.getAgentAudit(id as number));
+            case "create": {
+              const missing = ["site_code", "agent_id", "task"].filter((k) => !args[k]);
+              if (missing.length) return err(`Error: ${missing.join(", ")} required for action 'create'`);
+              return ok(await gateway.createAgentAudit({
+                site_code: args.site_code as string | undefined,
+                agent_id: args.agent_id as string | undefined,
+                task: args.task as string | undefined,
+                original_request: args.original_request as string | undefined,
+                task_notes: args.task_notes as string | undefined,
+                user_id: args.user_id as string | undefined,
+              }));
+            }
+            case "delete":
+              return ok(await gateway.deleteAgentAudit(id as number));
+            default:
+              return err(`Unknown action: ${action}`);
+          }
         }
 
         default:

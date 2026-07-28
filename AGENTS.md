@@ -51,19 +51,23 @@ At the end of every session that touched a site, in this order:
 
 **1. Update site notes** — if any persistent fact changed (new IDs discovered, new quirk found, new integration added), call `get_site_notes`, edit the relevant section, and call `write_site_notes`. Site notes contain **only** persistent facts: quirks & warnings, key IDs, active integrations. Do not append changelog entries to site notes.
 
-**2. Write one audit note** — always, for every session that touched the site:
+**2. Write one audit note** — always, for every session that touched the site. Use `agent_audit`, **not** `knowledge_client`:
 
 ```
-knowledge_client {
+agent_audit {
   action: "create",
   site_code: "SITECODE",
-  topic: "audit: YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]",
-  content: "**Requested by:** [Name / email / 'internal'] | **Ticket:** [#XXXXX or 'none']\n**Summary of changes:**\n- [specific change with IDs]\n\n**Session detail:**\n[Step-by-step: what was investigated, every action taken, errors and how resolved, decisions made]",
-  tags: ["audit"]
+  agent_id: "super_shannon",              ← the agent scope that did the work
+  task: "YYYY-MM-DD — [Ticket #XXXXX | ][Brief title]",
+  user_id: "[Name / email / 'internal']",
+  original_request: "[the user's request, verbatim where practical]",
+  task_notes: "**Summary of changes:**\n- [specific change with IDs]\n\n**Session detail:**\n[Step-by-step: what was investigated, every action taken, errors and how resolved, decisions made]"
 }
 ```
 
-Audit notes are **never loaded at session start** — they exist for accountability and debugging only. Retrieve with `knowledge_client { action: "list", site_code: "SITECODE", tag: "audit" }` when investigating a problem.
+Audit notes live in their own container and are **never loaded at session start** — they exist for accountability and debugging only. Retrieve with `agent_audit { action: "list", site_code: "SITECODE" }`, which returns **summaries only** (id, site, agent, task, date); follow up with `agent_audit { action: "get", id: N }` for the one record you actually need.
+
+> **Never write audit or changelog content into `knowledge_client`.** That container is read during normal work, so session narratives there get pulled into every context window. `knowledge_client` is for durable client facts only.
 
 See `read_agent_doc(doc: "kb/site-history")` for the full format spec and examples.
 
@@ -171,6 +175,7 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 | `solutio_particles` | Load Solutio particle reference before adding/editing particles |
 | `gantry_reference{topic:"conventions"}` | Load Base/#Outline/#Home/#Grid/#Sponsors and subsite outline inheritance rules before creating or rewiring outlines |
 | `knowledge_universal` / `knowledge_client` / `knowledge_self_improving` / `knowledge_audit` | AI Knowledge Gateway access — see `kb/knowledge-gateway` |
+| `agent_audit` | Agent session audit log — where end-of-session audit notes go (`list` returns summaries; `get` for full detail) |
 | `reload_tools` | Reload tool lists if a downstream server was restarted |
 | `gantry_reconnect` | Force Gantry re-auth if layout tools are failing |
 

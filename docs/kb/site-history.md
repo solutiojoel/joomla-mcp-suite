@@ -3,7 +3,7 @@
 Every site has two separate records:
 
 1. **Site notes** (`get_site_notes` / `write_site_notes`) — persistent site intelligence. Read at session start. Contains only facts that remain true over time.
-2. **Audit notes** (`knowledge_client { tag: "audit" }`) — per-session records of what was done. Never loaded at session start. Retrieved on-demand when investigating.
+2. **Audit notes** (`agent_audit`) — per-session records of what was done. Stored in their own container, never loaded at session start, retrieved on-demand when investigating.
 
 ---
 
@@ -111,19 +111,23 @@ Every session that touches a site must write one audit note to the Knowledge Gat
 ### Writing an Audit Note
 
 ```
-knowledge_client {
+agent_audit {
   action: "create",
   site_code: "SITECODE",
-  topic: "audit: YYYY-MM-DD — [brief description of session, e.g. Ticket #35412 | Staff page update]",
-  content: "...",
-  tags: ["audit"]
+  agent_id: "super_shannon",                ← the agent scope that did the work
+  task: "YYYY-MM-DD — [brief description, e.g. Ticket #35412 | Staff page update]",
+  user_id: "[Name / email / 'internal']",
+  original_request: "[the user's request, verbatim where practical]",
+  task_notes: "..."
 }
 ```
 
-### Audit Note Content Format
+Audit notes go in `agent_audit`, which exists for exactly this purpose. **Do not write them to `knowledge_client`** — that container is read during normal work, so session narratives stored there are pulled into every context window that looks up a client fact.
+
+### `task_notes` Format
 
 ```
-**Requested by:** [Name / email / "internal"] | **Ticket:** [#XXXXX or "none"]
+**Ticket:** [#XXXXX or "none"]
 **Summary of changes:**
 - [What was changed — include IDs]
 - [Another change]
@@ -132,10 +136,14 @@ knowledge_client {
 [What was investigated before making changes, what tools were called, what was changed and in what order, any errors encountered and how resolved, decisions made and why, what was NOT done and why]
 ```
 
+`user_id` carries the requester, so it no longer needs to be repeated in the body.
+
 ### Good Audit Note Example
 
+`site_code: "stexample"`, `agent_id: "support"`, `task: "2026-03-14 — Ticket #35412 | Staff page update"`, `user_id: "jkowalski@stexample.com"`, and `task_notes`:
+
 ```
-**Requested by:** Janet Kowalski (jkowalski@stexample.com) | **Ticket:** #35412
+**Ticket:** #35412
 **Summary of changes:**
 - Article 47 (/about/staff) — added Fr. Marcus Reyes, Deacon Tom Hill, Mary Johnson to alternaterowsm table
 - Article 44 (Fr. Bob Smithson) — unpublished; menu item 203 hidden
@@ -153,13 +161,16 @@ Write one at the end of **every session** that touched the site — including in
 Audit notes are **never loaded at session start**. Retrieve only when investigating a problem or auditing past work:
 
 ```
-knowledge_client { action: "list", site_code: "SITECODE", tag: "audit" }
+agent_audit { action: "list", site_code: "SITECODE" }   ← summaries only (id, agent, task, date)
+agent_audit { action: "get", id: 12 }                   ← full detail for one record
 ```
+
+`list` deliberately returns summaries rather than full bodies, so scanning a site's history costs a few hundred tokens instead of tens of thousands. Pull the full record only for the session you actually care about.
 
 ---
 
 ## At Session End — Required Steps
 
 1. **Update site notes** if any persistent fact changed (new IDs, new quirk, new integration). Use `write_site_notes`.
-2. **Write one audit note** using `knowledge_client { action: "create", tags: ["audit"] }` — always, for every session that touched the site.
+2. **Write one audit note** using `agent_audit { action: "create" }` — always, for every session that touched the site.
 3. Announce to the user that the audit note has been written.

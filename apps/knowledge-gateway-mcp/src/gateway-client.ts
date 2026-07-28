@@ -53,6 +53,26 @@ export interface AuditListFilters {
   offset?: number;
 }
 
+/** Filters for listing agent-audit session records. */
+export interface AgentAuditListFilters {
+  site_code?: string;
+  agent_id?: string;
+  limit?: number;
+  offset?: number;
+  /** Return the full originalRequest/taskNotes bodies instead of the summary projection. */
+  full?: boolean;
+}
+
+/** Body fields for creating an agent-audit session record. */
+export interface AgentAuditFields {
+  site_code?: string;
+  agent_id?: string;
+  task?: string;
+  original_request?: string;
+  task_notes?: string;
+  user_id?: string;
+}
+
 /** Drop undefined values so we never send empty query params or body keys. */
 function compact<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -289,6 +309,76 @@ export class GatewayClient {
         }),
       });
       return { success: true, message: "Audit log listed", data };
+    } catch (e) {
+      return this.wrapError(e);
+    }
+  }
+
+  // ── Agent audit: /agent-audit (agent session records) ────────────────────
+  // Distinct from /audit above: that one is the gateway's own change log,
+  // written automatically. This one is where agents record what they did in a
+  // session, so those narratives stay out of client knowledge.
+
+  async listAgentAudit(filters: AgentAuditListFilters = {}): Promise<GatewayResponse> {
+    try {
+      const { data } = await this.axios.get("/agent-audit", {
+        params: compact({
+          site_code: filters.site_code,
+          agent_id: filters.agent_id,
+          limit: filters.limit,
+          offset: filters.offset,
+        }),
+      });
+      if (filters.full) return { success: true, message: "Agent audit listed", data };
+      // Session narratives run to thousands of tokens each. Default to a
+      // summary projection so listing can never drag every taskNotes body into
+      // an agent's context — that bloat is the reason this table exists.
+      const rows = Array.isArray(data) ? (data as Record<string, unknown>[]) : [];
+      return {
+        success: true,
+        message: `Agent audit listed — ${rows.length} record(s), summary only; use action 'get' for full detail`,
+        data: rows.map((r) => ({
+          id: r.id,
+          siteCode: r.siteCode,
+          agentId: r.agentId,
+          task: r.task,
+          createdAt: r.createdAt,
+        })),
+      };
+    } catch (e) {
+      return this.wrapError(e);
+    }
+  }
+
+  async getAgentAudit(id: number): Promise<GatewayResponse> {
+    try {
+      const { data } = await this.axios.get(`/agent-audit/${id}`);
+      return { success: true, message: "Agent audit record retrieved", data };
+    } catch (e) {
+      return this.wrapError(e);
+    }
+  }
+
+  async createAgentAudit(fields: AgentAuditFields): Promise<GatewayResponse> {
+    try {
+      const { data } = await this.axios.post("/agent-audit", compact({
+        siteCode: fields.site_code,
+        agentId: fields.agent_id,
+        task: fields.task,
+        originalRequest: fields.original_request,
+        taskNotes: fields.task_notes,
+        userId: fields.user_id,
+      }));
+      return { success: true, message: "Agent audit record created", data };
+    } catch (e) {
+      return this.wrapError(e);
+    }
+  }
+
+  async deleteAgentAudit(id: number): Promise<GatewayResponse> {
+    try {
+      await this.axios.delete(`/agent-audit/${id}`);
+      return { success: true, message: `Agent audit record ${id} deleted` };
     } catch (e) {
       return this.wrapError(e);
     }

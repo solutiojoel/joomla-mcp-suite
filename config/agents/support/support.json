@@ -15,7 +15,8 @@
       "joomla_user*", "joomla_group*",
       "joomla_docman_*",
       "freshdesk_*",
-      "knowledge_*"
+      "knowledge_*",
+"agent_audit"
     ],
     "deny": [
       "joomla_submit_admin_form", "joomla_permissions",

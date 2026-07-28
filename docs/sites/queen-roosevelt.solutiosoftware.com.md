@@ -5,6 +5,9 @@
 **Launched:** (date unknown — pre-existing site)
 **Type:** Parish
 
+> Session history lives in `agent_audit { action: "list", site_code: "queen-roosevelt" }` —
+> this file holds persistent facts only.
+
 ---
 
 ## ⚠️ Quirks & Warnings
@@ -24,14 +27,3 @@
 ## 🔌 Active Integrations
 
 - **Vanco:** Online giving via external URL link (menu item 194). No embed — redirects to Vanco page.
-
----
-
-## 📅 Change Log
-
-### 2026-05-26 — Give menu item added
-**Requested by:** Internal | **Ticket:** none
-**Changes:**
-- Menu item 194 (Give) created in Main Menu as URL type, linking to https://secure.myvanco.com/L-ZYZY, target new window
-- Positioned between Religious Education (127) and Sponsors (129)
-**Notes:** Gantry cache quirk confirmed — Joomla system cache clear alone is insufficient when menu ordering is involved.

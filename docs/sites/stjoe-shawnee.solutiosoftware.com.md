@@ -5,6 +5,9 @@
 **Launched:** (date unknown — pre-existing site)
 **Type:** Parish + School
 
+> Session history lives in `agent_audit { action: "list", site_code: "stjoe-shawnee" }` —
+> this file holds persistent facts only.
+
 ---
 
 ## ⚠️ Quirks & Warnings
@@ -20,33 +23,12 @@
 | Seven Sisters Apostolate | 423 (in Practice of Prayer section, after ID 429) |
 | Parish Vocation Ministry | 429 |
 | Required templateStyleId for all CHAPELS pages | 27 (Clarity - Site Outline/Base) |
+| Capital Campaign Home outline | 23 |
+| Homepage slider — Swiper particle | `swiper-6123` (in outline 23) |
+| Rotator - Capital Campaign category | 84 |
+
+**Homepage slider:** the Capital Campaign slider is the Swiper particle `swiper-6123` on outline 23, pulling articles from category 84 sorted by `ordering ASC`. To add, remove, or reposition a slide, publish/unpublish/reorder articles in category 84 — do not edit the particle.
 
 ## 🔌 Active Integrations
 
 - *(none logged yet)*
-
----
-
-## 📅 Change Log
-
-### 2026-05-22 — Seven Sisters Apostolate moved within CHAPELS menu
-**Requested by:** Internal | **Ticket:** none
-**Changes:**
-- Menu item 423 (Seven Sisters Apostolate) moved from Acts of Mercy section to Practice of Prayer section, positioned after Parish Vocation Ministry (ID 429)
-- Reason: Seven Sisters is a prayer ministry, not a charity ministry — incorrect categorization
-**Notes:** CHAPELS menu drag-and-drop quirk confirmed — `templateStyleId` must be verified after any reorder. All affected items confirmed at templateStyleId 27 after this move.
-
-### 2026-06-19 — Ticket #35339 | Replace Blue Streak slider with Fr. Scott Farewell slide
-**Requested by:** Libby Knox (Knox Development) | **Ticket:** #35339
-**Changes:**
-- Unpublished article 798 ("BLUE STREAK ALUMNI ANNOUNCE DECADE CHALLENGE") from category 84 (Rotator - Capital Campaign) to remove the Blue Streak Decade Challenge slide
-- Created article 806 ("Wish Fr. Scott a Fond Farewell") in category 84 with body `<h1><a class="stj-chevron-link" href="campaign-giving"> Wish Fr. Scott a Fond Farewell </a></h1>` and linked to /campaign-giving
-**Notes:** Jeremy will add the Fr. Scott featured image to article 806 to complete the slide. The slider is the Swiper particle (swiper-6123) in the Capital Campaign Home outline (ID 23), pulling from category 84. Article ordering by ASC — if slide needs to be repositioned, adjust ordering on article 806.
-_Logged by: local_
-
-### 2026-06-24 — Ticket #35339 | Float check presentation photo in article 807
-**Requested by:** Jeremy (internal) | **Ticket:** #35339
-**Changes:**
-- Article 807 ("Partnership with Security Bank of Kansas City"): removed full-width check photo block (was 673×658px standalone); replaced with a right-floated div (max-width: 300px) containing the same image (width:100%/auto height) and caption, positioned before the "The St. Joseph Athletic Facility will be home to..." paragraph so it tucks alongside the 2–3 paragraphs above
-**Notes:** Scoreboard sign image at bottom of article unchanged. Jeremy handling image uploads separately.
-_Logged by: local_

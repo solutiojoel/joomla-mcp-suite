@@ -8,6 +8,7 @@
       "get_site_notes", "append_site_note", "write_site_notes",
       "read_agent_doc", "reload_tools",
       "knowledge_universal",
+"agent_audit",
       "run_menu_interpretation", "run_menu_build",
       "derive_content_schematic", "run_content_interpretation",
       "joomla_article", "joomla_category", "joomla_menu*",

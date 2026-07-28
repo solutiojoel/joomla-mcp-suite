@@ -5,6 +5,9 @@
 **Launched:** not yet
 **Type:** Parish
 
+> Session history lives in `agent_audit { action: "list", site_code: "holyname-valley" }` —
+> this file holds persistent facts only.
+
 ---
 
 ## ⚠️ Quirks & Warnings
@@ -55,16 +58,3 @@
 - Article 176 (Scouts): scout troop details needed
 - Article 177 (Knights of Columbus): council number needed
 - Sponsors component: sponsor entries needed from client
-
----
-
-## 📅 Change Log
-
-### 2026-05-28 — Initial site build — menus and content structure
-**Requested by:** Internal (new site build) | **Ticket:** none
-**Changes:**
-- Full main menu built (items 101–197): Home, About Us, Mass Schedule, Bulletin, Livestreams, Sacraments (bilingual, 7 sub-items 148–154), Faith Formation (bilingual, sub-items 175–184), Parish Ministries (bilingual, sub-items 186–197), Donate (hidden, 173), Sponsors alias (129)
-- Category structure established: Page Content (31), Sacraments Items (18), Faith Formation Items (35), Ministries Items (50), Homepage Articles (24), Rotator (10), Headlines/News (8)
-- Key landing page articles created: Sacraments (58), Faith Formation (151), Parish Ministries (73), Contact Us & Directions (57), Clergy & Staff (7)
-- Outline assignments: Home (33) → menu item 101; Subpage (32) → Bulletin, Livestreams, Mass Schedule; Grid (34) → Sacraments, Faith Formation, Parish Ministries
-**Notes:** Multiple content items pending client input — see Outstanding Client Items above. Donate page hidden intentionally per client request.

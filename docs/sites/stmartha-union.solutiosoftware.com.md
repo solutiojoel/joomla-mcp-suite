@@ -5,6 +5,9 @@
 **Launched:** (date unknown — pre-existing site)
 **Type:** Parish
 
+> Session history lives in `agent_audit { action: "list", site_code: "stmartha-union" }` —
+> this file holds persistent facts only.
+
 ---
 
 ## ⚠️ Quirks & Warnings
@@ -21,14 +24,3 @@
 ## 🔌 Active Integrations
 
 - **JotForm:** Online giving form embedded via iframe in article 369 (/give or similar). Assigned to menu item 183 (CL Main Menu) as a Single Article type.
-
----
-
-## 📅 Change Log
-
-### 2026-05-26 — Give menu item reverted after wrong-site error
-**Requested by:** Internal (rollback) | **Ticket:** none
-**Changes:**
-- Menu item 183 (Give, CL Main Menu) reverted from URL type back to Single Article type pointing to article 369 (JotForm online giving iframe)
-- Vanco URL changes applied earlier the same day were made to this site in error (intended for a different site) and rolled back
-**Notes:** ⚠️ This site uses JotForm for giving, not Vanco. Confirm the correct site before making giving-related changes. Double-check active site before editing giving/donation menu items.

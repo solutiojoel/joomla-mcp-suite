@@ -262,7 +262,7 @@ This agent's scope ends when Phase 4 is complete, the skeleton is approved, and 
 
 ## Logging
 
-After Phase 4 completes, write an audit note (`knowledge_client { action: "create", tags: ["audit"] }` — see `kb/site-history`) recording the spec filename, the schematic filename, the `run_menu_build` summary, and any deferred `build_notes` / `open_questions` (from both the spec and the schematic). If the build surfaced a persistent fact (new menu/outline/category IDs, a quirk), also update site notes via `write_site_notes` — do not use `append_site_note`, which is deprecated for changelog entries.
+After Phase 4 completes, write an audit note (`agent_audit { action: "create" }` — see `kb/site-history`) recording the spec filename, the schematic filename, the `run_menu_build` summary, and any deferred `build_notes` / `open_questions` (from both the spec and the schematic). If the build surfaced a persistent fact (new menu/outline/category IDs, a quirk), also update site notes via `write_site_notes` — do not use `append_site_note`, which is deprecated for changelog entries.
 
 ---
 
