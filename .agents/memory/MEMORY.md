@@ -1,4 +1,5 @@
 - [Replit port detection](replit-port-detection.md) — explicit [[ports]] disables auto-detection; waitForPort 5000 needs its own mapping, and the platform reverts .replit port edits.
 - [Status dashboard](status-dashboard.md) — public page must stay sanitized; health is reachability-based (some servers 404 /healthz); empty tool maps at boot are normal and self-heal.
 - [Puppeteer Chromium](puppeteer-chromium.md) — no downloaded Chrome here; start script exports PUPPETEER_EXECUTABLE_PATH/CHROME_PATH from `command -v chromium`, never pin /nix/store paths.
+- [Joomla host throttling](joomla-host-throttling.md) — host 429s cloud IPs after ~2 rapid requests; all Joomla traffic must use the paced clients with Retry-After backoff.
 - [Single-process mode](single-process-mode.md) — INPROCESS_DOWNSTREAMS=1 hosts Node servers in-process for Autoscale; entry points need require.main guards; stdio children must not see PORT vars.

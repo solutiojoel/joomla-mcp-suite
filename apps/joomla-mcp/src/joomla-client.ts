@@ -119,6 +119,19 @@ interface ModuleBlueprint {
   };
 }
 
+/** Parse a Retry-After header (seconds or HTTP-date) into milliseconds, or null if absent/invalid. */
+function parseRetryAfterMs(header: string | null | undefined): number | null {
+  if (!header) return null;
+  const sec = Number(header);
+  if (Number.isFinite(sec) && sec > 0) return sec * 1000;
+  const dateMs = Date.parse(header);
+  if (!Number.isNaN(dateMs)) {
+    const delta = dateMs - Date.now();
+    if (delta > 0) return Math.min(delta, 60000);
+  }
+  return null;
+}
+
 export class JoomlaClient {
   private config: JoomlaConfig;
   private cookies: Map<string, string> = new Map();
@@ -565,10 +578,55 @@ export class JoomlaClient {
     );
   }
 
+  // --- Outbound request pacing & 429 backoff ---------------------------------
+  // The Joomla host throttles cloud-provider IPs (Replit egress). Space requests
+  // out and retry on 429 with backoff, honoring Retry-After when present.
+  private static readonly MIN_REQUEST_INTERVAL_MS = Number(process.env.JOOMLA_MIN_REQUEST_INTERVAL_MS || 750);
+  private static readonly MAX_429_RETRIES = 4;
+  private lastRequestAt = 0;
+  private pacerChain: Promise<void> = Promise.resolve();
+
+  /** Serialize callers and enforce a minimum interval between outbound requests. */
+  private async paceRequest(): Promise<void> {
+    const prev = this.pacerChain;
+    let release!: () => void;
+    this.pacerChain = new Promise<void>((r) => { release = r; });
+    await prev;
+    const wait = this.lastRequestAt + JoomlaClient.MIN_REQUEST_INTERVAL_MS - Date.now();
+    if (wait > 0) {
+      await new Promise((r) => setTimeout(r, wait));
+    }
+    this.lastRequestAt = Date.now();
+    release();
+  }
+
   private async request(
     url: string,
     options?: { method?: string; body?: string | FormData; contentType?: string; additionalHeaders?: Record<string, string> }
   ): Promise<{ status: number; headers: Map<string, string>; body: string }> {
+    let attempt = 0;
+    for (;;) {
+      const result = await this.requestOnce(url, options);
+      if (result.status !== 429 || attempt >= JoomlaClient.MAX_429_RETRIES) {
+        return result;
+      }
+      // FormData bodies can't be safely re-sent after consumption in some cases,
+      // but Node's fetch does not consume our FormData reference, so retry is fine.
+      const retryAfterMs = parseRetryAfterMs(result.headers.get("retry-after"));
+      const backoffMs = retryAfterMs !== null
+        ? retryAfterMs
+        : Math.min(2000 * Math.pow(2, attempt), 15000);
+      attempt++;
+      console.error(`[joomla-mcp] 429 from server, backing off ${backoffMs}ms (retry ${attempt}/${JoomlaClient.MAX_429_RETRIES})`);
+      await new Promise((r) => setTimeout(r, backoffMs));
+    }
+  }
+
+  private async requestOnce(
+    url: string,
+    options?: { method?: string; body?: string | FormData; contentType?: string; additionalHeaders?: Record<string, string> }
+  ): Promise<{ status: number; headers: Map<string, string>; body: string }> {
+    await this.paceRequest();
     const headers: Record<string, string> = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
