@@ -3,7 +3,7 @@ name: Joomla host throttling of cloud IPs
 description: The Joomla site's host rate-limits requests from cloud-provider (Replit/GCP) egress IPs; clients must pace requests and back off on 429.
 ---
 
-The rule: all outbound HTTP to the Joomla site must go through a paced client — minimum interval between requests (default 750ms, tunable via `JOOMLA_MIN_REQUEST_INTERVAL_MS`) plus bounded 429 retries honoring `Retry-After` (seconds or HTTP-date form).
+The rule: all outbound HTTP to the Joomla site must go through the shared clients, which do bounded 429 retries honoring `Retry-After` (seconds or HTTP-date form). Request pacing exists but defaults to 0ms — the user chose retry-only because pacing was too slow for larger builds; they plan to get the Replit egress IP allowlisted. Re-enable pacing via `JOOMLA_MIN_REQUEST_INTERVAL_MS` if 429 storms return.
 
 **Why:** Confirmed 2026-07-28: from Replit, the 3rd back-to-back request to the site returned HTTP 429 (worked fine from residential ISP IPs). The host's admin said cloud IPs (AWS/GCP) are throttled as bot traffic; slowing the request rate is their recommended fix — it is throttling, not a firewall block.
 

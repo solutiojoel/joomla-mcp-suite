@@ -79,7 +79,7 @@ class CookieJar {
 // --- Outbound request pacing & 429 backoff ---------------------------------
 // The Joomla host throttles cloud-provider IPs (Replit egress). Space requests
 // out and retry on 429 with backoff, honoring Retry-After when present.
-const MIN_REQUEST_INTERVAL_MS = Number(process.env.JOOMLA_MIN_REQUEST_INTERVAL_MS || 750);
+const MIN_REQUEST_INTERVAL_MS = Number(process.env.JOOMLA_MIN_REQUEST_INTERVAL_MS ?? 0);
 const MAX_429_RETRIES = 4;
 let lastRequestAt = 0;
 let pacerChain = Promise.resolve();
