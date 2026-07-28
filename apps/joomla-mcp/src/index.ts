@@ -906,6 +906,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
               note: args?.note as string,
               assignment: args?.assignment as string,
               assigned: args?.assigned as string[],
+              content: args?.content as string,
               params: args?.params as Record<string, string>,
               advanced: args?.advanced as Record<string, string>,
               fieldOverrides: args?.fieldOverrides as Record<string, string>,

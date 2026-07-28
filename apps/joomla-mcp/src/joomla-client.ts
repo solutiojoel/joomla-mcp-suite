@@ -3736,6 +3736,7 @@ export class JoomlaClient {
       note?: string;
       assignment?: string;
       assigned?: string[];
+      content?: string;
       params?: Record<string, string>;
       advanced?: Record<string, string>;
       fieldOverrides?: Record<string, string>;
@@ -3766,6 +3767,10 @@ export class JoomlaClient {
       "jform[assignment]": data.assignment ?? String(existingModule.assignment || "0"),
       [token.name]: token.value,
     };
+
+    if (data.content !== undefined) {
+      formData["jform[content]"] = data.content;
+    }
 
     if (data.assigned) {
       formData["jform[assigned][]"] = data.assigned;
@@ -3802,6 +3807,7 @@ export class JoomlaClient {
       noteMatches: !!verify.success && String(module.note || "") === String(formData["jform[note]"] || ""),
       assignmentMatches: !!verify.success && String(module.assignment || "") === String(formData["jform[assignment]"] || ""),
       assignedMatches: !this.shouldVerifyAssignedMembers(String(formData["jform[assignment]"] || "")) || (!!verify.success && JSON.stringify(actualAssigned) === JSON.stringify(expectedAssigned)),
+      contentMatches: data.content === undefined || (!!verify.success && this.decodeHtmlEntities(String(module.content || "")) === this.decodeHtmlEntities(String(data.content))),
     };
     const verified = Object.values(verification).every((value, index) => index < 2 || value === true) && verification.readbackSucceeded;
 
