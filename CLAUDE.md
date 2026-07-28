@@ -169,7 +169,7 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 | `write_site_notes` | Overwrite the active site's notes file (read first) |
 | `solutio_style_guide` | Load Solutio house conventions for Gantry 5 builds |
 | `solutio_particles` | Load Solutio particle reference before adding/editing particles |
-| `gantry_outline_conventions` | Load Base/#Outline/#Home/#Grid/#Sponsors and subsite outline inheritance rules before creating or rewiring outlines |
+| `gantry_reference{topic:"conventions"}` | Load Base/#Outline/#Home/#Grid/#Sponsors and subsite outline inheritance rules before creating or rewiring outlines |
 | `knowledge_universal` / `knowledge_client` / `knowledge_self_improving` / `knowledge_audit` | AI Knowledge Gateway access — see `kb/knowledge-gateway` |
 | `reload_tools` | Reload tool lists if a downstream server was restarted |
 | `gantry_reconnect` | Force Gantry re-auth if layout tools are failing |

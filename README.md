@@ -169,7 +169,6 @@ The next phase adds a web frontend for the team, backed by a new `apps/agent-run
 |---|---|
 | [`docs/agent-runtime-architecture.md`](docs/agent-runtime-architecture.md) | System schematic — components, identity chain, session/job models, KB bridge, deployment |
 | [`docs/agent-runtime-api.md`](docs/agent-runtime-api.md) | The REST/SSE contract the frontend is built against |
-| [`docs/agent-runtime-implementation-plan.md`](docs/agent-runtime-implementation-plan.md) | Build phases 0–5 |
 
 ---
 
@@ -463,47 +462,47 @@ Controls Gantry 5 through Puppeteer automation, reading and writing Gantry's int
 
 ### 📋 Outlines
 
-**`gantry_outlines_list`** — All Gantry 5 outlines with IDs, titles, default status, and menu item assignments.
+**`gantry_outline{action:"list"}`** — All Gantry 5 outlines with IDs, titles, default status, and menu item assignments.
 
-**`gantry_outlines_duplicate`** — Copies an outline. Pass `noInherit: true` for a full independent clone.
+**`gantry_outline{action:"duplicate"}`** — Copies an outline. Pass `noInherit: true` for a full independent clone.
 
-**`gantry_outlines_delete`** — Permanently deletes one or more outlines by ID.
+**`gantry_outline{action:"delete"}`** — Permanently deletes one or more outlines by ID.
 
 ---
 
 ### 🔭 Layout — Reading
 
-**`gantry_layout_list`** — Particles in an outline as a flat list. Pass `editable: true` to filter to configurable particles only.
+**`gantry_layout{action:"list"}`** — Particles in an outline as a flat list. Pass `editable: true` to filter to configurable particles only.
 
-**`gantry_layout_tree`** — Full hierarchical layout as a tree (sections → grids → blocks → particles). Use when you need exact structure before a surgical edit.
+**`gantry_layout{action:"tree"}`** — Full hierarchical layout as a tree (sections → grids → blocks → particles). Use when you need exact structure before a surgical edit.
 
-**`gantry_layout_sections`** — Lists top-level sections only (`navigation`, `header`, `expanded`, `footer`, etc.). These IDs are stable and the correct targets for `--to` parameters.
+**`gantry_layout{action:"sections"}`** — Lists top-level sections only (`navigation`, `header`, `expanded`, `footer`, etc.). These IDs are stable and the correct targets for `--to` parameters.
 
-**`gantry_layout_presets`** — Built-in layout presets available in the Gantry framework.
+**`gantry_layout{action:"presets"}`** — Built-in layout presets available in the Gantry framework.
 
 ---
 
 ### ➕ Layout — Adding Particles
 
-**`gantry_layout_add`** — Adds a particle, position, spacer, or system element to a section.
+**`gantry_particle{action:"add"}`** — Adds a particle, position, spacer, or system element to a section.
 - `to` — drops into a section as a new full-width grid row
 - `nextTo` — places as a sibling block in the same grid as an existing particle
 
-Always call `gantry_layout_sections` or `gantry_layout_tree` first to get valid IDs.
+Always call `gantry_layout{action:"sections"}` or `gantry_layout{action:"tree"}` first to get valid IDs.
 
 ---
 
 ### ✂️ Layout — Moving & Removing
 
-**`gantry_layout_move`** — Moves an existing particle to a new location using the same `to`/`nextTo` placement modes.
+**`gantry_particle{action:"move"}`** — Moves an existing particle to a new location using the same `to`/`nextTo` placement modes.
 
-**`gantry_layout_remove`** — Removes one or more particles by ID. Accepts a single ID, array, or CSV string. Empty grids are cleaned up automatically.
+**`gantry_particle{action:"remove"}`** — Removes one or more particles by ID. Accepts a single ID, array, or CSV string. Empty grids are cleaned up automatically.
 
 ---
 
 ### ✏️ Layout — Editing Particles
 
-**`gantry_layout_edit`** — Edits an existing particle's settings. Two approaches:
+**`gantry_particle{action:"edit"}`** — Edits an existing particle's settings. Two approaches:
 
 - **JSON-patch path** (default) — fast, dry-run aware. Use Gantry's bracket notation: `particles[contentarray][title]="Newsroom"`, `block[size]=50`
 - **Dialog path** (`viaDialog: true`) — opens the actual settings modal. Slower but necessary for fields not in the JSON structure.
@@ -512,33 +511,33 @@ Always call `gantry_layout_sections` or `gantry_layout_tree` first to get valid 
 
 ### 🏛️ Layout — Section Operations
 
-**`gantry_layout_section_edit`** — Edits a section's boxed state, CSS class, and variations (`dark`, `flush`, etc.).
+**`gantry_section{action:"edit"}`** — Edits a section's boxed state, CSS class, and variations (`dark`, `flush`, etc.).
 
-**`gantry_layout_section_inherit`** — Configures a section to inherit from another outline. Specify what to inherit: `children`, `attributes`, or both.
+**`gantry_section{action:"inherit"}`** — Configures a section to inherit from another outline. Specify what to inherit: `children`, `attributes`, or both.
 
-**`gantry_layout_section_clone`** — Breaks a section's inheritance link, turning it into an independent copy.
+**`gantry_section{action:"unlink"}`** — Breaks a section's inheritance link, turning it into an independent copy.
 
 ---
 
 ### 📤 Layout — Export, Import, Copy, Presets
 
-**`gantry_layout_export`** — Exports an outline's complete layout as structured JSON.
+**`gantry_layout{action:"export"}`** — Exports an outline's complete layout as structured JSON.
 
-**`gantry_layout_import`** — Applies a previously exported layout JSON to an outline. Auto-backs up before importing.
+**`gantry_layout{action:"import"}`** — Applies a previously exported layout JSON to an outline. Auto-backs up before importing.
 
-**`gantry_layout_copy_from`** — Copies the layout from one outline directly into another.
+**`gantry_layout{action:"copy_from"}`** — Copies the layout from one outline directly into another.
 
-**`gantry_layout_load_preset`** — Applies a built-in layout preset to an outline.
+**`gantry_layout{action:"load_preset"}`** — Applies a built-in layout preset to an outline.
 
-**`gantry_layout_clear`** — Removes all particles. `full` clears everything; `keep-inheritance` leaves inheritance links intact.
+**`gantry_layout{action:"clear"}`** — Removes all particles. `full` clears everything; `keep-inheritance` leaves inheritance links intact.
 
 ---
 
 ### ↩️ Layout — Backups & Undo
 
-**`gantry_layout_backups_list`** — All automatic backup files for an outline, sorted by timestamp.
+**`gantry_layout{action:"backups"}`** — All automatic backup files for an outline, sorted by timestamp.
 
-**`gantry_layout_undo`** — Restores the most recent backup — one-step undo of the last write.
+**`gantry_layout{action:"undo"}`** — Restores the most recent backup — one-step undo of the last write.
 
 **`gantry_layout_restore`** — Restores a specific backup by filename or the keyword `latest`.
 
@@ -546,31 +545,31 @@ Always call `gantry_layout_sections` or `gantry_layout_tree` first to get valid 
 
 ### 🖌️ Styles
 
-**`gantry_styles_list`** — All style variables for an outline: fonts, colors, spacing, theme settings.
+**`gantry_styles{action:"list"}`** — All style variables for an outline: fonts, colors, spacing, theme settings.
 
-**`gantry_styles_edit`** — Updates style variables using bracket notation: `styles[base][background]="#1a1a2e"`. Changes take effect on next page render.
+**`gantry_styles{action:"edit"}`** — Updates style variables using bracket notation: `styles[base][background]="#1a1a2e"`. Changes take effect on next page render.
 
 ---
 
 ### 📄 Page Settings
 
-**`gantry_page_list`** — Page settings for an outline: body classes, head tags, favicon, meta tags.
+**`gantry_page{action:"list"}`** — Page settings for an outline: body classes, head tags, favicon, meta tags.
 
-**`gantry_page_edit`** — Updates page settings: `page[body][attribs][class]="gantry site-sub withmaxwidth"`. Useful for adding body classes that control layout behavior.
+**`gantry_page{action:"edit"}`** — Updates page settings: `page[body][attribs][class]="gantry site-sub withmaxwidth"`. Useful for adding body classes that control layout behavior.
 
-**`gantry_page_settings_breakdown`** — Returns Page Settings grouped like the Gantry UI: Head Properties, Assets, Body Attributes, and Font Awesome, with meta tags, CSS rows, JavaScript rows, and tag attributes parsed from their JSON fields.
+**`gantry_page{action:"breakdown"}`** — Returns Page Settings grouped like the Gantry UI: Head Properties, Assets, Body Attributes, and Font Awesome, with meta tags, CSS rows, JavaScript rows, and tag attributes parsed from their JSON fields.
 
-**`gantry_page_head_edit`** — Updates Head Properties without touching the rest of the page: custom head content plus add/edit/remove meta tags by key.
+**`gantry_page{action:"head"}`** — Updates Head Properties without touching the rest of the page: custom head content plus add/edit/remove meta tags by key.
 
 By default, head edits preserve the managed Solutio site-default block on the Base Outline. Pass `siteDefaults` to update artwork-driven RGB values, color labels, font imports, and font families while keeping required variable names available.
 
-**`gantry_page_head_defaults_ensure`** — Adds or normalizes the Base Outline startup image, manifest, and `html body` CSS variable block in Head Properties while preserving existing custom content.
+**`gantry_page{action:"head_defaults"}`** — Adds or normalizes the Base Outline startup image, manifest, and `html body` CSS variable block in Head Properties while preserving existing custom content.
 
-**`gantry_page_asset_icons_edit`** — Updates just the favicon and touch icon paths.
+**`gantry_page{action:"icons"}`** — Updates just the favicon and touch icon paths.
 
-**`gantry_page_asset_files_edit`** — Adds, edits, or removes individual CSS and JavaScript asset rows. Use this for linked CSS/JS files instead of putting `<link>` or `<script>` tags in custom head content.
+**`gantry_page{action:"assets"}`** — Adds, edits, or removes individual CSS and JavaScript asset rows. Use this for linked CSS/JS files instead of putting `<link>` or `<script>` tags in custom head content.
 
-**`gantry_page_body_edit`** — Updates Body Id, Body Classes, tag attributes, Sections Layout, After `<body>`, and Before `</body>`.
+**`gantry_page{action:"body"}`** — Updates Body Id, Body Classes, tag attributes, Sections Layout, After `<body>`, and Before `</body>`.
 
 ---
 
@@ -601,4 +600,4 @@ Workflow guides and knowledge base articles live under `docs/agents/`. Agents re
 
 **Snapshot before mutating.** Any operation that could cause data loss is guarded by a snapshot or auto-backup. Restore tools are first-class, not an afterthought.
 
-**Discover before acting.** Introspection tools (`joomla_inspect_module_type`, `joomla_inspect_menu_item_type`, `joomla_inspect_admin_form`, `gantry_layout_sections`, `gantry_layout_tree`) are designed to be called before write operations so the agent can read a form's schema, understand what parameters exist, and construct a correct payload — rather than guessing.
+**Discover before acting.** Introspection tools (`joomla_inspect_module_type`, `joomla_inspect_menu_item_type`, `joomla_inspect_admin_form`, `gantry_layout{action:"sections"}`, `gantry_layout{action:"tree"}`) are designed to be called before write operations so the agent can read a form's schema, understand what parameters exist, and construct a correct payload — rather than guessing.

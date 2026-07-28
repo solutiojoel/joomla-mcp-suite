@@ -16,6 +16,10 @@ cp .env.example .env       # then edit .env with your credentials
 `.env` keys:
 
 ```
+# Optional for local dev. In a deployed environment (Replit) this file does not
+# exist — gantry-mcp falls back to the suite-wide JOOMLA_USERNAME/JOOMLA_PASSWORD
+# secrets that joomla-mcp and ftp-mcp already use. Do not rely on GANTRY_ADMIN_*
+# being present in production.
 GANTRY_ADMIN_USER=your_joomla_admin_username
 GANTRY_ADMIN_PASS=your_joomla_admin_password
 
@@ -30,13 +34,14 @@ GANTRY_BACKUP_DIR=./backups         # where auto-snapshots land
 GANTRY_SLOWMO=0                     # ms slow-mo for headful debugging
 ```
 
-Smoke test:
+Smoke test — start the server and confirm it authenticates against a site:
 
 ```
-node gantry.js -s https://yoursite.com login
+node mcp-server.js          # stdio; or HTTP_PORT=9301 node mcp-server.js
 ```
 
-Should print `Logged in. Theme: rt_studius  Token: <hash>`.
+Then call `gantry_outline(action: "list", site: "https://yoursite.com")`. A list
+of outlines means login, theme resolution and token capture all succeeded.
 
 ---
 
@@ -269,7 +274,9 @@ gantry --sites-file sites.json layout edit -o default --id contentarray-6583 -- 
 ]
 ```
 
-Credential lookup order: explicit override in sites.json → per-site env vars (e.g. `SITE_A_COM_USER` / `SITE_A_COM_PASS`) → global `GANTRY_ADMIN_USER` / `GANTRY_ADMIN_PASS`. Per-site env vars are derived from the host: uppercase, dots/dashes/colons → underscores.
+Credential lookup order: explicit override in sites.json → per-site env vars (e.g. `SITE_A_COM_USER` / `SITE_A_COM_PASS`) → global `GANTRY_ADMIN_USER` / `GANTRY_ADMIN_PASS` → suite-wide `JOOMLA_USERNAME` / `JOOMLA_PASSWORD`. Per-site env vars are derived from the host: uppercase, dots/dashes/colons → underscores.
+
+The final `JOOMLA_*` fallback is what makes gantry-mcp work in a deployed environment: `apps/gantry-mcp/.env` is gitignored, so `GANTRY_ADMIN_*` is only ever set on dev machines. Without the fallback every site-touching Gantry tool fails with "No credentials found" in production while passing locally.
 
 When the command finishes, you get a summary like:
 
@@ -321,14 +328,14 @@ All write tools accept `dryRun: true` and trigger an auto-backup before mutating
 
 ## Diagnostic helpers
 
-```
-gantry dump --view configurations            # any view's DOM/links/inputs
-gantry dump-layout-json -o 75                # serialized layout + window state probes
-gantry capture-traffic -o 75                 # log every gantry5 request until Ctrl+C
-gantry capture-save-body -o 75 --id <particleId>     # capture a real save POST body
-```
+The standalone `gantry` CLI and its `dump` / `capture-traffic` / `capture-save-body`
+subcommands were removed — they existed to reverse-engineer Gantry's AJAX flows
+during development and were not reachable from the MCP server. If Gantry changes
+and you need to inspect its requests again, recover them from git history:
 
-These wrote to `./discovery/` and helped reverse-engineer Gantry's AJAX flows. Useful if Gantry changes or you're investigating something new.
+```
+git log --diff-filter=D -- apps/gantry-mcp/gantry.js
+```
 
 ---
 
@@ -353,18 +360,24 @@ This means:
 ## Project layout
 
 ```
-gantry.js                   # CLI entry (commander)
+mcp-server.js               # MCP entry: 9 consolidated tools over an internal handler registry
 lib/
-  session.js                # login + Configure click + token capture
-  util.js                   # URL building, env lookup, screenshot helper
+  session.js                # login + Configure click + token capture (browser mode)
+  session-http.js           # same flow with no Chromium dependency (default)
+  http.js                   # cookie jar + form parsing used by session-http
+  util.js                   # URL building, credential lookup, screenshot helper
   layout.js                 # selectors + DOM helpers (list, available, fields, dialog edit)
   layout-api.js             # JSON-API: serialize, mutate, save, diff, copy, backups
+  design-compiler.js        # design YAML <-> Gantry layout structure
+  outline-conventions.js    # Solutio Base/#Outline/#Home/#Grid/#Sponsors rules
   menu.js                   # menu editor + assignments
   styles.js                 # styles dialog
   page.js                   # page settings dialog
   outlines.js               # list / duplicate / delete / particle-defaults
   backup.js                 # snapshot + restore primitives
-discovery/                  # captured traffic + DOM dumps used during dev
+design-patterns/            # named section patterns (read by gantry_reference)
+particles/                  # particle knowledge base (read by gantry_reference)
+templates/                  # section + homepage starters (read by gantry_reference)
 backups/                    # auto-snapshots before each mutation
 screenshots/                # debug screenshots
 ```

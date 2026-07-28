@@ -45,13 +45,20 @@ automatically. The deployment uses the same entry point (build:
 
 ## Required Environment Secrets
 
-Set these in Replit Secrets (the lock icon) before starting:
+Set these in Replit Secrets (the lock icon) before starting.
+
+Every server resolves configuration through `@solutio/env`, which layers
+`apps/<name>/.env` over the repo-root `.env` and lets the real environment beat
+both. In a deployment neither file exists, so Secrets are the only source — and
+each secret is set **once**, no matter how many servers read it. Each server
+logs `[env:<name>] loaded …` at boot and warns about unset required variables,
+so a missing secret shows up immediately instead of failing inside a tool call.
 
 | Secret | Description |
 |--------|-------------|
 | `JOOMLA_BASE_URL` | Full URL to your Joomla administrator, e.g. `https://example.com/administrator` |
-| `JOOMLA_USERNAME` | Joomla admin username |
-| `JOOMLA_PASSWORD` | Joomla admin password |
+| `JOOMLA_USERNAME` | Joomla admin username — shared by joomla-mcp, gantry-mcp and ftp-mcp |
+| `JOOMLA_PASSWORD` | Joomla admin password — shared by joomla-mcp, gantry-mcp and ftp-mcp |
 | `ORCHESTRATOR_TOKEN` | Shared bearer token MCP clients use to authenticate with the orchestrator |
 
 ### Optional secrets

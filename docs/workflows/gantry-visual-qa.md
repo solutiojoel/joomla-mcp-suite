@@ -19,11 +19,11 @@ Use this guide after any session involving particle placement, layout changes, o
 | Tool | Purpose |
 |------|---------|
 | `joomla_get_frontend_screenshot` | Full-page or element-targeted screenshots |
-| `gantry_particle_html` | Returns rendered particle HTML — real selectors and structure |
-| `gantry_layout_tree` | Full layout structure — section IDs and particle positions |
-| `gantry_layout_sections` | Lists section IDs — the stable targets for CSS and screenshots |
-| `gantry_layout_edit` | Set block classes on particles without opening the UI |
-| `gantry_styles_edit` | Update Gantry style variables only — not for site CSS rules |
+| `gantry_particle{action:"html"}` | Returns rendered particle HTML — real selectors and structure |
+| `gantry_layout{action:"tree"}` | Full layout structure — section IDs and particle positions |
+| `gantry_layout{action:"sections"}` | Lists section IDs — the stable targets for CSS and screenshots |
+| `gantry_particle{action:"edit"}` | Set block classes on particles without opening the UI |
+| `gantry_styles{action:"edit"}` | Update Gantry style variables only — not for site CSS rules |
 | `ftp_read_file` | Read the existing custom CSS file before appending new rules |
 | `ftp_upload_file` | Write updated CSS back to `/templates/g5_clarity/custom/css/custom.css` |
 | `mcp__Claude_in_Chrome__navigate` + `mcp__Claude_in_Chrome__javascript_tool` | Live DOM inspection, computed styles, element bounding boxes |
@@ -49,7 +49,7 @@ Gantry 5 renders sections with predictable IDs. These are the stable targets for
 | Bottom | `#g-bottom` | Copyright bar |
 | Offcanvas | `#g-offcanvas` | Mobile slide-out menu |
 
-Custom sections added in Gantry get their own IDs based on the section key set during creation (e.g., a section keyed `features` becomes `#g-features`). Find these with `gantry_layout_sections`.
+Custom sections added in Gantry get their own IDs based on the section key set during creation (e.g., a section keyed `features` becomes `#g-features`). Find these with `gantry_layout{action:"sections"}`.
 
 ---
 
@@ -62,7 +62,7 @@ Custom sections added in Gantry get their own IDs based on the section key set d
    → assign a unique block class to each particle (block[extra-class])
 
 2. Get the rendered HTML to confirm selectors
-   → gantry_particle_html(particleId: "...")
+   → gantry_particle(action: "html", particleId: "...")
 
 3. Screenshot just this section at all three widths
    → joomla_get_frontend_screenshot(url: "...", element: "#g-header", width: 1440)
@@ -135,7 +135,7 @@ Check these after screenshotting each section. Each section type has different c
 - [ ] Active/hover state colors match site palette
 
 ### Hero / Header (`#g-header`, `#g-slideshow`)
-- [ ] **Swiper block class is `fullwidth-swiper`** — verify via `gantry_layout_tree` or `gantry_particle_html`
+- [ ] **Swiper block class is `fullwidth-swiper`** — verify via `gantry_layout{action:"tree"}` or `gantry_particle{action:"html"}`
 - [ ] **Swiper particle ID is `rotate-addpic`** — verify in particle settings; required for rotator JS and CSS
 - [ ] Hero image fills the section — no gap, no overflow
 - [ ] Text overlay readable against the image — sufficient contrast
@@ -179,7 +179,7 @@ Check these after screenshotting each section. Each section type has different c
 Before touching CSS, get the real rendered HTML to confirm what selectors exist:
 
 ```
-gantry_particle_html(outlineId: ..., particleId: "contentarray-XXXX")
+gantry_particle(action: "html", outlineId: ..., particleId: "contentarray-XXXX")
 ```
 
 From the returned HTML, identify:
@@ -190,7 +190,7 @@ From the returned HTML, identify:
 **Always set a unique block class on every particle at creation time:**
 
 ```
-gantry_layout_edit(
+gantry_particle(action: "edit",
   outlineId: ...,
   particleId: "contentarray-XXXX",
   changes: { "block[extra-class]": "quicklinks-bar" }
@@ -203,7 +203,7 @@ CSS then targets `.quicklinks-bar`, which survives layout rebuilds. The generate
 
 ## Writing and Deploying CSS
 
-> **Before touching Page Settings assets:** run `gantry_get_outline_for_page` on the target page first. The live page may be served by a child outline (e.g., outline `33`) that has its own local Assets — changes to Base Outline will have no effect there. Always edit the outline that is actually serving the page.
+> **Before touching Page Settings assets:** run `gantry_outline{action:"for_page"}` on the target page first. The live page may be served by a child outline (e.g., outline `33`) that has its own local Assets — changes to Base Outline will have no effect there. Always edit the outline that is actually serving the page.
 
 CSS goes in the **active outline's Page Settings CSS asset rows** — not the Gantry Styles textarea. Three approaches depending on FTP access; see `read_agent_doc(doc: "gantry-section-css")` for the full reference.
 
@@ -213,20 +213,20 @@ CSS goes in the **active outline's Page Settings CSS asset rows** — not the Ga
 |-----------|-----|
 | Can write to `/templates/` | FTP `custom.css` → register in Base Outline CSS rows |
 | Locked to `/pub` | FTP to `content/override.css` (already registered on most sites) |
-| No FTP / fast iteration | Inline CSS directly in a Page Settings asset row via `gantry_page_edit` |
+| No FTP / fast iteration | Inline CSS directly in a Page Settings asset row via `gantry_page{action:"edit"}` |
 
 ### Inline approach (fastest — no file upload)
 
 Read the current CSS rows first, then append to the inline field of an existing row (or add a new one):
 
 ```
-1. gantry_page_list(site: "...", outline: "default", all: true)
+1. gantry_page(action: "list", site: "...", outline: "default", all: true)
    → find page[assets][css][_json] — note the existing rows array
 
 2. Modify the inline field of the target row (e.g. "To Merge" or "Override")
    → or add a new row: {"location": "", "inline": "/* css */", "priority": "1", "name": "Agent Custom"}
 
-3. gantry_page_edit(site: "...", outline: "default", edits: {
+3. gantry_page(action: "edit", site: "...", outline: "default", edits: {
      "page[assets][css][_json]": "[...complete updated array...]"
    })
    → always write the full array, not just the changed row
@@ -234,7 +234,7 @@ Read the current CSS rows first, then append to the inline field of an existing 
 4. Screenshot the section → verify the fix
 ```
 
-Always pass the **complete array** back — `gantry_page_edit` replaces the whole field. Read first, modify, write all rows.
+Always pass the **complete array** back — `gantry_page{action:"edit"}` replaces the whole field. Read first, modify, write all rows.
 
 ### CSS patterns
 

@@ -23,6 +23,14 @@ function normalizeSite(site) {
  * Look up per-site credentials in env, falling back to the global defaults.
  *   https://example.com -> EXAMPLE_COM_USER / EXAMPLE_COM_PASS
  *                       -> GANTRY_ADMIN_USER / GANTRY_ADMIN_PASS
+ *                       -> JOOMLA_USERNAME / JOOMLA_PASSWORD
+ *
+ * The JOOMLA_* pair is the suite-wide credential every other downstream reads
+ * (joomla-mcp, ftp-mcp). gantry-mcp historically only honoured GANTRY_ADMIN_*,
+ * which is set in the gitignored apps/gantry-mcp/.env and therefore exists on
+ * dev machines but never in a deployed environment — so every site-touching
+ * Gantry tool failed in production while passing locally. Falling through to
+ * JOOMLA_* keeps the two from drifting again.
  */
 function resolveCreds(site, override = {}) {
   const url = new URL(normalizeSite(site));
@@ -30,15 +38,18 @@ function resolveCreds(site, override = {}) {
   const user =
     override.user ||
     process.env[`${key}_USER`] ||
-    process.env.GANTRY_ADMIN_USER;
+    process.env.GANTRY_ADMIN_USER ||
+    process.env.JOOMLA_USERNAME;
   const pass =
     override.pass ||
     process.env[`${key}_PASS`] ||
-    process.env.GANTRY_ADMIN_PASS;
+    process.env.GANTRY_ADMIN_PASS ||
+    process.env.JOOMLA_PASSWORD;
   if (!user || !pass) {
     throw new Error(
-      `No credentials found for ${url.host}. Set ${key}_USER/${key}_PASS ` +
-        `or GANTRY_ADMIN_USER/GANTRY_ADMIN_PASS in your .env file, or pass --user/--pass.`
+      `No credentials found for ${url.host}. Set ${key}_USER/${key}_PASS, ` +
+        `GANTRY_ADMIN_USER/GANTRY_ADMIN_PASS, or JOOMLA_USERNAME/JOOMLA_PASSWORD ` +
+        `in the environment, or pass --user/--pass.`
     );
   }
   return { user, pass };

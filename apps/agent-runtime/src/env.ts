@@ -1,11 +1,14 @@
 // Must be the first import in index.ts so module-level env reads elsewhere see
-// the loaded values. Loads the app-local .env (cwd when launched via the start
-// script), then the repo-root .env as a non-overriding fallback.
-import path from "node:path";
-import dotenv from "dotenv";
+// the loaded values. Layers <app>/.env over the shared repo-root .env; the real
+// environment (deployment secrets) beats both. See @solutio/env.
+//
+// This app pioneered the layered pattern with a hand-rolled pair of dotenv
+// calls; it now uses the shared loader so every server resolves env identically
+// and app-root detection no longer depends on the launch directory.
+import { loadEnv } from "@solutio/env";
 
-dotenv.config({ quiet: true });
-dotenv.config({
-  path: path.resolve(__dirname, "..", "..", "..", ".env"),
-  quiet: true,
+loadEnv({
+  from: __dirname,
+  label: "agent-runtime",
+  required: ["RUNTIME_JWT_SECRET", "RUNTIME_ENC_KEY"],
 });

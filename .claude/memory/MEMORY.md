@@ -10,4 +10,3 @@
 - [Fresh Menus for Builds](feedback-fresh-menus.md) — Phase 4 always creates new client-named menus; never use or alter existing forge menus
 - [Joomla Version](joomla-version.md) — all sites run Joomla 3; no J4/J5 in use; Isis admin template, standard selects, J3 MenusController
 - [Sub-Agent Architecture](sub-agent-architecture.md) — planned agents-mcp downstream for LLM-backed tool handlers; direct leaf connections, no second orchestrator, timeout/site-injection risks
-- [Sub-Agent Implementation Plan](sub-agent-implementation-plan.md) — 5-phase dev plan; start with Phase 0 transport spike (agent_ping, 90s sleep), then harness, then menu-interpreter

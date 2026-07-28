@@ -29,7 +29,8 @@
     "dotenv": "^17.4.2",
     "jsdom": "^29.1.1",
     "turndown": "^7.2.4",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@solutio/env": "^0.1.0"
   },
   "devDependencies": {
     "@types/jsdom": "^28.0.3",

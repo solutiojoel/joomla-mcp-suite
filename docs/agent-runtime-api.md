@@ -2,7 +2,7 @@
 
 > **Audience:** the frontend developer. This is the complete surface the dashboard is built against — nothing else on the box should be called directly.
 > **Base URL:** `https://dashboard.<company-domain>/api` (final hostname supplied when the box is set up; served through a Cloudflare Tunnel). **Cloudflare Access** sits in front of the whole hostname — in a browser it's a one-time email login the frontend never has to handle. For live API testing *from Replit* during development, request a Cloudflare Access **service token** (a `CF-Access-Client-Id`/`CF-Access-Client-Secret` header pair) from Jeremy and send it on every request; otherwise mock the endpoints from this doc.
-> **Companion docs:** [`agent-runtime-architecture.md`](agent-runtime-architecture.md) (how it works inside), [`agent-runtime-implementation-plan.md`](agent-runtime-implementation-plan.md) (delivery order — §1 below marks which endpoints arrive in which phase).
+> **Companion doc:** [`agent-runtime-architecture.md`](agent-runtime-architecture.md) (how it works inside). The `[P1]`/`[P2]`/`[P3]` phase tags below refer to the retired build plan; Phases 0–3 shipped, so treat every tagged endpoint as live.
 > **Status:** contract for a service not yet built. Shapes here are binding; additive changes (new fields, new endpoints) may occur, breaking changes will be versioned.
 
 ---

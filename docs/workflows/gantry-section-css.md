@@ -218,7 +218,7 @@ Custom CSS belongs in the Base Outline's **Page Settings → CSS asset rows** (`
 Start by reading the current asset rows to see what already exists:
 
 ```
-gantry_page_list(site: "...", outline: "default", all: true)
+gantry_page(action: "list", site: "...", outline: "default", all: true)
 ```
 
 Look at `page[assets][css][_json]`. It contains an array of rows, each with:
@@ -243,7 +243,7 @@ Use when the FTP account can write to `/templates/`.
    → write updated file to server
 
 4. If the file isn't already in the CSS asset rows, add it:
-   gantry_page_edit(site: "...", outline: "default", edits: {
+   gantry_page(action: "edit", site: "...", outline: "default", edits: {
      "page[assets][css][_json]": "[...existing rows..., {\"location\": \"/templates/g5_clarity/custom/css/custom.css\", \"inline\": \"\", \"extra\": [], \"priority\": \"1\", \"name\": \"Custom\"}]"
    })
 ```
@@ -273,11 +273,11 @@ When FTP write access is restricted to `/pub`, the `/templates/` path is blocked
 
 When FTP is not available or you want to iterate quickly without touching files. CSS goes directly in the `inline` field of a CSS asset row — Gantry injects it as a `<style>` block on every page. No file required.
 
-Read the current rows first, then add/update an inline row via `gantry_page_edit`:
+Read the current rows first, then add/update an inline row via `gantry_page{action:"edit"}`:
 
 ```python
 # Build the updated JSON — keep ALL existing rows, modify or add one inline row
-existing_rows = [...]   # from gantry_page_list page[assets][css][_json]
+existing_rows = [...]   # from gantry_page{action:"list"} page[assets][css][_json]
 
 # Option A: add a new inline row
 existing_rows.append({
@@ -293,12 +293,12 @@ for row in existing_rows:
     if row["name"] == "To Merge":
         row["inline"] += "\n/* new rules */\n.my-section { ... }"
 
-gantry_page_edit(site: "...", outline: "default", edits: {
+gantry_page(action: "edit", site: "...", outline: "default", edits: {
     "page[assets][css][_json]": json.dumps(existing_rows)
 })
 ```
 
-**Important:** Always pass the complete array — `gantry_page_edit` replaces the entire field. Read first, modify in context, write the full updated array back.
+**Important:** Always pass the complete array — `gantry_page{action:"edit"}` replaces the entire field. Read first, modify in context, write the full updated array back.
 
 ---
 

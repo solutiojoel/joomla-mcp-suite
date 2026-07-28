@@ -11,7 +11,6 @@ export FRESHDESK_MCP_PORT="${FRESHDESK_MCP_PORT:-9307}"
 export FTP_MCP_PORT="${FTP_MCP_PORT:-9304}"
 export MOCKUP_MCP_PORT="${MOCKUP_MCP_PORT:-9305}"
 export KNOWLEDGE_GATEWAY_MCP_PORT="${KNOWLEDGE_GATEWAY_MCP_PORT:-9306}"
-export SITE_BUILDER_PORT="${SITE_BUILDER_PORT:-18303}"
 
 # Internal servers bind loopback only; the orchestrator alone is exposed
 # publicly so Replit's domain proxy always routes to it.
@@ -113,14 +112,6 @@ run_knowledge_gateway() {
   HTTP_PORT="${KNOWLEDGE_GATEWAY_MCP_PORT}" exec node dist/index.js
 }
 
-run_site_builder() {
-  cd "$ROOT/apps/gantry-mcp"
-  SITE_BUILDER_PORT="${SITE_BUILDER_PORT}" \
-  GANTRY_MCP_URL="http://127.0.0.1:${GANTRY_MCP_PORT}/mcp" \
-  JOOMLA_MCP_URL="http://127.0.0.1:${JOOMLA_MCP_PORT}/mcp" \
-  exec node site-builder-server.js
-}
-
 # Fast polling (0.2s) with an overall timeout (default 60s).
 wait_for_port() {
   local host="$1"
@@ -147,7 +138,6 @@ supervise freshdesk-mcp run_freshdesk &
 supervise ftp-mcp run_ftp &
 supervise mockup-analyzer run_mockup &
 supervise knowledge-gateway-mcp run_knowledge_gateway &
-supervise site-builder run_site_builder &
 
 # The orchestrator opens fresh per-call connections to downstream MCP
 # servers, so it does not need them to be up before it starts. It is NOT

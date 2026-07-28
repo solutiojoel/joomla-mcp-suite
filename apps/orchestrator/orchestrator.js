@@ -17,7 +17,15 @@
  * support, and credential management can all be extended here.
  */
 
-require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+// Layered env loading — see @solutio/env. Precedence:
+//   real environment (deployment secrets) > apps/orchestrator/.env > <repo root>/.env
+// In single-process mode this runs first and every in-process downstream then
+// sees the same resolved environment.
+require('@solutio/env').loadEnv({
+  from: __dirname,
+  label: 'orchestrator',
+  required: ['ORCHESTRATOR_TOKEN'],
+});
 
 const { STYLE_GUIDE, SECTIONS, PARTICLES } = require('./solutio-conventions.js');
 

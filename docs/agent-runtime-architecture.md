@@ -1,7 +1,7 @@
 # Solutio AI Dashboard — System Architecture
 
 > **Audience:** the whole team — Jeremy (backend), the frontend developer, and anyone operating the box.
-> **Companions:** [`agent-runtime-api.md`](agent-runtime-api.md) (the REST contract the frontend is built against) and [`agent-runtime-implementation-plan.md`](agent-runtime-implementation-plan.md) (build phases).
+> **Companion:** [`agent-runtime-api.md`](agent-runtime-api.md) — the REST contract the frontend is built against.
 > **Status:** approved design, pre-implementation. Anything marked **NEW** does not exist yet.
 
 ---

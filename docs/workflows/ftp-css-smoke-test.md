@@ -32,7 +32,7 @@ The two paths are different due to a server-side FTP alias. Never use `upload_pa
 ### Step 2 — Detect the outline serving the target page
 
 ```
-gantry_get_outline_for_page(site: "...", path: "/")
+gantry_outline(action: "for_page", site: "...", path: "/")
 ```
 
 Note the outline ID returned. **Edit this outline — not Base Outline — in steps 4 and 5.**
@@ -61,22 +61,27 @@ Confirm the public URL resolves: `https://<site-domain>/images/pub/smoke-test.cs
 Use the outline ID from step 2.
 
 ```
-gantry_page_asset_files_edit(
+gantry_page(
+  action: "assets",
   site: "...",
   outline: "<outline-id-from-step-2>",
-  action: "add",
-  file: "https://<site-domain>/images/pub/smoke-test.css",
-  type: "css"
+  cssActions: [
+    { action: "add", item: { location: "https://<site-domain>/images/pub/smoke-test.css" } }
+  ]
 )
 ```
 
-**Aliases for discoverability** — these tool names mean the same thing:
-- `gantry_page_asset_files_edit`
-- `gantry_add_css_asset`
-- `gantry_link_css_file`
-- `gantry_page_assets_edit`
+CSS and JS rows are edited through the `cssActions` / `javascriptActions` arrays.
+Each entry carries its own `action` (`add` | `edit` | `remove`); select an existing
+row with `index`, `name`, or `location`.
 
-If the tool doesn't exist under those names, use `gantry_page_edit` with the `page[assets][css][_json]` field directly (read first, append row, write full array).
+This replaces the old `gantry_page_asset_files_edit` tool and its
+`gantry_add_css_asset` / `gantry_link_css_file` / `gantry_page_assets_edit`
+aliases — there is now one way to do it.
+
+As a fallback, `gantry_page(action: "edit")` can write the
+`page[assets][css][_json]` field directly (read first, append the row, write the
+full array back).
 
 ---
 
@@ -100,7 +105,7 @@ ftp_read_file(path: "<pub_path>/smoke-test.css")
 If this was a validation run only:
 
 ```
-gantry_page_asset_files_edit(
+gantry_page(action: "assets",
   site: "...",
   outline: "<outline-id>",
   action: "remove",
@@ -116,9 +121,10 @@ The FTP file can remain in place — it is inert.
 
 ```
 ftp_site_config()
-  → gantry_get_outline_for_page(path: "/target-page")   ← detect active outline first
+  → gantry_outline(action: "for_page", path: "/target-page")   ← detect active outline first
   → ftp_upload_file(path: "<upload_path>/file.css")
-  → gantry_page_asset_files_edit(outline: "<detected-id>", action: "add", file: "...")
+  → gantry_page(action: "assets", outline: "<detected-id>",
+                cssActions: [{ action: "add", item: { location: "..." } }])
   → joomla_get_frontend_page(path: "/target-page")       ← search for <link> tag
 ```
 
@@ -129,9 +135,9 @@ ftp_site_config()
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
 | FTP upload succeeds but file isn't at public URL | Wrong path — used `pub_path` instead of `upload_path` | Re-read `ftp_site_config` and use the correct path for each operation |
-| CSS file at public URL but not in page source | Added to wrong outline | Re-run `gantry_get_outline_for_page`, edit the correct outline |
+| CSS file at public URL but not in page source | Added to wrong outline | Re-run `gantry_outline{action:"for_page"}`, edit the correct outline |
 | Asset row added but stylesheet still missing | Child outline has `inherit: false` for Assets | Edit the child outline's Assets directly, not Base Outline |
-| `gantry_page_asset_files_edit` not found | Tool name varies by server version | Use `gantry_page_edit` with `page[assets][css][_json]` |
+| `gantry_page{action:"assets"}` not found | Tool name varies by server version | Use `gantry_page{action:"edit"}` with `page[assets][css][_json]` |
 
 ---
 

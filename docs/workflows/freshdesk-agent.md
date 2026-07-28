@@ -134,7 +134,7 @@ Common Joomla investigation starting points:
 - **Article / content wrong**: `joomla_article(action: "list", search: "...")`, then `get`
 - **Menu broken or missing**: `joomla_menu_item(action: "list", menuId: "mainmenu")`
 - **Module not showing**: `joomla_module(action: "list")`, then `get`
-- **Gantry layout**: `gantry_get_outline_for_page`, `gantry_particle_inspect`
+- **Gantry layout**: `gantry_outline{action:"for_page"}`, `gantry_particle{action:"inspect"}`
 - **General site state**: `joomla_backend_inventory()`
 
 Surface any blockers, unexpected findings, or questions to the user as they arise. Do not make changes during this step.

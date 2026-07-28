@@ -12,10 +12,10 @@ Monorepo (`joomla-mcp-suite`) — a fleet-management platform for Solutio Softwa
 **Apps:**
 - `apps/orchestrator` — the single MCP entry point (port 9302 HTTP; renamed from `apps/joomla-orchestrator` 2026-06-12). Auth (bearer tokens via `config/users.json`), per-session active site, agent-scope enforcement, KB accessor (`kb.js`), config-driven downstream registry, and the composite `gantry_css_asset_smoke_test` tool.
 - `apps/joomla-mcp` — TypeScript, Joomla admin automation (27 tools), site-keyed session cache. Port 9300.
-- `apps/gantry-mcp` — Node.js, Gantry 5 layout automation (65 tools). Port 9301.
+- `apps/gantry-mcp` — Node.js, Gantry 5 layout automation (9 consolidated action-dispatch tools; consolidated from 65 on 2026-07-28). Port 9301.
 - `apps/freshdesk-mcp` — Freshdesk REST tools (7), no site context (`inject: null`). Port 9303.
 - `apps/ftp-mcp` — FTP tools (7), owns `ftp-sites.json`. Port 9304.
-- `apps/dashboard` — web dashboard. Port 18305.
+- `apps/agent-runtime` — dashboard backend (JWT logins, chat sessions, jobs/knowledge proxies). Port 18310. Replaced the retired `apps/dashboard`.
 
 **MCP client connects only to the orchestrator.** Tools appear as `mcp__orchestrator__*` (prefix changed from `mcp__joomla-orchestrator__*` with the rename). Routing: first downstream whose tool map has the name wins; the active site is injected as `site_url` (joomla/ftp) or `site` (gantry).
 

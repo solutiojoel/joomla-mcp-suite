@@ -30,52 +30,53 @@ read_agent_doc(doc: "gantry-particle-map")
 
 Use this DOM model when writing or reviewing `override.css`: `#g-section > .g-container > .g-grid > .g-block`, where the particle's custom block class lives on `.g-block` and the particle-generated HTML lives inside it. Put section backgrounds on `#g-section`, put section padding on `#g-section > .g-container` with `!important`, and scope homepage-only section styles with `.site-home`.
 
-Use the particle map to confirm every setting for the particle subtype before writing design YAML. After applying on a test outline, use `gantry_particle_html` to inspect the rendered block and write CSS from the actual DOM.
+Use the particle map to confirm every setting for the particle subtype before writing design YAML. After applying on a test outline, use `gantry_particle{action:"html"}` to inspect the rendered block and write CSS from the actual DOM.
 
 ### Step 1 — Understand the design pattern options
 
 ```
-gantry_design_patterns   (no arguments → returns index of all patterns)
+gantry_reference{topic:"patterns"}   (no arguments → returns index of all patterns)
 ```
 
 Read the pattern index. Identify which patterns match the sections requested in the brief. If the brief mentions "hero slider + mass times", that is the `hero-swiper-with-mass-times` pattern. If it mentions "quicklinks bar", that is `quicklinks-bar`. Etc.
 
 Fetch full detail for any pattern you plan to use:
 ```
-gantry_design_patterns(name: "hero-swiper-with-mass-times")
-gantry_design_patterns(name: "quicklinks-bar")
+gantry_reference(topic: "patterns", name: "hero-swiper-with-mass-times")
+gantry_reference(topic: "patterns", name: "quicklinks-bar")
 ```
 
 **Do not skip this step.** The patterns teach you the particle choice rationale, content contract, and guardrails before you write a single line of YAML.
 
 ---
 
-### Step 2 — Generate a design plan from the brief
+### Step 2 — Write the design plan yourself
 
-```
-gantry_design_plan_from_brief(brief: "...", site_type: "parish")
-```
+There is no tool for this step. The old `gantry_design_plan_from_brief` matched
+keywords in the brief against a fixed pattern list; you read the brief far
+better than that did. Using the patterns loaded in Step 1, write out:
 
-This returns:
-- Which patterns were selected and why
-- All required content IDs you must resolve (article IDs, category IDs)
-- All guardrails that apply to this design
-- Missing information that blocks proceeding
+- Which patterns you selected, and why each fits this brief
+- Every content ID you must resolve first (article IDs, category IDs) — look
+  them up with `joomla_article(action: "list")` / `joomla_category(action: "list")`
+- Which guardrails from those patterns apply to this design
+- Anything the brief leaves unanswered
 
-**Do not proceed until all missing_information items are resolved.**
+**Do not proceed until every open question is resolved.** Guessing an article ID
+or a section's purpose produces a layout that has to be rebuilt.
 
 ---
 
 ### Step 3 — Look at similar sites for proven examples
 
 ```
-gantry_homepage_examples(site_type: "parish")
+gantry_reference(topic: "homepage_examples", site_type: "parish")
 ```
 
 Find a site whose layout resembles what you're building. Fetch it with `include_decompiled: true` to get a working design YAML as a starting point:
 
 ```
-gantry_homepage_examples(slug: "stchris-speed", include_decompiled: true)
+gantry_reference(topic: "homepage_examples", slug: "stchris-speed", include_decompiled: true)
 ```
 
 **Use the decompiled YAML as your starting point** — adapt the context variables, not the structure, unless the brief explicitly differs.
@@ -100,8 +101,8 @@ joomla_list_articles(site: "...", ...)  → find article IDs
 If you are modifying an existing outline rather than building from scratch:
 
 ```
-gantry_explain_existing_section(site: "...", outline: "...", section: "slideshow")
-gantry_explain_existing_section(site: "...", outline: "...", section: "utility")
+gantry_section(action: "explain", site: "...", outline: "...", section: "slideshow")
+gantry_section(action: "explain", site: "...", outline: "...", section: "utility")
 ```
 
 Read the explanations before touching anything. Understand what each particle does, where its content comes from, and what guardrails protect it.
@@ -129,7 +130,7 @@ Write your design YAML using:
 ### Step 7 — Validate the design contract
 
 ```
-gantry_validate_design_contract(design_yaml: "...")
+gantry_design(action: "validate", design_yaml: "...")
 ```
 
 Fix all `errors` before proceeding. Review all `warnings`. Do not apply a layout with validation errors.
@@ -139,7 +140,7 @@ Fix all `errors` before proceeding. Review all `warnings`. Do not apply a layout
 ### Step 8 — Dry run the compiler
 
 ```
-gantry_layout_design(site: "...", outline: "...", design_yaml: "...", dryRun: true)
+gantry_design(action: "compile", site: "...", outline: "...", design_yaml: "...", dryRun: true)
 ```
 
 Check `treeSummary` to confirm the section structure matches what you intended. Check `warnings` from the compiler. Fix any issues.
@@ -149,7 +150,7 @@ Check `treeSummary` to confirm the section structure matches what you intended. 
 ### Step 9 — Apply
 
 ```
-gantry_layout_design(site: "...", outline: "...", design_yaml: "...")
+gantry_design(action: "compile", site: "...", outline: "...", design_yaml: "...")
 ```
 
 Confirm `applied: true` and `verified: true` in the response.
@@ -164,10 +165,10 @@ Fetch the homepage and check each section:
 joomla_get_frontend_page(site: "...", path: "/")
 ```
 
-Or use `gantry_particle_html` to fetch the rendered HTML of specific particles:
+Or use `gantry_particle{action:"html"}` to fetch the rendered HTML of specific particles:
 
 ```
-gantry_particle_html(site: "...", outline: "...", id: "...", page_url: "/")
+gantry_particle(action: "html", site: "...", outline: "...", id: "...", page_url: "/")
 ```
 
 For each major section, confirm:
@@ -232,4 +233,4 @@ Do not: [e.g. "no clickable hero slides", "no pagination on news", etc.]
 | Parish mission | parish-mission | contentarray | parish-mission-wrapper |
 | Footer | footer-shell | contentarray | (blank) |
 
-For full details on any pattern, call `gantry_design_patterns(name: "pattern-name")`.
+For full details on any pattern, call `gantry_reference(topic: "patterns", name: "pattern-name")`.

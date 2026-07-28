@@ -12,7 +12,7 @@ Particle schemas live in:
 apps/gantry-mcp/particles/
 ```
 
-The `gantry_particle_catalog` tool reads those YAML files directly. If a particle setting appears in exported layouts, it should be represented in the matching YAML file so future designs can build it intentionally.
+The `gantry_reference{topic:"particles"}` tool reads those YAML files directly. If a particle setting appears in exported layouts, it should be represented in the matching YAML file so future designs can build it intentionally.
 
 Fleet inventory sources checked:
 
@@ -28,7 +28,7 @@ Fleet inventory sources checked:
 
 ### Adding Particles to Empty Sections (Bug — needs dev fix)
 
-`gantry_layout_add` crashes with `Cannot read properties of undefined (reading 'push')` when targeting any section that has no existing particles. Empty sections have no `children` key in the layout JSON, and the tool tries to call `.push()` on `undefined`.
+`gantry_particle{action:"add"}` crashes with `Cannot read properties of undefined (reading 'push')` when targeting any section that has no existing particles. Empty sections have no `children` key in the layout JSON, and the tool tries to call `.push()` on `undefined`.
 
 **Affected sections:** `above`, `feature`, `showcase`, `sidebar`, `mainbar`, `aside`, `expanded`, `extension` — any section with zero particles on a fresh or cleared outline.
 
@@ -36,7 +36,7 @@ Fleet inventory sources checked:
 
 1. Export the current layout:
    ```
-   gantry_layout_export(site: "...", outline: "33")
+   gantry_layout(action: "export", site: "...", outline: "33")
    ```
 
 2. In the exported JSON, find the empty section node. It will look like:
@@ -95,26 +95,26 @@ Fleet inventory sources checked:
 
 5. Import the full modified layout:
    ```
-   gantry_layout_import(site: "...", outline: "33", layout: [...full patched array...], dryRun: true)
+   gantry_layout(action: "import", site: "...", outline: "33", layout: [...full patched array...], dryRun: true)
    ```
    Verify the diff shows only your new particle as added and nothing else changed. Then remove `dryRun` to save.
 
 6. After import, verify the particle is visible:
    ```
-   gantry_layout_list(site: "...", outline: "33", editable: true)
+   gantry_layout(action: "list", site: "...", outline: "33", editable: true)
    ```
-   Your new particle ID should appear. Use that confirmed ID for any subsequent `gantry_layout_edit` calls.
+   Your new particle ID should appear. Use that confirmed ID for any subsequent `gantry_particle{action:"edit"}` calls.
 
 ---
 
 ### Editing Particles — ID Resolution Rules
 
-`gantry_layout_edit` only resolves particles from the **editable (non-inherited) set**. Two things cause "Particle X not found":
+`gantry_particle{action:"edit"}` only resolves particles from the **editable (non-inherited) set**. Two things cause "Particle X not found":
 
 1. **The particle is inherited** from a parent outline — edit it on the source outline instead (usually Base Outline `default`).
-2. **The particle was just created** and the layout state hasn't refreshed — call `gantry_layout_list(editable: true)` first, confirm the ID appears, then call `gantry_layout_edit`.
+2. **The particle was just created** and the layout state hasn't refreshed — call `gantry_layout(action: "list", editable: true)` first, confirm the ID appears, then call `gantry_particle{action:"edit"}`.
 
-Always use IDs returned by `gantry_layout_list(editable: true)` as the source of truth before editing. Never assume an ID is resolvable just because it appears in `gantry_layout_tree` — inherited particles appear in the tree but not in the editable list.
+Always use IDs returned by `gantry_layout(action: "list", editable: true)` as the source of truth before editing. Never assume an ID is resolvable just because it appears in `gantry_layout{action:"tree"}` — inherited particles appear in the tree but not in the editable list.
 
 ---
 
@@ -128,7 +128,7 @@ Most particles render inside:
 
 Use the custom block class on `.g-block` as the primary CSS anchor.
 
-If a particle has no unique block class, `gantry_particle_html` may not be able to isolate it from the frontend HTML. For those particles, either inspect the full page DOM or temporarily assign a unique block class on a test outline.
+If a particle has no unique block class, `gantry_particle{action:"html"}` may not be able to isolate it from the frontend HTML. For those particles, either inspect the full page DOM or temporarily assign a unique block class on a test outline.
 
 ---
 
@@ -312,7 +312,7 @@ Settings:
 
 - `enabled`
 
-Usually inherited in `offcanvas`. It often has no unique block class and may not be locatable by `gantry_particle_html` without a temporary test class.
+Usually inherited in `offcanvas`. It often has no unique block class and may not be locatable by `gantry_particle{action:"html"}` without a temporary test class.
 
 ### position and module positions
 
@@ -407,8 +407,8 @@ Use when the video should be managed as a Gantry particle. Use contentarray when
 
 Before adding a particle to a section:
 
-1. Call `gantry_particle_catalog(subtype: "...")`.
+1. Call `gantry_reference(topic: "particles", subtype: "...")`.
 2. Use a block class on the `.g-block` for any particle that needs CSS.
 3. Dry-run the section/layout apply.
-4. After applying on a test outline, call `gantry_particle_html` for the new particle ID.
+4. After applying on a test outline, call `gantry_particle{action:"html"}` for the new particle ID.
 5. Write CSS from the rendered HTML, not from guessed particle internals.

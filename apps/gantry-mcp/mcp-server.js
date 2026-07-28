@@ -12,9 +12,19 @@
  * login cost each time.
  */
 
-// Load .env from the same directory as this script — MCP clients spawn this
-// process from arbitrary cwds, so relying on the default `./.env` lookup fails.
-require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+// Layered env loading — see @solutio/env. MCP clients spawn this process from
+// arbitrary cwds, so resolution starts at __dirname, never `./`. Precedence:
+//
+//   real environment (deployment secrets)  >  apps/gantry-mcp/.env  >  <repo root>/.env
+//
+// The admin credential is the suite-wide JOOMLA_USERNAME/JOOMLA_PASSWORD pair
+// that joomla-mcp and ftp-mcp also use; apps/gantry-mcp/.env is only needed for
+// per-server overrides.
+require('@solutio/env').loadEnv({
+  from: __dirname,
+  label: 'gantry-mcp',
+  required: ['JOOMLA_USERNAME', 'JOOMLA_PASSWORD'],
+});
 
 const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
 const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
@@ -259,7 +269,15 @@ function shouldSyncSharedPageSettings(args, edits) {
   return Object.keys(edits || {}).some((name) => name.startsWith('page[head]') || name.startsWith('page[assets]'));
 }
 
-const TOOLS = [
+/*
+ * Internal handler registry.
+ *
+ * These are NOT exposed to agents. Each entry stays exactly as written — the
+ * Gantry logic is the valuable part and is deliberately untouched — and the
+ * consolidation layer at the bottom of this file routes to them by name. That
+ * keeps the agent-facing surface small without rewriting 60+ handler bodies.
+ */
+const LEGACY_TOOLS = [
   /* Outlines */
   {
     name: 'gantry_outline_conventions',
@@ -2420,7 +2438,9 @@ const TOOLS = [
 
       if (!input) {
         if (!args.outline) throw new Error('Either outline or blueprint must be provided');
-        const ctx = await getCtx(args.site, args.theme || '');
+        // getCtx takes the whole args object (it reads .site/.theme/.user/.pass).
+        // Passing positional args made site undefined -> "Missing required argument: site".
+        const ctx = await getCtx(args);
         const layout = await layoutApi.fetchSavedLayout(ctx, args.outline);
         input = layout;
       }
@@ -3055,18 +3075,555 @@ const TOOLS = [
 ];
 
 
-/* Tool aliases for gantry_page_asset_files_edit.
- * Agents often guess names like gantry_add_css_asset or gantry_link_css_file.
- * These aliases forward to the same handler so either name works.
+/* ─────────────────────────── consolidated surface ───────────────────────────
+ *
+ * Nine action-dispatch tools replace the 60+ single-purpose ones above, mirroring
+ * the joomla-mcp convention (`joomla_article { action: list|get|create|… }`).
+ * The old surface cost ~15.7k tokens of schema for a domain far smaller than
+ * Joomla's, and its near-synonymous names (layout_edit vs particle_direct_edit
+ * vs find_and_edit) made tool *selection* the main failure mode.
+ *
+ * Each handler below routes to a LEGACY_TOOLS entry by name; no Gantry logic is
+ * reimplemented here.
  */
-['gantry_add_css_asset', 'gantry_link_css_file', 'gantry_page_assets_edit'].forEach((alias) => {
-  TOOLS.push({
-    name: alias,
-    description: "Alias for gantry_page_asset_files_edit. Add, remove, or edit CSS/JS asset rows in a Gantry outline's Page Settings. Accepts the same arguments as gantry_page_asset_files_edit.",
-    schema: TOOLS.find((t) => t.name === 'gantry_page_asset_files_edit').schema,
-    handler: TOOLS.find((t) => t.name === 'gantry_page_asset_files_edit').handler,
-  });
-});
+
+const LEGACY_BY_NAME = new Map(LEGACY_TOOLS.map((t) => [t.name, t]));
+
+function callLegacy(name, args) {
+  const tool = LEGACY_BY_NAME.get(name);
+  if (!tool) throw new Error(`internal routing error: no handler named "${name}"`);
+  return tool.handler(args);
+}
+
+/**
+ * Build a handler that routes on a discriminator argument. Most tools key off
+ * `action`; gantry_reference keys off `topic`, so the field name is a parameter
+ * rather than hardcoded.
+ */
+function dispatch(toolName, map, key = 'action') {
+  const actions = Object.keys(map);
+  return async (args = {}) => {
+    const action = args[key];
+    if (!action) {
+      throw new Error(`${toolName}: "${key}" is required. Valid values: ${actions.join(', ')}`);
+    }
+    const target = map[action];
+    if (!target) {
+      throw new Error(
+        `${toolName}: unknown ${key} "${action}". Valid values: ${actions.join(', ')}`
+      );
+    }
+    return typeof target === 'function' ? target(args) : callLegacy(target, args);
+  };
+}
+
+const ACTION = (desc, values) => ({ type: 'string', enum: values, description: desc });
+
+const TOOLS = [
+  /* ── reference ──────────────────────────────────────────────────────────── */
+  {
+    name: 'gantry_reference',
+    description:
+      'Gantry design knowledge base — no site access, safe to call freely. ' +
+      'topic: conventions (Solutio outline/subsite rules — read before creating, ' +
+      'duplicating or assigning outlines) | particles (attribute schemas, block ' +
+      'classes, worked examples) | patterns (named section patterns and when to use ' +
+      'them) | section_templates (ready-made section YAML starters) | ' +
+      'homepage_examples (captured #Home outlines from real parish sites).',
+    schema: {
+      type: 'object',
+      properties: {
+        topic: ACTION('Which reference to return.', [
+          'conventions', 'particles', 'patterns', 'section_templates', 'homepage_examples',
+        ]),
+        section: { type: 'string', enum: ['full', 'primary', 'subsite', 'clone', 'page_settings', 'workflow', 'checklist'], description: 'conventions: focused part of the reference. Default full.' },
+        subtype: { type: 'string', description: 'particles: one subtype (e.g. "blockcontent"). Omit for the full catalog.' },
+        name:    { type: 'string', description: 'patterns/section_templates: fetch one by name. Omit to list.' },
+        site_type: { type: 'string', enum: ['parish', 'school', 'cemetery'], description: 'patterns/homepage_examples: filter the listing.' },
+        slug:    { type: 'string', description: 'homepage_examples: site slug to fetch (e.g. "stlaw-alex"). Omit to list.' },
+        outline_type: { type: 'string', enum: ['home', 'school_home'], description: 'homepage_examples: which outline. Default home.' },
+        has_school: { type: 'boolean', description: 'homepage_examples: only sites with a school home outline.' },
+        search_block_class: { type: 'string', description: 'homepage_examples: only sites whose home outline uses this block class.' },
+        include_decompiled: { type: 'boolean', description: 'homepage_examples: also return the blueprint as design YAML. Default false.' },
+        include_blueprint: { type: 'boolean', description: 'homepage_examples: also return raw blueprint JSON. Large. Default false.' },
+      },
+      required: ['topic'],
+    },
+    handler: dispatch(
+      'gantry_reference',
+      {
+        conventions:       'gantry_outline_conventions',
+        particles:         'gantry_particle_catalog',
+        patterns:          'gantry_design_patterns',
+        section_templates: 'gantry_section_templates',
+        homepage_examples: 'gantry_homepage_examples',
+      },
+      'topic'
+    ),
+  },
+
+  /* ── outlines ───────────────────────────────────────────────────────────── */
+  {
+    name: 'gantry_outline',
+    description:
+      'Manage Gantry outlines (configurations). ' +
+      'action: list | resolve (name/title -> id) | for_page (which outline serves a ' +
+      'frontend URL — call this before editing a page) | duplicate | delete | ' +
+      'strip_prefix (drop generated "Studius - " title prefixes) | assignments ' +
+      '(read or set which menu items use an outline). ' +
+      'Read gantry_reference{topic:"conventions"} before creating or assigning outlines.',
+    schema: {
+      type: 'object',
+      properties: {
+        action: ACTION('Operation to perform.', [
+          'list', 'resolve', 'for_page', 'duplicate', 'delete', 'strip_prefix', 'assignments',
+        ]),
+        ...SITE_THEME_FIELDS,
+        ref:      { type: 'string', description: 'resolve: outline id, title, or "#Title".' },
+        path:     { type: 'string', description: 'for_page: frontend path ("/", "/about-us") or full URL.' },
+        sourceId: { type: 'string', description: 'duplicate: outline id to copy from.' },
+        title:    { type: 'string', description: 'duplicate: title for the new outline.' },
+        inherit:  { type: 'boolean', description: 'duplicate: false deep-clones children instead of inheriting.' },
+        prefix:   { type: 'string', description: 'strip_prefix: prefix to remove. Default "Studius - ".' },
+        id:       { type: 'string', description: 'delete: outline id.' },
+        ids:      { type: 'array', items: { type: 'string' }, description: 'delete: several outline ids at once.' },
+        ...OUTLINE_FIELD,
+        edits:    { type: 'object', additionalProperties: true, description: 'assignments: field -> value map to save. Omit to read.' },
+        dryRun:   { type: 'boolean', description: 'Validate and report without saving.' },
+      },
+      required: ['site', 'action'],
+    },
+    handler: dispatch('gantry_outline', {
+      list:         'gantry_outlines_list',
+      resolve:      'gantry_outline_resolve',
+      for_page:     'gantry_get_outline_for_page',
+      duplicate:    'gantry_outlines_duplicate',
+      delete:       'gantry_outlines_delete',
+      strip_prefix: 'gantry_outlines_strip_theme_prefix',
+      assignments:  'gantry_outline_assignments',
+    }),
+  },
+
+  /* ── whole-layout ───────────────────────────────────────────────────────── */
+  {
+    name: 'gantry_layout',
+    description:
+      'Read or bulk-manage an outline\'s whole layout. ' +
+      'action: tree (nested structure) | list (flat particle list) | sections (valid ' +
+      'section ids) | export | import | presets | load_preset | copy_from | clear | ' +
+      'backups | undo. ' +
+      'For editing individual particles or sections use gantry_particle / gantry_section — ' +
+      'they are the normal editing path and are far safer than replacing a whole layout. ' +
+      'Every mutating action here is auto-backed-up and supports dryRun.',
+    schema: {
+      type: 'object',
+      properties: {
+        action: ACTION('Operation to perform.', [
+          'tree', 'list', 'sections', 'export', 'import', 'presets',
+          'load_preset', 'copy_from', 'clear', 'backups', 'undo',
+        ]),
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        editable:      { type: 'boolean', description: 'list: only editable nodes.' },
+        includeBlocks: { type: 'boolean', description: 'list: include block wrappers.' },
+        layout:        { type: 'object', additionalProperties: true, description: 'import: previously-exported layout structure.' },
+        preset:        { type: 'string', description: 'load_preset: preset name from action "presets".' },
+        from:          { type: 'string', description: 'copy_from: source outline.' },
+        to:            { type: 'string', description: 'copy_from: target outline.' },
+        local:         { type: 'boolean', description: 'copy_from: true clones as a fully local copy, clearing inheritance. Default false (keeps inheritance).' },
+        mode:          { type: 'string', enum: ['full', 'keep-inheritance'], description: 'clear: "full" empties everything; "keep-inheritance" preserves inherited nodes.' },
+        dryRun:        { type: 'boolean', description: 'Validate and report without saving.' },
+      },
+      required: ['site', 'action'],
+    },
+    handler: dispatch('gantry_layout', {
+      tree:        'gantry_layout_tree',
+      list:        'gantry_layout_list',
+      sections:    'gantry_layout_sections',
+      export:      'gantry_layout_export',
+      import:      'gantry_layout_import',
+      presets:     'gantry_layout_presets',
+      load_preset: 'gantry_layout_load_preset',
+      clear:       'gantry_layout_clear',
+      backups:     'gantry_layout_backups_list',
+      undo:        'gantry_layout_undo',
+      // Two legacy tools differed only in whether inheritance survived the copy.
+      copy_from: (a) =>
+        callLegacy(a.local ? 'gantry_layout_clone_all_from' : 'gantry_layout_copy_from', a),
+    }),
+  },
+
+  /* ── particles ──────────────────────────────────────────────────────────── */
+  {
+    name: 'gantry_particle',
+    description:
+      'Work with individual particles — the primary editing path for layout content. ' +
+      'action: find | inspect | add | edit | move | remove | block_edit (wrapper CSS ' +
+      'class) | repeater_item (one item in an array attribute, e.g. a single slide) | ' +
+      'repeater_replace (whole array) | html (rendered frontend HTML for visual QA). ' +
+      'For "edit", prefer `attributes` (deep-merged, most reliable); use `edits` only ' +
+      'for raw form-field names. Omit `id` and pass filters (section/title/subtype/type) ' +
+      'to edit every matching particle in one atomic save.',
+    schema: {
+      type: 'object',
+      properties: {
+        action: ACTION('Operation to perform.', [
+          'find', 'inspect', 'add', 'edit', 'move', 'remove',
+          'block_edit', 'repeater_item', 'repeater_replace', 'html',
+        ]),
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        id:  { type: 'string', description: 'Particle id. Required for inspect/move/block_edit/repeater_*/html; for edit/remove, omit to act on filter matches.' },
+        ids: { type: 'array', items: { type: 'string' }, description: 'remove: several particle ids at once.' },
+        section: { type: 'string', description: 'find/edit: filter by containing section id.' },
+        title:   { type: 'string', description: 'find/edit: filter by title. add: title for the new particle.' },
+        subtype: { type: 'string', description: 'add: particle subtype (required). find/edit: filter by subtype.' },
+        type:    { type: 'string', description: 'add: node type (particle/position/spacer/system). find/edit: filter by type.' },
+        to:      { type: 'string', description: 'add/move: target section id.' },
+        nextTo:  { type: 'string', description: 'add/move: place beside this particle id instead of appending.' },
+        size:    { type: 'number', description: 'add: block width percentage.' },
+        mode:    { type: 'string', description: 'add: placement mode.' },
+        attributes: { type: 'object', additionalProperties: true, description: 'edit: settings object, deep-merged into the particle. Preferred over `edits`.' },
+        blockClass: { type: 'string', description: 'edit: CSS class for the wrapping block.' },
+        edits:   { type: 'object', additionalProperties: true, description: 'edit: raw form-field name -> value map (e.g. {"particle[title]":"Hi"}). Use `attributes` unless you need raw field names.' },
+        attrs:   { type: 'object', additionalProperties: true, description: 'block_edit: block attributes, e.g. {"class":"g-offset-20"}.' },
+        repeaterPath: { type: 'string', description: 'repeater_*: path to the array attribute (e.g. "subcontents").' },
+        index:   { type: 'number', description: 'repeater_item: zero-based index of the item to patch.' },
+        patch:   { type: 'object', additionalProperties: true, description: 'repeater_item: fields to merge into that item.' },
+        newArray: { type: 'array', items: { type: 'object', additionalProperties: true }, description: 'repeater_replace: the full replacement array.' },
+        page_url: { type: 'string', description: 'html: frontend URL to render (required). edit: optional URL to re-render after saving.' },
+        return_html: { type: 'boolean', description: 'edit: return rendered HTML after saving, for visual QA.' },
+        dryRun:  { type: 'boolean', description: 'Validate and report without saving.' },
+      },
+      required: ['site', 'action'],
+    },
+    handler: dispatch('gantry_particle', {
+      find:             'gantry_particle_find',
+      inspect:          'gantry_particle_inspect',
+      add:              'gantry_layout_add',
+      move:             'gantry_layout_move',
+      remove:           'gantry_layout_remove',
+      block_edit:       'gantry_block_edit',
+      repeater_item:    'gantry_particle_update_repeater_item',
+      repeater_replace: 'gantry_particle_replace_repeater',
+      html:             'gantry_particle_html',
+      // Three legacy edit paths collapse here. Targeting by filter wins over id;
+      // otherwise `attributes` (deep-merge) is preferred and `edits` is the
+      // raw-form-field escape hatch.
+      edit: (a) => {
+        const hasFilter = !a.id && (a.section || a.title || a.subtype || a.type);
+        if (hasFilter) {
+          if (!a.edits) {
+            throw new Error(
+              'gantry_particle edit: filter-based editing uses raw form fields — pass `edits`. ' +
+                'To use `attributes`, target a single particle with `id`.'
+            );
+          }
+          return callLegacy('gantry_find_and_edit', a);
+        }
+        if (!a.id) {
+          throw new Error(
+            'gantry_particle edit: pass `id` for a single particle, or filters ' +
+              '(section/title/subtype/type) with `edits` to update every match.'
+          );
+        }
+        if (a.attributes || a.blockClass !== undefined) return callLegacy('gantry_particle_direct_edit', a);
+        if (a.edits) return callLegacy('gantry_layout_edit', a);
+        throw new Error('gantry_particle edit: pass `attributes` (preferred), `blockClass`, or `edits`.');
+      },
+    }),
+  },
+
+  /* ── sections ───────────────────────────────────────────────────────────── */
+  {
+    name: 'gantry_section',
+    description:
+      'Work on one layout section at a time — the preferred way to build or rebuild a ' +
+      'page, since it leaves every other section untouched. ' +
+      'action: apply (write a section design YAML into a live section) | edit (section ' +
+      'attributes such as boxed/class) | explain (plain-English account of a live ' +
+      'section) | inherit (make a section inherit from another outline) | unlink (break ' +
+      'inheritance) | clone_from (copy sections from another outline). ' +
+      'Base-outline sections (navigation, bottom, footer, copyright, offcanvas) are ' +
+      'auto-routed to the default outline on apply.',
+    schema: {
+      type: 'object',
+      properties: {
+        action: ACTION('Operation to perform.', [
+          'apply', 'edit', 'explain', 'inherit', 'unlink', 'clone_from',
+        ]),
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        section:      { type: 'string', description: 'apply/explain: section id (e.g. "slideshow", "utility").' },
+        section_yaml: { type: 'string', description: 'apply: YAML for the section — id, optional attributes.class, and grids.' },
+        mode:         { type: 'string', enum: ['replace', 'merge', 'clear'], description: 'apply: replace (default) swaps particles, merge appends, clear empties the section.' },
+        update_section_class: { type: 'boolean', description: 'apply: also set the section CSS class from attributes.class. Default true.' },
+        context:      { type: 'object', additionalProperties: true, description: 'apply: values substituted into the YAML (e.g. {"mass_times_article_id":"55"}).' },
+        id:           { type: 'string', description: 'edit/inherit/unlink: section id. clone_from: single node id to copy.' },
+        attrs:        { type: 'object', additionalProperties: true, description: 'edit: section attributes (boxed, class, variations…).' },
+        from:         { type: 'string', description: 'inherit/clone_from: source outline.' },
+        to:           { type: 'string', description: 'clone_from: target outline.' },
+        include:      { type: 'array', items: { type: 'string' }, description: 'inherit: which parts to inherit (children, attributes, block).' },
+        ids:          { type: 'array', items: { type: 'string' }, description: 'clone_from: several node ids at once.' },
+        dryRun:       { type: 'boolean', description: 'Validate and report without saving.' },
+      },
+      required: ['site', 'action'],
+    },
+    handler: dispatch('gantry_section', {
+      apply:      'gantry_section_apply',
+      edit:       'gantry_layout_section_edit',
+      explain:    'gantry_explain_existing_section',
+      inherit:    'gantry_layout_section_inherit',
+      unlink:     'gantry_layout_section_clone',
+      clone_from: 'gantry_layout_sections_clone_from',
+    }),
+  },
+
+  /* ── page settings ──────────────────────────────────────────────────────── */
+  {
+    name: 'gantry_page',
+    description:
+      "Read and edit a Gantry outline's Page Settings. " +
+      'action: list | breakdown (parsed into Head/Assets/Body/Font Awesome) | edit (raw ' +
+      'field map) | head (custom head content and meta tags) | body (body id/classes, ' +
+      'after-<body>, tag attributes) | icons (favicon, touch icon) | assets (CSS/JS ' +
+      'rows — the right place to link a stylesheet) | copy_from | head_defaults (ensure ' +
+      'managed Solutio startup image/manifest block) | restore_inheritance (repair a ' +
+      'primary outline that lost its inherited settings).',
+    schema: {
+      type: 'object',
+      properties: {
+        action: ACTION('Operation to perform.', [
+          'list', 'breakdown', 'edit', 'head', 'body', 'icons', 'assets',
+          'copy_from', 'head_defaults', 'restore_inheritance',
+        ]),
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        all:   { type: 'boolean', description: 'list: include every field, not just those with values.' },
+        edits: { type: 'object', additionalProperties: true, description: 'edit: raw field map, e.g. {"page[body][attribs][class]":"site-sub"}.' },
+        customContent: { type: 'string', description: 'head: custom head content (page[head][head_bottom]).' },
+        metaActions:   { type: 'array', items: { type: 'object', additionalProperties: true }, description: 'head: add/remove/update individual meta tags.' },
+        ensureSiteDefaults:   { type: 'boolean', description: 'head: also apply the managed Solutio defaults block.' },
+        preserveSiteDefaults: { type: 'boolean', description: 'head: keep an existing managed block when replacing custom content.' },
+        siteDefaults:  { type: 'object', additionalProperties: true, description: 'head/head_defaults: override the managed default values.' },
+        favicon:   { type: 'string', description: 'icons: favicon path (e.g. gantry-media://…).' },
+        touchicon: { type: 'string', description: 'icons: touch icon path.' },
+        cssActions:        { type: 'array', items: { type: 'object', additionalProperties: true }, description: 'assets: add/remove/edit CSS rows.' },
+        javascriptActions: { type: 'array', items: { type: 'object', additionalProperties: true }, description: 'assets: add/remove/edit JS rows.' },
+        bodyId:      { type: 'string', description: 'body: Body Id.' },
+        bodyClasses: { type: 'string', description: 'body: Body Classes. copy_from: override classes on the target.' },
+        sectionsLayout: { type: 'string', description: 'body: Sections Layout.' },
+        afterBody:   { type: 'string', description: 'body: markup injected after <body>.' },
+        beforeBody:  { type: 'string', description: 'body: markup injected before </body>.' },
+        tagAttributeActions: { type: 'array', items: { type: 'object', additionalProperties: true }, description: 'body: add/remove/update body tag attributes.' },
+        from: { type: 'string', description: 'copy_from: source outline.' },
+        to:   { type: 'string', description: 'copy_from: target outline.' },
+        preset:     { type: 'string', description: 'copy_from: named field preset to copy.' },
+        forceLocal: { type: 'boolean', description: 'copy_from: write values locally instead of inheriting.' },
+        localFields: { type: 'array', items: { type: 'string' }, description: 'restore_inheritance: fields to keep local while restoring the rest.' },
+        syncSubsiteChildren: { type: 'boolean', description: 'head/head_defaults/icons/assets: also push to this outline\'s subsite children.' },
+        dryRun: { type: 'boolean', description: 'Validate and report without saving.' },
+      },
+      required: ['site', 'action'],
+    },
+    handler: dispatch('gantry_page', {
+      list:                'gantry_page_list',
+      breakdown:           'gantry_page_settings_breakdown',
+      edit:                'gantry_page_edit',
+      head:                'gantry_page_head_edit',
+      body:                'gantry_page_body_edit',
+      icons:               'gantry_page_asset_icons_edit',
+      assets:              'gantry_page_asset_files_edit',
+      copy_from:           'gantry_page_copy_from',
+      head_defaults:       'gantry_page_head_defaults_ensure',
+      restore_inheritance: 'gantry_primary_page_settings_restore',
+    }),
+  },
+
+  /* ── theme styles ───────────────────────────────────────────────────────── */
+  {
+    name: 'gantry_styles',
+    description:
+      'Read or edit theme style fields for an outline (colors, fonts, breakpoints). ' +
+      'action: list | edit. Edits are a flat field map, e.g. ' +
+      '{"styles[base][background]":"#fafafa"}.',
+    schema: {
+      type: 'object',
+      properties: {
+        action: ACTION('Operation to perform.', ['list', 'edit']),
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        edits: { type: 'object', additionalProperties: true, description: 'edit: style field -> value map.' },
+        syncSubsiteChildren: { type: 'boolean', description: 'edit: also push to subsite child outlines.' },
+      },
+      required: ['site', 'action'],
+    },
+    handler: dispatch('gantry_styles', {
+      list: 'gantry_styles_list',
+      edit: 'gantry_styles_edit',
+    }),
+  },
+
+  /* ── subsite scaffolding ────────────────────────────────────────────────── */
+  {
+    name: 'gantry_subsite',
+    description:
+      'End-to-end subsite outline scaffolding. ' +
+      'action: outline_setup (build the parent #<Subsite> Outline from the Base ' +
+      'Outline) | child_outline_setup (build one child — Home/Grid/Sponsors — ' +
+      'inheriting from the parent) | page_sync (push shared Head Properties and Assets ' +
+      'from the parent to its children). ' +
+      'Read gantry_reference{topic:"conventions", section:"subsite"} first.',
+    schema: {
+      type: 'object',
+      properties: {
+        action: ACTION('Operation to perform.', ['outline_setup', 'child_outline_setup', 'page_sync']),
+        ...SITE_THEME_FIELDS,
+        layoutSource: { type: 'string', description: 'outline_setup: outline to clone the layout from (usually the Base Outline).' },
+        pageSource:   { type: 'string', description: 'outline_setup: outline to copy Page Settings from.' },
+        target:       { type: 'string', description: 'outline_setup/child_outline_setup: outline being built.' },
+        bodyClasses:  { type: 'string', description: 'outline_setup: Body Classes for the new outline.' },
+        bodyId:       { type: 'string', description: 'outline_setup: Body Id for the new outline.' },
+        kind:         { type: 'string', description: 'child_outline_setup: which child (home, grid, sponsors).' },
+        source:       { type: 'string', description: 'child_outline_setup: layout source outline. page_sync: parent #<Subsite> Outline.' },
+        subsiteOutline: { type: 'string', description: 'child_outline_setup: the parent subsite outline to inherit sections from.' },
+        cloneIds:     { type: 'array', items: { type: 'string' }, description: 'child_outline_setup: sections to clone locally instead of inheriting.' },
+        inheritIds:   { type: 'array', items: { type: 'string' }, description: 'child_outline_setup: sections to inherit.' },
+        pagePreset:   { type: 'string', description: 'child_outline_setup: Page Settings preset to apply.' },
+        targets:      { type: 'array', items: { type: 'string' }, description: 'page_sync: child outlines to update. Omit for all children.' },
+        forceLocal:   { type: 'boolean', description: 'page_sync: write values locally rather than inheriting.' },
+        force:        { type: 'boolean', description: 'page_sync: overwrite existing local values.' },
+        dryRun:       { type: 'boolean', description: 'Validate and report without saving.' },
+      },
+      required: ['site', 'action'],
+    },
+    handler: dispatch('gantry_subsite', {
+      outline_setup:       'gantry_subsite_outline_setup',
+      child_outline_setup: 'gantry_subsite_child_outline_setup',
+      page_sync:           'gantry_subsite_page_shared_sync',
+    }),
+  },
+
+  /* ── whole-layout design YAML ───────────────────────────────────────────── */
+  {
+    name: 'gantry_design',
+    description:
+      'Whole-layout design YAML pipeline. Occasional use only — for normal work edit ' +
+      'one section at a time with gantry_section{action:"apply"} or one particle at a ' +
+      'time with gantry_particle, which cannot disturb the rest of the outline. ' +
+      'action: compile (apply a full design YAML to an outline — replaces every section ' +
+      'it names) | decompile (live outline or blueprint -> design YAML, for reading an ' +
+      'existing layout) | validate (check a design YAML against pattern contracts ' +
+      'without touching the site). Always compile with dryRun first.',
+    schema: {
+      type: 'object',
+      properties: {
+        action: ACTION('Operation to perform.', ['compile', 'decompile', 'validate']),
+        ...SITE_THEME_FIELDS,
+        ...OUTLINE_FIELD,
+        design_yaml: { type: 'string', description: 'compile/validate: the design YAML.' },
+        context:     { type: 'object', additionalProperties: true, description: 'compile: values substituted into the YAML (article/category ids).' },
+        blueprint:   { type: 'object', additionalProperties: true, description: 'decompile: a blueprint JSON to decompile instead of reading the live outline.' },
+        truncate_html: { type: 'boolean', description: 'decompile: shorten long HTML in custom particles. Default true.' },
+        max_html_len:  { type: 'number', description: 'decompile: cutoff for truncated HTML. Default 400.' },
+        pattern_name:  { type: 'string', description: 'validate: check against one named pattern.' },
+        dryRun:      { type: 'boolean', description: 'compile: validate and diff without saving. Use this first.' },
+      },
+      required: ['action'],
+    },
+    handler: dispatch('gantry_design', {
+      compile:   'gantry_layout_design',
+      decompile: 'gantry_layout_decompile',
+      validate:  'gantry_validate_design_contract',
+    }),
+  },
+];
+
+/*
+ * Old tool names -> what replaced them. These are deliberately NOT registered as
+ * tools (that would put the retired surface back into every agent's context);
+ * they only turn an "Unknown tool" dead end into a usable instruction.
+ */
+const RENAMED = {
+  gantry_outline_conventions: 'gantry_reference { topic: "conventions" }',
+  gantry_particle_catalog:    'gantry_reference { topic: "particles" }',
+  gantry_design_patterns:     'gantry_reference { topic: "patterns" }',
+  gantry_section_templates:   'gantry_reference { topic: "section_templates" }',
+  gantry_homepage_examples:   'gantry_reference { topic: "homepage_examples" }',
+
+  gantry_outlines_list:              'gantry_outline { action: "list" }',
+  gantry_outline_resolve:            'gantry_outline { action: "resolve" }',
+  gantry_get_outline_for_page:       'gantry_outline { action: "for_page" }',
+  gantry_outlines_duplicate:         'gantry_outline { action: "duplicate" }',
+  gantry_outlines_delete:            'gantry_outline { action: "delete" }',
+  gantry_outlines_strip_theme_prefix:'gantry_outline { action: "strip_prefix" }',
+  gantry_outline_assignments:        'gantry_outline { action: "assignments" }',
+
+  gantry_layout_tree:         'gantry_layout { action: "tree" }',
+  gantry_layout_list:         'gantry_layout { action: "list" }',
+  gantry_layout_sections:     'gantry_layout { action: "sections" }',
+  gantry_layout_export:       'gantry_layout { action: "export" }',
+  gantry_layout_import:       'gantry_layout { action: "import" }',
+  gantry_layout_presets:      'gantry_layout { action: "presets" }',
+  gantry_layout_load_preset:  'gantry_layout { action: "load_preset" }',
+  gantry_layout_clear:        'gantry_layout { action: "clear" }',
+  gantry_layout_backups_list: 'gantry_layout { action: "backups" }',
+  gantry_layout_undo:         'gantry_layout { action: "undo" }',
+  gantry_layout_copy_from:      'gantry_layout { action: "copy_from" }',
+  gantry_layout_clone_all_from: 'gantry_layout { action: "copy_from", local: true }',
+
+  gantry_particle_find:    'gantry_particle { action: "find" }',
+  gantry_particle_inspect: 'gantry_particle { action: "inspect" }',
+  gantry_layout_add:       'gantry_particle { action: "add" }',
+  gantry_layout_move:      'gantry_particle { action: "move" }',
+  gantry_layout_remove:    'gantry_particle { action: "remove" }',
+  gantry_block_edit:       'gantry_particle { action: "block_edit" }',
+  gantry_particle_html:    'gantry_particle { action: "html" }',
+  gantry_particle_update_repeater_item: 'gantry_particle { action: "repeater_item" }',
+  gantry_particle_replace_repeater:     'gantry_particle { action: "repeater_replace" }',
+  gantry_particle_direct_edit: 'gantry_particle { action: "edit", attributes: {…} }',
+  gantry_layout_edit:          'gantry_particle { action: "edit", edits: {…} }',
+  gantry_find_and_edit:        'gantry_particle { action: "edit" } with filters and no id',
+
+  gantry_section_apply:              'gantry_section { action: "apply" }',
+  gantry_layout_section_edit:        'gantry_section { action: "edit" }',
+  gantry_explain_existing_section:   'gantry_section { action: "explain" }',
+  gantry_layout_section_inherit:     'gantry_section { action: "inherit" }',
+  gantry_layout_section_clone:       'gantry_section { action: "unlink" }',
+  gantry_layout_sections_clone_from: 'gantry_section { action: "clone_from" }',
+
+  gantry_page_list:              'gantry_page { action: "list" }',
+  gantry_page_settings_breakdown:'gantry_page { action: "breakdown" }',
+  gantry_page_edit:              'gantry_page { action: "edit" }',
+  gantry_page_head_edit:         'gantry_page { action: "head" }',
+  gantry_page_body_edit:         'gantry_page { action: "body" }',
+  gantry_page_asset_icons_edit:  'gantry_page { action: "icons" }',
+  gantry_page_asset_files_edit:  'gantry_page { action: "assets" }',
+  gantry_page_copy_from:         'gantry_page { action: "copy_from" }',
+  gantry_page_head_defaults_ensure:    'gantry_page { action: "head_defaults" }',
+  gantry_primary_page_settings_restore:'gantry_page { action: "restore_inheritance" }',
+  gantry_add_css_asset:  'gantry_page { action: "assets" }',
+  gantry_link_css_file:  'gantry_page { action: "assets" }',
+  gantry_page_assets_edit:'gantry_page { action: "assets" }',
+
+  gantry_styles_list: 'gantry_styles { action: "list" }',
+  gantry_styles_edit: 'gantry_styles { action: "edit" }',
+
+  gantry_subsite_outline_setup:       'gantry_subsite { action: "outline_setup" }',
+  gantry_subsite_child_outline_setup: 'gantry_subsite { action: "child_outline_setup" }',
+  gantry_subsite_page_shared_sync:    'gantry_subsite { action: "page_sync" }',
+
+  gantry_layout_design:            'gantry_design { action: "compile" }',
+  gantry_layout_decompile:         'gantry_design { action: "decompile" }',
+  gantry_validate_design_contract: 'gantry_design { action: "validate" }',
+
+  // Removed outright: an LLM writes a better scaffold from a brief than these
+  // keyword-matching heuristics did.
+  gantry_layout_from_brief:
+    'removed — write the design YAML directly, using gantry_reference { topic: "patterns" | "section_templates" } for building blocks',
+  gantry_design_plan_from_brief:
+    'removed — plan directly from gantry_reference { topic: "patterns" }',
+};
 
 
 
@@ -3093,9 +3650,18 @@ function buildServer() {
     const tool = TOOLS.find((candidate) => candidate.name === toolName);
 
     if (!tool) {
+      // Retired names resolve to an instruction rather than a dead end.
+      const replacement = RENAMED[toolName];
       return {
         isError: true,
-        content: [{ type: 'text', text: 'Unknown tool: ' + toolName }],
+        content: [
+          {
+            type: 'text',
+            text: replacement
+              ? `${toolName} no longer exists. Use ${replacement}.`
+              : `Unknown tool: ${toolName}. Available: ${TOOLS.map((t) => t.name).join(', ')}`,
+          },
+        ],
       };
     }
 

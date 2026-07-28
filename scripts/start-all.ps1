@@ -9,7 +9,6 @@
 #   ftp-mcp       -> 9304
 #   knowledge-gateway-mcp -> 9306
 #   agents-mcp    -> 3506
-#   site-builder  -> 18303
 
 $root = Split-Path -Parent $PSScriptRoot
 
@@ -20,7 +19,6 @@ $freshdeskPort = 9303
 $ftpPort    = 9304
 $knowledgePort = 9306
 $agentsPort = 3506
-$siteBuilderPort = 18303
 
 function Start-McpService([string]$Title, [string]$Dir, [string]$Cmd) {
     $pArgs = @("-NoExit", "-Command", "& { `$host.UI.RawUI.WindowTitle = '$Title'; Set-Location '$Dir'; $Cmd }")
@@ -81,13 +79,9 @@ if (Wait-Port $agentsPort) { Write-Host " ready." } else { Write-Error "agents-m
 Write-Host "Starting orchestrator on port $orchPort..."
 Start-McpService "orchestrator :$orchPort" "$root\apps\orchestrator" "`$env:HTTP_PORT='$orchPort'; node orchestrator.js"
 
-Write-Host "Starting site-builder on port $siteBuilderPort..."
-Start-McpService "site-builder :$siteBuilderPort" "$root\apps\gantry-mcp" "`$env:SITE_BUILDER_PORT='$siteBuilderPort'; `$env:GANTRY_MCP_URL='http://127.0.0.1:$gantryPort/mcp'; `$env:JOOMLA_MCP_URL='http://127.0.0.1:$joomlaPort/mcp'; node site-builder-server.js"
-
 Write-Host ""
 Write-Host "All services running."
 Write-Host "  Orchestrator: http://localhost:$orchPort/mcp"
-Write-Host "  Site Builder: http://localhost:$siteBuilderPort"
 Write-Host ""
 Write-Host "Claude Desktop connects via mcp-remote -- no changes needed after first setup."
 Write-Host "Close the terminal windows to stop all services."

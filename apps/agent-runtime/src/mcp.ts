@@ -4,8 +4,8 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 /**
  * Per-user orchestrator MCP access. A FRESH client per call, mirroring the
  * orchestrator's own downstream policy (no stale connections, no shared
- * sessions between users). Adapted from apps/dashboard/server/mcp-client.js
- * with the per-user Authorization header added.
+ * sessions between users). Originally adapted from the retired apps/dashboard
+ * (superseded by this app), with the per-user Authorization header added.
  */
 
 export function orchestratorUrl(): string {
