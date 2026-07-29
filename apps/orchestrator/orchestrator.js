@@ -932,10 +932,30 @@ function buildServer(sessionCtx) {
     return sessionAgents.filter(n => visible.includes(n));
   }
 
+  // listChanged: this server's tool list is NOT static — switch_agent swaps the
+  // agent scope mid-session and reload_tools re-reads the downstream registry,
+  // both of which change what ListTools returns. Without advertising the
+  // capability (and sending the notification below) a client keeps the catalog
+  // it fetched at session start, so tools the current scope cannot call stay
+  // visible and only fail at CallTool.
   const server = new Server(
     { name: 'orchestrator', version: '1.0.0' },
-    { capabilities: { tools: {}, prompts: {} } }
+    { capabilities: { tools: { listChanged: true }, prompts: {} } }
   );
+
+  // Fire-and-forget: a client that did not negotiate the capability, or a
+  // transport with no open stream, must never turn a successful scope switch
+  // into a tool error.
+  function notifyToolListChanged(reason) {
+    try {
+      const r = server.sendToolListChanged();
+      if (r && typeof r.catch === 'function') {
+        r.catch(err => log(`tools/list_changed notify failed (${reason}): ${err?.message || err}`));
+      }
+    } catch (err) {
+      log(`tools/list_changed notify failed (${reason}): ${err?.message || err}`);
+    }
+  }
 
   // ── Prompts ──────────────────────────────────────────────────────────────────
   // Prompts are conversation starters. When a user says "I want to work on a
@@ -1444,7 +1464,9 @@ function buildServer(sessionCtx) {
       const counts = DOWNSTREAMS.map(d => `${d.label}: ${d.toolMap.size} tools`).join(', ');
       // Notify the client to re-fetch its tool list so newly loaded downstream
       // tools (joomla-mcp, gantry-mcp) become callable without a session restart.
-      try { server.notification({ method: 'notifications/tools/list_changed' }); } catch { /* best-effort */ }
+      // This only reaches the client because capabilities.tools.listChanged is
+      // declared at construction — without it the notification is dropped.
+      notifyToolListChanged('reload_tools');
       return {
         content: [{
           type: 'text',
@@ -1541,10 +1563,13 @@ function buildServer(sessionCtx) {
       currentAgent = targetAgent;
       agentDef     = targetDef;
       log(`session switched agent: ${user} → ${currentAgent}`);
+      // The scope just changed, so the ListTools result changed with it. Tell
+      // the client to re-fetch instead of asking the model to remember to.
+      notifyToolListChanged(`switch_agent → ${currentAgent}`);
       return {
         content: [{
           type: 'text',
-          text: `Switched to agent: **${currentAgent}**\n${agentDef.description || ''}\n\nCall ListTools to see the updated tool and doc set.`,
+          text: `Switched to agent: **${currentAgent}**\n${agentDef.description || ''}`,
         }],
       };
     }
@@ -1691,7 +1716,11 @@ function buildServer(sessionCtx) {
 // a per-session { user, agent } context passed to buildServer), CORS for browser
 // clients, and a downstream-tool warm-up before it starts listening.
 
-runServer({
+// Exported so tests can build a session server without opening a port, matching
+// the require.main guard the downstream apps (ftp-mcp, joomla-mcp, …) already use.
+module.exports = { buildServer };
+
+if (require.main === module) runServer({
   buildServer,
   serverInfo: { name: 'orchestrator', version: '1.0.0' },
   authenticate: (req) => resolveSessionContext(req.headers['authorization'] || ''),

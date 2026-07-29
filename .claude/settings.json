@@ -4,8 +4,6 @@
       "Bash(node -e \"const p=require\\('./apps/joomla-mcp/package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,1\\)\\)\")",
       "Bash(netstat -ano)",
       "mcp__orchestrator__ftp_list_files",
-      "Bash(rtk wc *)",
-      "Bash(cp /tmp/uploader.min.js \"/c/Users/Jeremy/AppData/Local/Temp/claude/c--Users-Jeremy-code-projects-joomla-mcp-suite/ec288344-4022-4c35-90cd-94f183a17fd0/scratchpad/uploader.min.js\" 2>&1 | tail -5; rtk ls -la \"/c/Users/Jeremy/AppData/Local/Temp/claude/c--Users-Jeremy-code-projects-joomla-mcp-suite/ec288344-4022-4c35-90cd-94f183a17fd0/scratchpad/\")",
       "Bash(node -e ' *)",
       "PowerShell(winget install --id Cloudflare.cloudflared --accept-source-agreements --accept-package-agreements)",
       "PowerShell(New-Item -ItemType Directory -Force \"$env:LOCALAPPDATA\\\\cloudflared\" | Out-Null; Invoke-WebRequest -Uri \"https://github.com/cloudflare/cloudflared/releases/download/2026.7.1/cloudflared-windows-amd64.exe\" -OutFile \"$env:LOCALAPPDATA\\\\cloudflared\\\\cloudflared.exe\"; & \"$env:LOCALAPPDATA\\\\cloudflared\\\\cloudflared.exe\" --version)",

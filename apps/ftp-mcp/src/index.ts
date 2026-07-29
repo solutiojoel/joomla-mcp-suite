@@ -55,7 +55,11 @@ const tools = [
   },
   {
     name: "ftp_upload_file",
-    description: "Upload text content to a file on the FTP server. Target path must be within upload_path if configured.",
+    description:
+      "Upload text content to a file on the FTP server. Target path must be within upload_path if configured. " +
+      "Returns the sha256 of the bytes written: when you assembled `content` from anything other than a direct copy, " +
+      "compare that hash against the local file (sha256sum / Get-FileHash) to confirm the WHOLE file round-tripped. " +
+      "Spot-checking a few lines of a whole-file write does not verify it.",
     inputSchema: {
       type: "object",
       properties: {
@@ -80,11 +84,14 @@ const tools = [
   },
   {
     name: "ftp_upload_local_file",
-    description: "Upload a local file to the FTP server. Supports any file type including images and PDFs.",
+    description:
+      "Upload a file from the FTP SERVER's OWN filesystem to the FTP server. Supports any file type including images and PDFs. " +
+      "Only usable when this server runs on the same machine as the caller — on a remote deployment the caller's paths do not exist here. " +
+      "For text use ftp_upload_file with inline content; for binaries use the Gateway Files bridge.",
     inputSchema: {
       type: "object",
       properties: {
-        local_path: { type: "string", description: "Absolute local file path (e.g. C:/Users/Jeremy/Desktop/photo.png)" },
+        local_path: { type: "string", description: "Absolute path on the ftp-mcp server's filesystem (NOT the caller's machine, unless they are the same host)" },
         path: { type: "string", description: "Absolute remote destination path" },
         domain: { type: "string", description: "Site domain. Defaults to active site's domain." },
       },
@@ -124,7 +131,18 @@ export function buildServer(): Server {
     { capabilities: { tools: {} } }
   );
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
+  // ftp_upload_local_file reads from THIS process's filesystem, so it only works
+  // when ftp-mcp is co-located with the caller. Remote deployments should set
+  // FTP_LOCAL_UPLOAD=0 to stop advertising a tool that can never succeed there —
+  // an advertised-but-uncallable tool costs a round trip and misdirects the
+  // caller into hand-reconstructing file contents. Opt-out rather than opt-in so
+  // existing local/self-hosted setups keep working untouched.
+  const localUploadEnabled = !/^(0|false|no)$/i.test(process.env.FTP_LOCAL_UPLOAD ?? "");
+  const visibleTools = localUploadEnabled
+    ? tools
+    : tools.filter(t => t.name !== "ftp_upload_local_file");
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: visibleTools }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name: string; arguments?: Record<string, unknown> } }) => {
     const { name, arguments: args } = request.params;
@@ -174,6 +192,18 @@ export function buildServer(): Server {
         }
 
         case "ftp_upload_local_file": {
+          if (!localUploadEnabled) {
+            return {
+              content: [{ type: "text", text: formatResult({
+                success: false,
+                message:
+                  "ftp_upload_local_file is disabled on this deployment (FTP_LOCAL_UPLOAD=0) because this server does not " +
+                  "share a filesystem with the caller. Use ftp_upload_file with inline content for text, or the Gateway " +
+                  "Files bridge for binaries.",
+              }) }],
+              isError: true,
+            };
+          }
           const localPath = args?.local_path as string;
           const ftpPath = args?.path as string;
           const result = await ftpClient.uploadLocalFile(localPath, ftpPath, domain);

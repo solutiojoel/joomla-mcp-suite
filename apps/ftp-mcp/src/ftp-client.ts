@@ -1,6 +1,8 @@
 import { Client, FileType } from "basic-ftp";
 import { Readable, Writable } from "stream";
+import crypto from "crypto";
 import fs from "fs";
+import os from "os";
 import path from "path";
 
 // Same shape joomla-mcp's JoomlaResponse had — kept structurally identical so
@@ -314,10 +316,22 @@ export class FtpClient {
         await client.uploadFrom(readable, remotePath);
       }
 
+      // sha256 of exactly the bytes written. Callers that built `content` by
+      // any lossy route (reconstructing a file from context rather than piping
+      // it) can compare this against a local `sha256sum` and know the whole
+      // file round-tripped — not just the lines they thought to spot-check.
+      const sha256 = crypto.createHash("sha256").update(buffer).digest("hex");
+
       return {
         success: true,
-        message: `Uploaded ${buffer.length} bytes to ${remotePath} on ${domain}`,
-        data: { path: remotePath, bytes: buffer.length, warnings },
+        message: `Uploaded ${buffer.length} bytes to ${remotePath} on ${domain} (sha256 ${sha256.slice(0, 12)}…)`,
+        data: {
+          path: remotePath,
+          bytes: buffer.length,
+          sha256,
+          verify_hint: "Compare against the local file: sha256sum <file> (or Get-FileHash -Algorithm SHA256 <file>). Equal hashes mean the whole file matches; a byte count alone does not.",
+          warnings,
+        },
       };
     } catch (err) {
       return { success: false, message: `FTP upload failed: ${err instanceof Error ? err.message : String(err)}` };
@@ -376,7 +390,22 @@ export class FtpClient {
 
   async uploadLocalFile(localPath: string, remotePath: string, domain: string): Promise<JoomlaResponse> {
     if (!fs.existsSync(localPath)) {
-      return { success: false, message: `Local file not found: ${localPath}` };
+      // `localPath` resolves on THIS process's filesystem. When ftp-mcp runs
+      // co-located with the caller (local dev, self-hosted) that is the same
+      // machine and this tool is the right one. When it runs remotely (the
+      // Replit deployment) the caller's paths do not exist here, and a bare
+      // "file not found" sends the caller hunting for a typo instead of
+      // reaching for the transfer route that actually works.
+      return {
+        success: false,
+        message:
+          `Local file not found: ${localPath}\n\n` +
+          `Note: local_path is resolved on the ftp-mcp server's filesystem (host ${os.hostname()}), ` +
+          `not the caller's. If this server is running remotely, the caller's local paths will never resolve here.\n` +
+          `Alternatives:\n` +
+          `  • Text/CSS/JS — use ftp_upload_file with the content inline, then verify the returned sha256 against the local file.\n` +
+          `  • Binaries (images, PDFs) — upload via the Gateway Files UI and use the resulting public URL.`,
+      };
     }
 
     const conn = await this.connect(domain, "write");
@@ -412,10 +441,11 @@ export class FtpClient {
       } else {
         await client.uploadFrom(localPath, remotePath);
       }
+      const sha256 = crypto.createHash("sha256").update(fs.readFileSync(localPath)).digest("hex");
       return {
         success: true,
-        message: `Uploaded ${stats.size} bytes from ${localPath} to ${remotePath} on ${domain}`,
-        data: { local_path: localPath, remote_path: remotePath, bytes: stats.size, warnings },
+        message: `Uploaded ${stats.size} bytes from ${localPath} to ${remotePath} on ${domain} (sha256 ${sha256.slice(0, 12)}…)`,
+        data: { local_path: localPath, remote_path: remotePath, bytes: stats.size, sha256, warnings },
       };
     } catch (err) {
       return { success: false, message: `FTP upload failed: ${err instanceof Error ? err.message : String(err)}` };
