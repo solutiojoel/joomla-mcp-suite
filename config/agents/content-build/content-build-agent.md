@@ -87,7 +87,7 @@ Call `read_agent_doc(doc: "<name>")` — the whole `kb/` folder is in scope (fea
 | Doc name | When to use |
 |----------|-------------|
 | `workflows/content-build-workflow` | Full content-build workflow — Phases 1–5, guardrails, checklist. Read before starting |
-| `workflows/improvements` | Shared team queue for process notes |
+| — | Process notes go to `knowledge_universal { action: "create", tags: ["improvements"] }` |
 | `kb/content-schematic-schema` | Schematic schema, node-key rules, status lifecycle, field ownership — read before Phase 1 |
 | `kb/content-standards` | House formatting/link/table rules the writer follows — read when reviewing drafts or hand-editing |
 | `kb/css-table-classes` | Table/button classes, fonts, colors |

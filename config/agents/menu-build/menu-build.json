@@ -31,7 +31,6 @@
   "docs": {
     "allow": [
       "workflows/menu-build-workflow",
-      "workflows/improvements",
       "kb/menu-spec-schema",
       "kb/content-schematic-schema",
       "kb/grid-layout",

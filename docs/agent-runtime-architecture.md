@@ -57,9 +57,9 @@ The MCP suite already has the *hands* (Joomla/Gantry/Freshdesk/FTP tool servers)
 | Tool | Purpose |
 |---|---|
 | `set_active_site` / `get_active_site` | Select/confirm the session's working site (auto-fires Joomla login) |
-| `get_site_notes` / `append_site_note` / `write_site_notes` | Per-site persistent facts + changelog (`docs/sites/<host>.md`) |
+| `get_site_notes` / `append_site_note` / `write_site_notes` | Per-site persistent facts (Knowledge Gateway `/client-knowledge` row tagged `host:<hostname>`) |
 | `get_current_agent` / `switch_agent` | Read/change the session's agent scope |
-| `get_agent_instructions` / `read_agent_doc` | Agent operating instructions and workflow/KB docs |
+| `get_agent_instructions` / `read_agent_doc` | Agent operating instructions (local `config/agents/`) and workflow/KB docs (Knowledge Gateway `doc:<name>` rows) |
 | `solutio_style_guide` / `solutio_particles` / `solutio_design_workflow` | Static house-convention references |
 | `gantry_css_asset_smoke_test` | Composite FTP→Gantry→live-page validation |
 | `reload_tools` / `gantry_reconnect` | Operational: refresh downstream tool maps / force Gantry re-auth |

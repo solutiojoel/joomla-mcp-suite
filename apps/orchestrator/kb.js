@@ -1,71 +1,41 @@
 'use strict';
 
 /**
- * KB accessor module — the only place that touches the docs filesystem.
+ * KB accessor module — access control for docs and agent instructions.
  *
- * Docs live under docs/workflows/ and docs/kb/ (and any other topic dirs added
- * under docs/ except docs/sites/, which is managed by get_site_notes).
+ * Docs live in the Knowledge Gateway, one /knowledge row per doc, keyed by an
+ * exact tag: doc:<name> (e.g. "doc:kb/staff-grid"). gateway-store.js owns that
+ * transport; this module owns the per-agent access rules on top of it.
  *
- * A doc's name is its path relative to docs/, without the .md extension:
- *   e.g. "workflows/editing-rules", "kb/user-accounts"
+ * A doc's name keeps the old folder-style shape so existing references and
+ * docs.allow patterns still read the same:
+ *   e.g. "workflows/menu-build-workflow", "kb/user-accounts"
  *
  * Agent docs.allow patterns support trailing-* wildcards, so you can grant
- * access by folder ("kb/*", "workflows/*") or by explicit name ("workflows/editing-rules").
+ * access by folder ("kb/*", "workflows/*") or by explicit name.
+ *
+ * Agent instruction files are NOT docs — they stay on disk under config/agents/,
+ * next to the scope rules they belong with, and readInstructions is sync.
  *
  * Exports:
- *   listDocs(agentDef)          → string[]        doc names visible to the agent
- *   readDoc(agentDef, name)     → string           throws with .code on error
- *   readInstructions(agentDef)  → string           agent instruction file
+ *   listDocs(agentDef)          → Promise<string[]> doc names visible to the agent
+ *   readDoc(agentDef, name)     → Promise<string>   throws with .code on error
+ *   readInstructions(agentDef)  → string            agent instruction file (sync)
  *   isToolAllowed(agentDef, toolName) → boolean
  *   isDocAllowed(agentDef, docName)   → boolean
  *
  * Error codes thrown by readDoc / readInstructions:
- *   'PERMISSION_DENIED'  — agent's docs.allow doesn't include this doc
- *   'NOT_FOUND'          — file not on disk
+ *   'PERMISSION_DENIED'    — agent's docs.allow doesn't include this doc
+ *   'NOT_FOUND'            — no gateway row carries that doc:<name> tag
+ *   'GATEWAY_UNAVAILABLE'  — gateway unreachable and no cached snapshot
  */
 
 const fs   = require('fs');
 const path = require('path');
 
-const DOCS_DIR          = path.join(__dirname, '..', '..', 'docs');
+const gatewayStore = require('./gateway-store.js');
+
 const AGENTS_CONFIG_DIR = path.join(__dirname, '..', '..', 'config', 'agents');
-
-// Top-level dirs under docs/ that are excluded from the doc index.
-// sites/ is managed by get_site_notes / write_site_notes, not read_agent_doc.
-const EXCLUDED_DIRS = new Set(['sites']);
-
-// ─── Doc discovery ────────────────────────────────────────────────────────────
-
-/**
- * Scan docs/ and build the doc index.
- * Returns Map<name, { name, file }> where name is the path relative to docs/
- * without the .md extension (e.g. "workflows/editing-rules", "kb/user-accounts").
- * Re-scanned on every call so new files appear without a restart.
- */
-function buildDocIndex() {
-  const index = new Map();
-
-  function scanDir(dir, prefix) {
-    if (!fs.existsSync(dir)) return;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const entryName = prefix ? `${prefix}/${entry.name}` : entry.name;
-      if (entry.isDirectory()) {
-        if (!prefix && EXCLUDED_DIRS.has(entry.name)) continue;
-        scanDir(path.join(dir, entry.name), entryName);
-      } else if (entry.isFile() && entry.name.endsWith('.md')) {
-        const name = entryName.slice(0, -3);
-        if (index.has(name)) {
-          console.error(`[kb] WARNING: doc name collision on '${name}': keeping ${index.get(name).file}, ignoring ${path.join(dir, entry.name)}`);
-          continue;
-        }
-        index.set(name, { name, file: path.join(dir, entry.name) });
-      }
-    }
-  }
-
-  scanDir(DOCS_DIR, '');
-  return index;
-}
 
 // ─── Pattern matching ─────────────────────────────────────────────────────────
 // Supports trailing * wildcard only (e.g. "joomla_menu*", "global/*", "*").
@@ -78,21 +48,16 @@ function matchesPattern(name, pattern) {
 
 // ─── Access checks ────────────────────────────────────────────────────────────
 
-function docMatchesAllow(doc, allow) {
-  return allow.some(p => matchesPattern(doc.name, p));
-}
-
 /**
  * Returns true if the agent definition permits reading the named doc.
- * Unknown names are checked against the patterns directly (so NOT_FOUND,
- * not PERMISSION_DENIED, is reported for files that simply don't exist).
+ * Pure pattern matching — existence is a separate question, checked by readDoc
+ * against the gateway index so a missing doc reports NOT_FOUND, not
+ * PERMISSION_DENIED.
  */
 function isDocAllowed(agentDef, docName) {
   if (!agentDef || !agentDef.docs) return true;
   const { allow = ['*'] } = agentDef.docs;
   if (allow.includes('*')) return true;
-  const doc = buildDocIndex().get(docName);
-  if (doc) return docMatchesAllow(doc, allow);
   return allow.some(p => matchesPattern(docName, p));
 }
 
@@ -255,25 +220,27 @@ function checkToolRules(agentDef, toolName, args, globalToolRules = {}) {
 
 /**
  * List doc names available to the agent (filtered by docs.allow).
- * Called on every ListTools request so new files appear without a restart.
+ * Called on every ListTools request, so it reads the gateway store's cached
+ * snapshot rather than hitting the API each time.
  */
-function listDocs(agentDef) {
+async function listDocs(agentDef) {
   const allow = (agentDef && agentDef.docs && agentDef.docs.allow) || ['*'];
-  const names = [];
-  for (const doc of buildDocIndex().values()) {
-    if (allow.includes('*') || docMatchesAllow(doc, allow)) names.push(doc.name);
-  }
-  return names.sort();
+  const all = await gatewayStore.listDocNames();
+  if (allow.includes('*')) return all;
+  return all.filter(name => allow.some(p => matchesPattern(name, p)));
 }
 
 /**
- * Read a doc by name (path relative to docs/, without .md extension).
- * Throws Error with .code === 'PERMISSION_DENIED' or 'NOT_FOUND'.
+ * Read a doc by name (e.g. "kb/staff-grid") from the Knowledge Gateway.
+ * Throws Error with .code === 'PERMISSION_DENIED', 'NOT_FOUND', or
+ * 'GATEWAY_UNAVAILABLE'.
  */
-function readDoc(agentDef, docName) {
-  const doc = buildDocIndex().get(docName);
+async function readDoc(agentDef, docName) {
+  // Existence first, so a denied agent asking for a doc that does not exist
+  // still gets NOT_FOUND rather than a misleading permission error.
+  const content = await gatewayStore.getDocContent(docName);
 
-  if (!doc) {
+  if (content === null) {
     const err = new Error(`Doc not found: "${docName}"`);
     err.code = 'NOT_FOUND';
     throw err;
@@ -287,7 +254,7 @@ function readDoc(agentDef, docName) {
     throw err;
   }
 
-  return fs.readFileSync(doc.file, 'utf8');
+  return content;
 }
 
 /**

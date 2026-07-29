@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://solutiosoftware.com/schemas/menu-spec.json",
   "title": "Menu Spec",
-  "description": "Canonical intermediate artifact for a Joomla menu build. Produced by the menu-interpreter sub-agent (run_menu_interpretation) from a client menu document (PDF), reviewed/edited by a human, then built. See docs/kb/menu-spec-schema.md.",
+  "description": "Canonical intermediate artifact for a Joomla menu build. Produced by the menu-interpreter sub-agent (run_menu_interpretation) from a client menu document (PDF), reviewed/edited by a human, then built. See the KB doc kb/menu-spec-schema via read_agent_doc.",
   "type": "object",
   "required": ["site", "menus"],
   "additionalProperties": false,

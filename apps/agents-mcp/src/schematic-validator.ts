@@ -10,8 +10,8 @@ import { collectContentNodes, ContentSchematic, SchematicEntry } from "./schemat
  *
  * The cross-lint reuses collectContentNodes() from schematic.ts — the same
  * walk the derivation uses — so derivation and lint cannot disagree.
- * Lint rules mirror the "Lint invariants" section of
- * docs/kb/content-schematic-schema.md — if you change one, change both.
+ * Lint rules mirror the "Lint invariants" section of the KB doc
+ * kb/content-schematic-schema (read_agent_doc) — if you change one, change both.
  */
 
 const SCHEMA_PATH = path.join(

@@ -7,7 +7,7 @@
 
 All tools in this project are exposed through a single orchestrator MCP endpoint. You will see them as `mcp__orchestrator__*`. There is no separate joomla-mcp or gantry-mcp connection — the orchestrator aggregates everything.
 
-Workflow guides and KB articles are accessible via the `read_agent_doc` orchestrator tool — use it instead of the local Read tool so that agents without this repository mounted can access them.
+Workflow guides and KB articles live in the AI Knowledge Gateway, not in this repository. Read them with the `read_agent_doc` orchestrator tool. The local Read tool cannot reach them — `docs/workflows/` and `docs/kb/` no longer exist.
 
 ---
 
@@ -41,7 +41,7 @@ This tool returns the full contents of this file (AGENTS.md) via the orchestrato
 
 **Step 3 — `get_site_notes`** → read the active site's history before making any changes.
 
-After completing these three steps, load the universal editing conventions from the Knowledge Gateway: `knowledge_universal { action: "list", tag: "editing-rules" }` — they apply to every task. Do NOT call `read_agent_doc(doc: "workflows/editing-rules")` — that file is a deprecated stub.
+After completing these three steps, load the universal editing conventions from the Knowledge Gateway: `knowledge_universal { action: "list", tag: "editing-rules" }` — they apply to every task. The retired `workflows/editing-rules` doc name no longer resolves.
 
 ---
 
@@ -71,7 +71,7 @@ Audit notes live in their own container and are **never loaded at session start*
 
 See `read_agent_doc(doc: "kb/site-history")` for the full format spec and examples.
 
-**3. Review for process improvements** (when applicable — not required every session) — did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered? If yes, call `read_agent_doc(doc: "workflows/improvements")` and append an entry.
+**3. Review for process improvements** (when applicable — not required every session) — did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered? If yes, add an entry with `knowledge_universal { action: "create", tags: ["improvements"] }`. Read the queue with `knowledge_universal { action: "list", tag: "improvements" }`.
 
 ---
 
@@ -97,7 +97,7 @@ Working a specific ticket returns **two** docs under `tag: "workflow"` — follo
 - **Support Agent Workflow** — Steps 1–10 (load context, switch site, investigate, plan, execute, log, draft notes, resolve). Includes how to **read ticket attachments** (the `attachment_url` is a ~5-min signed S3 link — re-fetch the ticket for a fresh URL, download with curl, open with `Read`; never use `WebFetch`).
 - **Support Agent — Human Handoff** — the `human_agent` model. Every fix is presented as **one ordered resolution roadmap** whose steps are tagged by owner — **[AI]**, **[Human]**, or **[Client]** — with dependencies inline and a separate **Blockers** section for anything (usually a client decision or missing info) that must be resolved before a step can run. Route to **[Human]** (don't attempt) anything needing contracts, Google Workspace / calendar, mailbox access, Jotform / PDF Filler fillable PDFs & forms, Gantry troubleshooting, or cost estimates. Do not resolve a ticket while [Human]/[Client] steps or blockers are outstanding.
 
-Do NOT call `read_agent_doc(doc: "workflows/freshdesk-agent")` — that file is deprecated and archived. The support agent's `get_agent_instructions` handles this correctly; this note is for any other agent or human referencing CLAUDE.md.
+The old `workflows/freshdesk-agent` doc is retired and no longer resolves — the Knowledge Gateway holds the live workflow. The support agent's `get_agent_instructions` handles this correctly; this note is for any other agent or human referencing CLAUDE.md.
 
 ---
 
@@ -105,12 +105,10 @@ Do NOT call `read_agent_doc(doc: "workflows/freshdesk-agent")` — that file is 
 
 Only read these when explicitly performing that workflow — do not load them by default.
 
-Call `read_agent_doc(doc: "<name>")` with the name from the first column:
+Every doc below is a Knowledge Gateway row. Call `read_agent_doc(doc: "<name>")` with the name from the first column:
 
 | Doc name | When to use |
 |----------|-------------|
-| `workflows/editing-rules` | **Moved to Knowledge Gateway.** Use `knowledge_universal { action: "list", tag: "editing-rules" }` instead. |
-| `workflows/freshdesk-agent` | **Deprecated — archived only.** Use `knowledge_universal { tag: "triage" \| "workflow" }` instead. |
 | `workflows/menu-build-workflow` | Menu build — PDF → Menu Spec → Joomla skeleton (Phases 1–4). Category conventions, pitfalls, and checklist included. |
 | `workflows/content-build-workflow` | Content build — Content Schematic → written pages on the skeleton (Phase 5). Open-question resolution, deterministic fetch, batched writer, auto-apply. |
 | `workflows/content-agent` | Standard article text, SEO, and publish state edits |
@@ -120,11 +118,12 @@ Call `read_agent_doc(doc: "<name>")` with the name from the first column:
 | `workflows/gantry-visual-qa` | Visual QA loop after any layout or CSS work — screenshots, checklist, CSS iteration |
 | `workflows/ftp-css-smoke-test` | End-to-end validation that FTP upload → Gantry Page Settings → live page emission works; use before custom page builds or after server migrations |
 | `workflows/gantry-design-agent` | Solutio Gantry design workflow — step-by-step process for building or rebuilding a homepage layout |
-| `workflows/improvements` | Shared team queue for process improvement notes |
 
-Knowledge base articles for specific issue types — call `read_agent_doc(doc: "kb/<name>")`. When investigating a support ticket, check the KB index below and read any files that match the issue type before starting your investigation.
+The process improvement queue is no longer a doc — it is `knowledge_universal { tag: "improvements" }`.
 
-**KB file index:**
+Knowledge base articles for specific issue types — call `read_agent_doc(doc: "kb/<name>")`. When investigating a support ticket, check the KB index below and read any articles that match the issue type before starting your investigation.
+
+**KB article index:**
 
 | Doc name | Topic |
 |----------|-------|
@@ -153,7 +152,7 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 | `kb/error-pages` | 404 error page content and Gantry outline setup |
 | `kb/animate-on-scroll` | Scroll-triggered animations on article/grid sections |
 | `kb/subpage-backgrounds` | Full-page background image on specific subpages via CSS |
-| `kb/site-history` | Site history system — two-layer format spec, changelog entry format, examples |
+| `kb/site-history` | Site history system — two-layer format spec, site notes template, audit note format, examples |
 | `kb/knowledge-gateway` | AI Knowledge Gateway tools — universal/client knowledge, self-improving instructions, audit log |
 
 ---
@@ -167,10 +166,10 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 | `get_current_agent` | Return the active agent scope name and available agents — called at session start |
 | `switch_agent` | Switch to a different agent scope mid-session |
 | `get_agent_instructions` | Return this full AGENTS.md file — required second step at session start |
-| `read_agent_doc` | Read any workflow guide or KB article by doc name (see index above) |
+| `read_agent_doc` | Read any workflow guide or KB article by doc name from the Knowledge Gateway (see index above) |
 | `get_site_notes` | Read the active site's history and persistent facts |
-| `append_site_note` | Append a changelog entry to the active site's history |
-| `write_site_notes` | Overwrite the active site's notes file (read first) |
+| `append_site_note` | Append one new persistent fact to the active site's notes — never a changelog entry |
+| `write_site_notes` | Overwrite the active site's notes (read first) |
 | `solutio_style_guide` | Load Solutio house conventions for Gantry 5 builds |
 | `solutio_particles` | Load Solutio particle reference before adding/editing particles |
 | `gantry_reference{topic:"conventions"}` | Load Base/#Outline/#Home/#Grid/#Sponsors and subsite outline inheritance rules before creating or rewiring outlines |
@@ -187,15 +186,34 @@ All credentials come from the server's environment variables. Do not ask the use
 
 ---
 
-## Adding New Workflow Guides
+## Adding or Editing a Workflow Guide or KB Article
 
-Create a new `.md` file in `docs/workflows/` (for procedural how-to guides) or `docs/kb/` (for reference articles) and add a row to the doc name index in both AGENTS.md and CLAUDE.md. The doc name agents use is its path relative to `docs/` without the `.md` extension — e.g. `workflows/my-guide` or `kb/my-article`.
+Docs are Knowledge Gateway rows, not repository files. Each doc is one `knowledge_universal`
+record whose tags carry its identity:
 
-Agent access is controlled by `docs.allow` in each agent's JSON config (`config/agents/<name>/<name>.json`):
-- Folder-level access: `"workflows/*"` or `"kb/*"` grants the whole folder
+| Tag | Purpose |
+|-----|---------|
+| `doc:<name>` | The lookup key `read_agent_doc` resolves — e.g. `doc:kb/staff-grid`. Exactly one row per name. |
+| `agent-doc` | Marks the row as a `read_agent_doc` doc. |
+| `doc-group:workflows` / `doc-group:kb` | Folder grouping, kept so doc names read the same as before. |
+
+**To add a doc:**
+
+1. `knowledge_universal { action: "create", topic: "<H1 title>", tags: ["agent-doc", "doc:workflows/my-guide", "doc-group:workflows"], content: "<markdown>" }`
+2. Add a row to the doc name index above, in CLAUDE.md, then run `scripts/sync-agent-docs.ps1`.
+3. Call `reload_tools` so the orchestrator drops its 60-second doc cache and the name appears in `read_agent_doc`.
+
+**To edit a doc:** `knowledge_universal { action: "update", id: <id>, content: "..." }`. Keep the
+tags intact — dropping the `doc:` tag makes the doc unreachable. Then call `reload_tools`.
+
+Agent access is still controlled by `docs.allow` in each agent's JSON config
+(`config/agents/<name>/<name>.json`), applied on top of the gateway list:
+- Folder-level access: `"workflows/*"` or `"kb/*"` grants the whole group
 - Explicit access: `"workflows/my-guide"` grants a single doc
 
-No server code changes or container rebuild needed — `read_agent_doc` scans the directory on every call and the new file appears immediately.
+No server code change or container rebuild is needed for a doc change. Two migration scripts
+remain in `scripts/` for reference: `migrate-docs-to-gateway.js` and
+`migrate-site-notes-to-gateway.js`, both idempotent, both with `--dry-run` and `--verify-only`.
 
 ## graphify
 

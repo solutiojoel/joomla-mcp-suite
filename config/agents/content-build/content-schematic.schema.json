@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://solutiosoftware.com/schemas/content-schematic.json",
   "title": "Content Schematic",
-  "description": "Input contract for the content-build pass (Phase 5). Derived deterministically from the approved Menu Spec (deriveContentSchematic / derive_content_schematic), enriched by the content-interpreter sub-agent (run_content_interpretation) from the client PDF. Structure is owned by the derivation — entries are keyed 1:1 to content-bearing Menu Spec nodes and may never be added/removed/rekeyed by hand or by the interpreter. See docs/kb/content-schematic-schema.md.",
+  "description": "Input contract for the content-build pass (Phase 5). Derived deterministically from the approved Menu Spec (deriveContentSchematic / derive_content_schematic), enriched by the content-interpreter sub-agent (run_content_interpretation) from the client PDF. Structure is owned by the derivation — entries are keyed 1:1 to content-bearing Menu Spec nodes and may never be added/removed/rekeyed by hand or by the interpreter. See the KB doc kb/content-schematic-schema via read_agent_doc.",
   "type": "object",
   "required": ["site", "entries"],
   "additionalProperties": false,
@@ -70,7 +70,7 @@
             "additionalProperties": false,
             "properties": {
               "kind": { "type": "string", "description": "Feature slug, e.g. 'calendar-feed', 'quick-gallery', 'jotform'. Free string — the KB set grows." },
-              "kb_ref": { "type": "string", "description": "docs/kb reference that covers building this feature, e.g. 'kb/ministry-platform-widget'." },
+              "kb_ref": { "type": "string", "description": "KB doc name that covers building this feature, e.g. 'kb/ministry-platform-widget'." },
               "notes": { "type": "string" }
             }
           }

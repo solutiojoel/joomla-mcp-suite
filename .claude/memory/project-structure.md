@@ -19,8 +19,8 @@ Monorepo (`joomla-mcp-suite`) — a fleet-management platform for Solutio Softwa
 
 **MCP client connects only to the orchestrator.** Tools appear as `mcp__orchestrator__*` (prefix changed from `mcp__joomla-orchestrator__*` with the rename). Routing: first downstream whose tool map has the name wins; the active site is injected as `site_url` (joomla/ftp) or `site` (gantry).
 
-**Agent scoping:** `config/agents/<name>.json` (support, menu-content, admin) defines allowed tools + docs; instruction files sit beside them. Workflow docs live in `docs/agents/<scope>/` (global, support, menu-content, design, launch) and are read via the `read_agent_doc` tool — legacy flat names like `kb/staff-grid` still resolve through kb.js aliasing.
+**Agent scoping:** `config/agents/<name>/<name>.json` defines allowed tools + docs; instruction files sit beside them. `docs.allow` still gates `read_agent_doc` per agent.
 
-**Site notes:** per-hostname markdown at `docs/sites/<hostname>.md` via `get_site_notes` / `append_site_note` / `write_site_notes`; entries are auto-stamped with the session user.
+**Docs and site notes live in the Knowledge Gateway, not the repo** (migrated 2026-07-29). `docs/workflows/`, `docs/kb/`, and `docs/sites/` were deleted; only `docs/agent-runtime-*.md` remain local. `read_agent_doc` resolves a `doc:<name>` tag on a `/knowledge` row; `get_site_notes` / `write_site_notes` / `append_site_note` read and write a `/client-knowledge` row tagged `host:<hostname>`. Transport lives in `apps/orchestrator/gateway-store.js`; `kb.js` readDoc/listDocs are async now.
 
 **Start scripts:** `scripts/start-all.ps1` (windows) or per-service `start-*.ps1`; Docker via root Dockerfile + docker-compose.

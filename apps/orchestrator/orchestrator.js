@@ -43,11 +43,13 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const kb = require('./kb.js');
+const gatewayStore = require('./gateway-store.js');
 const { createLogger } = require('@solutio/logging');
 
 // Shared leveled logger. Defined up here because loadDownstreams() (called at
 // module load) may log on a config-parse error.
 const log = createLogger('orchestrator');
+gatewayStore.setLogger(log);
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -1062,6 +1064,17 @@ function buildServer(sessionCtx) {
     // restart — matching the hot-reload of the global policy below.
     agentDef = loadAgentDef(currentAgent);
 
+    // Doc names come from the Knowledge Gateway (cached in gateway-store), so the
+    // read_agent_doc enum has to be resolved before the tool array is built.
+    // A gateway outage leaves the enum empty rather than failing the whole list —
+    // every other tool must stay callable.
+    let availableDocs = [];
+    try {
+      availableDocs = await kb.listDocs(agentDef);
+    } catch (e) {
+      log.warn(`read_agent_doc: doc list unavailable (${e.message}); listing it with no docs.`);
+    }
+
     // Own management tools come first so the LLM encounters them early
     const ownTools = [
       {
@@ -1085,19 +1098,20 @@ function buildServer(sessionCtx) {
       {
         name: 'get_site_notes',
         description:
-          'REQUIRED at session start — read the active site\'s history file before making any changes. ' +
-          'Contains persistent site facts (key IDs, quirks, integrations) and a full changelog of past changes. ' +
+          'REQUIRED at session start — read the active site\'s notes before making any changes. ' +
+          'Contains persistent site facts only: key IDs, quirks, and active integrations. ' +
+          'Session history lives in agent_audit, not here. ' +
           'Call immediately after set_active_site is confirmed.',
         inputSchema: { type: 'object', properties: {} },
       },
       {
         name: 'append_site_note',
         description:
-          'Appends a plain-text note to the active site\'s notes file in docs/sites/. ' +
+          'Appends a plain-text note to the active site\'s notes in the Knowledge Gateway. ' +
           'Use this ONLY for persistent site facts that future agents need before touching the site: ' +
           'newly discovered quirks, warnings, key IDs, or integrations. ' +
           'Do NOT use this for changelog entries, session summaries, or audit records — ' +
-          'those belong in knowledge_client with tag: "audit".',
+          'those belong in agent_audit.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -1108,11 +1122,11 @@ function buildServer(sessionCtx) {
       },
       {
         name: 'write_site_notes',
-        description: 'Overwrite the entire notes file for the active site. Always read current notes first.',
+        description: 'Overwrite all notes for the active site. Always read the current notes first.',
         inputSchema: {
           type: 'object',
           properties: {
-            content: { type: 'string', description: 'Full markdown content to write (replaces entire file).' },
+            content: { type: 'string', description: 'Full markdown content to write (replaces all stored notes).' },
           },
           required: ['content'],
         },
@@ -1171,29 +1185,26 @@ function buildServer(sessionCtx) {
           },
         },
       },
-      (() => {
-        const availableDocs = kb.listDocs(agentDef);
-        return {
-          name: 'read_agent_doc',
-          description:
-            'Read any workflow guide or KB article referenced in the agent instructions. ' +
-            'Use this whenever the session protocol says to read a doc — it works for agents ' +
-            'that do not have the repository mounted locally. ' +
-            'Pass the doc name exactly as listed (e.g. "workflows/menu-build-workflow", "kb/staff-grid"). ' +
-            `Available docs: ${availableDocs.join(', ')}.`,
-          inputSchema: {
-            type: 'object',
-            properties: {
-              doc: {
-                type: 'string',
-                enum: availableDocs,
-                description: 'Doc name to read',
-              },
+      {
+        name: 'read_agent_doc',
+        description:
+          'Read any workflow guide or KB article referenced in the agent instructions. ' +
+          'Docs are served from the Knowledge Gateway, so this works for agents ' +
+          'that do not have the repository mounted locally. ' +
+          'Pass the doc name exactly as listed (e.g. "workflows/menu-build-workflow", "kb/staff-grid"). ' +
+          `Available docs: ${availableDocs.join(', ')}.`,
+        inputSchema: {
+          type: 'object',
+          properties: {
+            doc: {
+              type: 'string',
+              enum: availableDocs,
+              description: 'Doc name to read',
             },
-            required: ['doc'],
           },
-        };
-      })(),
+          required: ['doc'],
+        },
+      },
       {
         name: 'get_agent_instructions',
         description:
@@ -1382,54 +1393,69 @@ function buildServer(sessionCtx) {
         return { isError: true, content: [{ type: 'text', text: 'No active site set. Call set_active_site first.' }] };
       }
       const hostname = (() => { try { return new URL(activeSiteUrl).hostname; } catch { return activeSiteUrl; } })();
-      const notesPath = path.join(__dirname, '..', '..', 'docs', 'sites', `${hostname}.md`);
+
+      // Site notes live in the Knowledge Gateway (/client-knowledge, one row per
+      // site, keyed by the host:<hostname> tag). They used to be files under
+      // docs/sites/, which meant a note written in production landed on the
+      // container disk and was lost on the next deploy.
+      let notesRow;
+      try {
+        notesRow = await gatewayStore.getSiteNotesRow(hostname);
+      } catch (err) {
+        return { isError: true, content: [{ type: 'text', text: `Site notes are served from the Knowledge Gateway and it is not reachable: ${err.message}` }] };
+      }
 
       if (name === 'get_site_notes') {
-        if (!fs.existsSync(notesPath)) {
+        if (!notesRow) {
           return { content: [{ type: 'text', text: `No notes yet for ${hostname}.` }] };
         }
-        return { content: [{ type: 'text', text: fs.readFileSync(notesPath, 'utf8') }] };
+        return { content: [{ type: 'text', text: notesRow.content || '' }] };
       }
 
       if (name === 'append_site_note') {
         const note = args.note;
         if (!note) return { isError: true, content: [{ type: 'text', text: 'note is required' }] };
-        // If the note is a structured changelog entry (starts with ###), append it
-        // directly — it already has its own date header. Otherwise wrap it with a
-        // legacy timestamp for backwards compatibility with plain discovery notes.
+        // If the note is a structured entry (starts with ###), append it directly —
+        // it already has its own header. Otherwise wrap it with a timestamp, for
+        // backwards compatibility with plain discovery notes.
         const isStructured = note.trimStart().startsWith('###');
         const entry = isStructured
           ? `\n${note.trim()}\n_Logged by: ${user}_\n`
           : `\n**[${new Date().toISOString().replace('T', ' ').substring(0, 16)} UTC | ${user}]** ${note.trim()}\n`;
-        if (!fs.existsSync(notesPath)) {
-          fs.mkdirSync(path.dirname(notesPath), { recursive: true });
-          fs.writeFileSync(notesPath, `# Site Notes: ${hostname}\n\nNotes logged by AI agents.\n`);
+        const base = notesRow
+          ? (notesRow.content || '')
+          : `# Site Notes: ${hostname}\n\n> Session history lives in \`agent_audit { action: "list", site_code: "${gatewayStore.siteCodeFromHost(hostname)}" }\` —\n> this record holds persistent facts only.\n`;
+        try {
+          const { created } = await gatewayStore.writeSiteNotes(hostname, base + entry);
+          return { content: [{ type: 'text', text: `Note appended to ${hostname}${created ? ' (site notes created)' : ''}` }] };
+        } catch (err) {
+          return { isError: true, content: [{ type: 'text', text: `Failed to append the site note: ${err.message}` }] };
         }
-        fs.appendFileSync(notesPath, entry);
-        return { content: [{ type: 'text', text: `Changelog entry appended to ${hostname}` }] };
       }
 
       if (name === 'write_site_notes') {
         const content = args.content;
         if (!content) return { isError: true, content: [{ type: 'text', text: 'content is required' }] };
-        // Guard against stale-write: if the file already exists, verify the incoming
-        // content contains every ### changelog entry header that is currently on disk.
-        // This catches the pattern where an agent reads early, appends mid-session via
-        // append_site_note, then calls write_site_notes with the stale pre-append read.
-        if (fs.existsSync(notesPath)) {
-          const existing = fs.readFileSync(notesPath, 'utf8');
-          const existingHeaders = existing.match(/^### .+$/gm) || [];
+        // Guard against a stale write: verify the incoming content still contains
+        // every ### entry header already stored. This catches the pattern where an
+        // agent reads early, appends mid-session via append_site_note, then calls
+        // write_site_notes with the stale pre-append read.
+        if (notesRow) {
+          const existingHeaders = (notesRow.content || '').match(/^### .+$/gm) || [];
           const missingHeaders = existingHeaders.filter(h => !content.includes(h));
           if (missingHeaders.length > 0) {
             return {
               isError: true,
-              content: [{ type: 'text', text: `write_site_notes rejected: incoming content is missing ${missingHeaders.length} changelog entry(s) already on disk. Re-read the file with get_site_notes, merge your changes into the current content, then call write_site_notes again.\n\nMissing entries:\n${missingHeaders.join('\n')}` }]
+              content: [{ type: 'text', text: `write_site_notes rejected: incoming content is missing ${missingHeaders.length} entry(s) already stored. Re-read with get_site_notes, merge your changes into the current content, then call write_site_notes again.\n\nMissing entries:\n${missingHeaders.join('\n')}` }]
             };
           }
         }
-        fs.mkdirSync(path.dirname(notesPath), { recursive: true });
-        fs.writeFileSync(notesPath, content, 'utf8');
-        return { content: [{ type: 'text', text: `Site notes updated for ${hostname}` }] };
+        try {
+          const { created } = await gatewayStore.writeSiteNotes(hostname, content);
+          return { content: [{ type: 'text', text: `Site notes ${created ? 'created' : 'updated'} for ${hostname}` }] };
+        } catch (err) {
+          return { isError: true, content: [{ type: 'text', text: `Failed to write the site notes: ${err.message}` }] };
+        }
       }
     }
 
@@ -1460,6 +1486,9 @@ function buildServer(sessionCtx) {
 
     if (name === 'reload_tools') {
       await loadDownstreamTools();
+      // Docs are gateway-hosted and cached; drop the snapshot so a doc edited in
+      // the gateway shows up without waiting out the TTL.
+      gatewayStore.invalidateDocs();
       usersRegistry = loadUsersRegistry();
       const counts = DOWNSTREAMS.map(d => `${d.label}: ${d.toolMap.size} tools`).join(', ');
       // Notify the client to re-fetch its tool list so newly loaded downstream
@@ -1481,14 +1510,18 @@ function buildServer(sessionCtx) {
         return { isError: true, content: [{ type: 'text', text: 'doc is required' }] };
       }
       try {
-        return { content: [{ type: 'text', text: kb.readDoc(agentDef, doc) }] };
+        return { content: [{ type: 'text', text: await kb.readDoc(agentDef, doc) }] };
       } catch (err) {
         if (err.code === 'PERMISSION_DENIED') {
           return { isError: true, content: [{ type: 'text', text: err.message }] };
         }
         if (err.code === 'NOT_FOUND') {
-          const available = kb.listDocs(agentDef).join(', ');
+          let available = '(doc list unavailable)';
+          try { available = (await kb.listDocs(agentDef)).join(', '); } catch { /* keep the placeholder */ }
           return { isError: true, content: [{ type: 'text', text: `${err.message}. Available docs: ${available}` }] };
+        }
+        if (err.code === 'GATEWAY_UNAVAILABLE' || err.code === 'GATEWAY_ERROR') {
+          return { isError: true, content: [{ type: 'text', text: `Docs are served from the Knowledge Gateway and it is not reachable: ${err.message}` }] };
         }
         throw err;
       }
@@ -1617,7 +1650,8 @@ function buildServer(sessionCtx) {
 
     if (name === 'solutio_design_workflow') {
       try {
-        return { content: [{ type: 'text', text: kb.readDoc(agentDef, 'gantry-design-agent') }] };
+        // Doc names are folder-qualified — the bare name never resolved.
+        return { content: [{ type: 'text', text: await kb.readDoc(agentDef, 'workflows/gantry-design-agent') }] };
       } catch (err) {
         return { isError: true, content: [{ type: 'text', text: `Design workflow guide unavailable: ${err.message}` }] };
       }

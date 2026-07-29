@@ -11,7 +11,7 @@
  * The schematic-validator's cross-lint reuses `collectContentNodes` as its
  * source of truth, so derivation and lint cannot disagree.
  *
- * Field ownership and lifecycle: docs/kb/content-schematic-schema.md.
+ * Field ownership and lifecycle: KB doc kb/content-schematic-schema (read_agent_doc).
  * Schema: config/agents/content-build/content-schematic.schema.json.
  */
 

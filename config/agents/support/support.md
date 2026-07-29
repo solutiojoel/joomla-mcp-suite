@@ -30,7 +30,7 @@ knowledge_universal { action: "list", tag: "triage" }
 ```
 
 > **Do NOT call `read_agent_doc` for workflow or editing-rules docs.**
-> Both `workflows/freshdesk-agent` and `workflows/editing-rules` are deprecated stubs that redirect here. Use the Knowledge Gateway only.
+> The retired `workflows/freshdesk-agent` and `workflows/editing-rules` doc names no longer resolve. Use the Knowledge Gateway only.
 
 **Step 3 — Proceed.**
 Site switching, `get_site_notes`, and all remaining steps are defined in the workflow document returned by the Knowledge Gateway. Follow that document from Step 1.

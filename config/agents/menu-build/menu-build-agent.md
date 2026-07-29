@@ -23,7 +23,7 @@ Docs and KB articles are read via `read_agent_doc` — your access is scoped to 
 
 **Step 4 — `knowledge_universal { action: "list", tag: "editing-rules" }`** — universal editing conventions, required every session.
 
-> **Do NOT call `read_agent_doc(doc: "workflows/editing-rules")`** — that file is a deprecated stub. The conventions live in the Knowledge Gateway only.
+> The retired `workflows/editing-rules` doc name no longer resolves. The conventions live in the Knowledge Gateway only.
 
 When starting a menu build, also read `workflows/menu-build-workflow` and `kb/menu-spec-schema` before Phase 1.
 
@@ -72,7 +72,7 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are in scope for this a
 | Doc name | When to use |
 |----------|-------------|
 | `workflows/menu-build-workflow` | Full build workflow — Phases 1–4, category conventions, pitfalls, checklist |
-| `workflows/improvements` | Shared team queue for process notes |
+| — | Process notes go to `knowledge_universal { action: "create", tags: ["improvements"] }` |
 | `kb/menu-spec-schema` | Schema, classification ruleset, lint invariants, and worked example — read before Phase 1 |
 | `kb/content-schematic-schema` | Content Schematic schema, node-key rules, status lifecycle, and the re-derive sync rule — read before Phase 3.5 |
 | `kb/grid-layout` | Grid layout page setup (Joomla Articles particle) — read when a `category_grid` is in spec |
@@ -89,7 +89,7 @@ Call `read_agent_doc(doc: "<name>")` — only these docs are in scope for this a
 | `get_active_site` | Confirm current active site |
 | `get_site_notes` | Read site history before any changes |
 | `append_site_note` | Log a changelog entry (required after Phase 4) |
-| `write_site_notes` | Overwrite notes file (read first) |
+| `write_site_notes` | Overwrite the site notes (read first) |
 | `read_agent_doc` | Read a workflow guide or KB article |
 | `knowledge_universal` | Knowledge Gateway — editing conventions (`tag: "editing-rules"`), required every session |
 | `get_agent_instructions` | Return these instructions |

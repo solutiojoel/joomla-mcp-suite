@@ -10,8 +10,8 @@ import path from "node:path";
  * apps/orchestrator/test-menu-spec.cjs, the fixture regression net for this
  * validator). Hand-edited specs are checked via src/validate-spec.ts
  * (`npm run validate -w apps/agents-mcp -- <spec.json>`). The lint rules
- * here mirror the "Lint invariants" section of docs/kb/menu-spec-schema.md —
- * if you change one, change both.
+ * here mirror the "Lint invariants" section of the KB doc kb/menu-spec-schema
+ * (read_agent_doc) — if you change one, change both.
  */
 
 const SCHEMA_PATH = path.join(

@@ -31,7 +31,6 @@
   "docs": {
     "allow": [
       "workflows/content-build-workflow",
-      "workflows/improvements",
       "kb/*"
     ]
   }
