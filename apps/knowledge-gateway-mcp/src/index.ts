@@ -48,7 +48,10 @@ const NOT_CONFIGURED = {
 const tools = [
   {
     name: "knowledge_universal",
-    description: "Manage universal (cross-client) knowledge in the AI Knowledge Gateway. action: list|get|create|update|delete.",
+    description:
+      "Manage universal (cross-client) knowledge in the AI Knowledge Gateway. action: list|get|create|update|delete. " +
+      "'list' returns full bodies — this table holds the workflow guides and KB articles, so an unfiltered list is very large. " +
+      "Filter by tag/topic/search, or pass summary:true or limit to keep it small.",
     inputSchema: {
       type: "object",
       properties: {
@@ -61,6 +64,9 @@ const tools = [
         topic: { type: "string", description: "Topic label (filter on list; field on create/update)" },
         tag: { type: "string", description: "Single tag to filter by (list only)" },
         search: { type: "string", description: "Full-text search filter (list only)" },
+        limit: { type: "number", description: "Page size (list only; default: all rows)" },
+        offset: { type: "number", description: "Page offset (list only; default 0)" },
+        summary: { type: "boolean", description: "list only: return id/topic/tags/length per row instead of full bodies — use to browse the catalogue" },
         content: { type: "string", description: "Entry body (markdown or HTML) — create/update" },
         tags: { type: "array", items: { type: "string" }, description: "Tag list — create/update" },
         contentType: { type: "string", enum: ["markdown", "html"], description: "Defaults to markdown — create/update" },
@@ -84,6 +90,9 @@ const tools = [
         topic: { type: "string", description: "Topic label (filter on list; field on create/update)" },
         tag: { type: "string", description: "Single tag to filter by (list only)" },
         search: { type: "string", description: "Full-text search filter (list only)" },
+        limit: { type: "number", description: "Page size (list only; default: all rows)" },
+        offset: { type: "number", description: "Page offset (list only; default 0)" },
+        summary: { type: "boolean", description: "list only: return id/topic/tags/length per row instead of full bodies — use to browse the catalogue" },
         content: { type: "string", description: "Entry body (markdown or HTML) — create/update" },
         tags: { type: "array", items: { type: "string" }, description: "Tag list — create/update" },
         contentType: { type: "string", enum: ["markdown", "html"], description: "Defaults to markdown — create/update" },
@@ -186,6 +195,9 @@ export function buildServer(): Server {
                 topic: args.topic as string | undefined,
                 tag: args.tag as string | undefined,
                 search: args.search as string | undefined,
+                limit: args.limit as number | undefined,
+                offset: args.offset as number | undefined,
+                summary: args.summary as boolean | undefined,
               }));
             case "get":
               return ok(await gateway.getKnowledge(id as number));
@@ -220,6 +232,9 @@ export function buildServer(): Server {
                 topic: args.topic as string | undefined,
                 tag: args.tag as string | undefined,
                 search: args.search as string | undefined,
+                limit: args.limit as number | undefined,
+                offset: args.offset as number | undefined,
+                summary: args.summary as boolean | undefined,
               }));
             case "get":
               return ok(await gateway.getClientKnowledge(id as number));

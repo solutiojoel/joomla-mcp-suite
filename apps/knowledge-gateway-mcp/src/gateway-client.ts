@@ -19,6 +19,10 @@ export interface KnowledgeListFilters {
   topic?: string;
   tag?: string;
   search?: string;
+  limit?: number;
+  offset?: number;
+  /** Return id/topic/tags/length per row instead of the full body. */
+  summary?: boolean;
 }
 
 /** Body fields for creating/updating universal or client knowledge. */
@@ -113,6 +117,52 @@ export class GatewayClient {
     return { success: false, message: `Unexpected error: ${String(error)}` };
   }
 
+  /**
+   * Shared paging and projection for the two knowledge lists.
+   *
+   * Neither /knowledge nor /client-knowledge accepts limit or offset, and both
+   * return every matching row with its full body. Once the workflow guides and
+   * KB articles moved into /knowledge, an unfiltered list ran past 250k
+   * characters — far more than a caller can hold. Page here instead.
+   *
+   * Bodies stay in the response by default. The support agent loads its
+   * workflow straight out of `list` (tag: "workflow"), so a summary default
+   * would break it. Callers browsing the catalogue pass summary:true.
+   */
+  private pageKnowledge(
+    data: unknown,
+    label: string,
+    filters: KnowledgeListFilters,
+  ): GatewayResponse {
+    const all = Array.isArray(data) ? (data as Record<string, unknown>[]) : [];
+    const offset = Math.max(0, filters.offset ?? 0);
+    const rows =
+      filters.limit === undefined
+        ? all.slice(offset)
+        : all.slice(offset, offset + Math.max(0, filters.limit));
+    // Tell the caller when they hold a window rather than the lot, otherwise a
+    // paged list reads as "these are all the entries there are".
+    const range =
+      rows.length === all.length ? "" : ` (${offset + 1}-${offset + rows.length} of ${all.length})`;
+
+    if (!filters.summary) {
+      return { success: true, message: `${label} listed — ${rows.length} record(s)${range}`, data: rows };
+    }
+    return {
+      success: true,
+      message: `${label} listed — ${rows.length} record(s), summary only${range}; use action 'get' for the body`,
+      data: rows.map((r) => ({
+        id: r.id,
+        siteCode: r.siteCode,
+        topic: r.topic,
+        tags: r.tags,
+        contentType: r.contentType,
+        contentLength: typeof r.content === "string" ? r.content.length : undefined,
+        updatedAt: r.updatedAt,
+      })),
+    };
+  }
+
   // ── Universal knowledge: /knowledge ──────────────────────────────────────
 
   async listKnowledge(filters: KnowledgeListFilters = {}): Promise<GatewayResponse> {
@@ -120,7 +170,7 @@ export class GatewayClient {
       const { data } = await this.axios.get("/knowledge", {
         params: compact({ topic: filters.topic, tag: filters.tag, search: filters.search }),
       });
-      return { success: true, message: "Knowledge listed", data };
+      return this.pageKnowledge(data, "Knowledge", filters);
     } catch (e) {
       return this.wrapError(e);
     }
@@ -184,7 +234,7 @@ export class GatewayClient {
           search: filters.search,
         }),
       });
-      return { success: true, message: "Client knowledge listed", data };
+      return this.pageKnowledge(data, "Client knowledge", filters);
     } catch (e) {
       return this.wrapError(e);
     }
