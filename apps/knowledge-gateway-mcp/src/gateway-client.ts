@@ -321,22 +321,40 @@ export class GatewayClient {
 
   async listAgentAudit(filters: AgentAuditListFilters = {}): Promise<GatewayResponse> {
     try {
+      // /agent-audit accepts limit and offset but honours neither — it always
+      // returns the whole filtered set. Page here so the tool keeps its own
+      // contract, and leave both off the request so a future server-side
+      // implementation can't apply the offset a second time.
       const { data } = await this.axios.get("/agent-audit", {
         params: compact({
           site_code: filters.site_code,
           agent_id: filters.agent_id,
-          limit: filters.limit,
-          offset: filters.offset,
         }),
       });
-      if (filters.full) return { success: true, message: "Agent audit listed", data };
+      const all = Array.isArray(data) ? (data as Record<string, unknown>[]) : [];
+      const offset = Math.max(0, filters.offset ?? 0);
+      const rows =
+        filters.limit === undefined
+          ? all.slice(offset)
+          : all.slice(offset, offset + Math.max(0, filters.limit));
+      // Tell the caller when they are looking at a window rather than the lot,
+      // otherwise a paged list reads as "this site only has 5 sessions".
+      const range =
+        rows.length === all.length ? "" : ` (${offset + 1}-${offset + rows.length} of ${all.length})`;
+
       // Session narratives run to thousands of tokens each. Default to a
       // summary projection so listing can never drag every taskNotes body into
       // an agent's context — that bloat is the reason this table exists.
-      const rows = Array.isArray(data) ? (data as Record<string, unknown>[]) : [];
+      if (filters.full) {
+        return {
+          success: true,
+          message: `Agent audit listed — ${rows.length} record(s), full detail${range}`,
+          data: rows,
+        };
+      }
       return {
         success: true,
-        message: `Agent audit listed — ${rows.length} record(s), summary only; use action 'get' for full detail`,
+        message: `Agent audit listed — ${rows.length} record(s), summary only${range}; use action 'get' for full detail`,
         data: rows.map((r) => ({
           id: r.id,
           siteCode: r.siteCode,
