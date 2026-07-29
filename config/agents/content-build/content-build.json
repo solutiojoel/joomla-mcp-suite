@@ -14,7 +14,7 @@
       "run_content_build", "apply_content",
       "joomla_article", "joomla_category",
       "joomla_media", "joomla_bulk_checkin",
-      "joomla_get_frontend_*", "joomla_verify_frontend_content",
+      "joomla_get_frontend_*", "joomla_verify_frontend_content", "joomla_inspect_frontend",
       "joomla_backend_inventory",
       "joomla_docman_*",
       "joomla_workspace_write", "joomla_workspace_read"

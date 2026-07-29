@@ -13,7 +13,7 @@
       "derive_content_schematic", "run_content_interpretation",
       "joomla_article", "joomla_category", "joomla_menu*",
       "joomla_media", "joomla_bulk_checkin",
-      "joomla_get_frontend_*", "joomla_verify_frontend_content",
+      "joomla_get_frontend_*", "joomla_verify_frontend_content", "joomla_inspect_frontend",
       "joomla_redirects_list", "joomla_site_config_inspect",
       "joomla_backend_inventory",
       "joomla_docman_*", "joomla_fileman_list_files",

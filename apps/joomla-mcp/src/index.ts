@@ -486,6 +486,70 @@ const tools = [
     },
   },
   {
+    name: "joomla_inspect_frontend",
+    description:
+      "Inspect one region of a rendered frontend page in a real browser: DOM structure, " +
+      "box-model geometry, and the CSS rules that actually match. Use this when a screenshot " +
+      "shows something is off but not why — unexpected spacing, a rule that will not apply, " +
+      "a specificity fight. Returns a depth-capped tree plus, for CSS, only the rules matching " +
+      "the target element under the current media query, and a 'winners' map naming the selector " +
+      "and stylesheet that won each property. Scoped and truncated by design; prefer it over " +
+      "fetching whole pages or stylesheets.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Frontend path (e.g. '/gala') or full URL." },
+        selector: {
+          type: "string",
+          description: "CSS selector for the region to inspect (e.g. '#g-expanded', '.gala-prayer').",
+        },
+        viewport: {
+          type: "string",
+          enum: ["desktop", "tablet", "mobile"],
+          description: "desktop (1280×800), tablet (768×1024), mobile (390×844). Defaults to desktop.",
+        },
+        include: {
+          type: "array",
+          items: { type: "string", enum: ["box", "text", "css"] },
+          description:
+            "Extra payloads. 'box' = geometry and margin/padding per node (default), " +
+            "'text' = truncated text content, 'css' = matched rules and cascade winners. " +
+            "The structure tree is always returned.",
+        },
+        cssFor: {
+          type: "string",
+          description:
+            "Collect CSS for this descendant of the matched element instead of the element " +
+            "itself (e.g. selector '#g-expanded', cssFor '.gala-prayer-title').",
+        },
+        properties: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Restrict CSS output to these properties (e.g. ['margin-top','padding-top','color']). " +
+            "Strongly recommended when debugging one specific thing — it cuts the output sharply.",
+        },
+        depth: { type: "number", description: "How many levels of children to walk. Default 3." },
+        maxNodes: { type: "number", description: "Node cap per match. Default 60." },
+        maxMatches: { type: "number", description: "How many matching elements to report. Default 3." },
+        textLimit: { type: "number", description: "Characters of text per node. Default 80." },
+        settleMs: {
+          type: "number",
+          description:
+            "Wait after scrolling the target into view, for scroll-triggered animations to " +
+            "finish before measuring. Default 1200.",
+        },
+        includeInactiveMedia: {
+          type: "boolean",
+          description:
+            "Also report rules whose media query does not currently match. Default false — " +
+            "useful for checking why a mobile rule is not firing at desktop width.",
+        },
+      },
+      required: ["path", "selector"],
+    },
+  },
+  {
     name: "joomla_workspace_write",
     description:
       "Write a file into the /app/workspace/ directory inside the container. " +
@@ -1480,6 +1544,33 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
           content: [{ type: "text", text: fileContent }],
           isError: false,
         };
+      }
+
+      case "joomla_inspect_frontend": {
+        const login = await ensureLoggedIn();
+        if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
+
+        const inspectPath = args?.path as string;
+        const inspectSelector = args?.selector as string;
+        if (!inspectPath || !inspectSelector) {
+          return { content: [{ type: "text", text: "Error: path and selector are required" }], isError: true };
+        }
+
+        const result = await joomla.inspectFrontend({
+          path: inspectPath,
+          selector: inspectSelector,
+          viewport: (args?.viewport as 'desktop' | 'tablet' | 'mobile' | undefined) ?? 'desktop',
+          include: args?.include as Array<'box' | 'text' | 'css'> | undefined,
+          cssFor: args?.cssFor as string | undefined,
+          properties: args?.properties as string[] | undefined,
+          depth: args?.depth as number | undefined,
+          maxNodes: args?.maxNodes as number | undefined,
+          maxMatches: args?.maxMatches as number | undefined,
+          textLimit: args?.textLimit as number | undefined,
+          settleMs: args?.settleMs as number | undefined,
+          includeInactiveMedia: args?.includeInactiveMedia as boolean | undefined,
+        });
+        return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
       }
 
       case "joomla_verify_frontend_content": {

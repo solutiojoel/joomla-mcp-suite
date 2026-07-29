@@ -9,7 +9,7 @@
       "read_agent_doc", "reload_tools",
       "joomla_article", "joomla_category", "joomla_menu*", "joomla_module*",
       "joomla_media", "joomla_bulk_checkin",
-      "joomla_get_frontend_*", "joomla_verify_frontend_content",
+      "joomla_get_frontend_*", "joomla_verify_frontend_content", "joomla_inspect_frontend",
       "joomla_redirects_list", "joomla_site_config_inspect",
       "joomla_backend_inventory",
       "joomla_user*", "joomla_group*",

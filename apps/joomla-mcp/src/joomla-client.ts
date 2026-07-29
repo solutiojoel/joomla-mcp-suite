@@ -5890,22 +5890,33 @@ export class JoomlaClient {
     };
   }
 
-  async getFrontendScreenshot(
-    inputPath: string,
-    viewport: 'mobile' | 'tablet' | 'desktop' = 'desktop'
-  ): Promise<JoomlaResponse> {
-    const url = inputPath.startsWith('http')
-      ? inputPath
-      : inputPath.startsWith('/')
-        ? `${this.getBaseUrl()}${inputPath}`
-        : `${this.getBaseUrl()}/${inputPath}`;
+  /** Viewport presets shared by every frontend browser tool. */
+  private static readonly FRONTEND_VIEWPORTS = {
+    mobile:  { width: 390,  height: 844 },
+    tablet:  { width: 768,  height: 1024 },
+    desktop: { width: 1280, height: 800 },
+  } as const;
 
-    const VIEWPORTS = {
-      mobile:  { width: 390,  height: 844 },
-      tablet:  { width: 768,  height: 1024 },
-      desktop: { width: 1280, height: 800 },
-    };
-    const { width, height } = VIEWPORTS[viewport];
+  /** Resolve a caller-supplied path or absolute URL against the active site. */
+  private frontendUrl(inputPath: string): string {
+    if (inputPath.startsWith('http')) return inputPath;
+    return inputPath.startsWith('/')
+      ? `${this.getBaseUrl()}${inputPath}`
+      : `${this.getBaseUrl()}/${inputPath}`;
+  }
+
+  /**
+   * Open a frontend page in the pooled browser with the admin session attached.
+   *
+   * Cookies are only injected when the target host matches the active site —
+   * sending a session cookie to a third-party host would leak it. Callers own
+   * the returned page and must close it.
+   */
+  private async openFrontendPage(
+    url: string,
+    viewport: 'mobile' | 'tablet' | 'desktop'
+  ): Promise<{ page: import('puppeteer').Page; width: number; height: number; status: number }> {
+    const { width, height } = JoomlaClient.FRONTEND_VIEWPORTS[viewport];
 
     if (!this._browser || !this._browser.connected) {
       this._browser = await puppeteer.launch({
@@ -5929,8 +5940,22 @@ export class JoomlaClient {
       }
 
       const response = await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
-      if (!response || !response.ok()) {
-        return { success: false, message: `HTTP ${response?.status() ?? '?'} fetching ${url}` };
+      return { page, width, height, status: response?.status() ?? 0 };
+    } catch (err) {
+      await page.close();
+      throw err;
+    }
+  }
+
+  async getFrontendScreenshot(
+    inputPath: string,
+    viewport: 'mobile' | 'tablet' | 'desktop' = 'desktop'
+  ): Promise<JoomlaResponse> {
+    const url = this.frontendUrl(inputPath);
+    const { page, width, height, status } = await this.openFrontendPage(url, viewport);
+    try {
+      if (status < 200 || status >= 300) {
+        return { success: false, message: `HTTP ${status || '?'} fetching ${url}` };
       }
       await new Promise(r => setTimeout(r, 2000));
 
@@ -5958,6 +5983,416 @@ export class JoomlaClient {
         success: true,
         message: `Screenshot captured: ${url}`,
         data: { url, pageTitle, viewport, width, height, base64 },
+      };
+    } finally {
+      await page.close();
+    }
+  }
+
+  /**
+   * Inspect one region of a rendered frontend page.
+   *
+   * A screenshot shows *that* something is wrong; the page source shows what
+   * markup exists. Neither shows why an element sits where it does, which is
+   * usually a box-model or specificity question that can only be answered
+   * against the live CSSOM. This runs in the real browser and reports the
+   * structure, the geometry, and the CSS rules that actually match.
+   *
+   * Everything here is built to stay small enough to read: the tree is
+   * depth- and count-capped, text is truncated, and the CSS side reports only
+   * rules that match the target element under the *current* media query
+   * instead of dumping stylesheets. The `winners` map — which selector won
+   * each property — is the part that answers "why is my rule not applying".
+   */
+  async inspectFrontend(opts: {
+    path: string;
+    selector: string;
+    viewport?: 'mobile' | 'tablet' | 'desktop';
+    include?: Array<'box' | 'text' | 'css'>;
+    cssFor?: string;
+    properties?: string[];
+    depth?: number;
+    maxNodes?: number;
+    maxMatches?: number;
+    textLimit?: number;
+    settleMs?: number;
+    includeInactiveMedia?: boolean;
+    fetchCrossOrigin?: boolean;
+  }): Promise<JoomlaResponse> {
+    const {
+      selector,
+      viewport = 'desktop',
+      include = ['box'],
+      cssFor,
+      properties,
+      depth = 3,
+      maxNodes = 60,
+      maxMatches = 3,
+      textLimit = 80,
+      settleMs = 1200,
+      includeInactiveMedia = false,
+      fetchCrossOrigin = true,
+    } = opts;
+
+    if (!selector) return { success: false, message: 'selector is required' };
+
+    const url = this.frontendUrl(opts.path);
+    const { page, width, height, status } = await this.openFrontendPage(url, viewport);
+    try {
+      if (status < 200 || status >= 300) {
+        return { success: false, message: `HTTP ${status || '?'} fetching ${url}` };
+      }
+
+      // Scroll the target into view before measuring. Scroll-triggered reveals
+      // (the .s-animate pattern) start life offset by a transform, so measuring
+      // an un-revealed element reports the wrong geometry.
+      await page.evaluate((sel: string) => {
+        const el = (globalThis as any).document.querySelector(sel);
+        if (el) el.scrollIntoView({ block: 'center' });
+      }, selector);
+      await new Promise(r => setTimeout(r, settleMs));
+
+      // On these sites most CSS is served from a CDN (CloudFront, solutiocdn),
+      // which makes it cross-origin to the page. The CSSOM refuses to expose
+      // `cssRules` for such sheets, so the browser alone can only read the
+      // handful served from the site's own host — on a typical Gantry page that
+      // is override.css and nothing else. Node is not subject to CORS, so fetch
+      // the unreadable ones here and hand the text back for re-parsing in place.
+      let externalSheets: Array<{ index: number; href: string; text: string }> = [];
+      const unreadable: Array<{ index: number; href: string }> = [];
+      const unfetched: string[] = [];
+      if (include.includes('css') && fetchCrossOrigin) {
+        const inventory = await page.evaluate(() => {
+          const g = globalThis as any;
+          if (typeof g.__name !== 'function') g.__name = (fn: unknown) => fn;
+          return (Array.from(g.document.styleSheets) as any[]).map((sheet, index) => {
+            let readable = true;
+            try { void sheet.cssRules; } catch { readable = false; }
+            return { index, href: sheet.href as string | null, readable };
+          });
+        });
+
+        for (const s of inventory) {
+          if (!s.readable && s.href) unreadable.push({ index: s.index, href: s.href });
+        }
+
+        const MAX_SHEET_BYTES = 1_500_000;
+        const fetched = await Promise.all(
+          unreadable.map(async ({ index, href }) => {
+            try {
+              const res = await fetch(href, { headers: { 'user-agent': userAgentFor(href) } });
+              if (!res.ok) return { index, href, error: `HTTP ${res.status}` };
+              const text = await res.text();
+              if (text.length > MAX_SHEET_BYTES) {
+                return { index, href, error: `${Math.round(text.length / 1024)}KB, over cap` };
+              }
+              return { index, href, text };
+            } catch (e) {
+              return { index, href, error: e instanceof Error ? e.message : String(e) };
+            }
+          })
+        );
+        for (const f of fetched) {
+          if ('text' in f && f.text !== undefined) externalSheets.push({ index: f.index, href: f.href, text: f.text });
+          else unfetched.push(`${f.href.split('/').pop()?.split('?')[0]} (${(f as { error: string }).error})`);
+        }
+      }
+
+      const result = await page.evaluate(
+        (args: {
+          selector: string; include: string[]; cssFor: string | null;
+          properties: string[] | null; depth: number; maxNodes: number;
+          maxMatches: number; textLimit: number; includeInactiveMedia: boolean;
+          externalSheets: Array<{ index: number; href: string; text: string }>;
+        }) => {
+          const g = globalThis as any;
+          // esbuild — which tsx uses to run the server in dev — rewrites nested
+          // function definitions to call a module-scope __name helper. evaluate()
+          // ships only this function's own source to the browser, so that helper
+          // is undefined there and the first inner definition throws. Install a
+          // no-op before anything else runs. tsc emits no such helper, so this is
+          // dead weight in the built output and harmless either way.
+          if (typeof g.__name !== 'function') g.__name = (fn: unknown) => fn;
+          const doc = g.document;
+          const wantBox = args.include.includes('box');
+          const wantText = args.include.includes('text');
+          const wantCss = args.include.includes('css');
+
+          const px = (v: string) => (v === '0px' ? '0' : v);
+          const label = (el: any) => {
+            const id = el.id ? `#${el.id}` : '';
+            const cls = (el.getAttribute('class') || '')
+              .trim().split(/\s+/).filter(Boolean).map((c: string) => `.${c}`).join('');
+            return `${el.tagName.toLowerCase()}${id}${cls}`;
+          };
+
+          /** Approximate (id, class, element) specificity. Good enough to rank. */
+          const specificity = (sel: string): [number, number, number] => {
+            const s = sel.replace(/\s*[>+~]\s*/g, ' ');
+            const ids = (s.match(/#[\w-]+/g) || []).length;
+            const cls = (s.match(/\.[\w-]+|\[[^\]]+\]|:(?!:)(?!not\b|is\b|where\b)[\w-]+/g) || []).length;
+            const els = (s.match(/(?:^|\s)(?![.#:[])[a-zA-Z][\w-]*/g) || []).length
+              + (s.match(/::[\w-]+/g) || []).length;
+            return [ids, cls, els];
+          };
+          const cmpSpec = (a: number[], b: number[]) =>
+            a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+
+          const sheetName = (href: string | null) =>
+            href ? (href.split('/').pop() || href).split('?')[0] : '<inline>';
+
+          // ---- tree walk -------------------------------------------------
+          let nodeBudget = args.maxNodes;
+          const walk = (el: any, level: number): any => {
+            if (nodeBudget-- <= 0) return null;
+            const node: any = { level, el: label(el) };
+            if (wantBox) {
+              const r = el.getBoundingClientRect();
+              const cs = g.getComputedStyle(el);
+              node.box = {
+                top: Math.round(r.top), bottom: Math.round(r.bottom),
+                w: Math.round(r.width), h: Math.round(r.height),
+                margin: `${px(cs.marginTop)}/${px(cs.marginBottom)}`,
+                padding: `${px(cs.paddingTop)}/${px(cs.paddingBottom)}`,
+                display: cs.display,
+              };
+              if (cs.position !== 'static') node.box.position = cs.position;
+            }
+            if (wantText) {
+              const t = (el.textContent || '').replace(/\s+/g, ' ').trim();
+              if (t) node.text = t.length > args.textLimit ? `${t.slice(0, args.textLimit)}…` : t;
+            }
+            if (level < args.depth) {
+              const kids = Array.from(el.children).map((c: any) => walk(c, level + 1)).filter(Boolean);
+              if (kids.length) node.children = kids;
+            } else if (el.children.length) {
+              node.truncated = `${el.children.length} more child element(s)`;
+            }
+            return node;
+          };
+
+          // ---- CSS rules matching one element ----------------------------
+          const opaqueSheets: string[] = [];
+          const recoveredSheets: string[] = [];
+          const externalByIndex = new Map<number, { href: string; text: string }>(
+            args.externalSheets.map((s) => [s.index, { href: s.href, text: s.text }])
+          );
+
+          /**
+           * Stylesheets in document order, with cross-origin ones rebuilt from
+           * text fetched server-side. Order is preserved because it decides the
+           * cascade between rules of equal specificity.
+           */
+          let sheetCache: Array<{ name: string; rules: any; recovered?: boolean }> | null = null;
+          const orderedSheets = (): Array<{ name: string; rules: any; recovered?: boolean }> => {
+            if (sheetCache) return sheetCache;
+            const out: Array<{ name: string; rules: any; recovered?: boolean }> = [];
+            (Array.from(doc.styleSheets) as any[]).forEach((sheet, index) => {
+              let live: any = null;
+              try { live = sheet.cssRules; } catch { live = null; }
+              if (live) { out.push({ name: sheetName(sheet.href), rules: live }); return; }
+
+              const ext = externalByIndex.get(index);
+              if (ext) {
+                try {
+                  const rebuilt = new g.CSSStyleSheet();
+                  rebuilt.replaceSync(ext.text);
+                  const name = sheetName(ext.href);
+                  recoveredSheets.push(name);
+                  out.push({ name, rules: rebuilt.cssRules, recovered: true });
+                  return;
+                } catch { /* fall through to opaque */ }
+              }
+              opaqueSheets.push(sheetName(sheet.href));
+            });
+            sheetCache = out;
+            return out;
+          };
+
+          const collectRules = (el: any) => {
+            const rules: any[] = [];
+            let order = 0;
+            const visit = (list: any, media: string | null, sheet: string) => {
+              for (const rule of Array.from(list) as any[]) {
+                if (rule.media && rule.cssRules) {
+                  const cond = rule.conditionText || rule.media.mediaText;
+                  visit(rule.cssRules, media ? `${media} and ${cond}` : cond, sheet);
+                  continue;
+                }
+                if (rule.cssRules && rule.conditionText) {
+                  visit(rule.cssRules, media, sheet);
+                  continue;
+                }
+                if (!rule.selectorText || !rule.style) continue;
+                const parts = rule.selectorText.split(',').map((s: string) => s.trim());
+                let hit: string | null = null;
+                for (const p of parts) {
+                  // A rule can carry a pseudo-element; match on the base selector.
+                  const base = p.replace(/::[\w-]+(\([^)]*\))?/g, '') || '*';
+                  try { if (el.matches(base)) { hit = p; break; } } catch { /* unsupported selector */ }
+                }
+                if (!hit) continue;
+                const applies = media ? g.matchMedia(media).matches : true;
+                if (!applies && !args.includeInactiveMedia) continue;
+                const decls: Record<string, { value: string; important: boolean }> = {};
+                for (const prop of Array.from(rule.style) as string[]) {
+                  if (args.properties && !args.properties.includes(prop)) continue;
+                  decls[prop] = {
+                    value: rule.style.getPropertyValue(prop),
+                    important: rule.style.getPropertyPriority(prop) === 'important',
+                  };
+                }
+                if (Object.keys(decls).length === 0) continue;
+                rules.push({
+                  selector: hit, media, applies, source: sheet,
+                  specificity: specificity(hit), order: order++, decls,
+                });
+              }
+            };
+            for (const sheet of orderedSheets()) {
+              // A single malformed rule must not cost the whole stylesheet, so
+              // the walk is wrapped per sheet rather than around the whole loop.
+              try { visit(sheet.rules, null, sheet.name); }
+              catch { opaqueSheets.push(sheet.name); }
+            }
+            // inline style attribute beats every stylesheet rule
+            if (el.getAttribute && el.getAttribute('style')) {
+              const decls: Record<string, { value: string; important: boolean }> = {};
+              for (const prop of Array.from(el.style) as string[]) {
+                if (args.properties && !args.properties.includes(prop)) continue;
+                decls[prop] = {
+                  value: el.style.getPropertyValue(prop),
+                  important: el.style.getPropertyPriority(prop) === 'important',
+                };
+              }
+              if (Object.keys(decls).length) {
+                rules.push({
+                  selector: 'style="…"', media: null, applies: true, source: '<inline attr>',
+                  specificity: [1, 0, 0, 0] as any, order: order++, decls, inline: true,
+                });
+              }
+            }
+            return rules;
+          };
+
+          /** Resolve the cascade the way the browser does, per property. */
+          const resolveWinners = (rules: any[]) => {
+            const best: Record<string, any> = {};
+            for (const rule of rules) {
+              if (!rule.applies) continue;
+              for (const [prop, d] of Object.entries(rule.decls) as [string, any][]) {
+                const cur = best[prop];
+                const beats =
+                  !cur ||
+                  (d.important && !cur.important) ||
+                  (d.important === cur.important &&
+                    (cmpSpec(rule.specificity, cur.specificity) > 0 ||
+                      (cmpSpec(rule.specificity, cur.specificity) === 0 && rule.order > cur.order)));
+                if (beats) {
+                  best[prop] = {
+                    value: d.value, important: d.important,
+                    selector: rule.selector, source: rule.source,
+                    media: rule.media, specificity: rule.specificity, order: rule.order,
+                  };
+                }
+              }
+            }
+            return best;
+          };
+
+          // ---- assemble --------------------------------------------------
+          const all = Array.from(doc.querySelectorAll(args.selector)) as any[];
+          const matched = all.slice(0, args.maxMatches);
+          const out: any = {
+            selector: args.selector,
+            matchCount: all.length,
+            reported: matched.length,
+            viewport: { w: g.innerWidth, h: g.innerHeight },
+            matches: [],
+          };
+
+          for (const el of matched) {
+            nodeBudget = args.maxNodes;
+            const entry: any = { root: label(el), tree: walk(el, 0) };
+            if (wantCss) {
+              const target = args.cssFor ? el.querySelector(args.cssFor) : el;
+              if (!target) {
+                entry.css = { error: `cssFor "${args.cssFor}" matched nothing inside this element` };
+              } else {
+                const rules = collectRules(target);
+                entry.css = {
+                  target: label(target),
+                  ruleCount: rules.length,
+                  rules: rules.map((r: any) => ({
+                    selector: r.selector,
+                    source: r.source,
+                    media: r.media || undefined,
+                    applies: r.applies,
+                    specificity: (r.specificity as number[]).join(','),
+                    declarations: Object.fromEntries(
+                      Object.entries(r.decls).map(([k, v]: [string, any]) =>
+                        [k, v.important ? `${v.value} !important` : v.value])
+                    ),
+                  })),
+                  winners: Object.fromEntries(
+                    Object.entries(resolveWinners(rules)).map(([k, v]: [string, any]) => [
+                      k,
+                      `${v.important ? `${v.value} !important` : v.value}  ←  ${v.selector} (${v.source}${v.media ? ` @${v.media}` : ''})`,
+                    ])
+                  ),
+                };
+              }
+            }
+            out.matches.push(entry);
+          }
+          if (opaqueSheets.length) out.opaqueStylesheets = [...new Set(opaqueSheets)];
+          if (recoveredSheets.length) out.recoveredStylesheets = [...new Set(recoveredSheets)];
+          return out;
+        },
+        {
+          selector, include, cssFor: cssFor ?? null, properties: properties ?? null,
+          depth, maxNodes, maxMatches, textLimit, includeInactiveMedia, externalSheets,
+        }
+      );
+
+      if (result.matchCount === 0) {
+        return {
+          success: false,
+          message: `Selector "${selector}" matched nothing on ${url} at ${viewport} (${width}×${height}).`,
+          data: { url, selector, viewport, matchCount: 0 },
+        };
+      }
+
+      const notes: string[] = [];
+      if (result.matchCount > result.reported) {
+        notes.push(
+          `${result.matchCount} elements matched; reporting the first ${result.reported}. ` +
+          `Raise maxMatches or narrow the selector.`
+        );
+      }
+      if (result.recoveredStylesheets?.length) {
+        notes.push(
+          `${result.recoveredStylesheets.length} cross-origin stylesheet(s) were re-fetched ` +
+          `server-side and re-parsed in document order, so their rules ARE included: ` +
+          `${result.recoveredStylesheets.join(', ')}.`
+        );
+      }
+      if (result.opaqueStylesheets?.length) {
+        notes.push(
+          `Could not read these stylesheets, so their rules are NOT in the results: ` +
+          `${result.opaqueStylesheets.join(', ')}` +
+          (unfetched.length ? ` — fetch failures: ${unfetched.join('; ')}` : '') +
+          (fetchCrossOrigin ? '.' : '. Set fetchCrossOrigin=true to recover them.')
+        );
+      }
+      if (include.includes('css')) {
+        notes.push('Specificity is approximate (id,class,element) and is used only to rank rules.');
+      }
+
+      return {
+        success: true,
+        message: `Inspected "${selector}" on ${url} at ${viewport} (${width}×${height})`,
+        data: { url, viewport, width, height, ...result, notes: notes.length ? notes : undefined },
       };
     } finally {
       await page.close();

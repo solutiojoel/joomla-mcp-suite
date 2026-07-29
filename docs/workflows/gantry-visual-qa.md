@@ -19,6 +19,7 @@ Use this guide after any session involving particle placement, layout changes, o
 | Tool | Purpose |
 |------|---------|
 | `joomla_get_frontend_screenshot` | Full-page or element-targeted screenshots |
+| `joomla_inspect_frontend` | **Why** a section looks wrong — box-model geometry and the CSS rules that actually match. See below |
 | `gantry_particle{action:"html"}` | Returns rendered particle HTML — real selectors and structure |
 | `gantry_layout{action:"tree"}` | Full layout structure — section IDs and particle positions |
 | `gantry_layout{action:"sections"}` | Lists section IDs — the stable targets for CSS and screenshots |
@@ -27,6 +28,64 @@ Use this guide after any session involving particle placement, layout changes, o
 | `ftp_read_file` | Read the existing custom CSS file before appending new rules |
 | `ftp_upload_file` | Write updated CSS back to `/templates/g5_clarity/custom/css/custom.css` |
 | `mcp__Claude_in_Chrome__navigate` + `mcp__Claude_in_Chrome__javascript_tool` | Live DOM inspection, computed styles, element bounding boxes |
+
+---
+
+## Diagnosing a Section: `joomla_inspect_frontend`
+
+A screenshot tells you *that* something is wrong. It never tells you why. When
+spacing is off, a rule will not apply, or you are about to guess at a cause,
+inspect the live page instead of theorising.
+
+**Never guess at a box-model or specificity problem. Measure it.** One call is
+cheaper than a wrong fix.
+
+### Unexplained spacing
+
+```
+joomla_inspect_frontend {
+  path: "/gala", selector: "#g-expanded", include: ["box"], depth: 4
+}
+```
+
+Returns each node's rect plus its margin/padding, so asymmetric spacing shows up
+as a number. A common Gantry cause: a module that renders nothing visible still
+has a `.platform-content` wrapper with padding, which offsets everything below it.
+
+### A rule that will not apply
+
+```
+joomla_inspect_frontend {
+  path: "/gala", selector: "#g-expanded",
+  include: ["css"], cssFor: ".gala-prayer-title",
+  properties: ["color", "margin-top"]
+}
+```
+
+Returns the matching rules ranked by specificity and a `winners` map naming the
+selector and stylesheet that won each property — which is the answer to "why is
+my rule losing". Always pass `properties` when chasing one thing; it cuts the
+output sharply.
+
+### Keeping the output small
+
+The tool is scoped and truncated on purpose. Prefer it over fetching whole pages
+or stylesheets.
+
+- `include` defaults to `["box"]` — add `"css"`/`"text"` only when needed
+- `properties` restricts CSS output to the properties you care about
+- `depth` / `maxNodes` / `maxMatches` cap the tree
+- `includeInactiveMedia: true` shows rules whose media query does *not* currently
+  match — use it to work out why a mobile rule is not firing at desktop width
+
+### Cross-origin stylesheets
+
+On Solutio sites most CSS is served from CloudFront and `shared.solutiocdn.com`,
+so it is cross-origin to the page and the browser refuses to expose its rules.
+The tool re-fetches those sheets server-side and re-parses them in document
+order, so CDN rules **are** included. The `recoveredStylesheets` note lists what
+was recovered; anything in `opaqueStylesheets` is genuinely missing from the
+results. Set `fetchCrossOrigin: false` to skip the refetch.
 
 ---
 
