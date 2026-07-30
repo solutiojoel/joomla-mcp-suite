@@ -188,6 +188,22 @@ function parseFieldName(name) {
   return name.replace(/\]/g, '').split(/\[/);
 }
 
+/**
+ * Recursively merge `patch` into `target` and return a new object.
+ * Plain objects merge key by key; arrays and scalars replace outright, because a
+ * particle repeater (slides, links) is always supplied whole, never patched
+ * element by element — use editRepeaterItem for that.
+ */
+function deepMerge(target, patch) {
+  const isPlain = (v) => v != null && typeof v === 'object' && !Array.isArray(v);
+  if (!isPlain(target) || !isPlain(patch)) return patch;
+  const out = { ...target };
+  for (const [k, v] of Object.entries(patch)) {
+    out[k] = isPlain(v) && isPlain(out[k]) ? deepMerge(out[k], v) : v;
+  }
+  return out;
+}
+
 /** Set a deep path (array of keys) on `obj` to `value`, creating intermediate objects. */
 function setDeep(obj, pathKeys, value) {
   let cur = obj;
@@ -1222,8 +1238,10 @@ function inspectParticleDeep(structure, particleId) {
  * Returns the mutated structure.
  */
 function editRepeaterItem(structure, particleId, repeaterPath, index, patch) {
-  const node = findNode(structure, particleId);
-  if (!node) throw new Error(`Particle "${particleId}" not found`);
+  // findNode returns { node, parent, index } — the node itself is .node.
+  const found = findNode(structure, particleId);
+  if (!found) throw new Error(`Particle "${particleId}" not found`);
+  const node = found.node;
   if (!['particle', 'system', 'position', 'spacer'].includes(node.type)) {
     throw new Error(`Node "${particleId}" is not a particle (type: ${node.type})`);
   }
@@ -1265,8 +1283,10 @@ function replaceRepeater(structure, particleId, repeaterPath, newArray) {
     }
   }
 
-  const node = findNode(structure, particleId);
-  if (!node) throw new Error(`Particle "${particleId}" not found`);
+  // findNode returns { node, parent, index } — the node itself is .node.
+  const found = findNode(structure, particleId);
+  if (!found) throw new Error(`Particle "${particleId}" not found`);
+  const node = found.node;
 
   node.attributes = node.attributes || {};
   const { parent, key } = resolvePath(node.attributes, repeaterPath);
@@ -1285,8 +1305,10 @@ function replaceRepeater(structure, particleId, repeaterPath, newArray) {
  * Returns the mutated structure.
  */
 function editBlockAttrs(structure, blockId, patch) {
-  const node = findNode(structure, blockId);
-  if (!node) throw new Error(`Block "${blockId}" not found`);
+  // findNode returns { node, parent, index } — the node itself is .node.
+  const found = findNode(structure, blockId);
+  if (!found) throw new Error(`Block "${blockId}" not found`);
+  const node = found.node;
   if (node.type !== 'block') {
     throw new Error(`Node "${blockId}" is not a block (type: ${node.type})`);
   }
@@ -1513,6 +1535,7 @@ module.exports = {
   snapshotSections,
   assertSectionsPreserved,
   findNode,
+  deepMerge,
   removeNode,
   makeParticleNode,
   makeBlockNode,

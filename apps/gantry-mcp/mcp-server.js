@@ -2029,12 +2029,14 @@ const LEGACY_TOOLS = [
         (structure) => {
           // Attributes patch
           if (args.attributes) {
-            const node = layoutApi.findNode(structure, args.id);
-            if (!node) throw new Error(`Particle "${args.id}" not found in outline "${outline}"`);
+            // findNode returns { node, parent, index } — the node itself is .node.
+            const found = layoutApi.findNode(structure, args.id);
+            if (!found) throw new Error(`Particle "${args.id}" not found in outline "${outline}"`);
+            const node = found.node;
             if (!['particle', 'system', 'position', 'spacer'].includes(node.type)) {
               throw new Error(`Node "${args.id}" is type "${node.type}", not a particle`);
             }
-            node.attributes = { ...(node.attributes || {}), ...args.attributes };
+            node.attributes = layoutApi.deepMerge(node.attributes || {}, args.attributes);
           }
           // Block class patch
           if (args.blockClass !== undefined) {
