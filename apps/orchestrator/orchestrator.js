@@ -718,6 +718,11 @@ async function collectStatus() {
   };
 }
 
+// Tab-bar icon for the status and connect pages: a green health pulse on the
+// same dark slate the pages use. Inlined as a data URI so no extra route or
+// asset file is needed, and so the browser never falls back to /favicon.ico.
+const FAVICON_TAG = `<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Cpath d='M8 32h9l6-14 10 30 7-16h16' fill='none' stroke='%2322c55e' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">`;
+
 function renderStatusHtml(status) {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const dot = { up: '#22c55e', degraded: '#f59e0b', down: '#ef4444', disabled: '#64748b' };
@@ -741,6 +746,7 @@ function renderStatusHtml(status) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="refresh" content="15">
 <title>Joomla MCP Suite — Status</title>
+${FAVICON_TAG}
 <style>
   body { font-family: ui-sans-serif, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 2rem; }
   h1 { font-size: 1.3rem; margin: 0 0 .25rem; }
@@ -856,6 +862,7 @@ function renderConnectHtml(req) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Joomla MCP Suite — Connect</title>
+${FAVICON_TAG}
 <style>
   body { font-family: ui-sans-serif, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 2rem; max-width: 860px; }
   h1 { font-size: 1.3rem; margin: 0 0 .25rem; }
