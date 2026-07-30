@@ -120,19 +120,6 @@ interface ModuleBlueprint {
   };
 }
 
-/** Parse a Retry-After header (seconds or HTTP-date) into milliseconds, or null if absent/invalid. */
-function parseRetryAfterMs(header: string | null | undefined): number | null {
-  if (!header) return null;
-  const sec = Number(header);
-  if (Number.isFinite(sec) && sec > 0) return sec * 1000;
-  const dateMs = Date.parse(header);
-  if (!Number.isNaN(dateMs)) {
-    const delta = dateMs - Date.now();
-    if (delta > 0) return Math.min(delta, 60000);
-  }
-  return null;
-}
-
 export class JoomlaClient {
   private config: JoomlaConfig;
   private cookies: Map<string, string> = new Map();
@@ -152,6 +139,10 @@ export class JoomlaClient {
   private gantryLayoutRootCache: Map<string, { root: GantryLayoutNode[]; preset: unknown }> = new Map();
   // Joomla's nested set (lft/rgt) corrupts under concurrent INSERTs — serialize all creates within a session
   private _menuCreateQueue: Promise<void> = Promise.resolve();
+  /** Installed menu item types — immutable for the life of the session. */
+  private _menuItemTypesCache: MenuItemType[] | null = null;
+  /** Set JOOMLA_MCP_TIMING=1 to log per-phase timings for slow admin operations. */
+  static readonly TIMING = process.env.JOOMLA_MCP_TIMING === "1";
 
   constructor(config: JoomlaConfig) {
     this.config = config;
@@ -612,55 +603,15 @@ export class JoomlaClient {
     );
   }
 
-  // --- Outbound request pacing & 429 backoff ---------------------------------
-  // The Joomla host throttles cloud-provider IPs (Replit egress). Space requests
-  // out and retry on 429 with backoff, honoring Retry-After when present.
-  private static readonly MIN_REQUEST_INTERVAL_MS = Number(process.env.JOOMLA_MIN_REQUEST_INTERVAL_MS ?? 0);
-  private static readonly MAX_429_RETRIES = 4;
-  private lastRequestAt = 0;
-  private pacerChain: Promise<void> = Promise.resolve();
-
-  /** Serialize callers and enforce a minimum interval between outbound requests. */
-  private async paceRequest(): Promise<void> {
-    const prev = this.pacerChain;
-    let release!: () => void;
-    this.pacerChain = new Promise<void>((r) => { release = r; });
-    await prev;
-    const wait = this.lastRequestAt + JoomlaClient.MIN_REQUEST_INTERVAL_MS - Date.now();
-    if (wait > 0) {
-      await new Promise((r) => setTimeout(r, wait));
-    }
-    this.lastRequestAt = Date.now();
-    release();
-  }
-
+  // Outbound requests go out at full speed. Pacing and 429 backoff used to live
+  // here; they cost far more than they bought — a single write spent up to ~29s
+  // per request in backoff and blew past the caller's deadline. We identify
+  // ourselves via user-agent.ts instead, so the host can allowlist our egress.
+  // A 429 now surfaces immediately as an error (see the check below).
   private async request(
     url: string,
     options?: { method?: string; body?: string | FormData; contentType?: string; additionalHeaders?: Record<string, string> }
   ): Promise<{ status: number; headers: Map<string, string>; body: string }> {
-    let attempt = 0;
-    for (;;) {
-      const result = await this.requestOnce(url, options);
-      if (result.status !== 429 || attempt >= JoomlaClient.MAX_429_RETRIES) {
-        return result;
-      }
-      // FormData bodies can't be safely re-sent after consumption in some cases,
-      // but Node's fetch does not consume our FormData reference, so retry is fine.
-      const retryAfterMs = parseRetryAfterMs(result.headers.get("retry-after"));
-      const backoffMs = retryAfterMs !== null
-        ? retryAfterMs
-        : Math.min(2000 * Math.pow(2, attempt), 15000);
-      attempt++;
-      console.error(`[joomla-mcp] 429 from server, backing off ${backoffMs}ms (retry ${attempt}/${JoomlaClient.MAX_429_RETRIES})`);
-      await new Promise((r) => setTimeout(r, backoffMs));
-    }
-  }
-
-  private async requestOnce(
-    url: string,
-    options?: { method?: string; body?: string | FormData; contentType?: string; additionalHeaders?: Record<string, string> }
-  ): Promise<{ status: number; headers: Map<string, string>; body: string }> {
-    await this.paceRequest();
     const headers: Record<string, string> = {
       ...outboundHeaders(url),
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -702,6 +653,18 @@ export class JoomlaClient {
     }
 
     const body = await response.text();
+
+    // Fail fast and legibly. Without this the throttled HTML body flows on and
+    // fails later as an unrelated parse error, which is what made the original
+    // 429s so hard to recognise. We do not wait and we do not retry — get the
+    // egress IP allowlisted instead.
+    if (response.status === 429) {
+      throw new Error(
+        `RATE_LIMITED: ${new URL(url).host} returned HTTP 429. The host is throttling this egress IP — ` +
+        `it needs allowlisting. Retrying will not help.`
+      );
+    }
+
     return { status: response.status, headers: responseHeaders, body };
   }
 
@@ -5188,7 +5151,9 @@ export class JoomlaClient {
     let release!: () => void;
     this._menuCreateQueue = new Promise<void>((r) => { release = r; });
     try {
+      const tQueue = Date.now();
       await prev;
+      if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] createMenuItem queue wait ${Date.now() - tQueue}ms`);
       const result = await this._doCreateMenuItem(data);
       // Self-heal: if nested set placed this item under the wrong parent, fix it now
       const rd = result.data as Record<string, unknown> | undefined;
@@ -5224,8 +5189,15 @@ export class JoomlaClient {
     params?: Record<string, string>;
     fieldOverrides?: Record<string, string>;
   }): Promise<JoomlaResponse> {
-    const typesResult = await this.listMenuItemTypes();
-    const types = (typesResult.data || []) as MenuItemType[];
+    // Cached per client: the installed menu item types cannot change mid-session,
+    // and this fetch is a full extra admin page load on every create.
+    if (!this._menuItemTypesCache) {
+      const tTypes = Date.now();
+      const typesResult = await this.listMenuItemTypes();
+      this._menuItemTypesCache = (typesResult.data || []) as MenuItemType[];
+      if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] listMenuItemTypes ${Date.now() - tTypes}ms`);
+    }
+    const types = this._menuItemTypesCache;
     // "heading" in the spec maps to Joomla's "Separator" system link type
     const resolvedItemType = data.itemType.toLowerCase() === "heading" ? "separator" : data.itemType;
     const type = this.findMenuItemType(types, resolvedItemType);
@@ -5234,7 +5206,9 @@ export class JoomlaClient {
     }
 
     const newItemUrl = this.getAdminUrl("index.php?option=com_menus&task=item.add");
+    const tForm = Date.now();
     const { html } = await this.getPage(newItemUrl);
+    if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] GET item.add ${Date.now() - tForm}ms`);
     const token = this.extractCsrfToken(html);
 
     if (!token) {
@@ -5249,7 +5223,12 @@ export class JoomlaClient {
       "jform[menutype]": data.menuType,
       [token.name]: token.value,
     };
-    const typedPage = await this.postPage(newItemUrl, setTypeFormData);
+    // Reuse the item.add page we just fetched. It is one of the heaviest pages in
+    // Joomla admin (every template style, every menu tree, the full type list), and
+    // postPage would otherwise re-GET it before each POST.
+    const tType = Date.now();
+    const typedPage = await this.postPage(newItemUrl, setTypeFormData, { prefetchedHtml: html });
+    if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] POST item.setType ${Date.now() - tType}ms`);
     const typedHtml = typedPage.html || html;
     const typedToken = this.extractCsrfToken(typedHtml) || token;
     const request = { ...type.request, ...(data.request || {}) };
@@ -5291,13 +5270,18 @@ export class JoomlaClient {
 
     Object.assign(formData, data.fieldOverrides || {});
 
-    const result = await this.postPage(newItemUrl, formData);
+    const tApply = Date.now();
+    const result = await this.postPage(newItemUrl, formData, { prefetchedHtml: typedHtml });
+    if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] POST item.apply ${Date.now() - tApply}ms`);
     // Joomla 4/5: success message appears in redirect target HTML.
     // Joomla 3: message format differs and may not match, but a 303 redirect always
     // means Joomla accepted the save — a validation failure stays on the form (200).
     const successMsg = result.redirected || /menu item saved|item saved|has been saved/i.test(result.html);
     const errorMsg = this.extractAlertMessage(result.html);
     let savedId = "";
+    // Published state is read from the list, not the edit form: the edit form's
+    // jform[published] defaults to "1" even for unpublished items.
+    let publishedFromList = "";
     if (successMsg) {
       savedId = result.redirectUrl?.match(/[?&]id=(\d+)/)?.[1] ?? "";
       if (!savedId) {
@@ -5312,30 +5296,27 @@ export class JoomlaClient {
       }
       // Rebuild the menu nested set (lft/rgt) after each create so the tree stays
       // consistent and subsequent creates don't corrupt the published-state display.
+      const tRebuild = Date.now();
       await this.rebuildMenuTree();
-      // Always force the desired published state via the edit-form save after rebuild.
-      // items.publish task fails when the item is checked out (which toggleMenuItem's
-      // preflight getMenuItem call causes). updateMenuItem goes through the edit form
-      // and handles checkout correctly.
+      if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] rebuildMenuTree ${Date.now() - tRebuild}ms`);
+      // Correct the published state only when Joomla actually got it wrong. This used
+      // to run unconditionally, which cost a full extra edit-form round trip (~5
+      // requests) on every single create even though the common case — published:"1",
+      // which is also Joomla's default — needs no correction at all.
+      // items.publish fails when the item is checked out, so the repair still goes
+      // through updateMenuItem's edit-form path rather than the list task.
       if (savedId) {
         const expectedPublished = data.published ?? "1";
-        await this.updateMenuItem(savedId, { published: expectedPublished, menuType: data.menuType });
+        publishedFromList = await this.readPublishedFromList(data.menuType, data.title, savedId);
+        if (publishedFromList !== expectedPublished) {
+          await this.updateMenuItem(savedId, { published: expectedPublished, menuType: data.menuType });
+          publishedFromList = await this.readPublishedFromList(data.menuType, data.title, savedId);
+        }
       }
     }
-    // Verify published state from the list, not the edit form. The edit form's
-    // jform[published] field defaults to "1" even when the item is unpublished,
-    // causing false-positive publishedMatches. Use a title search so this works
-    // even when the menu has more items than the list page limit.
-    let publishedFromList = "";
-    if (savedId) {
-      const listVerify = await this.listMenuItems(data.menuType, data.title);
-      const listItems = Array.isArray(listVerify.data) ? listVerify.data as Array<Record<string, string>> : [];
-      const listItem = listItems.find((i) => i.id === savedId);
-      if (listItem) {
-        publishedFromList = listItem.state === "Published" ? "1" : listItem.state === "Unpublished" ? "0" : "";
-      }
-    }
+    const tVerify = Date.now();
     const verify = savedId ? await this.getMenuItem(savedId) : null;
+    if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] getMenuItem ${Date.now() - tVerify}ms`);
     const item = ((verify?.data || {}) as Record<string, unknown>);
     const verification = {
       attempted: true,
@@ -6598,12 +6579,28 @@ export class JoomlaClient {
 
   // ==================== MENU TREE ====================
 
+  /**
+   * Read an item's published state from the menu list rather than the edit form.
+   * The edit form's jform[published] defaults to "1" even for unpublished items,
+   * so it cannot be trusted. Uses a title search so this still works when the menu
+   * holds more items than the list page limit.
+   * Returns "1", "0", or "" when the item is not found.
+   */
+  private async readPublishedFromList(menuType: string, title: string, id: string): Promise<string> {
+    const listVerify = await this.listMenuItems(menuType, title);
+    const listItems = Array.isArray(listVerify.data) ? listVerify.data as Array<Record<string, string>> : [];
+    const listItem = listItems.find((i) => i.id === id);
+    if (!listItem) return "";
+    return listItem.state === "Published" ? "1" : listItem.state === "Unpublished" ? "0" : "";
+  }
+
   private async rebuildMenuTree(): Promise<void> {
     const listUrl = this.getAdminUrl("index.php?option=com_menus&view=menus");
     const { html } = await this.getPage(listUrl);
     const token = this.extractCsrfToken(html);
     if (!token) return;
-    await this.postPage(listUrl, { task: "menus.rebuild", [token.name]: token.value });
+    // Reuse the page we just fetched — postPage would otherwise re-GET it.
+    await this.postPage(listUrl, { task: "menus.rebuild", [token.name]: token.value }, { prefetchedHtml: html });
   }
 
   // ==================== BULK CHECKIN ====================

@@ -406,6 +406,29 @@ function invalidateStdioClient(label) {
   pending.then(c => c.close().catch(() => { })).catch(() => { });
 }
 
+// ─── Call timeouts ───────────────────────────────────────────────────────────
+// The SDK default is 60s, which is tight for the site-facing servers. One tool
+// call there can be a dozen sequential round trips to a remote Joomla admin
+// (a menu-item create), a headless-browser render, or a large FTP upload.
+// Losing such a call at 60s is expensive: the write is already half-applied and
+// we cannot safely replay it (see the no-retry-on-timeout rule below).
+// Override per downstream with e.g. JOOMLA_MCP_CALL_TIMEOUT_MS.
+
+const DEFAULT_CALL_TIMEOUT_MS = 60_000;
+const SITE_FACING_CALL_TIMEOUT_MS = 180_000;
+const SITE_FACING_LABELS = new Set(['joomla-mcp', 'gantry-mcp', 'ftp-mcp']);
+
+function downstreamTimeoutMs(ds) {
+  const override = Number(process.env[`${dsRegistry.envPrefix(ds.label)}_CALL_TIMEOUT_MS`]);
+  if (Number.isFinite(override) && override > 0) return override;
+  return SITE_FACING_LABELS.has(ds.label) ? SITE_FACING_CALL_TIMEOUT_MS : DEFAULT_CALL_TIMEOUT_MS;
+}
+
+/** True for the SDK's request-timeout error (ErrorCode.RequestTimeout). */
+function isTimeoutError(err) {
+  return err && (err.code === -32001 || /timed out|timeout/i.test(err.message || ''));
+}
+
 /** Close a per-call client; persistent (stdio) clients stay open. */
 function releaseClient(client) {
   if (!client || client._persistent) return;
@@ -446,9 +469,7 @@ async function callDownstream(ds, toolName, toolArgs, onprogress) {
   const isAgentCall = ds.label === 'agents-mcp';
   const callOptions = isAgentCall
     ? { timeout: 600_000, resetTimeoutOnProgress: true, maxTotalTimeout: 1_800_000, onprogress }
-    : onprogress
-      ? { onprogress }
-      : undefined;
+    : { timeout: downstreamTimeoutMs(ds), ...(onprogress ? { onprogress } : {}) };
   const maxAttempts = isAgentCall ? 1 : 2;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -464,6 +485,16 @@ async function callDownstream(ds, toolName, toolArgs, onprogress) {
       // attempt (or next call) respawns a fresh child.
       if (ds.mode === 'stdio') invalidateStdioClient(ds.label);
       if (attempt === maxAttempts) throw err;
+      // A timeout is OUR client giving up waiting — it does not cancel anything.
+      // The downstream is still driving the site, so replaying the call runs a
+      // second create/update against live data while the first is in flight
+      // (this is how a single joomla_menu_item create produced a duplicate item).
+      // Only a pre-flight transport failure is safe to retry: there, the request
+      // never reached the downstream. Same reasoning as the agents-mcp rule above.
+      if (isTimeoutError(err)) {
+        log(`${ds.label} ${toolName} timed out after ${callOptions.timeout}ms — not retrying (the call may still be running downstream)`);
+        throw err;
+      }
       log(`${ds.label} call failed (attempt ${attempt}), retrying - ${err.message}`);
     }
   }

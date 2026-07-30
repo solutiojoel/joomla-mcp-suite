@@ -96,38 +96,63 @@ const tagsOf = row => (Array.isArray(row && row.tags) ? row.tags : []);
 // ─── Docs ─────────────────────────────────────────────────────────────────────
 
 let docCache = { at: 0, index: null };
+let docRefresh = null;    // in-flight refetch, shared so concurrent readers issue one request
+let docGeneration = 0;    // bumped by invalidateDocs so a slow in-flight fetch cannot
+                          // overwrite the cache with rows read before the invalidation
+
+async function fetchDocIndex() {
+  const generation = docGeneration;
+  const rows = asRows(await gw('GET', '/knowledge'));
+  const index = new Map();
+  for (const row of rows) {
+    for (const tag of tagsOf(row)) {
+      if (!tag.startsWith(DOC_TAG_PREFIX)) continue;
+      const name = tag.slice(DOC_TAG_PREFIX.length);
+      if (index.has(name)) {
+        warn(`doc name collision on '${name}': keeping row ${index.get(name).id}, ignoring row ${row.id}`);
+        continue;
+      }
+      index.set(name, row);
+    }
+  }
+  if (generation === docGeneration) docCache = { at: Date.now(), index };
+  return index;
+}
+
+/**
+ * Start (or join) a refresh. Resolves to the cached snapshot when the fetch
+ * fails and one exists; rejects only on a cold start with nothing to serve.
+ */
+function refreshDocIndex() {
+  if (!docRefresh) {
+    docRefresh = fetchDocIndex()
+      .catch(err => {
+        if (docCache.index) {
+          warn(`doc index refresh failed (${err.message}); serving the cached snapshot.`);
+          return docCache.index;
+        }
+        throw err;
+      })
+      .finally(() => { docRefresh = null; });
+  }
+  return docRefresh;
+}
 
 /**
  * Map<docName, row> for every /knowledge row carrying a doc:<name> tag.
- * Cached; a failed refresh serves the previous snapshot.
+ *
+ * Stale-while-revalidate: an expired snapshot is returned immediately and
+ * refreshed in the background. GET /knowledge pulls every row with its full
+ * body (~1.8s measured), and this runs inside the ListTools handler — blocking
+ * on it put that stall in front of the first tools/list after every TTL lapse.
+ * Only a cold start with no snapshot waits for the network.
  */
 async function docIndex({ force = false } = {}) {
-  const fresh = Date.now() - docCache.at < CACHE_TTL_MS;
-  if (!force && fresh && docCache.index) return docCache.index;
-
-  try {
-    const rows = asRows(await gw('GET', '/knowledge'));
-    const index = new Map();
-    for (const row of rows) {
-      for (const tag of tagsOf(row)) {
-        if (!tag.startsWith(DOC_TAG_PREFIX)) continue;
-        const name = tag.slice(DOC_TAG_PREFIX.length);
-        if (index.has(name)) {
-          warn(`doc name collision on '${name}': keeping row ${index.get(name).id}, ignoring row ${row.id}`);
-          continue;
-        }
-        index.set(name, row);
-      }
-    }
-    docCache = { at: Date.now(), index };
-    return index;
-  } catch (err) {
-    if (docCache.index) {
-      warn(`doc index refresh failed (${err.message}); serving the cached snapshot.`);
-      return docCache.index;
-    }
-    throw err;
+  if (force || !docCache.index) return refreshDocIndex();
+  if (Date.now() - docCache.at >= CACHE_TTL_MS) {
+    refreshDocIndex().catch(() => { }); // fire-and-forget; the snapshot below still serves
   }
+  return docCache.index;
 }
 
 /** Doc names present in the gateway, sorted. */
@@ -143,6 +168,7 @@ async function getDocContent(name, opts) {
 
 /** Drop the cached snapshot so the next read refetches. Used by reload_tools. */
 function invalidateDocs() {
+  docGeneration++;
   docCache = { at: 0, index: null };
 }
 

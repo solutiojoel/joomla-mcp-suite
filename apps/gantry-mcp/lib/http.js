@@ -76,61 +76,11 @@ class CookieJar {
  *  - follows redirects manually so cookies set by the redirect are kept
  *  - exposes { status, body, headers, finalUrl } in the return
  */
-// --- Outbound request pacing & 429 backoff ---------------------------------
-// The Joomla host throttles cloud-provider IPs (Replit egress). Space requests
-// out and retry on 429 with backoff, honoring Retry-After when present.
-const MIN_REQUEST_INTERVAL_MS = Number(process.env.JOOMLA_MIN_REQUEST_INTERVAL_MS ?? 0);
-const MAX_429_RETRIES = 4;
-let lastRequestAt = 0;
-let pacerChain = Promise.resolve();
-
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
-/** Parse a Retry-After header (seconds or HTTP-date) into milliseconds, or null if absent/invalid. */
-function parseRetryAfterMs(header) {
-  if (!header) return null;
-  const sec = Number(header);
-  if (Number.isFinite(sec) && sec > 0) return sec * 1000;
-  const dateMs = Date.parse(header);
-  if (!Number.isNaN(dateMs)) {
-    const delta = dateMs - Date.now();
-    if (delta > 0) return Math.min(delta, 60000);
-  }
-  return null;
-}
-
-/** Serialize callers and enforce a minimum interval between outbound requests. */
-async function paceRequest() {
-  const prev = pacerChain;
-  let release;
-  pacerChain = new Promise((r) => { release = r; });
-  await prev;
-  const wait = lastRequestAt + MIN_REQUEST_INTERVAL_MS - Date.now();
-  if (wait > 0) await sleep(wait);
-  lastRequestAt = Date.now();
-  release();
-}
-
-async function pacedFetch(url, options) {
-  let attempt = 0;
-  for (;;) {
-    await paceRequest();
-    const response = await fetch(url, options);
-    if (response.status !== 429 || attempt >= MAX_429_RETRIES) {
-      return response;
-    }
-    const retryAfterMs = parseRetryAfterMs(response.headers.get('retry-after'));
-    const backoffMs = retryAfterMs !== null
-      ? retryAfterMs
-      : Math.min(2000 * Math.pow(2, attempt), 15000);
-    attempt++;
-    console.error(`[gantry-mcp] 429 from server, backing off ${backoffMs}ms (retry ${attempt}/${MAX_429_RETRIES})`);
-    await response.arrayBuffer().catch(() => {});
-    await sleep(backoffMs);
-  }
-}
+// Outbound requests go out at full speed. Pacing and 429 backoff used to live
+// here; they cost far more than they bought — a single operation spent up to
+// ~29s per request in backoff and blew past the caller's deadline. We identify
+// ourselves via user-agent.js instead, so the host can allowlist our egress.
+// A 429 surfaces immediately as an error; we do not wait and we do not retry.
 
 async function jarFetch(url, options = {}, jar, opts = {}) {
   const { maxRedirects = 5 } = opts;
@@ -146,8 +96,16 @@ async function jarFetch(url, options = {}, jar, opts = {}) {
       for (const [k, v] of Object.entries(outboundHeaders(currentUrl))) headers.set(k, v);
     }
 
-    response = await pacedFetch(currentUrl, { ...currentOptions, headers });
+    response = await fetch(currentUrl, { ...currentOptions, headers });
     jar.ingestResponse(currentUrl, response);
+
+    if (response.status === 429) {
+      await response.arrayBuffer().catch(() => { });
+      throw new Error(
+        `RATE_LIMITED: ${new URL(currentUrl).host} returned HTTP 429. The host is throttling this egress IP — ` +
+        `it needs allowlisting. Retrying will not help.`
+      );
+    }
 
     if (response.status >= 300 && response.status < 400) {
       const loc = response.headers.get('location');

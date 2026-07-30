@@ -186,6 +186,24 @@ export async function startHttpServer(options: StartHttpOptions): Promise<http.S
     if (req.method === "POST") {
       let transport = sessionId ? sessions.get(sessionId) : undefined;
       if (!transport) {
+        // A POST that carries a session id we do not hold is an orphan: the
+        // process restarted, or a load balancer routed it to an instance that
+        // never saw the initialize (Replit autoscale runs several containers,
+        // each with its own `sessions` map). Building a fresh transport here
+        // did not help — `onsessioninitialized` only fires for an initialize
+        // request, so the new transport stayed unregistered, rejected the call,
+        // and leaked one Server per request. Tell the client to re-initialize.
+        if (sessionId) {
+          res.writeHead(404, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({
+              jsonrpc: "2.0",
+              error: { code: -32001, message: "Session not found — re-initialize the MCP session." },
+              id: null,
+            })
+          );
+          return;
+        }
         const server = buildServer(context);
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
