@@ -1706,17 +1706,34 @@ const LEGACY_TOOLS = [
     description:
       'Deep-inspect a single particle by id. Returns the particle node, its wrapper ' +
       'block node (with CSS class), and all attributes. Essential before editing a ' +
-      'repeater or block class — shows the exact JSON structure to patch.',
+      'repeater or block class — shows the exact JSON structure to patch. Only finds ' +
+      'particles that are structural nodes inside an outline\'s layout tree (Grid/' +
+      'Sections particles) — a standalone Particle-type Joomla module assigned to a ' +
+      'template position is NOT part of that tree; use moduleId to get redirected.',
     schema: {
       type: 'object',
       properties: {
         ...SITE_THEME_FIELDS,
         ...OUTLINE_FIELD,
-        id: { type: 'string', description: 'Particle id to inspect' },
+        id: { type: 'string', description: 'Particle id to inspect (structural nodes only)' },
+        moduleId: { type: 'string', description: 'Joomla module id — if you have this instead of a structural particle id' },
       },
-      required: ['site', 'id'],
+      required: ['site'],
     },
     handler: async (args) => {
+      if (args.moduleId && !args.id) {
+        return {
+          error: 'not_a_layout_node',
+          message:
+            `Module id "${args.moduleId}" refers to a standalone Joomla module (e.g. a ` +
+            'Particle-type module assigned to a template position), not a structural ' +
+            'node in the outline\'s layout tree. Its particle config lives in the ' +
+            'module\'s own params, not in gantry_particle_inspect\'s search space. Call ' +
+            `joomla_module { action: "get", id: "${args.moduleId}" } instead — the ` +
+            'response includes the full particle JSON under params.particle.',
+        };
+      }
+      if (!args.id) throw new Error('gantry_particle_inspect requires "id" (or "moduleId" for the redirect message)');
       const ctx = await getCtx(args);
       const outline = await resolveOutlineArg(ctx, args);
       const structure = await layoutApi.getLayoutStructure(ctx, outline);

@@ -2698,21 +2698,35 @@ export class JoomlaClient {
         createdId = foundRetry?.id || "";
       }
     }
-    const verify = createdId ? await this.getArticle(createdId) : null;
-    const article = ((verify?.data || {}) as Record<string, string>);
     const expectedArticleText = data.content || "";
-    const verification = {
-      attempted: true,
-      foundInList: !!createdId,
-      readbackSucceeded: !!verify?.success,
-      titleMatches: !!verify?.success && this.decodeHtmlEntities(article.title) === this.decodeHtmlEntities(data.title),
-      aliasMatches: !!verify?.success && this.verifyAlias(String(article.alias || ""), data.alias),
-      categoryMatches: !!verify?.success && article.categoryId === data.categoryId,
-      stateMatches: !!verify?.success && article.state === String(data.state ?? "1"),
-      accessMatches: !!verify?.success && article.access === String(data.access ?? "1"),
-      articleTextMatches: !!verify?.success && this.isEquivalentRichText(String(article.content || ""), expectedArticleText),
+    const buildVerification = (verify: JoomlaResponse | null) => {
+      const article = ((verify?.data || {}) as Record<string, string>);
+      return {
+        attempted: true,
+        foundInList: !!createdId,
+        readbackSucceeded: !!verify?.success,
+        titleMatches: !!verify?.success && this.decodeHtmlEntities(article.title) === this.decodeHtmlEntities(data.title),
+        aliasMatches: !!verify?.success && this.verifyAlias(String(article.alias || ""), data.alias),
+        categoryMatches: !!verify?.success && article.categoryId === data.categoryId,
+        stateMatches: !!verify?.success && article.state === String(data.state ?? "1"),
+        accessMatches: !!verify?.success && article.access === String(data.access ?? "1"),
+        articleTextMatches: !!verify?.success && this.isEquivalentRichText(String(article.content || ""), expectedArticleText),
+      };
     };
-    const verified = Object.values(verification).every((value) => value === true);
+
+    // Read-after-write lag: the row can exist server-side before a readback reflects
+    // it, especially under concurrent/parallel creates. Retry the readback (not just
+    // the list-scan above) before reporting an unverified create.
+    let verify = createdId ? await this.getArticle(createdId) : null;
+    let verification = buildVerification(verify);
+    let verified = Object.values(verification).every((value) => value === true);
+    if (createdId && !verified) {
+      await new Promise((r) => setTimeout(r, 800));
+      verify = await this.getArticle(createdId);
+      verification = buildVerification(verify);
+      verified = Object.values(verification).every((value) => value === true);
+    }
+    const article = ((verify?.data || {}) as Record<string, string>);
 
     return {
       success: verified,
@@ -6831,11 +6845,23 @@ export class JoomlaClient {
     const baseFields = this.extractFormFields(html);
     delete baseFields["jform[groups][]"];
 
+    // block/requireReset are read by explicit [checked] lookup, not trusted from
+    // extractFormFields's generic pass-through — if the edit page ever renders
+    // without those radios checked (e.g. a checkout collision), the generic
+    // scraper silently drops the field, and Joomla's save controller then
+    // defaults a missing "block" post field to blocked=1. Always assert both
+    // fields explicitly so an omitted arg re-sends the current value instead of
+    // leaving it to chance.
+    const currentBlocked = this.extractCheckedValues(html, "jform[block]")[0] ?? "0";
+    const currentRequireReset = this.extractCheckedValues(html, "jform[requireReset]")[0] ?? "0";
+
     const formData: FormDataMap = {
       ...baseFields,
       task: "user.save",
       "jform[id]": id,
       "jform[groups][]": data.groups ?? existingGroups,
+      "jform[block]": data.block !== undefined ? (data.block ? "1" : "0") : currentBlocked,
+      "jform[requireReset]": data.requireReset !== undefined ? (data.requireReset ? "1" : "0") : currentRequireReset,
       [token.name]: token.value,
     };
 
@@ -6846,8 +6872,6 @@ export class JoomlaClient {
       formData["jform[password]"] = data.password;
       formData["jform[password2]"] = data.password;
     }
-    if (data.block !== undefined) formData["jform[block]"] = data.block ? "1" : "0";
-    if (data.requireReset !== undefined) formData["jform[requireReset]"] = data.requireReset ? "1" : "0";
 
     const result = await this.postPage(editUrl, formData);
     const saved = result.html.includes("User saved") || result.html.includes("has been saved");

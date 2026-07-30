@@ -1,7 +1,6 @@
 {
   "name": "super_shannon",
   "description": "Super agent — all tools, all docs, no restrictions",
-  "instructions": "super_shannon.md",
   "tools": { "allow": ["*"] },
   "docs":  { "allow": ["*"] }
 }

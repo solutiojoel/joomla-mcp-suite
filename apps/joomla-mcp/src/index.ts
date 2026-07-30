@@ -149,7 +149,7 @@ const tools = [
         content: { type: "string", description: "Article body as HTML" },
         state: { type: "string", description: "1=published, 0=unpublished, -2=trashed, 2=archived" },
         access: { type: "string", description: "1=Public, 2=Special, 3=Registered" },
-        ordering: { type: "string", description: "Place after article ID; -1 for first (update only)" },
+        ordering: { type: "string", description: "1-based target position within the category's current admin list order (unpublished items included); -1 for first (update only)" },
         introImage: { type: "string" },
         introImageAlt: { type: "string" },
         featuredImage: { type: "string", description: "Used in listing/blog views" },
@@ -474,7 +474,11 @@ const tools = [
       properties: {
         path: {
           type: "string",
-          description: "Frontend path or full URL. Defaults to '/'.",
+          description: "Frontend path or full URL. Defaults to '/'. Alias: 'url'.",
+        },
+        url: {
+          type: "string",
+          description: "Alias for 'path' — frontend path or full URL. Defaults to '/'.",
         },
         viewport: {
           type: "string",
@@ -1500,7 +1504,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
         const login = await ensureLoggedIn();
         if (!login.success) return { content: [{ type: "text", text: formatResult(login) }], isError: true };
 
-        const screenshotPath = (args?.path as string | undefined) ?? "/";
+        const screenshotPath = (args?.path as string | undefined) ?? (args?.url as string | undefined) ?? "/";
         const viewport = (args?.viewport as "desktop" | "tablet" | "mobile" | undefined) ?? "desktop";
 
         const result = await joomla.getFrontendScreenshot(screenshotPath, viewport);
