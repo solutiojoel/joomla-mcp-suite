@@ -927,8 +927,28 @@ export class JoomlaClient {
   }
 
   private extractAlertMessage(html: string): string | null {
-    const text = this.$c(html)('[class*="alert-message"]').first().text().trim();
-    return text || null;
+    const $ = this.$c(html);
+    const messages: string[] = [];
+
+    // Joomla 4/5 renders [class*="alert-message"]; Joomla 3 (Isis) renders
+    // #system-message > .alert.alert-error. Collect both, plus inline field
+    // validation errors, so a rejected save reports why instead of going silent.
+    $('[class*="alert-message"], #system-message .alert, .alert-error, .alert-danger').each((_, el) => {
+      const $el = $(el).clone();
+      // Drop the dismiss button ("×" / "Close") so it doesn't pollute the message.
+      $el.find("button, .close").remove();
+      const text = $el.text().replace(/\s+/g, " ").trim();
+      if (text) messages.push(text);
+    });
+
+    // Joomla marks failed fields with .invalid and renders the reason in the label.
+    $("label.invalid, .invalid > label, span.form-message").each((_, el) => {
+      const text = $(el).text().replace(/\s+/g, " ").trim();
+      if (text) messages.push(text);
+    });
+
+    const unique = Array.from(new Set(messages)).filter(Boolean);
+    return unique.length ? unique.join(" | ") : null;
   }
 
   private parseAdminLinks(html: string): Array<Record<string, string>> {
@@ -2733,7 +2753,7 @@ export class JoomlaClient {
 
     return {
       success: verified,
-      message: verified ? "Article saved" : (errorMsg ?? successMsg ? "Article save submitted, but creation was not verified" : "Unknown result"),
+      message: verified ? "Article saved" : (errorMsg ?? (successMsg ? "Article save submitted, but creation was not verified" : "Article save was rejected by Joomla and no alert message was returned")),
       data: this.buildOperationData("article", createdId || "", {
         title: article.title || data.title,
         state: article.state || String(data.state ?? "1"),
@@ -2872,7 +2892,7 @@ export class JoomlaClient {
 
     return {
       success: verified,
-      message: verified ? "Article trashed" : (errorMsg ?? successMsg ? "Article trash submitted, but deletion was not verified" : "Unknown result"),
+      message: verified ? "Article trashed" : (errorMsg ?? (successMsg ? "Article trash submitted, but deletion was not verified" : "Unknown result")),
       data: this.buildOperationData("article", id, {
         title,
         state: "-2",
@@ -3093,7 +3113,7 @@ export class JoomlaClient {
 
     return {
       success: verified,
-      message: verified ? "Category saved" : (errorMsg ?? successMsg ? "Category save submitted, but creation was not verified" : "Unknown result"),
+      message: verified ? "Category saved" : (errorMsg ?? (successMsg ? "Category save submitted, but creation was not verified" : "Category save was rejected by Joomla and no alert message was returned")),
       data: this.buildOperationData("category", createdId || "", {
         title: category.title || data.title,
         state: category.published || String(data.published ?? "1"),
@@ -3164,7 +3184,7 @@ export class JoomlaClient {
         ? "Category saved"
         : reorderResult && !reorderResult.success
           ? `Category saved but reorder failed: ${reorderResult.message}`
-          : (errorMsg ?? successMsg ? "Category save submitted, but updated values were not verified" : "Unknown result"),
+          : (errorMsg ?? (successMsg ? "Category save submitted, but updated values were not verified" : "Unknown result")),
       data: this.buildOperationData("category", id, {
         title: category.title || String(formData["jform[title]"] || ""),
         state: category.published || String(formData["jform[published]"] || ""),
@@ -3298,7 +3318,7 @@ export class JoomlaClient {
 
     return {
       success: verified,
-      message: verified ? "Category trashed" : (errorMsg ?? successMsg ? "Category trash submitted, but deletion was not verified" : "Unknown result"),
+      message: verified ? "Category trashed" : (errorMsg ?? (successMsg ? "Category trash submitted, but deletion was not verified" : "Unknown result")),
       data: this.buildOperationData("category", id, {
         title,
         state: "-2",
@@ -3915,7 +3935,7 @@ export class JoomlaClient {
 
     return {
       success: verified,
-      message: verified ? "Module saved" : (errorMsg ?? successMsg ? "Module save submitted, but updated values were not verified" : "Unknown result"),
+      message: verified ? "Module saved" : (errorMsg ?? (successMsg ? "Module save submitted, but updated values were not verified" : "Unknown result")),
       data: this.buildOperationData("module", id, {
         title: String(module.title || formData["jform[title]"] || ""),
         state: String(module.published || formData["jform[published]"] || ""),
@@ -4021,7 +4041,7 @@ export class JoomlaClient {
       success: verified,
       message: verified
         ? "Module saved"
-        : (errorMsg ?? successMsg ? "Module save submitted, but creation was not verified" : "Unknown result"),
+        : (errorMsg ?? (successMsg ? "Module save submitted, but creation was not verified" : "Unknown result")),
       data: this.buildOperationData("module", savedId, {
         title: String(module.title || data.title),
         state: String(module.published || data.published || "1"),
@@ -4083,7 +4103,7 @@ export class JoomlaClient {
       success: verified,
       message: verified
         ? "Module trashed"
-        : (errorMsg ?? successMsg ? "Module trash submitted, but deletion was not verified" : "Unknown result"),
+        : (errorMsg ?? (successMsg ? "Module trash submitted, but deletion was not verified" : "Unknown result")),
       data: this.buildOperationData("module", id, {
         title,
         state: "-2",
@@ -4878,7 +4898,7 @@ export class JoomlaClient {
       success: verified,
       message: verified
         ? `Module ${state === "1" ? "published" : "unpublished"}`
-        : (errorMsg ?? successMsg ? "Module state was not verified after submit" : "Unknown result"),
+        : (errorMsg ?? (successMsg ? "Module state was not verified after submit" : "Unknown result")),
       data: this.buildOperationData("module", id, {
         title: String(module.title || title),
         state: actualState,
@@ -4976,7 +4996,7 @@ export class JoomlaClient {
 
     return {
       success: verified,
-      message: verified ? "Menu saved" : (errorMsg ?? successMsg ? "Menu save submitted, but creation was not verified" : "Unknown result"),
+      message: verified ? "Menu saved" : (errorMsg ?? (successMsg ? "Menu save submitted, but creation was not verified" : "Unknown result")),
       data: {
         id: String(savedMenu?.id || idFromRedirect || ""),
         title: data.title,
@@ -5337,7 +5357,7 @@ export class JoomlaClient {
 
     return {
       success: verified,
-      message: verified ? "Menu item saved" : (errorMsg ?? successMsg ? "Menu item save submitted, but creation was not verified" : "Unknown result"),
+      message: verified ? "Menu item saved" : (errorMsg ?? (successMsg ? "Menu item save submitted, but creation was not verified" : "Menu item save was rejected by Joomla and no alert message was returned")),
       data: this.buildOperationData("menuItem", savedId, {
         title: String(item.title || data.title),
         state: publishedFromList || String(item.published || data.published || "1"),
@@ -5485,7 +5505,7 @@ export class JoomlaClient {
 
     return {
       success: verified,
-      message: verified ? "Menu item saved" : (errorMsg ?? successMsg ? "Menu item save submitted, but updated values were not verified" : "Unknown result"),
+      message: verified ? "Menu item saved" : (errorMsg ?? (successMsg ? "Menu item save submitted, but updated values were not verified" : "Menu item save was rejected by Joomla and no alert message was returned")),
       data: this.buildOperationData("menuItem", id, {
         title: String(item.title || formData["jform[title]"] || ""),
         state: String(item.published || formData["jform[published]"] || ""),
@@ -5540,7 +5560,7 @@ export class JoomlaClient {
       success: verified,
       message: verified
         ? "Menu item trashed"
-        : (errorMsg ?? successMsg ? "Menu item trash submitted, but deletion was not verified" : "Unknown result"),
+        : (errorMsg ?? (successMsg ? "Menu item trash submitted, but deletion was not verified" : "Unknown result")),
       data: this.buildOperationData("menuItem", id, {
         title,
         state: "-2",
