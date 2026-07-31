@@ -11,7 +11,17 @@
 # Credentials come from the repo-root .env (gitignored), or from the real
 # environment, which wins. Never hardcode a token in this file.
 #
-#   MCP_TOKEN_JEREMY      your orchestrator bearer token (use -TokenVar for another key)
+# The two targets need DIFFERENT tokens, because they authenticate differently:
+#
+#   local   config/users.json is present, so the orchestrator uses the per-user
+#           registry and ORCHESTRATOR_TOKEN is ignored -> use MCP_TOKEN_JEREMY.
+#   replit  config/users.json is gitignored, so the deployment never has one.
+#           The orchestrator falls back to single-token mode -> use
+#           ORCHESTRATOR_TOKEN, which must match the Replit secret.
+#
+# Verified 2026-07-31: MCP_TOKEN_JEREMY returns 401 against Replit, and
+# ORCHESTRATOR_TOKEN returns 200. Do not collapse these back into one variable.
+#
 #   REPLIT_BYPASS_TOKEN   the Replit project-protection bypass JWT (replit target only)
 
 param(
@@ -19,8 +29,11 @@ param(
     [ValidateSet('local', 'replit', 'show')]
     [string]$Target = 'show',
 
-    # Which .env key holds your bearer token. Each user has their own.
-    [string]$TokenVar = 'MCP_TOKEN_JEREMY'
+    # Which .env key holds your local registry token. Each user has their own.
+    [string]$TokenVar = 'MCP_TOKEN_JEREMY',
+
+    # Which .env key holds the Replit single-token secret. Shared, not per-user.
+    [string]$ReplitTokenVar = 'ORCHESTRATOR_TOKEN'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -61,9 +74,11 @@ if ($Target -eq 'show') {
     return
 }
 
-$token = Get-Secret $TokenVar
+$tokenVarForTarget = if ($Target -eq 'local') { $TokenVar } else { $ReplitTokenVar }
+
+$token = Get-Secret $tokenVarForTarget
 if (-not $token) {
-    Write-Error "$TokenVar is not set. Add it to $envPath or export it, then run this script again."
+    Write-Error "$tokenVarForTarget is not set. Add it to $envPath or export it, then run this script again."
     exit 1
 }
 
@@ -90,7 +105,7 @@ try { claude mcp remove joomla-suite -s local | Out-Null } catch { }
 claude mcp add --transport http joomla-suite $url --header "Authorization: Bearer $token"
 
 Write-Host ""
-Write-Host "joomla-suite now points at the $Target stack." -ForegroundColor Green
+Write-Host "joomla-suite now points at the $Target stack (auth: $tokenVarForTarget)." -ForegroundColor Green
 if ($Target -eq 'local') {
     Write-Host "  $url"
 } else {
