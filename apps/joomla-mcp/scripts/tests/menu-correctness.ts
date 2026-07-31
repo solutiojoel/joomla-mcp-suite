@@ -66,6 +66,9 @@ async function main() {
     check("menuType persisted", item.menuType, MENU);
     check("parent is root", item.parentId, "1");
     check("published persisted", item.published, "1");
+    // System link types skip the item.setType round trip. If that skip is ever wrong,
+    // Joomla stores the item with type "Unknown" and it silently stops working.
+    check("separator saved with the right type", item.type, "separator");
   }
 
   // ---------- 2. nested create (exercises the parent self-heal path) ----------
@@ -85,6 +88,7 @@ async function main() {
     check("child parent is the separator", item.parentId, sepId);
     check("child link persisted", item.link, "https://example.com/qa");
     check("child title persisted", item.title, `ZZ QA Child ${STAMP}`);
+    check("url saved with the right type", item.type, "url");
   }
 
   // ---------- 3. create unpublished (exercises the published repair path) ----------
@@ -122,6 +126,25 @@ async function main() {
     const item = await readBack(artId);
     checkTrue("link points at the article view", String(item.link).includes("view=article"));
     check("request id persisted", (item.request as unknown as Record<string, string>)?.id, String(articleId));
+    // A component type still goes through item.setType — this is the other side of the
+    // skip, and the case where the round trip actually earns its two requests.
+    checkTrue("article item bound to com_content", String(item.link).includes("option=com_content"));
+  }
+
+  // ---------- 4b. "heading" is our alias for Joomla's separator type ----------
+  console.log("\n[4b] create a heading");
+  const heading = await client.createMenuItem({
+    title: `ZZ QA Heading ${STAMP}`,
+    menuType: MENU,
+    itemType: "heading",
+  });
+  const headingId = String((heading.data as Record<string, string>)?.id || "");
+  created.push(headingId);
+  checkTrue("heading create reports success", heading.success === true);
+  {
+    const item = await readBack(headingId);
+    check("heading saved as a separator", item.type, "separator");
+    check("heading title persisted", item.title, `ZZ QA Heading ${STAMP}`);
   }
 
   // ---------- 5. update several fields at once ----------
@@ -181,6 +204,29 @@ async function main() {
     const rows = (listed.data || []) as Array<Record<string, string>>;
     const stuck = rows.filter((r) => created.includes(r.id) && r.checkedOut === "1");
     checkTrue(`no QA item is left checked out (${stuck.map((s) => s.title).join(", ") || "none"})`, stuck.length === 0);
+  }
+
+  // ---------- 9b. com_menus list filters are sticky in the session ----------
+  // Joomla stores menutype, search and published filters per session and reapplies them
+  // to any later request that omits them. A scoped read therefore used to narrow every
+  // read after it: "list all menus" silently returned only the last menu scoped.
+  console.log("\n[9b] a scoped list does not narrow the next unscoped list");
+  {
+    const scoped = ((await auditor.listMenuItems(MENU)).data || []) as Array<Record<string, string>>;
+    const unscoped = ((await auditor.listMenuItems()).data || []) as Array<Record<string, string>>;
+    const scopedIds = new Set(scoped.map((r) => r.id));
+    const outsideMenu = unscoped.filter((r) => !scopedIds.has(r.id));
+    checkTrue(
+      `unscoped list reaches past "${MENU}" (scoped=${scoped.length}, unscoped=${unscoped.length}, outside=${outsideMenu.length})`,
+      outsideMenu.length > 0,
+    );
+    // A search filter must not survive into the next unfiltered read either.
+    await auditor.listMenuItems(MENU, `ZZ QA Sep ${STAMP}`);
+    const afterSearch = ((await auditor.listMenuItems(MENU)).data || []) as Array<Record<string, string>>;
+    checkTrue(
+      `a previous search does not narrow the next list (${afterSearch.length} rows)`,
+      afterSearch.length === scoped.length,
+    );
   }
 
   // ---------- 10. delete ----------

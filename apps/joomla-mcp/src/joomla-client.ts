@@ -141,6 +141,9 @@ export class JoomlaClient {
   private _menuCreateQueue: Promise<void> = Promise.resolve();
   /** Installed menu item types — immutable for the life of the session. */
   private _menuItemTypesCache: MenuItemType[] | null = null;
+
+  /** mod_* name -> resolved type, keyed by "<clientId>:<mod_name>". See resolveModuleType. */
+  private _moduleTypeCache: Map<string, ModuleType> = new Map();
   /** Set JOOMLA_MCP_TIMING=1 to log per-phase timings for slow admin operations. */
   static readonly TIMING = process.env.JOOMLA_MCP_TIMING === "1";
 
@@ -159,6 +162,9 @@ export class JoomlaClient {
     this.gantryEntryUrl = null;
     this.gantryOutlineLayoutUrls.clear();
     this.gantryLayoutRootCache.clear();
+    // Installed menu item types are per-site — carrying them across a switch would
+    // resolve an itemType against the previous site's component list.
+    this._menuItemTypesCache = null;
   }
 
   private getAdminUrl(path = ""): string {
@@ -495,34 +501,186 @@ export class JoomlaClient {
       option: "com_menus",
       view: "items",
       limit: "0",
+      // Every com_menus list filter is sticky: Joomla stores it in the session and
+      // reapplies it to later requests that omit it. So a scoped read would silently
+      // narrow every read after it — an "all menus" list returning only the last menu
+      // scoped, or a verification read missing a trashed row. Send all three on every
+      // request, empty when we mean unfiltered, so the URL fully determines the result.
+      menutype: menuType ?? "",
+      // com_menus honours an "id:<n>" search prefix, which is how the write paths
+      // address exactly one row. A plain title search is a LIKE match, so it can pull
+      // in siblings and is not a safe basis for verifying one item.
+      "filter[search]": search ?? "",
+      "filter[published]": "",
     });
-    if (menuType) params.set("menutype", menuType);
-    // Filtering server-side keeps verification reads to a few KB. Unfiltered the
-    // list renders every item in the menu — ~95KB on a mid-sized site, fetched
-    // several times per write.
-    if (search !== undefined) params.set("filter[search]", search);
     return this.getAdminUrl(`index.php?${params.toString()}`);
   }
 
   /**
-   * Check a menu item back in using a token we already hold, in one request.
+   * Check a record back in using a token we already hold, in one request.
    *
-   * Opening the edit form (task=item.edit) checks the item out, so every read of a
-   * menu item has to release it again. The full checkInMenuItem tool costs several
-   * requests because it re-verifies the target first; internal callers already know
-   * the target is right, so they use this instead. Joomla routes POSTs by the task
-   * field, and its CSRF tokens are per-session, so the list URL plus an edit-page
-   * token is a valid check-in with no page fetch of its own.
+   * Opening any Joomla edit form (task=<x>.edit) checks the record out, so every read
+   * has to release it again. The full checkIn* tools cost several requests because they
+   * re-verify the target first; internal callers already know the target is right, so
+   * they use this instead. Joomla routes POSTs by the task field, and its CSRF tokens
+   * are per-session, so a list URL plus an edit-page token is a valid check-in with no
+   * page fetch of its own.
    */
-  private async quickCheckIn(id: string, token: { name: string; value: string } | null): Promise<boolean> {
+  private async quickCheckInRecord(
+    id: string,
+    listPath: string,
+    task: string,
+    token: { name: string; value: string } | null
+  ): Promise<boolean> {
     if (!token) return false;
-    const url = this.getAdminUrl("index.php?option=com_menus&view=items");
     const result = await this.postPage(
-      url,
-      { task: "items.checkin", "cid[]": id, boxchecked: "1" },
+      this.getAdminUrl(listPath),
+      { task, "cid[]": id, boxchecked: "1" },
       { token, noFollow: true }
     );
     return result.redirected;
+  }
+
+  private quickCheckIn(id: string, token: { name: string; value: string } | null): Promise<boolean> {
+    return this.quickCheckInRecord(id, "index.php?option=com_menus&view=items", "items.checkin", token);
+  }
+
+  /**
+   * List URLs for the other three components, on the same terms as getMenuItemsListUrl:
+   * every sticky filter is sent on every request (empty when we mean unfiltered) so the
+   * URL fully determines the result, and "id:<n>" addresses exactly one row rather than
+   * relying on a title LIKE match.
+   */
+  private getArticlesListUrl(search?: string, categoryId?: string): string {
+    const params = new URLSearchParams({
+      option: "com_content",
+      view: "articles",
+      limit: "0",
+      "filter[search]": search ?? "",
+      "filter[published]": "",
+      "filter[category_id]": categoryId ?? "",
+    });
+    return this.getAdminUrl(`index.php?${params.toString()}`);
+  }
+
+  private getCategoriesListUrl(search?: string, extension = "com_content"): string {
+    const params = new URLSearchParams({
+      option: "com_categories",
+      view: "categories",
+      extension,
+      limit: "0",
+      "filter[search]": search ?? "",
+      "filter[published]": "",
+    });
+    return this.getAdminUrl(`index.php?${params.toString()}`);
+  }
+
+  private getModulesListUrl(search?: string, clientId = "0"): string {
+    const params = new URLSearchParams({
+      option: "com_modules",
+      view: "modules",
+      client_id: clientId,
+      limit: "0",
+      "filter[search]": search ?? "",
+      "filter[state]": "",
+      "filter[position]": "",
+    });
+    return this.getAdminUrl(`index.php?${params.toString()}`);
+  }
+
+  private quickCheckInArticle(id: string, token: { name: string; value: string } | null): Promise<boolean> {
+    return this.quickCheckInRecord(id, "index.php?option=com_content&view=articles", "articles.checkin", token);
+  }
+
+  private quickCheckInCategory(id: string, token: { name: string; value: string } | null): Promise<boolean> {
+    return this.quickCheckInRecord(
+      id,
+      "index.php?option=com_categories&view=categories&extension=com_content",
+      "categories.checkin",
+      token
+    );
+  }
+
+  private quickCheckInModule(id: string, token: { name: string; value: string } | null): Promise<boolean> {
+    return this.quickCheckInRecord(id, "index.php?option=com_modules&view=modules", "modules.checkin", token);
+  }
+
+  /**
+   * Read one menu item's row from the items list, plus a token for the task that follows.
+   *
+   * The list-driven writes (toggle, check-in, trash) need four things about their target
+   * before they act: that it exists, its title, its state, and a CSRF token. Reading the
+   * edit form gets all four but costs three requests — Joomla 303s task=item.edit to the
+   * form, the form is ~71KB, and opening it checks the item out, so it has to be checked
+   * back in before a list task will touch it. The list row carries the same four things
+   * in one request and takes no checkout at all.
+   *
+   * Requires the menuType so the list can be scoped server-side; callers that do not know
+   * it fall back to the edit form. Returns null when the row is not in the list.
+   */
+  private async findMenuItemRow(
+    id: string,
+    menuType: string,
+  ): Promise<{ row: Record<string, string>; token: { name: string; value: string } | null } | null> {
+    const { html, token } = await this.getPage(this.getMenuItemsListUrl(menuType, `id:${id}`));
+    const row = this.parseMenuItemList(html).find((entry) => entry.id === id);
+    return row ? { row, token } : null;
+  }
+
+  /**
+   * Shared safety check for the list-driven menu item writes (toggle, check-in, trash).
+   *
+   * Establishes that the target exists and matches what the caller expected, and returns
+   * a token for the task. Prefers the one-request list row; falls back to the edit form
+   * when the menu is unknown or the row is not listed, which also recovers the menuType.
+   */
+  private async menuItemPreflight(
+    id: string,
+    menuType: string | undefined,
+    verb: string,
+    options: { expectedTitle?: string; expectedMenuType?: string },
+  ): Promise<
+    | { ok: true; title: string; menuType: string; token: { name: string; value: string }; row: Record<string, string> | null }
+    | { ok: false; message: string }
+  > {
+    let title = "";
+    let actualMenuType = menuType || "";
+    let token: { name: string; value: string } | null = null;
+    let row: Record<string, string> | null = null;
+
+    if (actualMenuType) {
+      const found = await this.findMenuItemRow(id, actualMenuType);
+      if (found) {
+        row = found.row;
+        title = found.row.title;
+        token = found.token;
+      }
+    }
+
+    if (!row) {
+      // No menuType to scope by, or the id is not in that menu. The edit form answers
+      // both questions, at the cost of a checkout we have to release again.
+      const before = await this.fetchMenuItemForm(id);
+      if (!before.success) {
+        return { ok: false, message: `Refusing to ${verb} menu item ${id} because the current target could not be verified` };
+      }
+      const item = (before.data || {}) as Record<string, unknown>;
+      title = String(item.title || "");
+      actualMenuType = menuType || String(item.menuType || "");
+      token = before.token ?? null;
+      await this.quickCheckIn(id, token);
+    }
+
+    if (options.expectedTitle && this.decodeHtmlEntities(title) !== this.decodeHtmlEntities(options.expectedTitle)) {
+      return { ok: false, message: `Refusing to ${verb} menu item ${id}: expected title ${options.expectedTitle}, found ${title}` };
+    }
+    if (options.expectedMenuType && actualMenuType !== options.expectedMenuType) {
+      return { ok: false, message: `Refusing to ${verb} menu item ${id}: expected menuType ${options.expectedMenuType}, found ${actualMenuType}` };
+    }
+    if (!token) {
+      return { ok: false, message: "Failed to extract CSRF token" };
+    }
+    return { ok: true, title, menuType: actualMenuType, token, row };
   }
 
   private parseMenuItemTypes(html: string): MenuItemType[] {
@@ -2620,15 +2778,17 @@ export class JoomlaClient {
     return articles;
   }
 
-  private async fetchArticleForm(id: string): Promise<JoomlaResponse> {
+  /** The token is returned so callers can post follow-up tasks without re-fetching a page. */
+  private async fetchArticleForm(id: string): Promise<JoomlaResponse & { token?: { name: string; value: string } | null }> {
     const url = this.getAdminUrl(`index.php?option=com_content&task=article.edit&id=${id}`);
-    const { html } = await this.getPage(url);
+    const { html, token } = await this.getPage(url);
     const article = this.parseArticleForm(html);
     return {
       success: !!article.title,
       message: article.title ? "Article retrieved" : "Failed to parse article form",
       data: article,
       html,
+      token,
     };
   }
 
@@ -2642,12 +2802,16 @@ export class JoomlaClient {
     }
     const result = await this.fetchArticleForm(id!);
     if (result.success) {
-      const ci = await this.checkInArticle(id!);
-      if (!ci.success) {
+      // Release the checkout the edit form just took. This used to call the full
+      // checkInArticle tool, which re-fetched the form and listed every article to
+      // verify a target this method had already read.
+      const released = await this.quickCheckInArticle(id!, result.token ?? null);
+      if (!released) {
         result.message = (result.message ?? "") + " (warning: auto-checkin failed)";
       }
     }
-    return result;
+    const { token: _token, ...response } = result;
+    return response;
   }
 
   private parseArticleForm(html: string): Record<string, string> {
@@ -2717,7 +2881,9 @@ export class JoomlaClient {
     }
     if (data.featuredImageAlt !== undefined) formData["jform[images][image_fulltext_alt]"] = data.featuredImageAlt;
 
-    const result = await this.postPage(newArticleUrl, formData);
+    // Reuse the add form we just fetched — postPage would otherwise re-GET it, and the
+    // article edit form is the heaviest page in the admin (~1.4MB with the editor).
+    const result = await this.postPage(newArticleUrl, formData, { prefetchedHtml: html });
 
     // Accept a redirect (302/303) as a success signal — Joomla 3 always redirects on save,
     // and the destination page (article list) may not contain "Article saved" text.
@@ -2763,18 +2929,38 @@ export class JoomlaClient {
       };
     };
 
+    // task=article.apply redirects to the new article's own edit form, so result.html is
+    // already the readback — no need to fetch that ~1.4MB page again. apply leaves the
+    // article checked out either way, so release it once we have the values.
+    const applyHtmlIsForm = /view=article\b/.test(result.redirectUrl ?? "") && /layout=edit/.test(result.redirectUrl ?? "");
+    let verify: JoomlaResponse | null = null;
+    let verifyToken: { name: string; value: string } | null = null;
+    if (createdId && applyHtmlIsForm) {
+      const parsed = this.parseArticleForm(result.html);
+      if (parsed.title) {
+        verify = { success: true, message: "Article retrieved", data: parsed };
+        verifyToken = this.extractCsrfToken(result.html);
+      }
+    }
+    if (createdId && !verify) {
+      const fetched = await this.fetchArticleForm(createdId);
+      verify = fetched;
+      verifyToken = fetched.token ?? null;
+    }
+    let verification = buildVerification(verify);
+    let verified = Object.values(verification).every((value) => value === true);
     // Read-after-write lag: the row can exist server-side before a readback reflects
     // it, especially under concurrent/parallel creates. Retry the readback (not just
     // the list-scan above) before reporting an unverified create.
-    let verify = createdId ? await this.getArticle(createdId) : null;
-    let verification = buildVerification(verify);
-    let verified = Object.values(verification).every((value) => value === true);
     if (createdId && !verified) {
       await new Promise((r) => setTimeout(r, 800));
-      verify = await this.getArticle(createdId);
+      const retry = await this.fetchArticleForm(createdId);
+      verify = retry;
+      verifyToken = retry.token ?? null;
       verification = buildVerification(verify);
       verified = Object.values(verification).every((value) => value === true);
     }
+    if (createdId) await this.quickCheckInArticle(createdId, verifyToken);
     const article = ((verify?.data || {}) as Record<string, string>);
 
     return {
@@ -2828,7 +3014,10 @@ export class JoomlaClient {
     const content = data.content ?? existingArticle.content;
     const formData: FormDataMap = {
       ...this.extractFormFields(html),
-      task: "article.save",
+      // "apply" rather than "save": both persist identically, but apply redirects back to
+      // this article's edit form, so the response IS the readback — and that form is
+      // ~1.4MB, so not fetching it twice is the single biggest saving here.
+      task: "article.apply",
       "jform[title]": data.title ?? existingArticle.title,
       "jform[alias]": data.alias ?? existingArticle.alias,
       "jform[catid]": data.categoryId ?? existingArticle.categoryId,
@@ -2847,10 +3036,24 @@ export class JoomlaClient {
       formData["jform[ordering]"] = data.ordering;
     }
 
-    const result = await this.postPage(editUrl, formData);
+    const result = await this.postPage(editUrl, formData, { prefetchedHtml: html });
     const successMsg = result.html.includes("Article saved") || result.html.includes("The article has been saved");
     const errorMsg = this.extractAlertMessage(result.html);
-    const verify = await this.getArticle(id);
+    let verify: JoomlaResponse | null = null;
+    let verifyToken: { name: string; value: string } | null = null;
+    if (/view=article\b/.test(result.redirectUrl ?? "") && /layout=edit/.test(result.redirectUrl ?? "")) {
+      const parsed = this.parseArticleForm(result.html);
+      if (parsed.title) {
+        verify = { success: true, message: "Article retrieved", data: parsed };
+        verifyToken = this.extractCsrfToken(result.html);
+      }
+    }
+    if (!verify) {
+      const fetched = await this.fetchArticleForm(id);
+      verify = fetched;
+      verifyToken = fetched.token ?? null;
+    }
+    await this.quickCheckInArticle(id, verifyToken);
     const article = (verify.data || {}) as Record<string, string>;
     const expectedTitle = String(formData["jform[title]"] || "");
     const expectedAlias = String(formData["jform[alias]"] || "");
@@ -2883,37 +3086,35 @@ export class JoomlaClient {
     }
 
   async deleteArticle(id: string, options: { expectedTitle?: string } = {}): Promise<JoomlaResponse> {
-    const before = await this.getArticle(id);
+    // Read the edit form directly rather than through getArticle: the token it yields
+    // authenticates the trash task below, and articles.trash fails on a checked-out
+    // article, so the checkout this read takes must be released first anyway.
+    const before = await this.fetchArticleForm(id);
     const articleBefore = (before.data || {}) as Record<string, string>;
     const title = articleBefore.title || "";
+    const token = before.token ?? null;
     if (!before.success) {
       return { success: false, message: `Refusing to delete article ${id} because the current target could not be verified` };
     }
+    if (!token) {
+      return { success: false, message: "Failed to extract CSRF token" };
+    }
+    // Release before the guard below, not after: the read above checked the article out,
+    // and a guard that refuses the delete still has to leave the record unlocked.
+    await this.quickCheckInArticle(id, token);
     if (options.expectedTitle && title !== options.expectedTitle) {
       return { success: false, message: `Refusing to delete article ${id}: expected title ${options.expectedTitle}, found ${title}` };
     }
 
-    const listUrl = this.getAdminUrl("index.php?option=com_content&view=articles");
-    const { html } = await this.getPage(listUrl);
-    const token = this.extractCsrfToken(html);
-
-    if (!token) {
-      return { success: false, message: "Failed to extract CSRF token" };
-    }
-
-    const formData: Record<string, string> = {
-      task: "articles.trash",
-      "cid[]": id,
-      [token.name]: token.value,
-    };
-
-    const result = await this.postPage(listUrl, formData);
+    // Post the task at the single-row list URL so its redirect target doubles as the
+    // "is it still listed?" check, without listing every article on the site.
+    const listUrl = this.getArticlesListUrl(`id:${id}`);
+    const result = await this.postPage(listUrl, { task: "articles.trash", "cid[]": id }, { token });
     const successMsg = /article[s]?\s+(trashed|deleted)|has been (trashed|deleted)/i.test(result.html);
     const errorMsg = this.extractAlertMessage(result.html);
-    const listResult = await this.listArticles();
-    const articles = Array.isArray(listResult.data) ? listResult.data as Array<Record<string, string>> : [];
-    const stillListed = articles.some((entry) => entry.id === id);
-    const verify = await this.getArticle(id);
+    const stillListed = this.parseArticleList(result.html).some((entry) => entry.id === id);
+    const verify = await this.fetchArticleForm(id);
+    if (verify.success) await this.quickCheckInArticle(id, verify.token ?? null);
     const verified = !stillListed && (successMsg || this.isDeletionVerified(stillListed, verify, ["published", "state"]));
 
     return {
@@ -2935,7 +3136,9 @@ export class JoomlaClient {
     }
 
   async checkInArticle(id: string, options: { expectedTitle?: string } = {}): Promise<JoomlaResponse> {
-    const listUrl = this.getAdminUrl("index.php?option=com_content&view=articles");
+    // Address exactly this row, so the preflight, the task, and the verification all
+    // read a single-row page instead of every article on the site.
+    const listUrl = this.getArticlesListUrl(`id:${id}`);
     const { html: listHtml } = await this.getPage(listUrl);
     const token = this.extractCsrfToken(listHtml);
 
@@ -2951,17 +3154,20 @@ export class JoomlaClient {
       }
     }
 
+    // The page above supplies the token, and the task's redirect target is the same
+    // filtered list, so it doubles as the verification read.
     const result = await this.postPage(listUrl, {
       task: "articles.checkin",
       "cid[]": id,
       boxchecked: "1",
-      [token.name]: token.value,
-    });
+    }, { token });
     const errorMsg = this.extractAlertMessage(result.html);
 
-    const listed = await this.listArticles();
-    const listedArticles = (listed.data || []) as Array<Record<string, string>>;
-    const listedArticle = listedArticles.find((entry) => entry.id === id);
+    let listedArticle = this.parseArticleList(result.html).find((entry) => entry.id === id);
+    if (!listedArticle) {
+      const verifyPage = await this.getPage(listUrl);
+      listedArticle = this.parseArticleList(verifyPage.html).find((entry) => entry.id === id);
+    }
     const checkedOutCleared = !!listedArticle && listedArticle.checkedOut !== "1";
 
     return {
@@ -3028,23 +3234,18 @@ export class JoomlaClient {
     return categories;
   }
 
-  private async fetchCategoryForm(id: string): Promise<JoomlaResponse> {
+  /** The token is returned so callers can post follow-up tasks without re-fetching a page. */
+  private async fetchCategoryForm(id: string): Promise<JoomlaResponse & { token?: { name: string; value: string } | null }> {
     const url = this.getAdminUrl(`index.php?option=com_categories&task=category.edit&id=${id}&extension=com_content`);
-    const { html } = await this.getPage(url);
-
-    const fields = this.extractFormFields(html);
-    const category: Record<string, string> = {};
-    category.title = this.getJFormField(fields, "title");
-    category.alias = this.getJFormField(fields, "alias");
-    category.parentId = this.getJFormField(fields, "parent_id", "1");
-    category.description = this.getJFormField(fields, "description");
-    category.published = this.getJFormField(fields, "published", "1");
+    const { html, token } = await this.getPage(url);
+    const category = this.parseCategoryForm(html);
 
     return {
       success: !!category.title,
       message: category.title ? "Category retrieved" : "Failed to parse category form",
       data: category,
       html,
+      token,
     };
   }
 
@@ -3058,12 +3259,16 @@ export class JoomlaClient {
     }
     const result = await this.fetchCategoryForm(id!);
     if (result.success) {
-      const ci = await this.checkInCategory(id!);
-      if (!ci.success) {
+      // Release the checkout the edit form just took. This used to call the full
+      // checkInCategory tool, which re-fetched the form and listed every category to
+      // verify a target this method had already read.
+      const released = await this.quickCheckInCategory(id!, result.token ?? null);
+      if (!released) {
         result.message = (result.message ?? "") + " (warning: auto-checkin failed)";
       }
     }
-    return result;
+    const { token: _token, ...response } = result;
+    return response;
   }
 
   async createCategory(data: {
@@ -3098,7 +3303,8 @@ export class JoomlaClient {
       [token.name]: token.value,
     };
 
-    const result = await this.postPage(newCatUrl, formData);
+    // Reuse the add form we just fetched — postPage would otherwise re-GET it.
+    const result = await this.postPage(newCatUrl, formData, { prefetchedHtml: html });
     // Accept a redirect (302/303) as a success signal — same pattern as createArticle.
     const successMsg = result.redirected || result.html.includes("Category saved") || result.html.includes("has been saved");
     const errorMsg = this.extractAlertMessage(result.html);
@@ -3123,7 +3329,23 @@ export class JoomlaClient {
         createdId = foundRetry?.id || "";
       }
     }
-    const verify = createdId ? await this.getCategory(createdId) : null;
+    // task=category.apply redirects to the new category's own edit form, so result.html
+    // is already the readback. apply leaves it checked out, so release it afterwards.
+    let verify: JoomlaResponse | null = null;
+    let verifyToken: { name: string; value: string } | null = null;
+    if (createdId && /view=category\b/.test(result.redirectUrl ?? "") && /layout=edit/.test(result.redirectUrl ?? "")) {
+      const parsed = this.parseCategoryForm(result.html);
+      if (parsed.title) {
+        verify = { success: true, message: "Category retrieved", data: parsed };
+        verifyToken = this.extractCsrfToken(result.html);
+      }
+    }
+    if (createdId && !verify) {
+      const fetched = await this.fetchCategoryForm(createdId);
+      verify = fetched;
+      verifyToken = fetched.token ?? null;
+    }
+    if (createdId) await this.quickCheckInCategory(createdId, verifyToken);
     const category = ((verify?.data || {}) as Record<string, string>);
     const verification = {
       attempted: true,
@@ -3171,7 +3393,9 @@ export class JoomlaClient {
 
     const formData: FormDataMap = {
       ...this.extractFormFields(html),
-      task: "category.save",
+      // "apply" rather than "save": both persist identically, but apply redirects back
+      // to this category's edit form, so the response IS the verification readback.
+      task: "category.apply",
       "jform[title]": data.title ?? existingCategory.title,
       "jform[alias]": data.alias ?? existingCategory.alias,
       "jform[parent_id]": data.parentId ?? existingCategory.parentId,
@@ -3181,10 +3405,26 @@ export class JoomlaClient {
       [token.name]: token.value,
     };
 
-    const result = await this.postPage(editUrl, formData);
+    const result = await this.postPage(editUrl, formData, { prefetchedHtml: html });
     const successMsg = result.html.includes("Category saved") || result.html.includes("has been saved");
     const errorMsg = this.extractAlertMessage(result.html);
-    const verify = await this.getCategory(id);
+    // The apply redirect lands on this category's edit form, so parse the response we
+    // already have. Fall back to an explicit read if Joomla redirected elsewhere.
+    let verify: JoomlaResponse | null = null;
+    let verifyToken: { name: string; value: string } | null = null;
+    if (/view=category\b/.test(result.redirectUrl ?? "") && /layout=edit/.test(result.redirectUrl ?? "")) {
+      const parsed = this.parseCategoryForm(result.html);
+      if (parsed.title) {
+        verify = { success: true, message: "Category retrieved", data: parsed };
+        verifyToken = this.extractCsrfToken(result.html);
+      }
+    }
+    if (!verify) {
+      const fetched = await this.fetchCategoryForm(id);
+      verify = fetched;
+      verifyToken = fetched.token ?? null;
+    }
+    await this.quickCheckInCategory(id, verifyToken);
     const category = (verify.data || {}) as Record<string, string>;
     const verification = {
       attempted: true,
@@ -3309,37 +3549,35 @@ export class JoomlaClient {
   }
 
   async deleteCategory(id: string, options: { expectedTitle?: string } = {}): Promise<JoomlaResponse> {
-    const before = await this.getCategory(id);
+    // Read the edit form directly rather than through getCategory: the token it yields
+    // authenticates the trash task below, and categories.trash fails on a checked-out
+    // category, so the checkout this read takes must be released first anyway.
+    const before = await this.fetchCategoryForm(id);
     const categoryBefore = (before.data || {}) as Record<string, string>;
     const title = categoryBefore.title || "";
+    const token = before.token ?? null;
     if (!before.success) {
       return { success: false, message: `Refusing to delete category ${id} because the current target could not be verified` };
     }
+    if (!token) {
+      return { success: false, message: "Failed to extract CSRF token" };
+    }
+    // Release before the guard below, not after: the read above checked the category out,
+    // and a guard that refuses the delete still has to leave the record unlocked.
+    await this.quickCheckInCategory(id, token);
     if (options.expectedTitle && title !== options.expectedTitle) {
       return { success: false, message: `Refusing to delete category ${id}: expected title ${options.expectedTitle}, found ${title}` };
     }
 
-    const listUrl = this.getAdminUrl("index.php?option=com_categories&view=categories&extension=com_content");
-    const { html } = await this.getPage(listUrl);
-    const token = this.extractCsrfToken(html);
-
-    if (!token) {
-      return { success: false, message: "Failed to extract CSRF token" };
-    }
-
-    const formData: Record<string, string> = {
-      task: "categories.trash",
-      "cid[]": id,
-      [token.name]: token.value,
-    };
-
-    const result = await this.postPage(listUrl, formData);
+    // Post the task at the single-row list URL so its redirect target doubles as the
+    // "is it still listed?" check, without listing every category on the site.
+    const listUrl = this.getCategoriesListUrl(`id:${id}`);
+    const result = await this.postPage(listUrl, { task: "categories.trash", "cid[]": id }, { token });
     const successMsg = /categor(y|ies)\s+(trashed|deleted)|has been (trashed|deleted)/i.test(result.html);
     const errorMsg = this.extractAlertMessage(result.html);
-    const listResult = await this.listCategories();
-    const categories = Array.isArray(listResult.data) ? listResult.data as Array<Record<string, string>> : [];
-    const stillListed = categories.some((entry) => entry.id === id);
-    const verify = await this.getCategory(id);
+    const stillListed = this.parseCategoryList(result.html).some((entry) => entry.id === id);
+    const verify = await this.fetchCategoryForm(id);
+    if (verify.success) await this.quickCheckInCategory(id, verify.token ?? null);
     const verified = this.isDeletionVerified(stillListed, verify, ["published", "state"]);
 
     return {
@@ -3367,29 +3605,33 @@ export class JoomlaClient {
     if (!before.success) {
       return { success: false, message: `Refusing to check in category ${id} because the current target could not be verified` };
     }
+
+    const token = before.token ?? null;
+    if (!token) {
+      return { success: false, message: "Failed to extract CSRF token" };
+    }
+    // Release before the guard below, not after: the read above checked the category out,
+    // and a check-in tool that refuses must not itself leave the record locked.
+    await this.quickCheckInCategory(id, token);
     if (options.expectedTitle && title !== options.expectedTitle) {
       return { success: false, message: `Refusing to check in category ${id}: expected title ${options.expectedTitle}, found ${title}` };
     }
 
-    const listUrl = this.getAdminUrl("index.php?option=com_categories&view=categories&extension=com_content");
-    const { html } = await this.getPage(listUrl);
-    const token = this.extractCsrfToken(html);
-
-    if (!token) {
-      return { success: false, message: "Failed to extract CSRF token" };
-    }
-
+    // The preflight above holds a valid session token, so the task needs no page fetch
+    // of its own, and its redirect target — the single-row list — is the verification read.
+    const listUrl = this.getCategoriesListUrl(`id:${id}`);
     const result = await this.postPage(listUrl, {
       task: "categories.checkin",
       "cid[]": id,
       boxchecked: "1",
-      [token.name]: token.value,
-    });
+    }, { token });
     const errorMsg = this.extractAlertMessage(result.html);
 
-    const listed = await this.listCategories();
-    const listedCategories = (listed.data || []) as Array<Record<string, string>>;
-    const listedCategory = listedCategories.find((entry) => entry.id === id);
+    let listedCategory = this.parseCategoryList(result.html).find((entry) => entry.id === id);
+    if (!listedCategory) {
+      const verifyPage = await this.getPage(listUrl);
+      listedCategory = this.parseCategoryList(verifyPage.html).find((entry) => entry.id === id);
+    }
     const checkedOutCleared = !!listedCategory && listedCategory.checkedOut !== "1";
 
     return {
@@ -3488,21 +3730,49 @@ export class JoomlaClient {
     ) || null;
   }
 
+  /**
+   * Rank candidate types so the likely match is probed first.
+   *
+   * The module select page lists display titles ("Custom", "Articles - Archived") and
+   * never the mod_* name, so a request for "mod_custom" cannot be matched from the list
+   * alone — each candidate's add form has to be opened to read its real name. Probing in
+   * page order meant ~9 types (18 requests) before reaching Custom. Comparing the
+   * stripped name against the normalised title puts the right one first.
+   */
+  private scoreModuleTypeCandidate(type: ModuleType, strippedName: string): number {
+    const normalisedTitle = type.title.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (normalisedTitle === strippedName) return 0;
+    if (normalisedTitle.startsWith(strippedName) || strippedName.startsWith(normalisedTitle)) return 1;
+    if (normalisedTitle.includes(strippedName)) return 2;
+    return 3;
+  }
+
   private async resolveModuleType(types: ModuleType[], moduleType: string, clientId = "0"): Promise<ModuleType | null> {
     const direct = this.findModuleType(types, moduleType);
     if (direct) return direct;
 
     const lowered = moduleType.toLowerCase();
-    for (const type of types) {
+    // The eid for a given mod_* name is fixed for the life of the install, so one probe
+    // per name per session is enough — a batch build creating many modules of the same
+    // type used to repeat the whole search for every single one.
+    const cacheKey = `${clientId}:${lowered}`;
+    const cached = this._moduleTypeCache.get(cacheKey);
+    if (cached) return cached;
+
+    const strippedName = lowered.replace(/^mod_/, "").replace(/[^a-z0-9]/g, "");
+    const ordered = [...types].sort(
+      (a, b) => this.scoreModuleTypeCandidate(a, strippedName) - this.scoreModuleTypeCandidate(b, strippedName)
+    );
+
+    for (const type of ordered) {
       const addUrl = this.getAdminUrl(`index.php?option=com_modules&task=module.add&eid=${type.id}&client_id=${clientId}`);
       const { html } = await this.getPage(addUrl);
       const parsed = this.parseModuleForm(html);
       const actualModule = String(parsed.moduleType || "").toLowerCase();
       if (actualModule === lowered) {
-        return {
-          ...type,
-          module: String(parsed.moduleType || ""),
-        };
+        const resolved = { ...type, module: String(parsed.moduleType || "") };
+        this._moduleTypeCache.set(cacheKey, resolved);
+        return resolved;
       }
     }
 
@@ -3679,9 +3949,10 @@ export class JoomlaClient {
     };
   }
 
-  private async fetchModuleForm(id: string): Promise<JoomlaResponse> {
+  /** The token is returned so callers can post follow-up tasks without re-fetching a page. */
+  private async fetchModuleForm(id: string): Promise<JoomlaResponse & { token?: { name: string; value: string } | null }> {
     const url = this.getAdminUrl(`index.php?option=com_modules&task=module.edit&id=${id}`);
-    const { html } = await this.getPage(url);
+    const { html, token } = await this.getPage(url);
     const module = this.parseModuleForm(html);
 
     return {
@@ -3689,6 +3960,7 @@ export class JoomlaClient {
       message: module.title ? "Module retrieved" : "Failed to parse module form",
       data: module,
       html,
+      token,
     };
   }
 
@@ -3702,12 +3974,16 @@ export class JoomlaClient {
     }
     const result = await this.fetchModuleForm(id!);
     if (result.success) {
-      const ci = await this.checkInModule(id!);
-      if (!ci.success) {
+      // Release the checkout the edit form just took. This used to call the full
+      // checkInModule tool, which re-fetched the form and listed every module to verify
+      // a target this method had already read.
+      const released = await this.quickCheckInModule(id!, result.token ?? null);
+      if (!released) {
         result.message = (result.message ?? "") + " (warning: auto-checkin failed)";
       }
     }
-    return result;
+    const { token: _token, ...response } = result;
+    return response;
   }
 
   async exportModuleBlueprint(
@@ -3901,7 +4177,9 @@ export class JoomlaClient {
 
     const formData: FormDataMap = {
       ...this.extractFormFields(html),
-      task: "module.save",
+      // "apply" rather than "save": both persist identically, but apply redirects back
+      // to this module's edit form, so the response IS the verification readback.
+      task: "module.apply",
       "jform[title]": data.title ?? String(existingModule.title || ""),
       "jform[position]": data.position ?? String(existingModule.position || ""),
       "jform[published]": data.published ?? String(existingModule.published || "1"),
@@ -3934,10 +4212,26 @@ export class JoomlaClient {
 
     Object.assign(formData, data.fieldOverrides || {});
 
-    const result = await this.postPage(editUrl, formData);
+    const result = await this.postPage(editUrl, formData, { prefetchedHtml: html });
     const successMsg = result.html.includes("Module saved") || result.html.includes("has been saved");
     const errorMsg = this.extractAlertMessage(result.html);
-    const verify = await this.getModule(id);
+    // The apply redirect lands on this module's edit form, so parse the response we
+    // already have. Fall back to an explicit read if Joomla redirected elsewhere.
+    let verify: JoomlaResponse | null = null;
+    let verifyToken: { name: string; value: string } | null = null;
+    if (/view=module\b/.test(result.redirectUrl ?? "") && /layout=edit/.test(result.redirectUrl ?? "")) {
+      const parsed = this.parseModuleForm(result.html);
+      if (parsed.title) {
+        verify = { success: true, message: "Module retrieved", data: parsed };
+        verifyToken = this.extractCsrfToken(result.html);
+      }
+    }
+    if (!verify) {
+      const fetched = await this.fetchModuleForm(id);
+      verify = fetched;
+      verifyToken = fetched.token ?? null;
+    }
+    await this.quickCheckInModule(id, verifyToken);
     const module = (verify.data || {}) as Record<string, unknown>;
     const expectedAssigned = data.assigned ?? (Array.isArray(existingModule.assigned) ? existingModule.assigned as string[] : []);
     const actualAssigned = Array.isArray(module.assigned) ? module.assigned as string[] : [];
@@ -4043,7 +4337,8 @@ export class JoomlaClient {
 
     Object.assign(formData, data.fieldOverrides || {});
 
-    const result = await this.postPage(addUrl, formData);
+    // Reuse the add form we just fetched — postPage would otherwise re-GET it.
+    const result = await this.postPage(addUrl, formData, { prefetchedHtml: html });
     const successMsg = result.redirected || /module saved|has been saved/i.test(result.html);
     const errorMsg = this.extractAlertMessage(result.html);
     const idFromRedirect = result.redirectUrl?.match(/[?&]id=(\d+)/)?.[1] ?? "";
@@ -4055,7 +4350,23 @@ export class JoomlaClient {
       savedEntry = this.findLatestByTitle(modules, data.title);
       savedId = String(savedEntry?.id || "");
     }
-    const verify = savedId ? await this.getModule(savedId) : null;
+    // task=module.apply redirects to the new module's own edit form, so result.html is
+    // already the readback. apply leaves it checked out, so release it afterwards.
+    let verify: JoomlaResponse | null = null;
+    let verifyToken: { name: string; value: string } | null = null;
+    if (savedId && /view=module\b/.test(result.redirectUrl ?? "") && /layout=edit/.test(result.redirectUrl ?? "")) {
+      const parsed = this.parseModuleForm(result.html);
+      if (parsed.title) {
+        verify = { success: true, message: "Module retrieved", data: parsed };
+        verifyToken = this.extractCsrfToken(result.html);
+      }
+    }
+    if (savedId && !verify) {
+      const fetched = await this.fetchModuleForm(savedId);
+      verify = fetched;
+      verifyToken = fetched.token ?? null;
+    }
+    if (savedId) await this.quickCheckInModule(savedId, verifyToken);
     const module = ((verify?.data || {}) as Record<string, unknown>);
     const expectedModuleType = String(existingModule.moduleType || "").toLowerCase();
     const actualModuleType = String(module.moduleType || "").toLowerCase();
@@ -4087,14 +4398,24 @@ export class JoomlaClient {
   }
 
   async deleteModule(id: string, options: { clientId?: string; expectedTitle?: string; expectedModuleType?: string } = {}): Promise<JoomlaResponse> {
-    const before = await this.getModule(id);
+    // Read the edit form directly rather than through getModule: the token it yields
+    // authenticates the trash task below, and modules.trash fails on a checked-out
+    // module, so the checkout this read takes must be released first anyway.
+    const before = await this.fetchModuleForm(id);
     const module = (before.data || {}) as Record<string, unknown>;
     const title = String(module.title || "");
     const moduleType = String(module.moduleType || "");
     const clientId = options.clientId || String(module.clientId || "0");
+    const token = before.token ?? null;
     if (!before.success) {
       return { success: false, message: `Refusing to delete module ${id} because the current target could not be verified` };
     }
+    if (!token) {
+      return { success: false, message: "Failed to extract CSRF token" };
+    }
+    // Release before the guards below, not after: the read above checked the module out,
+    // and a guard that refuses the operation still has to leave the record unlocked.
+    await this.quickCheckInModule(id, token);
     if (options.expectedTitle && title !== options.expectedTitle) {
       return { success: false, message: `Refusing to delete module ${id}: expected title ${options.expectedTitle}, found ${title}` };
     }
@@ -4102,27 +4423,15 @@ export class JoomlaClient {
       return { success: false, message: `Refusing to delete module ${id}: expected moduleType ${options.expectedModuleType}, found ${moduleType}` };
     }
 
-    const listUrl = this.getAdminUrl("index.php?option=com_modules&view=modules");
-    const { html } = await this.getPage(listUrl);
-    const token = this.extractCsrfToken(html);
-
-    if (!token) {
-      return { success: false, message: "Failed to extract CSRF token" };
-    }
-
-    const formData: Record<string, string> = {
-      task: "modules.trash",
-      "cid[]": id,
-      [token.name]: token.value,
-    };
-
-    const result = await this.postPage(listUrl, formData);
+    // Post the task at the single-row list URL so its redirect target doubles as the
+    // "is it still listed?" check, without listing every module on the site.
+    const listUrl = this.getModulesListUrl(`id:${id}`, clientId);
+    const result = await this.postPage(listUrl, { task: "modules.trash", "cid[]": id }, { token });
     const successMsg = /module[s]?\s+(trashed|deleted)|has been (trashed|deleted)/i.test(result.html);
     const errorMsg = this.extractAlertMessage(result.html);
-    const listResult = await this.listModules(clientId);
-    const modules = Array.isArray(listResult.data) ? listResult.data as Array<Record<string, string>> : [];
-    const stillListed = modules.some((entry) => entry.id === id);
-    const verify = await this.getModule(id);
+    const stillListed = this.parseModuleList(result.html).some((entry) => entry.id === id);
+    const verify = await this.fetchModuleForm(id);
+    if (verify.success) await this.quickCheckInModule(id, verify.token ?? null);
     const verified = !stillListed && (successMsg || this.isDeletionVerified(stillListed, verify, ["published", "state"]));
 
     return {
@@ -4154,6 +4463,14 @@ export class JoomlaClient {
     if (!before.success) {
       return { success: false, message: `Refusing to check in module ${id} because the current target could not be verified` };
     }
+
+    const token = before.token ?? null;
+    if (!token) {
+      return { success: false, message: "Failed to extract CSRF token" };
+    }
+    // Release before the guards below, not after: the read above checked the module out,
+    // and a check-in tool that refuses must not itself leave the record locked.
+    await this.quickCheckInModule(id, token);
     if (options.expectedTitle && title !== options.expectedTitle) {
       return { success: false, message: `Refusing to check in module ${id}: expected title ${options.expectedTitle}, found ${title}` };
     }
@@ -4161,25 +4478,23 @@ export class JoomlaClient {
       return { success: false, message: `Refusing to check in module ${id}: expected moduleType ${options.expectedModuleType}, found ${moduleType}` };
     }
 
-    const listUrl = this.getAdminUrl("index.php?option=com_modules&view=modules");
-    const { html } = await this.getPage(listUrl);
-    const token = this.extractCsrfToken(html);
-
-    if (!token) {
-      return { success: false, message: "Failed to extract CSRF token" };
-    }
-
+    // Address exactly this row. The old code verified against listModules(), which caps
+    // at 200 rows — a module outside that window read as "not listed" and reported a
+    // false negative even though the check-in had worked. The preflight above supplies
+    // the token, and the task's redirect target is this same single-row list.
+    const listUrl = this.getModulesListUrl(`id:${id}`, String(moduleBefore.clientId || "0"));
     const result = await this.postPage(listUrl, {
       task: "modules.checkin",
       "cid[]": id,
       boxchecked: "1",
-      [token.name]: token.value,
-    });
+    }, { token });
     const errorMsg = this.extractAlertMessage(result.html);
 
-    const listed = await this.listModules(String(moduleBefore.clientId || "0"));
-    const listedModules = (listed.data || []) as Array<Record<string, string>>;
-    const listedModule = listedModules.find((entry) => entry.id === id);
+    let listedModule = this.parseModuleList(result.html).find((entry) => entry.id === id);
+    if (!listedModule) {
+      const verifyPage = await this.getPage(listUrl);
+      listedModule = this.parseModuleList(verifyPage.html).find((entry) => entry.id === id);
+    }
     const checkedOutCleared = !!listedModule && listedModule.checkedOut !== "1";
 
     return {
@@ -4883,13 +5198,24 @@ export class JoomlaClient {
   }
 
   async toggleModule(id: string, state: string, options: { expectedTitle?: string; expectedModuleType?: string } = {}): Promise<JoomlaResponse> {
-    const before = await this.getModule(id);
+    // Read the edit form directly rather than through getModule: we need the token it
+    // yields anyway, and modules.publish fails on a checked-out module, so the checkout
+    // this read takes has to be released before the task below either way.
+    const before = await this.fetchModuleForm(id);
     const moduleBefore = (before.data || {}) as Record<string, unknown>;
     const title = String(moduleBefore.title || "");
     const moduleType = String(moduleBefore.moduleType || "");
+    const clientId = String(moduleBefore.clientId || "0");
+    const token = before.token ?? null;
     if (!before.success) {
       return { success: false, message: `Refusing to change module ${id} because the current target could not be verified` };
     }
+    if (!token) {
+      return { success: false, message: "Failed to extract CSRF token" };
+    }
+    // Release before the guards below, not after: the read above checked the module out,
+    // and a guard that refuses the operation still has to leave the record unlocked.
+    await this.quickCheckInModule(id, token);
     if (options.expectedTitle && title !== options.expectedTitle) {
       return { success: false, message: `Refusing to change module ${id}: expected title ${options.expectedTitle}, found ${title}` };
     }
@@ -4897,29 +5223,28 @@ export class JoomlaClient {
       return { success: false, message: `Refusing to change module ${id}: expected moduleType ${options.expectedModuleType}, found ${moduleType}` };
     }
 
-    const listUrl = this.getAdminUrl("index.php?option=com_modules&view=modules");
-    const { html } = await this.getPage(listUrl);
-    const token = this.extractCsrfToken(html);
-
-    if (!token) {
-      return { success: false, message: "Failed to extract CSRF token" };
-    }
-
+    // Post the task at the single-row list URL so its redirect target is the verification
+    // read. Verify from the list rather than the edit form: the form's published field
+    // defaults to "1", which reads as a false positive when it is not captured.
+    const listUrl = this.getModulesListUrl(`id:${id}`, clientId);
     const task = state === "1" ? "modules.publish" : "modules.unpublish";
-    const formData: Record<string, string> = {
+    const result = await this.postPage(listUrl, {
       task,
       "cid[]": id,
-      [token.name]: token.value,
-    };
-
-    const result = await this.postPage(listUrl, formData);
+      boxchecked: "1",
+    }, { token });
     const successMsg = /module[s]?\s+(published|unpublished)|has been/i.test(result.html);
     const errorMsg = this.extractAlertMessage(result.html);
 
-    const verify = await this.getModule(id);
-    const module = (verify.data || {}) as Record<string, unknown>;
-    const actualState = String(module.published || "");
-    const verified = verify.success && actualState === state;
+    let listedModule = this.parseModuleList(result.html).find((entry) => entry.id === id);
+    if (!listedModule) {
+      const verifyPage = await this.getPage(listUrl);
+      listedModule = this.parseModuleList(verifyPage.html).find((entry) => entry.id === id);
+    }
+    const expectedLabel = state === "1" ? "Published" : "Unpublished";
+    const actualLabel = listedModule?.state ?? "Unknown";
+    const actualState = actualLabel === "Published" ? "1" : actualLabel === "Unpublished" ? "0" : "";
+    const verified = !!listedModule && actualLabel === expectedLabel;
 
     return {
       success: verified,
@@ -4927,14 +5252,15 @@ export class JoomlaClient {
         ? `Module ${state === "1" ? "published" : "unpublished"}`
         : (errorMsg ?? (successMsg ? "Module state was not verified after submit" : "Unknown result")),
       data: this.buildOperationData("module", id, {
-        title: String(module.title || title),
+        title: String(listedModule?.title || title),
         state: actualState,
         moduleType,
         verification: {
           attempted: true,
           preflightVerified: true,
           requestedState: state,
-          actualState,
+          actualState: actualLabel,
+          foundInList: !!listedModule,
           verified,
         },
       }),
@@ -5087,9 +5413,12 @@ export class JoomlaClient {
       "view": "items",
       "limit": String(effectiveLimit),
       "limitstart": String(limitStart),
+      // Sticky session filters — see getMenuItemsListUrl. Sending menutype empty is
+      // what makes an unscoped list actually span every menu after a scoped one.
+      "menutype": menuId ?? "",
+      "filter[search]": search ?? "",
+      "filter[published]": "",
     });
-    if (menuId) params.set("menutype", menuId);
-    params.set("filter[search]", search ?? "");
     const url = this.getAdminUrl(`index.php?${params.toString()}`);
     const { html } = await this.getPage(url);
     const items = this.parseMenuItemList(html);
@@ -5101,7 +5430,19 @@ export class JoomlaClient {
     };
   }
 
+  /**
+   * The installed menu item types cannot change within a session, so this is cached
+   * here rather than in the create path alone — `inspect` and a repeat `list` were
+   * paying a full extra admin page load for an answer we already had.
+   */
   async listMenuItemTypes(): Promise<JoomlaResponse> {
+    if (this._menuItemTypesCache) {
+      return {
+        success: true,
+        message: `Found ${this._menuItemTypesCache.length} menu item types`,
+        data: this._menuItemTypesCache,
+      };
+    }
     const url = this.getAdminUrl("index.php?option=com_menus&view=menutypes&tmpl=component&client_id=0&recordId=0");
     const { html } = await this.getPage(url);
     const blacklist = this.config.menuItemTypeBlacklist;
@@ -5110,6 +5451,9 @@ export class JoomlaClient {
       const cleanLabel = t.label.split("\t")[0].trim().toLowerCase();
       return !blacklist.has(cleanLabel);
     });
+    // Only cache a real answer. An empty parse means the page did not render the
+    // accordion we expect, and caching that would break every create in the session.
+    if (types.length > 0) this._menuItemTypesCache = types;
 
     return {
       success: true,
@@ -5262,15 +5606,10 @@ export class JoomlaClient {
     params?: Record<string, string>;
     fieldOverrides?: Record<string, string>;
   }): Promise<JoomlaResponse> {
-    // Cached per client: the installed menu item types cannot change mid-session,
-    // and this fetch is a full extra admin page load on every create.
-    if (!this._menuItemTypesCache) {
-      const tTypes = Date.now();
-      const typesResult = await this.listMenuItemTypes();
-      this._menuItemTypesCache = (typesResult.data || []) as MenuItemType[];
-      if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] listMenuItemTypes ${Date.now() - tTypes}ms`);
-    }
-    const types = this._menuItemTypesCache;
+    const tTypes = Date.now();
+    const typesResult = await this.listMenuItemTypes();
+    const types = (typesResult.data || []) as MenuItemType[];
+    if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] listMenuItemTypes ${Date.now() - tTypes}ms`);
     // "heading" in the spec maps to Joomla's "Separator" system link type
     const resolvedItemType = data.itemType.toLowerCase() === "heading" ? "separator" : data.itemType;
     const type = this.findMenuItemType(types, resolvedItemType);
@@ -5288,22 +5627,32 @@ export class JoomlaClient {
       return { success: false, message: "Failed to extract CSRF token" };
     }
 
-    const setTypeFormData: FormDataMap = {
-      ...this.extractFormFields(html),
-      task: "item.setType",
-      fieldtype: "type",
-      "jform[type]": type.encoded,
-      "jform[menutype]": data.menuType,
-      [token.name]: token.value,
-    };
-    // Reuse the item.add page we just fetched. It is one of the heaviest pages in
-    // Joomla admin (every template style, every menu tree, the full type list), and
-    // postPage would otherwise re-GET it before each POST.
-    const tType = Date.now();
-    const typedPage = await this.postPage(newItemUrl, setTypeFormData, { prefetchedHtml: html });
-    if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] POST item.setType ${Date.now() - tType}ms`);
-    const typedHtml = typedPage.html || html;
-    const typedToken = this.extractCsrfToken(typedHtml) || token;
+    // item.setType round-trips the form so the server returns hidden fields — component_id
+    // above all — matching the chosen type. That only tells us something for component
+    // types. A system link type (url, separator, alias, heading) has an empty request and
+    // no component, so the typed form comes back with the same hidden fields we already
+    // hold, and the round trip costs two requests and ~70KB for nothing.
+    const isSystemLinkType = Object.keys(type.request).length === 0;
+    let typedHtml = html;
+    let typedToken = token;
+    if (!isSystemLinkType) {
+      const setTypeFormData: FormDataMap = {
+        ...this.extractFormFields(html),
+        task: "item.setType",
+        fieldtype: "type",
+        "jform[type]": type.encoded,
+        "jform[menutype]": data.menuType,
+        [token.name]: token.value,
+      };
+      // Reuse the item.add page we just fetched. It is one of the heaviest pages in
+      // Joomla admin (every template style, every menu tree, the full type list), and
+      // postPage would otherwise re-GET it before each POST.
+      const tType = Date.now();
+      const typedPage = await this.postPage(newItemUrl, setTypeFormData, { prefetchedHtml: html });
+      if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] POST item.setType ${Date.now() - tType}ms`);
+      typedHtml = typedPage.html || html;
+      typedToken = this.extractCsrfToken(typedHtml) || token;
+    }
     const request = { ...type.request, ...(data.request || {}) };
     // System link types (separator, url, alias, heading) have an empty request object;
     // Joomla requires the plain type title string in jform[type] for these.
@@ -5373,7 +5722,9 @@ export class JoomlaClient {
       // Rebuild the menu nested set (lft/rgt) after each create so the tree stays
       // consistent and subsequent creates don't corrupt the published-state display.
       const tRebuild = Date.now();
-      await this.rebuildMenuTree();
+      // The apply response is an admin page from this session, so its token is valid
+      // for the rebuild task and saves that task its own page fetch.
+      await this.rebuildMenuTree(this.extractCsrfToken(result.html) ?? typedToken);
       if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] rebuildMenuTree ${Date.now() - tRebuild}ms`);
       // Correct the published state only when Joomla actually got it wrong. This used
       // to run unconditionally, which cost a full extra edit-form round trip (~5
@@ -5607,44 +5958,28 @@ export class JoomlaClient {
   }
 
   async deleteMenuItem(id: string, options: { expectedTitle?: string; expectedMenuType?: string; menuType?: string } = {}): Promise<JoomlaResponse> {
-    // Read the edit form directly rather than through getMenuItem: the token it yields
-    // authenticates the trash task below, and items.trash fails on a checked-out item,
-    // so the checkout this read takes must be released first anyway.
-    const before = await this.fetchMenuItemForm(id);
-    const item = (before.data || {}) as Record<string, unknown>;
-    const title = String(item.title || "");
-    const menuType = options.menuType || String(item.menuType || "");
-    const token = before.token ?? null;
-    if (!before.success) {
-      return { success: false, message: `Refusing to delete menu item ${id} because the current target could not be verified` };
-    }
-    if (options.expectedTitle && title !== options.expectedTitle) {
-      return { success: false, message: `Refusing to delete menu item ${id}: expected title ${options.expectedTitle}, found ${title}` };
-    }
-    if (options.expectedMenuType && menuType !== options.expectedMenuType) {
-      return { success: false, message: `Refusing to delete menu item ${id}: expected menuType ${options.expectedMenuType}, found ${menuType}` };
-    }
-    if (!token) {
-      return { success: false, message: "Failed to extract CSRF token" };
-    }
-    await this.quickCheckIn(id, token);
+    const pre = await this.menuItemPreflight(id, options.menuType, "delete", options);
+    if (!pre.ok) return { success: false, message: pre.message };
+    const { title, menuType, token } = pre;
 
-    // Post the task at the filtered list URL so its redirect target doubles as the
-    // "is it still listed?" check, in a few KB rather than the whole menu.
-    const listUrl = this.getMenuItemsListUrl(menuType || undefined, title);
-    const result = await this.postPage(listUrl, { task: "items.trash", "cid[]": id }, { token });
-    const successMsg = /menu item[s]?\s+(trashed|deleted)|item[s]?\s+(trashed|deleted)|has been (trashed|deleted)/i.test(result.html);
-    const errorMsg = this.extractAlertMessage(result.html);
-    const stillListed = this.parseMenuItemList(result.html).some((entry) => entry.id === id);
-    const verify = await this.fetchMenuItemForm(id);
-    if (verify.success) await this.quickCheckIn(id, verify.token ?? null);
-    const verified = this.isDeletionVerified(stillListed, verify, ["published", "state"]);
+    const listUrl = this.getMenuItemsListUrl(menuType || undefined, `id:${id}`);
+    const result = await this.postPage(listUrl, { task: "items.trash", "cid[]": id }, { token, noFollow: true });
+
+    // The list URL pins filter[published] to its default, which excludes trashed items,
+    // so a trashed item drops out of this read. That is the check. Re-reading the edit
+    // form to confirm — as this used to — cost three more requests and left the item
+    // checked out again, for a weaker signal than its absence from the list.
+    const verifyPage = await this.getPage(listUrl);
+    const listedItem = this.parseMenuItemList(verifyPage.html).find((entry) => entry.id === id);
+    const errorMsg = this.extractAlertMessage(verifyPage.html);
+    const stillListed = !!listedItem && listedItem.state !== "Trashed";
+    const verified = !stillListed;
 
     return {
       success: verified,
       message: verified
         ? "Menu item trashed"
-        : (errorMsg ?? (successMsg ? "Menu item trash submitted, but deletion was not verified" : "Unknown result")),
+        : (errorMsg ?? "Menu item trash submitted, but deletion was not verified"),
       data: this.buildOperationData("menuItem", id, {
         title,
         state: "-2",
@@ -5654,7 +5989,6 @@ export class JoomlaClient {
           preflightVerified: true,
           listCheckAttempted: !!menuType,
           stillListed,
-          readbackSucceeded: verify.success,
           verified,
         },
       }),
@@ -5663,51 +5997,30 @@ export class JoomlaClient {
   }
 
   async toggleMenuItem(id: string, state: string, menuType?: string, options: { expectedTitle?: string; expectedMenuType?: string } = {}): Promise<JoomlaResponse> {
-    // Read the edit form directly rather than through getMenuItem: we need the token it
-    // yields anyway, and items.publish fails on a checked-out item, so the checkout the
-    // read takes has to be released before the task below either way.
-    const before = await this.fetchMenuItemForm(id);
-    const itemBefore = (before.data || {}) as Record<string, unknown>;
-    const title = String(itemBefore.title || "");
-    const actualMenuType = menuType || String(itemBefore.menuType || "");
-    const token = before.token ?? null;
-    if (!before.success) {
-      return { success: false, message: `Refusing to change menu item ${id} because the current target could not be verified` };
-    }
-    if (options.expectedTitle && title !== options.expectedTitle) {
-      return { success: false, message: `Refusing to change menu item ${id}: expected title ${options.expectedTitle}, found ${title}` };
-    }
-    if (options.expectedMenuType && actualMenuType !== options.expectedMenuType) {
-      return { success: false, message: `Refusing to change menu item ${id}: expected menuType ${options.expectedMenuType}, found ${actualMenuType}` };
-    }
-    if (!token) {
-      return { success: false, message: "Failed to extract CSRF token" };
-    }
-    await this.quickCheckIn(id, token);
+    const pre = await this.menuItemPreflight(id, menuType, "change", options);
+    if (!pre.ok) return { success: false, message: pre.message };
+    const { title, menuType: actualMenuType, token } = pre;
 
-    // Filter the list to this item's title so both the task redirect and the verification
-    // read return a few KB instead of the whole menu.
-    const listUrl = this.getMenuItemsListUrl(actualMenuType, title);
+    // Address exactly this row so the verification read returns a few KB instead of
+    // the whole menu, and cannot be confused by a similarly titled sibling.
+    const listUrl = this.getMenuItemsListUrl(actualMenuType, `id:${id}`);
     const task = state === "1" ? "items.publish" : "items.unpublish";
+    // noFollow: the redirect target is the items list under whatever filters the session
+    // happens to hold, so it is not a trustworthy readback — the explicit filtered GET
+    // below is. Skipping the redirect body drops a page we would only throw away.
     const result = await this.postPage(listUrl, {
       task,
       "cid[]": id,
       boxchecked: "1",
-    }, { token });
-    const errorMsg = this.extractAlertMessage(result.html);
+    }, { token, noFollow: true });
 
-    // Verify using the list view rather than the edit form. The edit form's jform[published]
-    // field has a fallback default of "1", which causes false-positive verification when the
-    // field isn't captured (Joomla 4 renders it as a custom radio group, not a plain input).
-    // The redirect target of the task above IS that list view, so parse it instead of
-    // fetching the same page a second time.
-    let listedItem = this.parseMenuItemList(result.html).find((entry) => entry.id === id);
-    if (!listedItem) {
-      // The redirect landed somewhere that does not show this row (a stale session
-      // filter, or Joomla redirected elsewhere). Fall back to an explicit read.
-      const verifyPage = await this.getPage(listUrl);
-      listedItem = this.parseMenuItemList(verifyPage.html).find((entry) => entry.id === id);
-    }
+    // Verify from the list rather than the edit form: the edit form's jform[published]
+    // falls back to "1", which reads as a false positive whenever the field isn't
+    // captured. Joomla queues its system message in the session until something renders
+    // it, and nothing has yet, so this page carries any error the task produced.
+    const verifyPage = await this.getPage(listUrl);
+    const listedItem = this.parseMenuItemList(verifyPage.html).find((entry) => entry.id === id);
+    const errorMsg = this.extractAlertMessage(verifyPage.html);
     const expectedLabel = state === "1" ? "Published" : "Unpublished";
     const foundInList = !!listedItem;
     const actualLabel = listedItem?.state ?? "Unknown";
@@ -5736,40 +6049,24 @@ export class JoomlaClient {
   }
 
   async checkInMenuItem(id: string, menuType?: string, options: { expectedTitle?: string; expectedMenuType?: string } = {}): Promise<JoomlaResponse> {
-    const before = await this.fetchMenuItemForm(id);
-    const itemBefore = (before.data || {}) as Record<string, unknown>;
-    const title = String(itemBefore.title || "");
-    const actualMenuType = menuType || String(itemBefore.menuType || "");
-    if (!before.success) {
-      return { success: false, message: `Refusing to check in menu item ${id} because the current target could not be verified` };
-    }
-    if (options.expectedTitle && title !== options.expectedTitle) {
-      return { success: false, message: `Refusing to check in menu item ${id}: expected title ${options.expectedTitle}, found ${title}` };
-    }
-    if (options.expectedMenuType && actualMenuType !== options.expectedMenuType) {
-      return { success: false, message: `Refusing to check in menu item ${id}: expected menuType ${options.expectedMenuType}, found ${actualMenuType}` };
-    }
+    // The preflight reads the list, not the edit form. That matters more here than
+    // anywhere else: opening the edit form checks the item out, so the old preflight
+    // checked out the very item it was about to check in.
+    const pre = await this.menuItemPreflight(id, menuType, "check in", options);
+    if (!pre.ok) return { success: false, message: pre.message };
+    const { title, menuType: actualMenuType, token } = pre;
 
-    const token = before.token ?? null;
-    if (!token) {
-      return { success: false, message: "Failed to extract CSRF token" };
-    }
-
-    // The preflight above holds a valid session token, so the task needs no page fetch
-    // of its own, and its redirect target — the filtered list — is the verification read.
-    const listUrl = this.getMenuItemsListUrl(actualMenuType, title);
+    // The preflight holds a valid session token, so the task needs no page fetch of its own.
+    const listUrl = this.getMenuItemsListUrl(actualMenuType, `id:${id}`);
     const result = await this.postPage(listUrl, {
       task: "items.checkin",
       "cid[]": id,
       boxchecked: "1",
-    }, { token });
-    const errorMsg = this.extractAlertMessage(result.html);
+    }, { token, noFollow: true });
 
-    let listedItem = this.parseMenuItemList(result.html).find((entry) => entry.id === id);
-    if (!listedItem) {
-      const verifyPage = await this.getPage(listUrl);
-      listedItem = this.parseMenuItemList(verifyPage.html).find((entry) => entry.id === id);
-    }
+    const verifyPage = await this.getPage(listUrl);
+    const listedItem = this.parseMenuItemList(verifyPage.html).find((entry) => entry.id === id);
+    const errorMsg = this.extractAlertMessage(verifyPage.html);
     const checkedOutCleared = !!listedItem && listedItem.checkedOut !== "1";
 
     return {
@@ -6706,13 +7003,20 @@ export class JoomlaClient {
     return listItem.state === "Published" ? "1" : listItem.state === "Unpublished" ? "0" : "";
   }
 
-  private async rebuildMenuTree(): Promise<void> {
+  /**
+   * Joomla's CSRF tokens are per-session, so a caller that already holds one lets this
+   * skip its own page fetch entirely — the menus list was a 62KB GET made only to read
+   * a token out of it.
+   */
+  private async rebuildMenuTree(sessionToken?: { name: string; value: string } | null): Promise<void> {
     const listUrl = this.getAdminUrl("index.php?option=com_menus&view=menus");
-    const { html } = await this.getPage(listUrl);
-    const token = this.extractCsrfToken(html);
+    let token = sessionToken ?? null;
+    if (!token) {
+      const { html } = await this.getPage(listUrl);
+      token = this.extractCsrfToken(html);
+    }
     if (!token) return;
-    // Reuse the page we just fetched — postPage would otherwise re-GET it — and skip the
-    // redirect target, which is the same menus page again and is never read.
+    // Skip the redirect target: it is the same menus page again and is never read.
     await this.postPage(listUrl, { task: "menus.rebuild" }, { token, noFollow: true });
   }
 
