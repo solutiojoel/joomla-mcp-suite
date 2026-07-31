@@ -24,9 +24,29 @@ Autoscale deployment (scales to zero when idle, wakes on request).
 **Legacy multi-process mode** (`scripts/start-all.sh`) still works: each server
 gets its own loopback HTTP port (9300–9307).
 
-Agents connect to the **orchestrator** `/mcp` endpoint with a bearer token
-matching `ORCHESTRATOR_TOKEN`. Unauthenticated status dashboard at `/`,
-`/status`, `/status.json`.
+Agents connect to the **orchestrator** `/mcp` endpoint with a bearer token.
+Unauthenticated status dashboard at `/`, `/status`, `/status.json`.
+
+### Authentication — two modes
+
+The orchestrator prefers a **user registry**: a map of `sha256:<hex>` token
+digests → `{ user, agent, allowedAgents? }`. It gives each person their own
+revocable token, their own default agent scope, and their own name in the audit
+log. Generate and rotate tokens with `scripts/hash-tokens.js`.
+
+Locally the registry is the gitignored file `config/users.json`. That file never
+reaches a deployment, so set the secret **`ORCHESTRATOR_USERS_JSON`** to the same
+JSON instead — paste the file contents verbatim, newlines and all. The digests
+are one-way, so the secret holds no usable token.
+
+Without a registry the orchestrator falls back to **single-token mode**: one
+shared `ORCHESTRATOR_TOKEN`, every caller recorded as `local` with the
+`super_shannon` scope. A loaded registry replaces this outright, so
+`ORCHESTRATOR_TOKEN` stops authenticating once `ORCHESTRATOR_USERS_JSON` parses.
+Keep it set anyway — it is what takes over if the secret is ever malformed.
+
+Call `reload_tools` to confirm which mode is live. It reports the token count and
+the source it loaded from.
 
 ### Autoscale behavior change (by design)
 
@@ -59,12 +79,13 @@ so a missing secret shows up immediately instead of failing inside a tool call.
 | `JOOMLA_BASE_URL` | Full URL to your Joomla administrator, e.g. `https://example.com/administrator` |
 | `JOOMLA_USERNAME` | Joomla admin username — shared by joomla-mcp, gantry-mcp and ftp-mcp |
 | `JOOMLA_PASSWORD` | Joomla admin password — shared by joomla-mcp, gantry-mcp and ftp-mcp |
-| `ORCHESTRATOR_TOKEN` | Shared bearer token MCP clients use to authenticate with the orchestrator |
+| `ORCHESTRATOR_TOKEN` | Shared bearer token for single-token mode, and the fallback when no registry loads |
 
 ### Optional secrets
 
 | Secret | Purpose |
 |--------|---------|
+| `ORCHESTRATOR_USERS_JSON` | The per-user token registry as JSON — the deployment's stand-in for `config/users.json`. See "Authentication" above. |
 | `FRESHDESK_DOMAIN` | Freshdesk subdomain (e.g. `yourcompany`) |
 | `FRESHDESK_API_KEY` | Freshdesk API key |
 | `FTP_READONLY_USER` / `FTP_READONLY_PASS` | FTP read-only credentials |
@@ -79,7 +100,7 @@ Point any MCP-compatible client (Claude Desktop, Cursor, etc.) at:
 
 ```
 URL:    http://<replit-dev-domain>:9302/mcp
-Token:  <value of ORCHESTRATOR_TOKEN>
+Token:  your own registry token, or ORCHESTRATOR_TOKEN in single-token mode
 ```
 
 The `.mcp.json` in the repo root has a template entry.

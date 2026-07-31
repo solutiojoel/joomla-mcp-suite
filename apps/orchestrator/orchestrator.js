@@ -188,19 +188,52 @@ function setDownstreamDisabled(label, disabled) {
 }
 
 // ─── User registry ────────────────────────────────────────────────────────────
-// config/users.json maps bearer tokens → { user, agent, allowedAgents? }.
-// Keys are "sha256:<hex>" digests of the token (run scripts/hash-tokens.js);
-// bare plaintext keys are still accepted as a migration fallback for one release.
-// If the file is absent, falls back to the single ORCHESTRATOR_TOKEN env var.
+// Maps bearer tokens → { user, agent, allowedAgents? }. Keys are "sha256:<hex>"
+// digests of the token (run scripts/hash-tokens.js); bare plaintext keys are
+// still accepted as a migration fallback for one release.
+//
+// Two sources, in precedence order:
+//   1. ORCHESTRATOR_USERS_JSON  the whole registry as a JSON string. Deployments
+//      use this: config/users.json is gitignored, so it never reaches Replit.
+//   2. config/users.json        the local file. Developer machines use this.
+//
+// When neither resolves, auth falls back to the single ORCHESTRATOR_TOKEN env
+// var and every caller becomes { user: 'local', agent: 'super_shannon' }.
+// A registry, once loaded, replaces that fallback outright — ORCHESTRATOR_TOKEN
+// is then ignored, so a token must be in the registry to authenticate.
 
 const USERS_JSON_PATH = path.join(__dirname, '..', '..', 'config', 'users.json');
 
+// Which source the live registry came from. Reported by reload_tools so a
+// deployment can be told apart from a developer machine without shell access.
+let usersRegistrySource = 'none';
+
 function loadUsersRegistry() {
-  if (!fs.existsSync(USERS_JSON_PATH)) return null;
+  const inline = process.env.ORCHESTRATOR_USERS_JSON;
+  if (inline && inline.trim()) {
+    try {
+      const parsed = JSON.parse(inline);
+      usersRegistrySource = 'ORCHESTRATOR_USERS_JSON';
+      log(`user registry loaded from ORCHESTRATOR_USERS_JSON - ${Object.keys(parsed).length} token(s)`);
+      return parsed;
+    } catch (err) {
+      // Deliberately fall through to the file, then to single-token mode. A
+      // typo in the secret must not lock every user out of a live deployment.
+      log(`WARNING: failed to parse ORCHESTRATOR_USERS_JSON - ${err.message}`);
+    }
+  }
+
+  if (!fs.existsSync(USERS_JSON_PATH)) {
+    usersRegistrySource = 'none';
+    return null;
+  }
   try {
-    return JSON.parse(fs.readFileSync(USERS_JSON_PATH, 'utf8'));
+    const parsed = JSON.parse(fs.readFileSync(USERS_JSON_PATH, 'utf8'));
+    usersRegistrySource = 'config/users.json';
+    return parsed;
   } catch (err) {
     log(`WARNING: failed to parse config/users.json - ${err.message}`);
+    usersRegistrySource = 'none';
     return null;
   }
 }
@@ -1522,7 +1555,7 @@ function buildServer(sessionCtx) {
       return {
         content: [{
           type: 'text',
-          text: `Tools reloaded - ${counts}. User registry: ${usersRegistry ? Object.keys(usersRegistry).length + ' token(s)' : 'not found (single-token fallback)'}.`,
+          text: `Tools reloaded - ${counts}. User registry: ${usersRegistry ? `${Object.keys(usersRegistry).length} token(s) from ${usersRegistrySource}` : 'not found (single-token fallback)'}.`,
         }],
       };
     }

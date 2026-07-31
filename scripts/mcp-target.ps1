@@ -11,16 +11,16 @@
 # Credentials come from the repo-root .env (gitignored), or from the real
 # environment, which wins. Never hardcode a token in this file.
 #
-# The two targets need DIFFERENT tokens, because they authenticate differently:
+# Both targets now use your per-user token, because both run the user registry:
 #
-#   local   config/users.json is present, so the orchestrator uses the per-user
-#           registry and ORCHESTRATOR_TOKEN is ignored -> use MCP_TOKEN_JEREMY.
-#   replit  config/users.json is gitignored, so the deployment never has one.
-#           The orchestrator falls back to single-token mode -> use
-#           ORCHESTRATOR_TOKEN, which must match the Replit secret.
+#   local   reads config/users.json from disk.
+#   replit  reads the same registry from the ORCHESTRATOR_USERS_JSON secret,
+#           because config/users.json is gitignored and never deploys.
 #
-# Verified 2026-07-31: MCP_TOKEN_JEREMY returns 401 against Replit, and
-# ORCHESTRATOR_TOKEN returns 200. Do not collapse these back into one variable.
+# A loaded registry replaces single-token mode outright, so ORCHESTRATOR_TOKEN
+# is ignored on both. It stays in .env only as the fallback that takes over if
+# the registry fails to load. To reach a deployment that has no registry secret
+# yet, run: .\scripts\mcp-target.ps1 replit -ReplitTokenVar ORCHESTRATOR_TOKEN
 #
 #   REPLIT_BYPASS_TOKEN   the Replit project-protection bypass JWT (replit target only)
 
@@ -32,8 +32,9 @@ param(
     # Which .env key holds your local registry token. Each user has their own.
     [string]$TokenVar = 'MCP_TOKEN_JEREMY',
 
-    # Which .env key holds the Replit single-token secret. Shared, not per-user.
-    [string]$ReplitTokenVar = 'ORCHESTRATOR_TOKEN'
+    # Which .env key holds the token for Replit. Same registry, so normally the
+    # same variable — override it to fall back to single-token mode.
+    [string]$ReplitTokenVar = 'MCP_TOKEN_JEREMY'
 )
 
 $ErrorActionPreference = 'Stop'
