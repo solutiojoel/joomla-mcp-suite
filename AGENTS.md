@@ -212,7 +212,7 @@ Agent access is still controlled by `docs.allow` in each agent's JSON config
 - Explicit access: `"workflows/my-guide"` grants a single doc
 
 No server code change or container rebuild is needed for a doc change. Two migration scripts
-remain in `scripts/` for reference: `migrate-docs-to-gateway.js` and
+remain in `scripts/archive/` for reference: `migrate-docs-to-gateway.js` and
 `migrate-site-notes-to-gateway.js`, both idempotent, both with `--dry-run` and `--verify-only`.
 
 ## graphify

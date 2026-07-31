@@ -18,7 +18,6 @@ export FRESHDESK_MCP_PORT=9407
 export FTP_MCP_PORT=9404
 export MOCKUP_MCP_PORT=9405
 export KNOWLEDGE_GATEWAY_MCP_PORT=9406
-export SITE_BUILDER_PORT=18403
 export ORCHESTRATOR_PORT=6100
 export DISABLE_9303_FORWARDER=1
 
@@ -62,7 +61,7 @@ kill_freshdesk() {
 
 ports_free() {
   for p in $JOOMLA_MCP_PORT $GANTRY_MCP_PORT $FRESHDESK_MCP_PORT $FTP_MCP_PORT \
-           $MOCKUP_MCP_PORT $KNOWLEDGE_GATEWAY_MCP_PORT $SITE_BUILDER_PORT $ORCHESTRATOR_PORT; do
+           $MOCKUP_MCP_PORT $KNOWLEDGE_GATEWAY_MCP_PORT $ORCHESTRATOR_PORT; do
     [[ -n "$(port_pid "$p")" ]] && return 1
   done
   return 0
@@ -74,7 +73,7 @@ wait_ports_free() {
     ports_free && return 0
     # Nudge any leftovers.
     for p in $JOOMLA_MCP_PORT $GANTRY_MCP_PORT $FRESHDESK_MCP_PORT $FTP_MCP_PORT \
-             $MOCKUP_MCP_PORT $KNOWLEDGE_GATEWAY_MCP_PORT $SITE_BUILDER_PORT $ORCHESTRATOR_PORT; do
+             $MOCKUP_MCP_PORT $KNOWLEDGE_GATEWAY_MCP_PORT $ORCHESTRATOR_PORT; do
       pid=$(port_pid "$p"); [[ -n "$pid" ]] && kill -9 "$pid" 2>/dev/null
     done
     sleep 0.5

@@ -18,17 +18,17 @@
  * Every write is read back and compared by SHA256 before it is reported as done.
  *
  * Usage:
- *   node scripts/migrate-docs-to-gateway.js --dry-run
- *   node scripts/migrate-docs-to-gateway.js --only kb/staff-grid
- *   node scripts/migrate-docs-to-gateway.js
- *   node scripts/migrate-docs-to-gateway.js --verify-only
+ *   node scripts/archive/migrate-docs-to-gateway.js --dry-run
+ *   node scripts/archive/migrate-docs-to-gateway.js --only kb/staff-grid
+ *   node scripts/archive/migrate-docs-to-gateway.js
+ *   node scripts/archive/migrate-docs-to-gateway.js --verify-only
  */
 
 const fs     = require('fs');
 const path   = require('path');
 const crypto = require('crypto');
 
-const ROOT      = path.join(__dirname, '..');
+const ROOT      = path.join(__dirname, '..', '..');
 const DOCS_DIR  = path.join(ROOT, 'docs');
 const MIGRATE_DIRS = ['workflows', 'kb'];
 

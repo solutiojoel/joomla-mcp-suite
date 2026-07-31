@@ -186,14 +186,9 @@ For phased capability expansion and priorities, see [docs/JOOMLA_MCP_ROADMAP.md]
 
 - `src/`: MCP server source code.
 - `dist/`: compiled server output.
-- `scripts/`: operational and development scripts grouped by purpose:
-  - `scripts/tests/`
-  - `scripts/build/`
-  - `scripts/menu/`
-  - `scripts/content/`
-  - `scripts/debug/`
-  - `scripts/manual/`
-  - `scripts/probes/`
+- `scripts/tests/`: test and probe scripts. Run them through the `package.json`
+  entries — `npm run smoke`, `npm run test:all-tools`, or a per-suite variant
+  such as `npm run test:tools:menus`.
 - `blueprints/`: Gantry and module blueprint YAML files.
 - `blueprints/layouts/`: saved Gantry base layout JSON exports.
 - `docs/`: process and roadmap documentation.

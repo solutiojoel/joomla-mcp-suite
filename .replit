@@ -67,11 +67,6 @@ localPort = 9306
 externalPort = 3001
 exposeLocalhost = true
 
-[[ports]]
-localPort = 18303
-externalPort = 5000
-exposeLocalhost = true
-
 [deployment]
 deploymentTarget = "autoscale"
 run = ["bash", "scripts/start-single.sh"]

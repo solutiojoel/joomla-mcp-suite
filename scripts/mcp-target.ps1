@@ -7,28 +7,69 @@
 # Local hosting exists to dodge the Joomla host's throttling of cloud egress IPs.
 # See .agents/memory/joomla-host-throttling.md. Restart Claude Code after switching —
 # an in-session MCP connection does not re-resolve its URL.
+#
+# Credentials come from the repo-root .env (gitignored), or from the real
+# environment, which wins. Never hardcode a token in this file.
+#
+#   MCP_TOKEN_JEREMY      your orchestrator bearer token (use -TokenVar for another key)
+#   REPLIT_BYPASS_TOKEN   the Replit project-protection bypass JWT (replit target only)
 
 param(
     [Parameter(Position = 0)]
     [ValidateSet('local', 'replit', 'show')]
-    [string]$Target = 'show'
+    [string]$Target = 'show',
+
+    # Which .env key holds your bearer token. Each user has their own.
+    [string]$TokenVar = 'MCP_TOKEN_JEREMY'
 )
 
 $ErrorActionPreference = 'Stop'
 
-$token       = 'RgOPSb46DHV8/GEirOLyMVTf8UzLjRP0jAw3HdrC684='
-$localUrl    = 'http://127.0.0.1:9302/mcp'
-$replitBypass = 'eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzb3VyY2UiOiJ1c2VyLW1hbmFnZWQiLCJkZXBsb3ltZW50SWQiOiIwYmYwZmVkMy1lODlmLTQxNjYtYjRhMC1kYjk2M2I2YTZiMjMiLCJqdGkiOiJSS0NjUktaeW1aOU5LcU8tOVRHNU8iLCJpYXQiOjE3ODUxNjY1NTUsImV4cCI6MTk0Mjg0NjU1NX0.-EWAsXm_6R_yG7XeRNT8BL-UK6jSyq_Zr__T3OhnBF7zJw89g_kh6YGgNsZy3lgOsZLfvUYjWRP0NG5wnNhOdg'
-$replitUrl   = "https://shannon-mcp.replit.app/mcp?project-protection-bypass=$replitBypass"
+$root    = Split-Path -Parent $PSScriptRoot
+$envPath = Join-Path $root '.env'
+
+# Parse KEY=VALUE lines from the repo-root .env. Comments and blanks are skipped.
+function Read-DotEnv([string]$Path) {
+    $map = @{}
+    if (-not (Test-Path $Path)) { return $map }
+    foreach ($line in Get-Content $Path) {
+        $trimmed = $line.Trim()
+        if ($trimmed -eq '' -or $trimmed.StartsWith('#')) { continue }
+        $split = $trimmed.IndexOf('=')
+        if ($split -lt 1) { continue }
+        $key = $trimmed.Substring(0, $split).Trim()
+        $val = $trimmed.Substring($split + 1).Trim().Trim('"').Trim("'")
+        $map[$key] = $val
+    }
+    return $map
+}
+
+$dotenv = Read-DotEnv $envPath
+
+# The real environment beats .env — the same precedence @solutio/env applies.
+function Get-Secret([string]$Name) {
+    $fromEnv = [Environment]::GetEnvironmentVariable($Name)
+    if ($fromEnv) { return $fromEnv }
+    if ($dotenv.ContainsKey($Name) -and $dotenv[$Name]) { return $dotenv[$Name] }
+    return $null
+}
+
+$localUrl = 'http://127.0.0.1:9302/mcp'
 
 if ($Target -eq 'show') {
     claude mcp get joomla-suite
     return
 }
 
-$url = if ($Target -eq 'local') { $localUrl } else { $replitUrl }
+$token = Get-Secret $TokenVar
+if (-not $token) {
+    Write-Error "$TokenVar is not set. Add it to $envPath or export it, then run this script again."
+    exit 1
+}
 
 if ($Target -eq 'local') {
+    $url = $localUrl
+
     $tcp = [System.Net.Sockets.TcpClient]::new()
     try {
         $tcp.Connect('127.0.0.1', 9302)
@@ -36,13 +77,24 @@ if ($Target -eq 'local') {
     } catch {
         Write-Warning "Nothing is listening on 127.0.0.1:9302. Run .\scripts\start-all.ps1 first."
     }
+} else {
+    $bypass = Get-Secret 'REPLIT_BYPASS_TOKEN'
+    if (-not $bypass) {
+        Write-Error "REPLIT_BYPASS_TOKEN is not set. Add it to $envPath or export it, then run this script again."
+        exit 1
+    }
+    $url = "https://shannon-mcp.replit.app/mcp?project-protection-bypass=$bypass"
 }
 
 try { claude mcp remove joomla-suite -s local | Out-Null } catch { }
 claude mcp add --transport http joomla-suite $url --header "Authorization: Bearer $token"
 
 Write-Host ""
-Write-Host "joomla-suite now points at the $Target stack:" -ForegroundColor Green
-Write-Host "  $url"
+Write-Host "joomla-suite now points at the $Target stack." -ForegroundColor Green
+if ($Target -eq 'local') {
+    Write-Host "  $url"
+} else {
+    Write-Host "  https://shannon-mcp.replit.app/mcp?project-protection-bypass=<redacted>"
+}
 Write-Host ""
 Write-Host "Restart Claude Code so the session picks up the new URL." -ForegroundColor Yellow

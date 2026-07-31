@@ -655,9 +655,9 @@ async function runCssAssetSmokeTest(site, args) {
 }
 
 // ─── Status collector ────────────────────────────────────────────────────────
-// Probes each downstream's unauthenticated /healthz (plus the site-builder UI)
-// and reports reachability, latency, cached tool counts, and the last
-// tool-load error. Read-only; exposes no tool names, config, or secrets.
+// Probes each downstream's unauthenticated /healthz and reports reachability,
+// latency, cached tool counts, and the last tool-load error. Read-only;
+// exposes no tool names, config, or secrets.
 
 async function probeUrl(url, timeoutMs = 4000) {
   const started = Date.now();
@@ -725,21 +725,6 @@ async function collectStatus() {
       error: disabled ? null : (probe.reachable ? (degraded ? 'tool load failed' : null) : 'unreachable'),
     };
   }));
-
-  // Site-builder UI runs only in the multi-process dev stack; in
-  // single-process mode it is not part of the deployment.
-  if (!INPROC) {
-    const sbPort = process.env.SITE_BUILDER_PORT || '18303';
-    const sbProbe = await probeUrl(`http://127.0.0.1:${sbPort}/`);
-    services.push({
-      name: 'site-builder',
-      status: sbProbe.up ? 'up' : 'down',
-      latencyMs: sbProbe.latencyMs,
-      toolCount: null,
-      lastToolLoadAt: null,
-      error: sbProbe.up ? null : (sbProbe.httpStatus ? `health check returned HTTP ${sbProbe.httpStatus}` : 'unreachable'),
-    });
-  }
 
   return {
     orchestrator: { name: 'orchestrator', version: '1.0.0', status: 'up', uptimeSeconds: Math.round(process.uptime()) },

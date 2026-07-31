@@ -21,16 +21,16 @@
  * Every write is read back and compared by SHA256.
  *
  * Usage:
- *   node scripts/migrate-site-notes-to-gateway.js --dry-run
- *   node scripts/migrate-site-notes-to-gateway.js
- *   node scripts/migrate-site-notes-to-gateway.js --verify-only
+ *   node scripts/archive/migrate-site-notes-to-gateway.js --dry-run
+ *   node scripts/archive/migrate-site-notes-to-gateway.js
+ *   node scripts/archive/migrate-site-notes-to-gateway.js --verify-only
  */
 
 const fs     = require('fs');
 const path   = require('path');
 const crypto = require('crypto');
 
-const ROOT      = path.join(__dirname, '..');
+const ROOT      = path.join(__dirname, '..', '..');
 const SITES_DIR = path.join(ROOT, 'docs', 'sites');
 
 const args        = process.argv.slice(2);

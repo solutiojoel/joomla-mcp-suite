@@ -46,20 +46,44 @@ No direct database writes. Every Joomla operation goes through the same code pat
 
 ```
 apps/
-  joomla-mcp/          TypeScript MCP server — Joomla admin automation
-  gantry-mcp/          Node.js MCP server — Gantry 5 layout automation
-  orchestrator/ Router — aggregates both servers under one /mcp endpoint
-docs/
-  agents/              Workflow guides loaded by AI agents
-    kb/                Knowledge base articles (staff pages, grids, DNS, etc.)
-scripts/
-  start-all.sh         Process supervisor (used inside Docker)
-  sync-agent-docs.ps1  Keeps CLAUDE.md and AGENTS.md in sync
-CLAUDE.md              Agent instructions for Claude Code
-AGENTS.md              Agent instructions for OpenAI Codex and compatible agents
+  orchestrator/            Router — aggregates every downstream under one /mcp endpoint
+  joomla-mcp/              TypeScript MCP server — Joomla admin automation
+  gantry-mcp/              Node.js MCP server — Gantry 5 layout automation
+  freshdesk-mcp/           Freshdesk ticket tools
+  ftp-mcp/                 FTP asset upload tools
+  knowledge-gateway-mcp/   AI Knowledge Gateway access
+  agents-mcp/              LLM-backed sub-agent tool handlers
+  agent-runtime/           Dashboard backend (auth, chat sessions, jobs)
+  mockup-analyzer/         Python MCP server — mockup image analysis
+packages/                  Shared workspace libraries (env, logging, transport)
+config/                    Agent scopes, user registry (gitignored), examples
+docs/                      Architecture and API notes
+scripts/                   See the table below
+CLAUDE.md                  Agent instructions for Claude Code
+AGENTS.md                  Agent instructions for OpenAI Codex and compatible agents
 Dockerfile
 docker-compose.yml
 ```
+
+> Workflow guides and KB articles are **not** files. They live in the AI Knowledge
+> Gateway and load through the `read_agent_doc` tool.
+
+### Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `start-single.sh` | Replit entry point — the orchestrator hosts every downstream in-process on one port |
+| `start-all.sh` | Legacy multi-process supervisor (Docker and the older Replit workflow) |
+| `start-all.ps1` | Local Windows stack — calls the per-service `start-*.ps1` scripts |
+| `start-<service>.ps1` | Start one service in its own terminal window |
+| `mcp-target.ps1` | Point the `joomla-suite` MCP registration at the local stack or Replit |
+| `sync-agent-docs.ps1` | Keep CLAUDE.md and AGENTS.md in sync |
+| `hash-tokens.js` | Hash or rotate the orchestrator bearer tokens in `config/users.json` |
+| `runtime-user-tool.js` | Hash a password or encrypt a token for `config/runtime-users.json` |
+| `on-joomla-edit.ps1` | PostToolUse hook — rebuild joomla-mcp when its source changes |
+| `post-merge.sh` | Install dependencies and build after a task merge |
+| `check-crash-loop.sh` | Verify the `start-all.sh` supervisor gives up on a crash loop |
+| `archive/` | One-time migrations that already ran — reference only |
 
 ---
 
@@ -83,8 +107,6 @@ http://localhost:18302/mcp
 | Port | Visibility | Service |
 |------|-----------|---------|
 | `18302` | External | Orchestrator — the only port you need |
-| `18303` | External | Gantry Site Builder web app |
-| `18304` | External | Gantry Mockup Brief Builder web app |
 | `18300` | Internal | Joomla MCP server |
 | `18301` | Internal | Gantry MCP server |
 | `18310` | Cloudflare Tunnel | Agent-runtime + Solutio AI Dashboard *(planned — see below)* |

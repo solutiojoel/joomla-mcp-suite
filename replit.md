@@ -22,7 +22,7 @@ Autoscale deployment (scales to zero when idle, wakes on request).
 `buildServer()` with no side effects on require.
 
 **Legacy multi-process mode** (`scripts/start-all.sh`) still works: each server
-gets its own loopback HTTP port (9300–9307) plus the site-builder UI on 18303.
+gets its own loopback HTTP port (9300–9307).
 
 Agents connect to the **orchestrator** `/mcp` endpoint with a bearer token
 matching `ORCHESTRATOR_TOKEN`. Unauthenticated status dashboard at `/`,

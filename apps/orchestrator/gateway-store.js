@@ -176,7 +176,7 @@ function invalidateDocs() {
 
 /**
  * Short site code from a hostname, matching the site_code used by agent_audit.
- * Mirrors siteCodeFromHost() in scripts/migrate-site-notes-to-gateway.js.
+ * Mirrors siteCodeFromHost() in scripts/archive/migrate-site-notes-to-gateway.js.
  */
 function siteCodeFromHost(hostname) {
   const h = String(hostname || '').toLowerCase();

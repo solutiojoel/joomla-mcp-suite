@@ -1,47 +1,62 @@
-  # Start all MCP services in separate terminal windows.
+# Start the local MCP stack, each service in its own terminal window.
 # Run from anywhere -- the script resolves paths relative to itself.
 #
-# Ports:
-#   joomla-mcp    -> 9300
-#   gantry-mcp    -> 9301
-#   orchestrator  -> 9302  (what Claude Desktop connects to)
-#   freshdesk-mcp -> 9303
-#   ftp-mcp       -> 9304
+# Every service is defined once, in its own start-<name>.ps1. This script calls
+# those scripts, waits for each port, then starts the orchestrator last.
+#
+# Core stack (always started):
+#   joomla-mcp            -> 9300
+#   gantry-mcp            -> 9301
+#   freshdesk-mcp         -> 9303
+#   ftp-mcp               -> 9304
 #   knowledge-gateway-mcp -> 9306
-#   agents-mcp    -> 3506
+#   agents-mcp            -> 3506
+#   orchestrator          -> 9302  (what Claude Desktop and mcp-target.ps1 connect to)
+#
+# Optional services (opt in with a switch):
+#   -WithMockup        mockup-analyzer -> 9305   (needs Python)
+#   -WithDashboard     sub-agent run dashboard -> 3507
+#   -WithAgentRuntime  agent-runtime -> 18310
+#   -All               all three of the above
 
-$root = Split-Path -Parent $PSScriptRoot
+param(
+    [switch]$WithMockup,
+    [switch]$WithDashboard,
+    [switch]$WithAgentRuntime,
+    [switch]$All
+)
 
-$joomlaPort = 9300
-$gantryPort = 9301
-$orchPort   = 9302
-$freshdeskPort = 9303
-$ftpPort    = 9304
-$knowledgePort = 9306
-$agentsPort = 3506
+$ErrorActionPreference = 'Stop'
 
-function Start-McpService([string]$Title, [string]$Dir, [string]$Cmd) {
-    $pArgs = @("-NoExit", "-Command", "& { `$host.UI.RawUI.WindowTitle = '$Title'; Set-Location '$Dir'; $Cmd }")
-    Start-Process powershell -ArgumentList $pArgs
+if ($All) {
+    $WithMockup       = $true
+    $WithDashboard    = $true
+    $WithAgentRuntime = $true
 }
 
-Write-Host "Starting joomla-mcp on port $joomlaPort..."
-Start-McpService "joomla-mcp :$joomlaPort" "$root\apps\joomla-mcp" "`$env:HTTP_PORT='$joomlaPort'; node dist/index.js"
+# Name = the start-<Name>.ps1 script to call; Port = the port to wait for.
+$core = @(
+    @{ Name = 'joomla-mcp';            Port = 9300 },
+    @{ Name = 'gantry-mcp';            Port = 9301 },
+    @{ Name = 'freshdesk-mcp';         Port = 9303 },
+    @{ Name = 'ftp-mcp';               Port = 9304 },
+    @{ Name = 'knowledge-gateway-mcp'; Port = 9306 },
+    @{ Name = 'agents-mcp';            Port = 3506 }
+)
 
-Write-Host "Starting gantry-mcp on port $gantryPort..."
-Start-McpService "gantry-mcp :$gantryPort" "$root\apps\gantry-mcp" "`$env:HTTP_PORT='$gantryPort'; node mcp-server.js"
+$optional = @()
+if ($WithMockup)       { $optional += @{ Name = 'mockup-mcp';    Port = 9305 } }
+if ($WithDashboard)    { $optional += @{ Name = 'dashboard';     Port = 3507 } }
+if ($WithAgentRuntime) { $optional += @{ Name = 'agent-runtime'; Port = 18310 } }
 
-Write-Host "Starting freshdesk-mcp on port $freshdeskPort..."
-Start-McpService "freshdesk-mcp :$freshdeskPort" "$root\apps\freshdesk-mcp" "`$env:HTTP_PORT='$freshdeskPort'; node dist/index.js"
-
-Write-Host "Starting ftp-mcp on port $ftpPort..."
-Start-McpService "ftp-mcp :$ftpPort" "$root\apps\ftp-mcp" "`$env:HTTP_PORT='$ftpPort'; node dist/index.js"
-
-Write-Host "Starting knowledge-gateway-mcp on port $knowledgePort..."
-Start-McpService "knowledge-gateway-mcp :$knowledgePort" "$root\apps\knowledge-gateway-mcp" "`$env:HTTP_PORT='$knowledgePort'; node dist/index.js"
-
-Write-Host "Starting agents-mcp on port $agentsPort..."
-Start-McpService "agents-mcp :$agentsPort" "$root\apps\agents-mcp" "`$env:HTTP_PORT='$agentsPort'; npx tsx src/index.ts"
+function Start-McpService([string]$Name) {
+    $script = Join-Path $PSScriptRoot "start-$Name.ps1"
+    if (-not (Test-Path $script)) {
+        Write-Error "Missing start script: $script"
+        exit 1
+    }
+    & $script
+}
 
 function Wait-Port([int]$Port, [int]$TimeoutSec = 60) {
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
@@ -58,30 +73,29 @@ function Wait-Port([int]$Port, [int]$TimeoutSec = 60) {
     return $false
 }
 
-Write-Host "Waiting for joomla-mcp..." -NoNewline
-if (Wait-Port $joomlaPort) { Write-Host " ready." } else { Write-Error "joomla-mcp did not start in time."; exit 1 }
+$services = $core + $optional
 
-Write-Host "Waiting for gantry-mcp..." -NoNewline
-if (Wait-Port $gantryPort) { Write-Host " ready." } else { Write-Error "gantry-mcp did not start in time."; exit 1 }
+foreach ($svc in $services) {
+    Start-McpService $svc.Name
+}
 
-Write-Host "Waiting for freshdesk-mcp..." -NoNewline
-if (Wait-Port $freshdeskPort) { Write-Host " ready." } else { Write-Error "freshdesk-mcp did not start in time."; exit 1 }
+# The orchestrator opens a fresh connection per call, so it can start before a
+# downstream is ready. Waiting first still gives a clear failure on a dead service.
+foreach ($svc in $services) {
+    Write-Host "Waiting for $($svc.Name) on $($svc.Port)..." -NoNewline
+    if (Wait-Port $svc.Port) {
+        Write-Host " ready."
+    } else {
+        Write-Error "$($svc.Name) did not start in time."
+        exit 1
+    }
+}
 
-Write-Host "Waiting for ftp-mcp..." -NoNewline
-if (Wait-Port $ftpPort) { Write-Host " ready." } else { Write-Error "ftp-mcp did not start in time."; exit 1 }
-
-Write-Host "Waiting for knowledge-gateway-mcp..." -NoNewline
-if (Wait-Port $knowledgePort) { Write-Host " ready." } else { Write-Error "knowledge-gateway-mcp did not start in time."; exit 1 }
-
-Write-Host "Waiting for agents-mcp..." -NoNewline
-if (Wait-Port $agentsPort) { Write-Host " ready." } else { Write-Error "agents-mcp did not start in time."; exit 1 }
-
-Write-Host "Starting orchestrator on port $orchPort..."
-Start-McpService "orchestrator :$orchPort" "$root\apps\orchestrator" "`$env:HTTP_PORT='$orchPort'; node orchestrator.js"
+Start-McpService 'orchestrator'
 
 Write-Host ""
-Write-Host "All services running."
-Write-Host "  Orchestrator: http://localhost:$orchPort/mcp"
+Write-Host "All services running." -ForegroundColor Green
+Write-Host "  Orchestrator: http://localhost:9302/mcp"
 Write-Host ""
-Write-Host "Claude Desktop connects via mcp-remote -- no changes needed after first setup."
+Write-Host "Point Claude Code at it with: .\scripts\mcp-target.ps1 local"
 Write-Host "Close the terminal windows to stop all services."

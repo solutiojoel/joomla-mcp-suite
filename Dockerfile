@@ -40,9 +40,8 @@ RUN npm run build
 # Python deps for mockup-analyzer
 RUN pip3 install "mcp[cli]" pyyaml --break-system-packages
 
-# Orchestrator (MCP/HTTP), site-builder webapp, and mockup-analyzer
+# Orchestrator (MCP/HTTP) and mockup-analyzer
 EXPOSE 9302
 EXPOSE 9305
-EXPOSE 18303
 
 CMD ["bash", "scripts/start-all.sh"]

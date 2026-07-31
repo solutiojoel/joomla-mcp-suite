@@ -12,10 +12,8 @@ services:
       FTP_MCP_PORT: "18307"
       MOCKUP_MCP_PORT: "9305"
       HTTP_PORT: "18302"
-      SITE_BUILDER_PORT: "18303"
     ports:
       - "18302:18302"
-      - "18303:18303"
     volumes:
       - ./apps/gantry-mcp/exports:/workspace/apps/gantry-mcp/exports
     restart: unless-stopped
