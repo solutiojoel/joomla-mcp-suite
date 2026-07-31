@@ -14,6 +14,11 @@
     "test:tools:gantry": "npm run build && cross-env TEST_SUITE=gantry tsx scripts/tests/mcp-all-tools-test.ts",
     "test:tools:menus": "npm run build && cross-env TEST_SUITE=menus tsx scripts/tests/mcp-all-tools-test.ts",
     "test:tools:admin": "npm run build && cross-env TEST_SUITE=admin tsx scripts/tests/mcp-all-tools-test.ts",
+    "menu:audit": "tsx scripts/tests/menu-audit.ts",
+    "menu:correctness": "tsx scripts/tests/menu-correctness.ts",
+    "menu:e2e": "tsx scripts/tests/menu-mcp-e2e.ts",
+    "check:forms": "tsx scripts/tests/form-parse-check.ts",
+    "check:adjacent": "tsx scripts/tests/adjacent-tools-check.ts",
     "inspect": "npx @modelcontextprotocol/inspector tsx src/index.ts",
     "start:http": "cross-env HTTP_PORT=3000 tsx src/index.ts"
   },
