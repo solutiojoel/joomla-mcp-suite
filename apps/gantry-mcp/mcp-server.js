@@ -2945,9 +2945,11 @@ const LEGACY_TOOLS = [
     description:
       'Apply a section design YAML to a SINGLE section in a live outline, leaving all ' +
       'other sections completely untouched. The surgical alternative to gantry_layout_design. ' +
+      'Always breaks inheritance on the target section first -- no separate unlink step ' +
+      'needed, and no old inherited content is left behind after "replace" or "clear". ' +
       'Modes: ' +
       '"replace" (default) clears the section then adds the new particles; ' +
-      '"merge" appends new particles alongside existing ones; ' +
+      '"merge" appends new particles alongside existing ones (existing ones become local); ' +
       '"clear" removes all particles from the section without adding new ones. ' +
       'section_yaml accepts the same format as a single section in gantry_layout_design: ' +
       'id, attributes.class, grids array with blocks, or a template: reference. ' +
@@ -3069,6 +3071,14 @@ const LEGACY_TOOLS = [
           if (!['section', 'offcanvas'].includes(section.type)) {
             throw new Error('"' + resolvedSectionId + '" is type "' + section.type + '"; expected section or offcanvas');
           }
+
+          // Break section- and particle-level inheritance before mutating. Without
+          // this, a section still inherited from a parent outline keeps its old
+          // inherited children forever -- "replace" would silently leave them in
+          // place next to the new grids instead of removing them, since they'd
+          // still carry a non-empty `inherit` block. Callers should never need to
+          // remember a separate unlink step before apply.
+          layoutApi.clearNodeInherit(structure, resolvedSectionId);
 
           // Replace: strip non-inherited grid children
           if (mode === 'replace' || mode === 'clear') {
@@ -3309,9 +3319,8 @@ const TOOLS = [
       'action: find | inspect | add | edit | move | remove | block_edit (wrapper CSS ' +
       'class) | repeater_item (one item in an array attribute, e.g. a single slide) | ' +
       'repeater_replace (whole array) | html (rendered frontend HTML for visual QA). ' +
-      'For "edit", prefer `attributes` (deep-merged, most reliable); use `edits` only ' +
-      'for raw form-field names. Omit `id` and pass filters (section/title/subtype/type) ' +
-      'to edit every matching particle in one atomic save.',
+      'edit: pass `id` for one particle, or a filter (section/title/subtype/type) with ' +
+      'no `id` to edit every match in one save — see the `attributes`/`edits` field notes.',
     schema: {
       type: 'object',
       properties: {
@@ -3330,10 +3339,10 @@ const TOOLS = [
         to:      { type: 'string', description: 'add/move: target section id.' },
         nextTo:  { type: 'string', description: 'add/move: place beside this particle id instead of appending.' },
         size:    { type: 'number', description: 'add: block width percentage.' },
-        mode:    { type: 'string', description: 'add: placement mode.' },
+        mode:    { type: 'string', enum: ['newGrid', 'firstGrid'], description: 'add: placement mode. Default newGrid.' },
         attributes: { type: 'object', additionalProperties: true, description: 'edit: settings object, deep-merged into the particle. Preferred over `edits`.' },
         blockClass: { type: 'string', description: 'edit: CSS class for the wrapping block.' },
-        edits:   { type: 'object', additionalProperties: true, description: 'edit: raw form-field name -> value map (e.g. {"particle[title]":"Hi"}). Use `attributes` unless you need raw field names.' },
+        edits:   { type: 'object', additionalProperties: true, description: 'edit: raw form-field name -> value map (e.g. {"particle[title]":"Hi"}) — escape hatch when `attributes` can\'t reach a field.' },
         attrs:   { type: 'object', additionalProperties: true, description: 'block_edit: block attributes, e.g. {"class":"g-offset-20"}.' },
         repeaterPath: { type: 'string', description: 'repeater_*: path to the array attribute (e.g. "subcontents").' },
         index:   { type: 'number', description: 'repeater_item: zero-based index of the item to patch.' },
@@ -3388,10 +3397,12 @@ const TOOLS = [
     description:
       'Work on one layout section at a time — the preferred way to build or rebuild a ' +
       'page, since it leaves every other section untouched. ' +
-      'action: apply (write a section design YAML into a live section) | edit (section ' +
-      'attributes such as boxed/class) | explain (plain-English account of a live ' +
-      'section) | inherit (make a section inherit from another outline) | unlink (break ' +
-      'inheritance) | clone_from (copy sections from another outline). ' +
+      'action: apply (write a section design YAML into a live section — always breaks ' +
+      'inheritance on that section first, so you never need a separate unlink call and ' +
+      'no old inherited content is left behind) | edit (section attributes such as ' +
+      'boxed/class) | explain (plain-English account of a live section) | inherit (make a ' +
+      'section inherit from another outline) | unlink (break inheritance without changing ' +
+      'content) | clone_from (copy sections from another outline). ' +
       'Base-outline sections (navigation, bottom, footer, copyright, offcanvas) are ' +
       'auto-routed to the default outline on apply.',
     schema: {
