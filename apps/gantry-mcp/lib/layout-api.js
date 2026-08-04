@@ -479,17 +479,6 @@ function setNodeInherit(structure, nodeId, inherit) {
   return found.node;
 }
 
-/**
- * Break inheritance on a node — empties the `inherit` field. The node's
- * existing children stay (so the local copy continues with whatever's there).
- */
-function clearNodeInherit(structure, nodeId) {
-  const found = findNode(structure, nodeId);
-  if (!found) throw new Error(`Node "${nodeId}" not found`);
-  found.node.inherit = {};
-  return found.node;
-}
-
 function cloneDeep(value) {
   return JSON.parse(JSON.stringify(value));
 }
@@ -501,6 +490,23 @@ function clearInheritDeep(node) {
     node.children.forEach(clearInheritDeep);
   }
   return node;
+}
+
+/**
+ * Break inheritance on a node AND every particle underneath it. Gantry tracks
+ * inheritance at two independent levels: the node's own `inherit` pointer
+ * (which children/particles exist) and each descendant particle's own
+ * `inherit` block (whether that particle's `attributes`/`block` still
+ * resolve live from a parent-outline counterpart). Clearing only the node's
+ * own field leaves every child particle silently re-resolving its attributes
+ * from the parent outline on every read — edits to those particles appear to
+ * save but have no visible effect. Recursing with `clearInheritDeep` clears
+ * both layers in one call, so the section is truly local afterward.
+ */
+function clearNodeInherit(structure, nodeId) {
+  const found = findNode(structure, nodeId);
+  if (!found) throw new Error(`Node "${nodeId}" not found`);
+  return clearInheritDeep(found.node);
 }
 
 /**
@@ -1202,10 +1208,14 @@ function resolvePath(obj, pathStr) {
  * Deep-inspect a particle by id: returns the particle node, its wrapper block,
  * and all attributes. Useful for understanding the full structure before editing.
  *
- * Returns: { particle, block, attributes }
- *   particle  — the raw particle node from the layout tree
- *   block     — the block node that wraps this particle (may be null for top-level)
- *   attributes — particle.attributes (convenience)
+ * Returns: { particle, block, attributes, inherited, inheritedFrom }
+ *   particle      — the raw particle node from the layout tree
+ *   block         — the block node that wraps this particle (may be null for top-level)
+ *   attributes    — particle.attributes (convenience)
+ *   inherited     — true if this particle still has a live `inherit` block, meaning
+ *                   `attributes` (and/or `block`) may be silently re-resolved from a
+ *                   parent outline on every read regardless of what this response shows.
+ *   inheritedFrom — { outline, particle, include } describing the source, or null.
  */
 function inspectParticleDeep(structure, particleId) {
   let particle = null;
@@ -1222,7 +1232,14 @@ function inspectParticleDeep(structure, particleId) {
   });
 
   if (!particle) return null;
-  return { particle, block, attributes: particle.attributes || {} };
+  const inherited = !!(particle.inherit && Object.keys(particle.inherit).length);
+  return {
+    particle,
+    block,
+    attributes: particle.attributes || {},
+    inherited,
+    inheritedFrom: inherited ? particle.inherit : null,
+  };
 }
 
 /**

@@ -663,10 +663,15 @@ const LEGACY_TOOLS = [
   {
     name: 'gantry_layout_section_clone',
     description:
-      'Break inheritance on an already-local section (clears the inherit field only). ' +
-      'This does NOT copy source outline content. For Gantry\'s full Clone action with ' +
-      'Section Attributes, Block Attributes, and Particles within Section checked, use ' +
-      'gantry_layout_sections_clone_from.',
+      'Break inheritance on a section AND every particle underneath it (clears the ' +
+      'inherit field on the section node and recursively on all descendants). This does ' +
+      'NOT copy source outline content — existing children stay as-is, just no longer live-' +
+      'linked to the parent outline. Use this before editing any particle inside a section ' +
+      'that was created via inherit/duplicate, so attribute edits on those particles actually ' +
+      'take effect (a per-particle inherit block left in place silently re-resolves attributes ' +
+      'from the parent outline on every read, even after the section itself is unlinked). ' +
+      'For Gantry\'s full Clone action with Section Attributes, Block Attributes, and ' +
+      'Particles within Section checked, use gantry_layout_sections_clone_from.',
     schema: {
       type: 'object',
       properties: { ...SITE_THEME_FIELDS, ...OUTLINE_FIELD, id: { type: 'string' }, dryRun: { type: 'boolean' } },
@@ -2013,7 +2018,11 @@ const LEGACY_TOOLS = [
       'slides) or whenever gantry_layout_edit reports a no-op. ' +
       'Pass `attributes` as the exact JSON object to merge — e.g. ' +
       '{"subcontents": [...], "title": "My Title"}. ' +
-      'Pass `blockClass` to set/replace the wrapper block CSS class (e.g. "ql-window-title").',
+      'Pass `blockClass` to set/replace the wrapper block CSS class (e.g. "ql-window-title"). ' +
+      'If this particle still has its own inherit link to a parent outline (common right after ' +
+      'duplicating/inheriting an outline, even if the containing section was already unlinked), ' +
+      'that link is broken automatically before the attribute merge so the edit actually takes ' +
+      'effect on render — check the response\'s `brokeInheritance` field to see if this happened.',
     schema: {
       type: 'object',
       properties: {
@@ -2040,6 +2049,8 @@ const LEGACY_TOOLS = [
       const outline = await resolveOutlineArg(ctx, args);
       let editedParticleId = args.id;
       let editedBlockId = null;
+      let brokeInheritance = false;
+      let previousInherit = null;
 
       const r = await layoutApi.mutateLayout(
         ctx, outline,
@@ -2052,6 +2063,16 @@ const LEGACY_TOOLS = [
             const node = found.node;
             if (!['particle', 'system', 'position', 'spacer'].includes(node.type)) {
               throw new Error(`Node "${args.id}" is type "${node.type}", not a particle`);
+            }
+            // A particle can carry its own `inherit` block (independent of the
+            // section it lives in) that re-resolves `attributes` from a paired
+            // particle in a parent outline on every read. If left in place, this
+            // edit would save but be silently overwritten the next time the
+            // layout is read/rendered. Break it here so the edit actually sticks.
+            if (node.inherit && Object.keys(node.inherit).length) {
+              previousInherit = { ...node.inherit };
+              node.inherit = {};
+              brokeInheritance = true;
             }
             node.attributes = layoutApi.deepMerge(node.attributes || {}, args.attributes);
           }
@@ -2075,6 +2096,8 @@ const LEGACY_TOOLS = [
         diff:       r.diff || null,
         verified:   r.verified ?? null,
         backupPath: r.backupPath || null,
+        brokeInheritance,
+        ...(brokeInheritance ? { previousInherit } : {}),
       };
 
       // Optional: fetch live rendered HTML after save
