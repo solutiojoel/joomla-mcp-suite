@@ -510,6 +510,57 @@ function clearNodeInherit(structure, nodeId) {
 }
 
 /**
+ * Build the full ancestor chain (root-first, target-last) for a node id.
+ * `findNode`/`walk` only ever hand back the *immediate* parent, which is not
+ * enough to know whether a grandparent section is still inherited.
+ */
+function findNodePath(structure, nodeId) {
+  let result = null;
+  const search = (nodes, path) => {
+    if (result || !Array.isArray(nodes)) return;
+    for (const node of nodes) {
+      const nextPath = [...path, node];
+      if (node.id === nodeId) {
+        result = nextPath;
+        return;
+      }
+      if (Array.isArray(node.children)) search(node.children, nextPath);
+      if (result) return;
+    }
+  };
+  search(structure, []);
+  return result;
+}
+
+/**
+ * Break inheritance on every ANCESTOR of a node (section, grid, block —
+ * everything from the root down to but not including the node itself).
+ *
+ * `clearNodeInherit` only clears a node and its descendants. That is not
+ * enough for editing/removing a single particle: if the containing section
+ * still carries `inherit.include: [..., "children"]`, Gantry recomputes that
+ * section's child list from the parent outline on every read/render, which
+ * silently resupplies the very particle that was just edited or removed —
+ * the edit/removal appears to save but has no visible effect. Call this
+ * before mutating a particle (or its own clearNodeInherit) so the whole path
+ * from root to the particle is local and nothing upstream can resupply it.
+ */
+function clearAncestorInherit(structure, nodeId) {
+  const path = findNodePath(structure, nodeId);
+  if (!path) throw new Error(`Node "${nodeId}" not found`);
+  let broke = false;
+  const previous = [];
+  for (const node of path.slice(0, -1)) {
+    if (node.inherit && Object.keys(node.inherit).length) {
+      previous.push({ id: node.id, inherit: { ...node.inherit } });
+      node.inherit = {};
+      broke = true;
+    }
+  }
+  return { broke, previous };
+}
+
+/**
  * Replace a target node with a local clone of the matching source node.
  * Equivalent to Gantry's section Inheritance -> Clone flow with:
  *   - Section Attributes checked
@@ -1566,6 +1617,8 @@ module.exports = {
   addSectionClasses,
   setNodeInherit,
   clearNodeInherit,
+  findNodePath,
+  clearAncestorInherit,
   cloneNodeFromStructure,
   cloneStructureLocal,
   clearLayout,

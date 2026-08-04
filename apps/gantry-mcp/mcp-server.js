@@ -555,6 +555,16 @@ const LEGACY_TOOLS = [
         args.outline || 'default',
         (structure) => {
           for (const id of ids) {
+            // If an ancestor section/grid/block still inherits its `children`
+            // list from a parent outline, removing the node from THIS structure
+            // is not enough -- that ancestor resupplies the same particle from
+            // the parent outline on the very next read. Break the whole path
+            // first so the removal actually sticks.
+            try {
+              layoutApi.clearAncestorInherit(structure, id);
+            } catch {
+              // Node not found -- let removeNode below record it as missing.
+            }
             const got = layoutApi.removeNode(structure, id);
             (got ? removed : missing).push(id);
           }
@@ -588,7 +598,16 @@ const LEGACY_TOOLS = [
       const outline = await resolveOutlineArg(ctx, args);
       const r = await layoutApi.mutateLayout(
         ctx, outline,
-        (structure) => layoutApi.editParticleFromForm(structure, args.id, args.edits),
+        (structure) => {
+          // Same ancestor-resupply risk as gantry_particle_direct_edit: clear
+          // the whole path to the particle before patching raw form fields.
+          try {
+            layoutApi.clearAncestorInherit(structure, args.id);
+          } catch {
+            // Unknown id -- editParticleFromForm below will raise a clearer error.
+          }
+          layoutApi.editParticleFromForm(structure, args.id, args.edits);
+        },
         { op: 'edit', dryRun: !!args.dryRun }
       );
       // Detect silent no-ops: if the diff is empty, nothing matched — warn loudly.
@@ -2074,10 +2093,26 @@ const LEGACY_TOOLS = [
               node.inherit = {};
               brokeInheritance = true;
             }
+            // The particle's OWN inherit is only half the story: if an ancestor
+            // section/grid/block still inherits its `children` list from a parent
+            // outline, that ancestor resupplies the pre-edit particle on every
+            // read regardless of what we just did above. Clear the whole path.
+            const ancestorResult = layoutApi.clearAncestorInherit(structure, args.id);
+            if (ancestorResult.broke) {
+              previousInherit = { ...(previousInherit || {}), ancestors: ancestorResult.previous };
+              brokeInheritance = true;
+            }
             node.attributes = layoutApi.deepMerge(node.attributes || {}, args.attributes);
           }
           // Block class patch
           if (args.blockClass !== undefined) {
+            // Same ancestor-resupply risk as the attributes branch above, even
+            // when only the wrapper block class is being changed.
+            const ancestorResult = layoutApi.clearAncestorInherit(structure, args.id);
+            if (ancestorResult.broke) {
+              previousInherit = { ...(previousInherit || {}), ancestors: ancestorResult.previous };
+              brokeInheritance = true;
+            }
             const info = layoutApi.inspectParticleDeep(structure, args.id);
             if (!info) throw new Error(`Cannot inspect particle "${args.id}"`);
             if (info.block) {
