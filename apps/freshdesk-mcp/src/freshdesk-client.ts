@@ -201,6 +201,43 @@ interface CompanyRaw {
   updated_at: string;
 }
 
+// Freshdesk renders note bodies as raw HTML and does not convert markdown — a note written
+// in markdown (blank-line paragraphs, "- "/"1. " lists) collapses into one run-on paragraph.
+// If the body has no HTML block tags at all, treat it as plain text/markdown and convert the
+// common subset to real HTML before sending. A body that already contains HTML tags is
+// passed through unchanged, so a caller that already writes correct HTML is never touched.
+function escapeInlineMarkdown(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>")
+    .replace(/_(.+?)_/g, "<em>$1</em>");
+}
+
+export function markdownToHtmlIfNeeded(body: string): string {
+  if (/<(p|ul|ol|li|div|br|strong|em|b|i|h[1-6])\b/i.test(body)) return body;
+
+  const blocks = body.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+  if (blocks.length === 0) return body;
+
+  const html = blocks.map((block) => {
+    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+    const isUnordered = lines.length > 0 && lines.every((l) => /^[-*]\s+/.test(l));
+    const isOrdered = lines.length > 0 && lines.every((l) => /^\d+\.\s+/.test(l));
+    if (isUnordered) {
+      return `<ul>${lines.map((l) => `<li>${escapeInlineMarkdown(l.replace(/^[-*]\s+/, ""))}</li>`).join("")}</ul>`;
+    }
+    if (isOrdered) {
+      return `<ol>${lines.map((l) => `<li>${escapeInlineMarkdown(l.replace(/^\d+\.\s+/, ""))}</li>`).join("")}</ol>`;
+    }
+    return `<p>${escapeInlineMarkdown(lines.join(" "))}</p>`;
+  });
+
+  return html.join("\n");
+}
+
 export class FreshdeskClient {
   private readonly axios: AxiosInstance;
 
@@ -350,9 +387,10 @@ export class FreshdeskClient {
     isPrivate = true
   ): Promise<FreshdeskResponse> {
     try {
+      const htmlBody = markdownToHtmlIfNeeded(body);
       const { data } = await this.axios.post(
         `/tickets/${ticketId}/notes`,
-        { body, private: isPrivate, notify_emails: [] }
+        { body: htmlBody, private: isPrivate, notify_emails: [] }
       );
       const note: FreshdeskNoteResult = {
         id: data.id,

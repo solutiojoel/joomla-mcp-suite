@@ -3345,19 +3345,35 @@ export class JoomlaClient {
       verify = fetched;
       verifyToken = fetched.token ?? null;
     }
+    const buildVerification = (verify: JoomlaResponse | null) => {
+      const category = ((verify?.data || {}) as Record<string, string>);
+      return {
+        attempted: true,
+        foundInList: !!createdId,
+        readbackSucceeded: !!verify?.success,
+        titleMatches: !!verify?.success && this.decodeHtmlEntities(category.title) === this.decodeHtmlEntities(data.title),
+        aliasMatches: !!verify?.success && this.verifyAlias(String(category.alias || ""), data.alias),
+        parentMatches: !!verify?.success && category.parentId === String(data.parentId || "1"),
+        descriptionMatches: !!verify?.success && this.isEquivalentRichText(String(category.description || ""), String(data.description || "")),
+        publishedMatches: !!verify?.success && category.published === String(data.published ?? "1"),
+      };
+    };
+    let verification = buildVerification(verify);
+    let verified = Object.values(verification).every((value) => value === true);
+    // Read-after-write lag: the row can exist server-side before a readback reflects
+    // it, especially under concurrent/parallel creates. Retry the readback (not just
+    // the list-scan above) before reporting an unverified create. Same fix as
+    // createArticle — see [[joomla_article]] self-improving history.
+    if (createdId && !verified) {
+      await new Promise((r) => setTimeout(r, 800));
+      const retry = await this.fetchCategoryForm(createdId);
+      verify = retry;
+      verifyToken = retry.token ?? null;
+      verification = buildVerification(verify);
+      verified = Object.values(verification).every((value) => value === true);
+    }
     if (createdId) await this.quickCheckInCategory(createdId, verifyToken);
     const category = ((verify?.data || {}) as Record<string, string>);
-    const verification = {
-      attempted: true,
-      foundInList: !!createdId,
-      readbackSucceeded: !!verify?.success,
-      titleMatches: !!verify?.success && this.decodeHtmlEntities(category.title) === this.decodeHtmlEntities(data.title),
-      aliasMatches: !!verify?.success && this.verifyAlias(String(category.alias || ""), data.alias),
-      parentMatches: !!verify?.success && category.parentId === String(data.parentId || "1"),
-      descriptionMatches: !!verify?.success && this.isEquivalentRichText(String(category.description || ""), String(data.description || "")),
-      publishedMatches: !!verify?.success && category.published === String(data.published ?? "1"),
-    };
-    const verified = Object.values(verification).every((value) => value === true);
 
     return {
       success: verified,
@@ -4350,8 +4366,26 @@ export class JoomlaClient {
       savedEntry = this.findLatestByTitle(modules, data.title);
       savedId = String(savedEntry?.id || "");
     }
+    if (!savedId) {
+      // One retry after a short delay — handles the DB commit timing window where
+      // the module exists on the server but hasn't propagated to the list view yet.
+      // Same read-after-write lag class as createArticle/createCategory.
+      await new Promise((r) => setTimeout(r, 600));
+      const listRetry = await this.listModules(data.clientId || "0");
+      const modulesRetry = Array.isArray(listRetry.data) ? listRetry.data as Array<Record<string, string>> : [];
+      savedEntry = this.findLatestByTitle(modulesRetry, data.title);
+      savedId = String(savedEntry?.id || "");
+    }
     // task=module.apply redirects to the new module's own edit form, so result.html is
     // already the readback. apply leaves it checked out, so release it afterwards.
+    const buildVerification = (verify: JoomlaResponse | null) => {
+      const module = ((verify?.data || {}) as Record<string, unknown>);
+      const expectedModuleType = String(existingModule.moduleType || "").toLowerCase();
+      const actualModuleType = String(module.moduleType || "").toLowerCase();
+      const titleMatches = !!verify?.success && this.decodeHtmlEntities(String(module.title || "")) === this.decodeHtmlEntities(data.title);
+      const moduleTypeMatches = !!verify?.success && (!expectedModuleType || actualModuleType === expectedModuleType);
+      return { titleMatches, moduleTypeMatches };
+    };
     let verify: JoomlaResponse | null = null;
     let verifyToken: { name: string; value: string } | null = null;
     if (savedId && /view=module\b/.test(result.redirectUrl ?? "") && /layout=edit/.test(result.redirectUrl ?? "")) {
@@ -4366,19 +4400,26 @@ export class JoomlaClient {
       verify = fetched;
       verifyToken = fetched.token ?? null;
     }
+    let { titleMatches, moduleTypeMatches } = buildVerification(verify);
+    let verified = !!savedId && titleMatches && moduleTypeMatches;
+    // Read-after-write lag: retry the readback once before reporting an unverified
+    // create. Same fix as createArticle — see [[joomla_article]] self-improving history.
+    if (savedId && !verified) {
+      await new Promise((r) => setTimeout(r, 800));
+      const retry = await this.fetchModuleForm(savedId);
+      verify = retry;
+      verifyToken = retry.token ?? null;
+      ({ titleMatches, moduleTypeMatches } = buildVerification(verify));
+      verified = !!savedId && titleMatches && moduleTypeMatches;
+    }
     if (savedId) await this.quickCheckInModule(savedId, verifyToken);
     const module = ((verify?.data || {}) as Record<string, unknown>);
-    const expectedModuleType = String(existingModule.moduleType || "").toLowerCase();
-    const actualModuleType = String(module.moduleType || "").toLowerCase();
-    const titleMatches = !!verify?.success && this.decodeHtmlEntities(String(module.title || "")) === this.decodeHtmlEntities(data.title);
-    const moduleTypeMatches = !!verify?.success && (!expectedModuleType || actualModuleType === expectedModuleType);
-    const verified = !!savedId && titleMatches && moduleTypeMatches;
 
     return {
       success: verified,
       message: verified
         ? "Module saved"
-        : (errorMsg ?? (successMsg ? "Module save submitted, but creation was not verified" : "Unknown result")),
+        : (errorMsg ?? (successMsg ? "Module save submitted, but creation was not verified" : "Module save was rejected by Joomla and no alert message was returned")),
       data: this.buildOperationData("module", savedId, {
         title: String(module.title || data.title),
         state: String(module.published || data.published || "1"),
@@ -5610,9 +5651,12 @@ export class JoomlaClient {
     const typesResult = await this.listMenuItemTypes();
     const types = (typesResult.data || []) as MenuItemType[];
     if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] listMenuItemTypes ${Date.now() - tTypes}ms`);
-    // "heading" in the spec maps to Joomla's "Separator" system link type
-    const resolvedItemType = data.itemType.toLowerCase() === "heading" ? "separator" : data.itemType;
-    const type = this.findMenuItemType(types, resolvedItemType);
+    // Joomla exposes "Heading" as its own system link type, distinct from "Separator" —
+    // do not collapse one into the other. findMenuItemType matches itemType against the
+    // live type list's title/label/requestKey, so a bare string like "heading" resolves
+    // correctly on its own; it previously got silently rewritten to "separator" here,
+    // which is why itemType:"heading" saved as a Separator with no error.
+    const type = this.findMenuItemType(types, data.itemType);
     if (!type) {
       return { success: false, message: `Menu item type not found: ${data.itemType}` };
     }
@@ -5835,8 +5879,9 @@ export class JoomlaClient {
     if (data.itemType) {
       const typesResult = await this.listMenuItemTypes();
       const types = (typesResult.data || []) as MenuItemType[];
-      const resolvedUpdateType = data.itemType.toLowerCase() === "heading" ? "separator" : data.itemType;
-      type = this.findMenuItemType(types, resolvedUpdateType);
+      // See _doCreateMenuItem: "Heading" is its own Joomla system link type, distinct
+      // from "Separator" — do not rewrite one to the other before the lookup.
+      type = this.findMenuItemType(types, data.itemType);
       if (!type) {
         return { success: false, message: `Menu item type not found: ${data.itemType}` };
       }
@@ -7132,8 +7177,12 @@ export class JoomlaClient {
       const name = nameLink.text().trim();
       if (!name) return;
       const username = $cells.eq(2).text().trim();
-      // Enabled = icon-unpublish present (toggle to block = currently enabled)
-      const enabled = /icon-unpublish|users\.block/.test(rowHtml);
+      // Enabled = the row's toggle link offers "task=users.block" — you can only block
+      // an account that isn't already blocked. The icon-class check this used to OR in
+      // (icon-unpublish) was backwards: that class marks the row's CURRENT disabled-state
+      // icon, not an available action, so it made every blocked user read as enabled.
+      // Task-string only, since it can't collide with the unblock task's "users.unblock".
+      const enabled = /task=users\.block\b/.test(rowHtml);
       const groupsText = $cells.eq(5).text().trim();
       const email = $cells.eq(6).text().trim();
       const lastVisitDate = $cells.eq(7).text().trim();

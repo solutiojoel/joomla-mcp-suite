@@ -45,6 +45,18 @@ After completing these three steps, load the universal editing conventions from 
 
 ---
 
+## Self-Improving Tool Corrections
+
+`knowledge_self_improving` holds per-tool patches for cases where a tool's built-in description doesn't match its actual behavior, or a permanent platform quirk needs a standing rule. It is a correction layer on top of the tool description, not a replacement for it.
+
+**Read side (required):** Before the first call to any `mcp__joomla-suite__*` tool in a session, check `knowledge_self_improving { action: "list", tool_name: "<tool>" }`. If an instruction exists, follow it over the tool's own description when the two conflict.
+
+**Write side:** Add an entry only when all three hold — the finding names one specific tool, the correction applies on every call to that tool (not a one-off), and the issue is an open code bug, an unverified fix, or a permanent platform behavior that no code change removes.
+
+**Lifecycle — fix the tool before you write a rule:** A self-improving entry is a workaround, not a permanent home for a code defect. Once the underlying tool is fixed and verified — a real code fix, input validation, or a clear self-documenting error or warning — delete the entry; the tool no longer needs an agent to remember the workaround. Keep an entry indefinitely only for a genuine third-party platform behavior (e.g., Freshdesk not rendering markdown, Joomla trashed items reserving an alias) that no tooling change removes. When in doubt, fix the tool first, and write the standing rule only for what tooling truly cannot absorb.
+
+---
+
 ## Session End (Required)
 
 At the end of every session that touched a site, in this order:

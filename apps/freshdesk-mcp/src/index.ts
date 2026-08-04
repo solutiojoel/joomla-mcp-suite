@@ -101,7 +101,7 @@ const tools = [
       type: "object",
       properties: {
         ticket_id: { type: "number" },
-        body: { type: "string", description: "Note body (HTML supported). Describe what was checked and changed." },
+        body: { type: "string", description: "Note body. Real HTML is passed through as-is. Plain text/markdown (blank-line paragraphs, \"- \" or \"1. \" lists, **bold**, *italic*) is auto-converted to HTML — Freshdesk itself does not render markdown. Describe what was checked and changed." },
       },
       required: ["ticket_id", "body"],
     },
