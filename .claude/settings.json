@@ -72,7 +72,13 @@
       "mcp__joomla-suite__gantry_section",
       "mcp__joomla-suite__joomla_get_frontend_screenshot",
       "mcp__joomla-suite__gantry_particle",
-      "mcp__joomla-suite__joomla_media"
+      "mcp__joomla-suite__joomla_media",
+      "mcp__joomla-suite__ftp_site_config",
+      "mcp__joomla-suite__gantry_page",
+      "mcp__joomla-suite__write_site_notes",
+      "mcp__joomla-suite__agent_audit",
+      "mcp__joomla-suite__reload_tools",
+      "mcp__joomla-suite__knowledge_universal"
     ],
     "additionalDirectories": [
       "\\tmp",

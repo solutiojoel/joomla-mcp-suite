@@ -7,6 +7,10 @@ Use this reference before creating, duplicating, inheriting, cloning, or assigni
 Gantry 5 outlines on Solutio Joomla sites. The canonical live model is
 https://agent7.forge.solutiosoftware.com/.
 
+RULE — starting a new homepage design: duplicate #Home (or #School Home). Never
+duplicate #Outline (or #School Outline) for this — #Outline has no homepage design
+sections and a page assigned to it renders blank.
+
 Agent7 canonical outline examples:
 - default: Base Outline
 - 32: #Outline

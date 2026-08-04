@@ -5775,6 +5775,12 @@ export class JoomlaClient {
       languageMatches: !!verify?.success && String(item.language || "") === String(data.language || "*"),
       browserNavMatches: !!verify?.success && String(item.browserNav || "") === String(data.browserNav || "0"),
       homeMatches: !!verify?.success && String(item.home || "") === String(data.home || "0"),
+      // Joomla silently drops jform[template_style_id] back to "0" when the submitted
+      // value isn't among the rendered <select> options (e.g. a just-duplicated outline
+      // Joomla hasn't listed yet) — no error, no redirect change, "success" message intact.
+      // Only check this when the caller actually asked for a non-default outline; template
+      // style 0 (site default) is a legitimate, common choice and shouldn't force a readback.
+      templateStyleMatches: !data.templateStyleId || data.templateStyleId === "0" || (!!verify?.success && String(item.templateStyleId || "0") === String(data.templateStyleId)),
     };
     const verified = Object.values(verification).every((value) => value === true);
 
@@ -5939,6 +5945,12 @@ export class JoomlaClient {
       browserNavMatches: !!verify.success && String(item.browserNav || "") === String(formData["jform[browserNav]"] || ""),
       homeMatches: !!verify.success && String(item.home || "") === String(formData["jform[home]"] || ""),
       noteMatches: !!verify.success && String(item.note || "") === String(formData["jform[note]"] || ""),
+      // Joomla silently drops jform[template_style_id] back to "0" when the submitted
+      // value isn't among the rendered <select> options (e.g. a just-duplicated outline
+      // Joomla hasn't listed yet) — no error, no redirect change, "success" message intact.
+      // Only check this when the caller actually changed templateStyleId; leaving it
+      // untouched (data.templateStyleId undefined) shouldn't force a readback comparison.
+      templateStyleMatches: data.templateStyleId === undefined || (!!verify.success && String(item.templateStyleId || "0") === String(formData["jform[template_style_id]"] || "0")),
     };
     const verified = Object.values(verification).every((value) => value === true);
 
