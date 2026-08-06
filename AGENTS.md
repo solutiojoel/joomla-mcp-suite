@@ -85,6 +85,13 @@ See `read_agent_doc(doc: "kb/site-history")` for the full format spec and exampl
 
 **3. Review for process improvements** (when applicable — not required every session) — did a task take more attempts than it should? Was a KB article missing or wrong? Was a better approach discovered? If yes, add an entry with `knowledge_universal { action: "create", tags: ["improvements"] }`. Read the queue with `knowledge_universal { action: "list", tag: "improvements" }`.
 
+**The queue holds open findings only.** When a finding is fixed and verified:
+
+1. Append a dated status block saying what shipped and how it was verified — `knowledge_universal { action: "append", id: N, content: "..." }`. Use `append`, never `update`: `update` replaces the whole body, so it makes you retype every existing character and a slip in the carried-over text ships silently.
+2. Retag the record from `improvements` to `improvements-archive`, keeping any other tags — `knowledge_universal { action: "update", id: N, tags: ["improvements-archive", ...] }`. A tags-only `update` sends only the tags and leaves the body untouched.
+
+Read resolved history with `tag: "improvements-archive"`. Nothing is ever deleted; the archive is the record of what was fixed and why.
+
 ---
 
 ## Switching Sites
@@ -131,7 +138,7 @@ Every doc below is a Knowledge Gateway row. Call `read_agent_doc(doc: "<name>")`
 | `workflows/ftp-css-smoke-test` | End-to-end validation that FTP upload → Gantry Page Settings → live page emission works; use before custom page builds or after server migrations |
 | `workflows/gantry-design-agent` | Solutio Gantry design workflow — step-by-step process for building or rebuilding a homepage layout |
 
-The process improvement queue is no longer a doc — it is `knowledge_universal { tag: "improvements" }`.
+The process improvement queue is no longer a doc — it is `knowledge_universal { tag: "improvements" }` for open findings, and `tag: "improvements-archive"` for resolved ones.
 
 Knowledge base articles for specific issue types — call `read_agent_doc(doc: "kb/<name>")`. When investigating a support ticket, check the KB index below and read any articles that match the issue type before starting your investigation.
 
@@ -188,6 +195,7 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 | `knowledge_universal` / `knowledge_client` / `knowledge_self_improving` / `knowledge_audit` | AI Knowledge Gateway access — see `kb/knowledge-gateway` |
 | `agent_audit` | Agent session audit log — where end-of-session audit notes go (`list` returns summaries; `get` for full detail) |
 | `reload_tools` | Reload tool lists if a downstream server was restarted |
+| `mcp_target_info` | Which orchestrator process this session is bound to (local / replit / production), its git sha and start time, and where each downstream runs. Call this first when a code change appears to have no effect. |
 | `gantry_reconnect` | Force Gantry re-auth if layout tools are failing |
 
 ---

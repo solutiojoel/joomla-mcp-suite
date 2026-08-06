@@ -2727,9 +2727,14 @@ export class JoomlaClient {
       "limit": String(effectiveLimit),
       "limitstart": String(limitStart),
     });
-    if (categoryId) params.set("filter[category_id]", categoryId);
-    if (state !== undefined && state !== "") params.set("filter[published]", state);
-    if (search) params.set("filter[search]", search);
+    // Always send every filter, even when empty. Joomla stores list filters in the
+    // admin session: a parameter that is omitted is not cleared, it is inherited from
+    // whatever the previous call set. Sending "" is what actually resets the filter.
+    // Omitting them made an unfiltered list silently return the previous call's
+    // filtered rows with success:true — a wrong answer no caller could detect.
+    params.set("filter[category_id]", categoryId ?? "");
+    params.set("filter[published]", state ?? "");
+    params.set("filter[search]", search ?? "");
     const url = this.getAdminUrl(`index.php?${params.toString()}`);
     const { html } = await this.getPage(url);
     const articles = this.parseArticleList(html);
@@ -5679,6 +5684,9 @@ export class JoomlaClient {
     params?: Record<string, string>;
     fieldOverrides?: Record<string, string>;
   }): Promise<JoomlaResponse> {
+    const badMenuType = await this.rejectUnknownMenuType(data.menuType, "create");
+    if (badMenuType) return badMenuType;
+
     const tTypes = Date.now();
     const typesResult = await this.listMenuItemTypes();
     const types = (typesResult.data || []) as MenuItemType[];
@@ -5898,6 +5906,13 @@ export class JoomlaClient {
       fieldOverrides?: Record<string, string>;
     }
   ): Promise<JoomlaResponse> {
+    // Only when the caller is actually moving the item — an update that leaves
+    // menuType alone must not be blocked by a menu list lookup.
+    if (data.menuType) {
+      const badMenuType = await this.rejectUnknownMenuType(data.menuType, "update");
+      if (badMenuType) return badMenuType;
+    }
+
     const editUrl = this.getAdminUrl(`index.php?option=com_menus&task=item.edit&id=${id}`);
     const { html } = await this.getPage(editUrl);
     const existing = this.parseMenuItemForm(html);
