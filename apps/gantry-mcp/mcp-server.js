@@ -27,14 +27,13 @@ require('@solutio/env').loadEnv({
 });
 
 const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
-const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
-const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
 const {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } = require('@modelcontextprotocol/sdk/types.js');
-const http = require('http');
-const { randomUUID } = require('crypto');
+// ESM package required from CommonJS — Node >= 22.12 supports require(ESM),
+// which is how the CommonJS orchestrator consumes it too.
+const { runServer } = require('@solutio/mcp-transport');
 
 const session = require('./lib/session');
 const baseTemplate = require('./lib/base-template');
@@ -459,7 +458,7 @@ const LEGACY_TOOLS = [
     name: 'gantry_layout_add',
     description:
       'Add a particle / position / spacer / system node to a section. Either drop into a section as a new full-width row (`to`) or place beside an existing particle (`nextTo`). The standard Studius particle subtypes include: blockcontent, custom, gridstatistic, image, contentarray, logo, menu, mobile-menu, pricingtable, search, simplecontent, slider, social, swiper, timeline, totop, video. Positions: module, position. Spacer: spacer. System: content, messages. ' +
-      'WARNING — the returned `added.id` can already be stale: Gantry regenerates structural ids when it saves the section, so the save that creates this particle may invalidate the id reported here. Do NOT feed it straight into gantry_layout_edit / _remove / _move. Re-find the particle by title and section first, and use that id. A "Node \'X\' is type \'undefined\'" error right after an add is this, not a broken particle.',
+      'Gantry regenerates structural ids when it saves, so the id assigned before the save is usually dead afterwards. This tool now reads the id back out of the saved layout, so `added.id` is the live id and is safe to pass to gantry_particle edit / move / remove. Check `id_resolved`: on `true` the id is post-save. On `false` a `warning` explains why the read-back failed, the id is pre-save, and you must re-find the particle by title and section before you edit it. A "Node \'X\' is type \'undefined\'" error after an add means you used a pre-save id.',
     schema: {
       type: 'object',
       properties: {
@@ -499,7 +498,48 @@ const LEGACY_TOOLS = [
         },
         { op: 'add', dryRun: !!args.dryRun }
       );
-      return { added, dryRun: !!r.dryRun, diff: r.diff || null, backupPath: r.backupPath || null };
+
+      // Gantry rewrites structural ids as it saves, so `added.id` — assigned
+      // by the mutator before the POST — is usually already dead. mutateLayout
+      // re-fetches the saved layout for its readback check; the same fetch
+      // carries the real post-save id, so translate it here by tree position
+      // rather than making every caller re-find the particle by title.
+      let idResolved = null;
+      let warning = null;
+      if (added && !r.dryRun) {
+        if (!r.saved) {
+          warning =
+            'Could not read the layout back after saving, so `added.id` is the pre-save id and is probably stale. ' +
+            'Re-find the particle by title and section before editing it.';
+        } else {
+          const resolved = layoutApi.resolveSavedNodeId(r.structure, r.saved, added.id);
+          idResolved = resolved.resolved;
+          if (resolved.resolved) {
+            added = { ...added, id: resolved.id };
+          } else {
+            // The commonest cause by far: the target section still inherits its
+            // children from a parent outline, so Gantry recomputes the child
+            // list on every read and drops the new particle. The save reports
+            // success and the particle simply is not there afterwards.
+            warning =
+              'The new particle is NOT in the saved layout — the add did not stick, and `added.id` is the pre-save id. ' +
+              'The usual cause is that section "' + (args.to || args.nextTo) + '" still inherits its children from a parent ' +
+              'outline, so Gantry recomputes them on read and discards the addition. Make the section local first ' +
+              '(gantry_layout copy_from with local:true, or clear the section\'s inheritance), then add again.';
+          }
+        }
+      }
+
+      return {
+        added,
+        id_resolved: idResolved,
+        warning,
+        verified: r.verified ?? null,
+        verifyMismatch: r.verifyMismatch ?? null,
+        dryRun: !!r.dryRun,
+        diff: r.diff || null,
+        backupPath: r.backupPath || null,
+      };
     },
   },
   {
@@ -2382,14 +2422,15 @@ const LEGACY_TOOLS = [
       const backupPath = backup.takeBackup(ctx, outline, 'pre-design-import', before);
       await layoutApi.saveLayoutDirect(ctx, ctx, outline, result.layout);
 
-      // Readback verify
+      // Readback verify. Compare by position and content, not by id — Gantry
+      // rewrites grid and block ids as it saves, so the id-keyed diff reports
+      // differences even when the save applied perfectly.
       let verified = null;
+      let verifyMismatch = null;
       try {
-        const saved      = await layoutApi.fetchSavedLayout(ctx, outline);
-        const verifyDiff = layoutApi.diffStructures(result.layout, saved);
-        verified = verifyDiff.changed.length === 0 &&
-                   verifyDiff.added.length   === 0 &&
-                   verifyDiff.removed.length === 0;
+        const saved = await layoutApi.fetchSavedLayout(ctx, outline);
+        verifyMismatch = layoutApi.firstStructuralMismatch(result.layout, saved);
+        verified = verifyMismatch === null;
       } catch {}
 
       return {
@@ -2399,6 +2440,7 @@ const LEGACY_TOOLS = [
         backupPath,
         diff,
         verified,
+        verifyMismatch,
         warnings: result.warnings,
         treeSummary: result.treeSummary,
       };
@@ -3777,82 +3819,25 @@ function buildServer() {
   return server;
 }
 
-async function readJsonBody(req) {
-  return new Promise((resolve, reject) => {
-    let data = '';
-    req.on('data', (chunk) => { data += chunk.toString(); });
-    req.on('end', () => {
-      if (!data) return resolve(undefined);
-      try { resolve(JSON.parse(data)); } catch { resolve(undefined); }
-    });
-    req.on('error', reject);
-  });
-}
-
-async function startHttp(port) {
-  const sessions = new Map();
-
-  const httpServer = http.createServer(async (req, res) => {
-    try {
-      const reqUrl = new URL(req.url || '/', 'http://' + (req.headers.host || 'localhost'));
-
-      if (reqUrl.pathname !== '/mcp') {
-        res.writeHead(404);
-        res.end('Not found');
-        return;
-      }
-
-      const sessionId = req.headers['mcp-session-id'];
-      let transport = sessionId ? sessions.get(sessionId) : undefined;
-
-      if (!transport) {
-        const mcpServer = buildServer();
-        transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => randomUUID(),
-          onsessioninitialized: (id) => {
-            sessions.set(id, transport);
-          },
-        });
-        await mcpServer.connect(transport);
-      }
-
-      const body = req.method === 'POST' ? await readJsonBody(req) : undefined;
-      await transport.handleRequest(req, res, body);
-
-      if (req.method === 'DELETE' && sessionId) {
-        sessions.delete(sessionId);
-      }
-    } catch (err) {
-      if (!res.headersSent) {
-        res.writeHead(500, { 'content-type': 'text/plain' });
-      }
-      res.end('Error: ' + (err.message || String(err)));
-    }
-  });
-
-  await new Promise((resolve) => httpServer.listen(port, process.env.HTTP_HOST || '0.0.0.0', resolve));
-  console.error('Gantry MCP Server running on HTTP port ' + port);
-}
-
-async function startStdio() {
-  const server = buildServer();
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error('Gantry MCP Server running on stdio');
-}
-
-async function main() {
-  const rawPort = process.env.HTTP_PORT || process.env.PORT;
-  const httpPort = rawPort ? parseInt(rawPort, 10) : null;
-  if (httpPort) await startHttp(httpPort);
-  else await startStdio();
-}
-
 // Only auto-start a transport when executed directly (node mcp-server.js).
 // The orchestrator requires this module for in-process hosting and calls
 // buildServer() itself.
+//
+// Transport comes from @solutio/mcp-transport, the same bootstrap every other
+// server in the suite uses. gantry-mcp kept a hand-rolled copy of it longer
+// than the rest, which cost it two things the shared version has: the
+// unauthenticated GET /healthz route the runtime health aggregator polls, and
+// the fix for orphan sessions. A POST carrying a session id this process does
+// not hold used to build a fresh transport that never registered itself —
+// `onsessioninitialized` only fires for an initialize request — so the call was
+// rejected anyway and one Server leaked per request. The shared version answers
+// those with a 404 telling the client to re-initialize.
 if (require.main === module) {
-  main().catch((err) => {
+  runServer({
+    buildServer,
+    serverInfo: { name: 'gantry-mcp', version: '1.0.0' },
+    logger: (msg) => console.error('[gantry-mcp] ' + msg),
+  }).catch((err) => {
     console.error('Fatal error:', err);
     process.exit(1);
   });

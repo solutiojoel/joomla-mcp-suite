@@ -533,6 +533,67 @@ function findNodePath(structure, nodeId) {
 }
 
 /**
+ * Locate a node by its POSITION in the tree — an array of child indices from
+ * the root down — instead of by id.
+ *
+ * Gantry regenerates structural ids (grids, blocks, and frequently the particle
+ * itself) when it saves a section, so the id a mutator assigned is often dead
+ * by the time the save returns. The saved tree is otherwise the tree we posted,
+ * so the index path survives the save when the id does not.
+ */
+function indexPathOf(structure, nodeId) {
+  let result = null;
+  const search = (nodes, path) => {
+    if (result || !Array.isArray(nodes)) return;
+    for (let i = 0; i < nodes.length; i++) {
+      const nextPath = [...path, i];
+      if (nodes[i].id === nodeId) {
+        result = nextPath;
+        return;
+      }
+      search(nodes[i].children, nextPath);
+      if (result) return;
+    }
+  };
+  search(structure, []);
+  return result;
+}
+
+/** Follow an index path from indexPathOf back to a node. Null if it runs off the tree. */
+function nodeAtIndexPath(structure, path) {
+  let nodes = structure;
+  let node = null;
+  for (const i of path) {
+    if (!Array.isArray(nodes) || !nodes[i]) return null;
+    node = nodes[i];
+    nodes = node.children;
+  }
+  return node;
+}
+
+/**
+ * Translate a node id from the structure we POSTed into the id that same node
+ * carries in the structure Gantry actually saved.
+ *
+ * Returns { id, changed, resolved }. `resolved: false` means the position walk
+ * failed or landed on a different kind of node, so the pre-save id comes back
+ * unchanged — a caller must report that rather than hand out an id it cannot
+ * stand behind.
+ */
+function resolveSavedNodeId(after, saved, nodeId) {
+  const path = indexPathOf(after, nodeId);
+  if (!path) return { id: nodeId, changed: false, resolved: false };
+  const source = nodeAtIndexPath(after, path);
+  const target = nodeAtIndexPath(saved, path);
+  // Type/subtype must agree, otherwise the trees diverged and the same position
+  // is a different node — Gantry reordered or dropped something.
+  if (!source || !target || target.type !== source.type || target.subtype !== source.subtype) {
+    return { id: nodeId, changed: false, resolved: false };
+  }
+  return { id: target.id, changed: target.id !== nodeId, resolved: true };
+}
+
+/**
  * Break inheritance on every ANCESTOR of a node (section, grid, block —
  * everything from the root down to but not including the node itself).
  *
@@ -1002,19 +1063,105 @@ async function mutateLayout(arg1, arg2, arg3, arg4, arg5) {
 
   // Readback verification: re-fetch from disk and confirm the save landed.
   // Only possible in HTTP mode (browser mode reads in-memory state).
+  // `saved` is returned as well as diffed: it is the only place the post-save
+  // ids exist, and a caller that just created a node needs them (see
+  // resolveSavedNodeId).
   let verified = null;
   let verifyDiff = null;
+  let verifyMismatch = null;
+  let saved = null;
   if (ctx?.mode !== 'browser') {
     try {
-      const saved = await fetchSavedLayout(ctx, outline);
+      saved = await fetchSavedLayout(ctx, outline);
+      // Compare by position and content, not by id — Gantry rewrites grid and
+      // block ids on save, which made the old id-keyed verdict false every time.
+      verifyMismatch = firstStructuralMismatch(after, saved);
+      verified = verifyMismatch === null;
       verifyDiff = diffStructures(after, saved);
-      verified = verifyDiff.changed.length === 0 && verifyDiff.added.length === 0 && verifyDiff.removed.length === 0;
     } catch {
       // non-fatal — best-effort
     }
   }
 
-  return { structure: after, result, resp, backupPath, diff, verified, verifyDiff };
+  return { structure: after, result, resp, backupPath, diff, verified, verifyDiff, verifyMismatch, saved };
+}
+
+/** Key-order-independent serialization, so an attribute map that survived a
+ *  YAML round trip still compares equal to the one we posted. */
+function stableString(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value ?? null);
+  if (Array.isArray(value)) return '[' + value.map(stableString).join(',') + ']';
+  return '{' + Object.keys(value).sort()
+    .map((k) => JSON.stringify(k) + ':' + stableString(value[k]))
+    .join(',') + '}';
+}
+
+/**
+ * Structural nodes carry no meaningful subtype, but Gantry writes the node's own
+ * type into the field when it saves — a grid built with `subtype: false` reads
+ * back as `subtype: "grid"`. Collapse both spellings to null so that server
+ * normalization does not read as a content change. Particles are unaffected:
+ * their subtype ("custom", "image") is never equal to their type.
+ */
+function normalizedSubtype(node) {
+  const subtype = node.subtype;
+  if (!subtype) return null;
+  return subtype === node.type ? null : subtype;
+}
+
+/**
+ * Grids and blocks are stamped with the placeholder title "Untitled" when we
+ * build them; Gantry drops the field entirely when it saves. Collapse both to
+ * null. Only grids and blocks are normalized — a particle really can be titled
+ * "Untitled", and losing that would hide a real change.
+ */
+function normalizedTitle(node) {
+  const title = node.title;
+  if (node.type === 'grid' || node.type === 'block') {
+    return title && title !== 'Untitled' ? title : null;
+  }
+  return title ?? null;
+}
+
+/**
+ * Compare two layout trees by POSITION and CONTENT, ignoring node ids. Returns
+ * a description of the first mismatch, or null when the trees are equivalent.
+ *
+ * Readback verification cannot use an id-keyed diff. Gantry assigns its own ids
+ * to grids and blocks as it saves, so comparing what we posted against what came
+ * back always reports spurious added/removed nodes — a perfectly applied save
+ * reported `verified: false` every time, which made the flag worthless. Ids are
+ * the server's to choose; what has to survive the save is the shape and the
+ * content, so that is what this checks.
+ */
+function firstStructuralMismatch(after, saved, path = 'root') {
+  const a = Array.isArray(after) ? after : [];
+  const b = Array.isArray(saved) ? saved : [];
+  if (a.length !== b.length) {
+    return `${path}: expected ${a.length} child node(s), saved layout has ${b.length}`;
+  }
+  for (let i = 0; i < a.length; i++) {
+    const expected = a[i];
+    const actual = b[i];
+    const here = `${path}[${i}]`;
+    if ((expected.type ?? null) !== (actual.type ?? null)) {
+      return `${here}: type is ${JSON.stringify(actual.type)}, expected ${JSON.stringify(expected.type)}`;
+    }
+    if (normalizedSubtype(expected) !== normalizedSubtype(actual)) {
+      return `${here}: subtype is ${JSON.stringify(actual.subtype)}, expected ${JSON.stringify(expected.subtype)}`;
+    }
+    if (normalizedTitle(expected) !== normalizedTitle(actual)) {
+      return `${here}: title is ${JSON.stringify(actual.title)}, expected ${JSON.stringify(expected.title)}`;
+    }
+    for (const field of ['attributes', 'inherit']) {
+      if (stableString(expected[field] ?? {}) !== stableString(actual[field] ?? {})) {
+        return `${here} (${actual.type}): ${field} did not survive the save`;
+      }
+    }
+    const deeper = firstStructuralMismatch(expected.children, actual.children, here);
+    if (deeper) return deeper;
+  }
+  return null;
 }
 
 /**
@@ -1618,6 +1765,9 @@ module.exports = {
   setNodeInherit,
   clearNodeInherit,
   findNodePath,
+  indexPathOf,
+  nodeAtIndexPath,
+  resolveSavedNodeId,
   clearAncestorInherit,
   cloneNodeFromStructure,
   cloneStructureLocal,
@@ -1631,6 +1781,7 @@ module.exports = {
   saveLayoutDirect,
   mutateLayout,
   diffStructures,
+  firstStructuralMismatch,
   restoreLayout,
   listAvailablePresets,
   loadPresetByName,
