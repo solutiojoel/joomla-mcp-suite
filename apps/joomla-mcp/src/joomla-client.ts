@@ -772,7 +772,7 @@ export class JoomlaClient {
         if (!payload) return;
         types.push({
           group,
-          label: $link.text().trim(),
+          label: $link.text().replace(/\s+/g, " ").trim(),
           description: $link.attr("title") || "",
           encoded,
           title: payload.title,
