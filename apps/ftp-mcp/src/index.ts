@@ -71,6 +71,28 @@ const tools = [
     },
   },
   {
+    name: "ftp_append_file",
+    description:
+      "Add text to the END of an existing file without sending the current contents back. " +
+      "PREFER THIS over ftp_upload_file whenever you are adding a section to a file that already exists " +
+      "(a new rule block in pub/editor.css, a new component stylesheet section). Rewriting the whole file " +
+      "puts every existing byte through you a second time, and a character altered there ships silently. " +
+      "Here the server keeps the old bytes; only your new text can be wrong. " +
+      "Creates the file when it does not exist. Returns existing_content_preserved, which confirms the " +
+      "pre-existing region read back byte-identical.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Absolute remote file path to append to" },
+        content: { type: "string", description: "Text to add at the end of the file. Send ONLY the new text, never the existing content." },
+        domain: { type: "string", description: "Site domain. Defaults to active site's domain." },
+        separator: { type: "string", description: "Inserted between old and new content when the file does not already end in a newline. Default '\\n'. Pass '' to join with no separator." },
+        create_if_missing: { type: "boolean", description: "Create the file when it does not exist (default true). Set false to fail instead." },
+      },
+      required: ["path", "content"],
+    },
+  },
+  {
     name: "ftp_delete_file",
     description: "Delete a file via FTP. Target path must be within upload_path if configured.",
     inputSchema: {
@@ -182,6 +204,16 @@ export function buildServer(): Server {
           const ftpPath = args?.path as string;
           const content = (args?.content as string) || "";
           const result = await ftpClient.uploadFile(ftpPath, content, domain);
+          return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
+        }
+
+        case "ftp_append_file": {
+          const ftpPath = args?.path as string;
+          const content = (args?.content as string) || "";
+          const result = await ftpClient.appendFile(ftpPath, content, domain, {
+            separator: args?.separator as string | undefined,
+            createIfMissing: args?.create_if_missing as boolean | undefined,
+          });
           return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
         }
 

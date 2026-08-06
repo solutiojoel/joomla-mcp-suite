@@ -277,6 +277,43 @@ export class FtpClient {
       `"${config.upload_path}". Writes go to upload_path; the same files read back from "${pubPath}".`;
   }
 
+  /**
+   * Write a buffer to `remotePath`. A fresh Readable per attempt: the fallback
+   * would otherwise resume a stream the failed attempt had already drained and
+   * write a truncated file.
+   */
+  private async putBuffer(client: Client, remotePath: string, buffer: Buffer): Promise<void> {
+    const remoteDir = remotePath.substring(0, remotePath.lastIndexOf("/"));
+    const filename = remotePath.substring(remotePath.lastIndexOf("/") + 1);
+    if (!remoteDir) {
+      await client.uploadFrom(Readable.from(buffer), remotePath);
+      return;
+    }
+    try {
+      // Try a single CWD command first — handles symlinked directories that
+      // ensureDir's step-by-step navigation cannot traverse.
+      await client.cd(remoteDir);
+      await client.uploadFrom(Readable.from(buffer), filename);
+    } catch {
+      // Directory may not exist yet — fall back to ensureDir + absolute upload.
+      await client.ensureDir(remoteDir);
+      await client.uploadFrom(Readable.from(buffer), remotePath);
+    }
+  }
+
+  /** Download `remotePath` into memory. Caller owns the connection. */
+  private async getBuffer(client: Client, remotePath: string): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    const writable = new Writable({
+      write(chunk: Buffer, _enc: string, cb: () => void) {
+        chunks.push(chunk);
+        cb();
+      },
+    });
+    await client.downloadTo(writable, remotePath);
+    return Buffer.concat(chunks);
+  }
+
   async uploadFile(remotePath: string, content: string, domain: string): Promise<JoomlaResponse> {
     const conn = await this.connect(domain, "write");
     if ("error" in conn) return { success: false, message: conn.error };
@@ -298,23 +335,7 @@ export class FtpClient {
 
     try {
       const buffer = Buffer.from(content, "utf8");
-      const readable = Readable.from(buffer);
-      const remoteDir = remotePath.substring(0, remotePath.lastIndexOf("/"));
-      const filename = remotePath.substring(remotePath.lastIndexOf("/") + 1);
-      if (remoteDir) {
-        try {
-          // Try a single CWD command first — handles symlinked directories that
-          // ensureDir's step-by-step navigation cannot traverse.
-          await client.cd(remoteDir);
-          await client.uploadFrom(readable, filename);
-        } catch {
-          // Directory may not exist yet — fall back to ensureDir + absolute upload.
-          await client.ensureDir(remoteDir);
-          await client.uploadFrom(readable, remotePath);
-        }
-      } else {
-        await client.uploadFrom(readable, remotePath);
-      }
+      await this.putBuffer(client, remotePath, buffer);
 
       // sha256 of exactly the bytes written. Callers that built `content` by
       // any lossy route (reconstructing a file from context rather than piping
@@ -335,6 +356,129 @@ export class FtpClient {
       };
     } catch (err) {
       return { success: false, message: `FTP upload failed: ${err instanceof Error ? err.message : String(err)}` };
+    } finally {
+      client.close();
+    }
+  }
+
+  /**
+   * Add `content` to the end of an existing file without the caller ever holding
+   * the current contents.
+   *
+   * The alternative — read the file, retype it plus the new section, upload the
+   * whole thing — puts every existing byte back through the caller once more. A
+   * single character altered in that carried-over region ships silently, because
+   * the obvious check (does the new section look right?) never looks at it. Here
+   * the existing bytes go server → memory → server untouched, so only the new
+   * text can be wrong.
+   */
+  async appendFile(
+    remotePath: string,
+    content: string,
+    domain: string,
+    options?: { separator?: string; createIfMissing?: boolean }
+  ): Promise<JoomlaResponse> {
+    const conn = await this.connect(domain, "write");
+    if ("error" in conn) return { success: false, message: conn.error };
+
+    const { client, config } = conn;
+    const warnings: string[] = [];
+
+    if (config.upload_path) {
+      if (!this.isWithin(config.upload_path, remotePath)) {
+        client.close();
+        return {
+          success: false,
+          message: this.refusalMessage("Append", remotePath, config),
+        };
+      }
+    } else {
+      warnings.push(`No upload_path configured for ${domain} — write access is unrestricted. Consider adding upload_path to ftp-sites.json.`);
+    }
+
+    try {
+      const lastSlash = remotePath.lastIndexOf("/");
+      const dir = lastSlash > 0 ? remotePath.substring(0, lastSlash) : "/";
+      const filename = remotePath.substring(lastSlash + 1);
+
+      let existing: Buffer = Buffer.alloc(0);
+      let created = false;
+
+      let listing: Awaited<ReturnType<Client["list"]>> = [];
+      try {
+        listing = await client.list(dir);
+      } catch {
+        listing = [];
+      }
+      const fileInfo = listing.find((f) => f.name === filename);
+
+      if (!fileInfo) {
+        if (options?.createIfMissing === false) {
+          return {
+            success: false,
+            message: `Append refused: ${remotePath} does not exist. Pass create_if_missing (default) to create it, or use ftp_upload_file.`,
+          };
+        }
+        created = true;
+      } else {
+        if (fileInfo.type === FileType.Directory) {
+          return { success: false, message: `${remotePath} is a directory, not a file.` };
+        }
+        // The whole file is rewritten, so the read cap applies here too.
+        if (fileInfo.size > MAX_TEXT_FILE_BYTES) {
+          return {
+            success: false,
+            message: `File is too large to append to (${fileInfo.size} bytes; limit is ${MAX_TEXT_FILE_BYTES} bytes). Edit it manually via Cyberduck.`,
+          };
+        }
+        existing = await this.getBuffer(client, remotePath);
+      }
+
+      // Default separator keeps appended sections from fusing onto the last line.
+      // Skipped when the file is new or already ends in a newline.
+      const separator = options?.separator ?? "\n";
+      const needsSeparator = existing.length > 0 && separator.length > 0 && !existing.toString("utf8").endsWith("\n");
+      const addition = Buffer.from((needsSeparator ? separator : "") + content, "utf8");
+      const combined = Buffer.concat([existing, addition]);
+
+      await this.putBuffer(client, remotePath, combined);
+
+      const shaBefore = crypto.createHash("sha256").update(existing).digest("hex");
+      const sha256 = crypto.createHash("sha256").update(combined).digest("hex");
+
+      // Read the file back and prove the pre-existing region is byte-identical.
+      // This is the check a full-file retype cannot make about itself.
+      let preservedPrefix: boolean | null = null;
+      try {
+        const readback = await this.getBuffer(client, remotePath);
+        preservedPrefix = readback.subarray(0, existing.length).equals(existing);
+        if (!readback.equals(combined)) {
+          warnings.push("Read-back does not match the bytes sent — the server may have altered line endings. Compare sha256 against a local copy before you rely on this file.");
+        }
+      } catch {
+        warnings.push("Append succeeded but the read-back check could not run. Confirm the file with ftp_read_file.");
+      }
+
+      return {
+        success: true,
+        message: created
+          ? `Created ${remotePath} on ${domain} with ${combined.length} bytes (sha256 ${sha256.slice(0, 12)}…)`
+          : `Appended ${addition.length} bytes to ${remotePath} on ${domain}: ${existing.length} → ${combined.length} bytes (sha256 ${sha256.slice(0, 12)}…)`,
+        data: {
+          path: remotePath,
+          created,
+          bytes_before: existing.length,
+          bytes_appended: addition.length,
+          bytes: combined.length,
+          separator_inserted: needsSeparator,
+          sha256,
+          sha256_before: shaBefore,
+          existing_content_preserved: preservedPrefix,
+          warnings,
+        },
+      };
+    } catch (err) {
+      return { success: false, message: `FTP append failed: ${err instanceof Error ? err.message : String(err)}` };
     } finally {
       client.close();
     }

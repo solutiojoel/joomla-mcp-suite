@@ -372,7 +372,9 @@ Direct file access to the site's server — useful for custom CSS/JS, service ke
 
 **`ftp_read_file`** — Reads the contents of a file on the server.
 
-**`ftp_upload_file`** — Uploads content as a new file at the specified path.
+**`ftp_upload_file`** — Uploads content as a new file at the specified path. Whole-file overwrite.
+
+**`ftp_append_file`** — Adds text to the end of an existing file. The server keeps the existing bytes, so they never pass back through the caller. Prefer this over `ftp_upload_file` when you add a section to a file that already exists.
 
 **`ftp_upload_local_file`** — Uploads a local file from the workspace to the server.
 

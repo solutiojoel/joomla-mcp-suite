@@ -458,7 +458,8 @@ const LEGACY_TOOLS = [
   {
     name: 'gantry_layout_add',
     description:
-      'Add a particle / position / spacer / system node to a section. Either drop into a section as a new full-width row (`to`) or place beside an existing particle (`nextTo`). The standard Studius particle subtypes include: blockcontent, custom, gridstatistic, image, contentarray, logo, menu, mobile-menu, pricingtable, search, simplecontent, slider, social, swiper, timeline, totop, video. Positions: module, position. Spacer: spacer. System: content, messages.',
+      'Add a particle / position / spacer / system node to a section. Either drop into a section as a new full-width row (`to`) or place beside an existing particle (`nextTo`). The standard Studius particle subtypes include: blockcontent, custom, gridstatistic, image, contentarray, logo, menu, mobile-menu, pricingtable, search, simplecontent, slider, social, swiper, timeline, totop, video. Positions: module, position. Spacer: spacer. System: content, messages. ' +
+      'WARNING — the returned `added.id` can already be stale: Gantry regenerates structural ids when it saves the section, so the save that creates this particle may invalidate the id reported here. Do NOT feed it straight into gantry_layout_edit / _remove / _move. Re-find the particle by title and section first, and use that id. A "Node \'X\' is type \'undefined\'" error right after an add is this, not a broken particle.',
     schema: {
       type: 'object',
       properties: {
