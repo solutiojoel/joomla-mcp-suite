@@ -121,9 +121,11 @@ async function listStyles(arg1, arg2) {
   const { page, ctx } = _norm(arg1, arg2 && (arg2.mode || arg2.fetch) ? arg2 : null);
   if (page && ctx?.mode !== 'http') {
     return page.evaluate(() => {
-      return Array.from(
-        document.querySelectorAll(
-          'input[name^="styles["], select[name^="styles["], textarea[name^="styles["]'
+      return /** @type {(HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement)[]} */ (
+        Array.from(
+          document.querySelectorAll(
+            'input[name^="styles["], select[name^="styles["], textarea[name^="styles["]'
+          )
         )
       ).map((el) => ({
         name: el.getAttribute('name'),

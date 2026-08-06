@@ -458,7 +458,8 @@ const LEGACY_TOOLS = [
     name: 'gantry_layout_add',
     description:
       'Add a particle / position / spacer / system node to a section. Either drop into a section as a new full-width row (`to`) or place beside an existing particle (`nextTo`). The standard Studius particle subtypes include: blockcontent, custom, gridstatistic, image, contentarray, logo, menu, mobile-menu, pricingtable, search, simplecontent, slider, social, swiper, timeline, totop, video. Positions: module, position. Spacer: spacer. System: content, messages. ' +
-      'Gantry regenerates structural ids when it saves, so the id assigned before the save is usually dead afterwards. This tool now reads the id back out of the saved layout, so `added.id` is the live id and is safe to pass to gantry_particle edit / move / remove. Check `id_resolved`: on `true` the id is post-save. On `false` a `warning` explains why the read-back failed, the id is pre-save, and you must re-find the particle by title and section before you edit it. A "Node \'X\' is type \'undefined\'" error after an add means you used a pre-save id.',
+      'Gantry regenerates structural ids when it saves, so the id assigned before the save is usually dead afterwards. This tool now reads the id back out of the saved layout, so `added.id` is the live id and is safe to pass to gantry_particle edit / move / remove. Check `id_resolved`: on `true` the id is post-save. On `false` a `warning` explains why the read-back failed, the id is pre-save, and you must re-find the particle by title and section before you edit it. A "Node \'X\' is type \'undefined\'" error after an add means you used a pre-save id. ' +
+      'Adding into a section that still inherits its children from a parent outline used to fail silently — Gantry recomputed the child list on read and dropped the new particle. This tool now breaks inheritance along the whole path from the outline root to the new particle, the same way gantry_particle edit and remove do, so the add sticks. `brokeInheritance: true` means that happened and the affected sections are now local to this outline; `previousInherit` records what was cleared.',
     schema: {
       type: 'object',
       properties: {
@@ -477,7 +478,10 @@ const LEGACY_TOOLS = [
     },
     handler: async (args) => {
       const ctx = await getCtx(args);
+      /** @type {import('./lib/layout-api').LayoutNode|undefined} */
       let added;
+      let brokeInheritance = false;
+      let previousInherit = null;
       const r = await layoutApi.mutateLayout(
         ctx,
         args.outline || 'default',
@@ -494,6 +498,18 @@ const LEGACY_TOOLS = [
             });
           } else {
             throw new Error('Pass `to` (section) or `nextTo` (sibling particle id)');
+          }
+          // An add is as vulnerable to ancestor inheritance as an edit or a
+          // remove, and worse to diagnose: if the target section still carries
+          // `inherit.include: [..., "children"]`, Gantry recomputes its child
+          // list from the parent outline on the next read and the new particle
+          // is simply not there — the save still reports success. edit and
+          // remove already break the path; add did not, which made adding into
+          // an inherited section fail silently.
+          const ancestorResult = layoutApi.clearAncestorInherit(structure, added.id);
+          if (ancestorResult.broke) {
+            brokeInheritance = true;
+            previousInherit = ancestorResult.previous;
           }
         },
         { op: 'add', dryRun: !!args.dryRun }
@@ -517,15 +533,15 @@ const LEGACY_TOOLS = [
           if (resolved.resolved) {
             added = { ...added, id: resolved.id };
           } else {
-            // The commonest cause by far: the target section still inherits its
-            // children from a parent outline, so Gantry recomputes the child
-            // list on every read and drops the new particle. The save reports
-            // success and the particle simply is not there afterwards.
+            // Ancestor inheritance — the historic cause — is broken above, so
+            // reaching here means Gantry rejected or relocated the node for
+            // some other reason. Say what was checked so the next reader does
+            // not re-diagnose inheritance.
             warning =
-              'The new particle is NOT in the saved layout — the add did not stick, and `added.id` is the pre-save id. ' +
-              'The usual cause is that section "' + (args.to || args.nextTo) + '" still inherits its children from a parent ' +
-              'outline, so Gantry recomputes them on read and discards the addition. Make the section local first ' +
-              '(gantry_layout copy_from with local:true, or clear the section\'s inheritance), then add again.';
+              'The new particle is NOT at its expected position in the saved layout, so `added.id` is the pre-save id ' +
+              'and is probably stale. Ancestor inheritance on section "' + (args.to || args.nextTo) + '" was already ' +
+              'broken by this call, so that is not the cause. Read the outline back and check whether the particle exists ' +
+              'at all: if it does, re-find it by title and section; if it does not, Gantry rejected the node itself.';
           }
         }
       }
@@ -536,6 +552,8 @@ const LEGACY_TOOLS = [
         warning,
         verified: r.verified ?? null,
         verifyMismatch: r.verifyMismatch ?? null,
+        brokeInheritance,
+        ...(brokeInheritance ? { previousInherit } : {}),
         dryRun: !!r.dryRun,
         diff: r.diff || null,
         backupPath: r.backupPath || null,
@@ -2165,6 +2183,9 @@ const LEGACY_TOOLS = [
         { op: 'direct-edit', dryRun: !!args.dryRun }
       );
 
+      // renderedHtml / renderedHtmlError are set below only when the caller
+      // asked for live HTML, so they are declared here rather than inferred.
+      /** @type {Record<string, any>} */
       const out = {
         particleId: editedParticleId,
         blockId:    editedBlockId,
@@ -3783,6 +3804,9 @@ function buildServer() {
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const toolName = request.params.name;
+    // The SDK types arguments as Record<string, unknown>; every handler here
+    // reads its own named fields off it, so widen once at the boundary.
+    /** @type {Record<string, any>} */
     const toolArgs = request.params.arguments || {};
     const tool = TOOLS.find((candidate) => candidate.name === toolName);
 

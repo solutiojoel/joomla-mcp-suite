@@ -183,6 +183,44 @@ test('resolveSavedNodeId refuses an id that is not in the posted tree', () => {
   assert.strictEqual(result.id, 'ghost-9999');
 });
 
+/* --- ancestor inheritance (clearAncestorInherit) --- */
+
+test('clearAncestorInherit clears the whole path to a freshly added particle', () => {
+  const s = baseStructure();
+  // An outline duplicated with inherit:true looks like this: the section
+  // recomputes its child list from the parent, so anything added under it is
+  // discarded on the next read.
+  s[1].inherit = { outline: '33', include: ['attributes', 'children'] };
+  const added = api.addParticleToSection(s, 'expanded', 'particle', 'custom');
+
+  const result = api.clearAncestorInherit(s, added.id);
+  assert.strictEqual(result.broke, true);
+  assert.deepStrictEqual(s[1].inherit, {}, 'the section must be local afterwards');
+  assert.deepStrictEqual(
+    result.previous.map((p) => p.id),
+    ['expanded'],
+    'must report which node it cleared, so the caller can say what changed',
+  );
+});
+
+test('clearAncestorInherit reports no change when nothing on the path inherits', () => {
+  const s = baseStructure();
+  const added = api.addParticleToSection(s, 'expanded', 'particle', 'custom');
+  const result = api.clearAncestorInherit(s, added.id);
+  assert.strictEqual(result.broke, false);
+  assert.deepStrictEqual(result.previous, []);
+});
+
+test('clearAncestorInherit leaves the added particle itself untouched', () => {
+  const s = baseStructure();
+  s[1].inherit = { outline: '33', include: ['children'] };
+  const added = api.addParticleToSection(s, 'expanded', 'particle', 'custom', { title: 'Kept' });
+  api.clearAncestorInherit(s, added.id);
+  const node = api.findNode(s, added.id);
+  assert.strictEqual(node.node.title, 'Kept');
+  assert.strictEqual(node.node.subtype, 'custom');
+});
+
 /* --- readback verification (firstStructuralMismatch) --- */
 
 test('regenerated ids alone do not count as a failed save', () => {

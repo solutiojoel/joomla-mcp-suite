@@ -49,25 +49,28 @@ const tools = [
   {
     name: "knowledge_universal",
     description:
-      "Manage universal (cross-client) knowledge in the AI Knowledge Gateway. action: list|get|create|update|delete. " +
+      "Manage universal (cross-client) knowledge in the AI Knowledge Gateway. action: list|get|create|append|update|delete. " +
       "'list' returns full bodies — this table holds the workflow guides and KB articles, so an unfiltered list is very large. " +
-      "Filter by tag/topic/search, or pass summary:true or limit to keep it small.",
+      "Filter by tag/topic/search, or pass summary:true or limit to keep it small. " +
+      "To add to an entry use 'append', not 'update': 'update' replaces the whole body, so it makes you retype every existing " +
+      "character, and a character you alter in the carried-over text ships silently. 'update' is for a genuine rewrite or a " +
+      "topic/tags change. Changing only tags is safe on 'update' — omitted fields are left alone.",
     inputSchema: {
       type: "object",
       properties: {
         action: {
           type: "string",
-          enum: ["list", "get", "create", "update", "delete"],
-          description: "list: filter entries; get: by id; create: new entry; update: edit fields; delete: remove",
+          enum: ["list", "get", "create", "append", "update", "delete"],
+          description: "list: filter entries; get: by id; create: new entry; append: add to the end of the body; update: replace the fields you pass; delete: remove",
         },
-        id: { type: "number", description: "Entry id — required for get/update/delete" },
+        id: { type: "number", description: "Entry id — required for get/append/update/delete" },
         topic: { type: "string", description: "Topic label (filter on list; field on create/update)" },
         tag: { type: "string", description: "Single tag to filter by (list only)" },
         search: { type: "string", description: "Full-text search filter (list only)" },
         limit: { type: "number", description: "Page size (list only; default: all rows)" },
         offset: { type: "number", description: "Page offset (list only; default 0)" },
         summary: { type: "boolean", description: "list only: return id/topic/tags/length per row instead of full bodies — use to browse the catalogue" },
-        content: { type: "string", description: "Entry body (markdown or HTML) — create/update" },
+        content: { type: "string", description: "create/update: the whole entry body (markdown or HTML). append: only the new text to add at the end — never resend the existing body" },
         tags: { type: "array", items: { type: "string" }, description: "Tag list — create/update" },
         contentType: { type: "string", enum: ["markdown", "html"], description: "Defaults to markdown — create/update" },
       },
@@ -76,16 +79,18 @@ const tools = [
   },
   {
     name: "knowledge_client",
-    description: "Manage client-scoped knowledge (per site) in the AI Knowledge Gateway. action: list|get|create|update|delete. Pass site_code to scope.",
+    description:
+      "Manage client-scoped knowledge (per site) in the AI Knowledge Gateway. action: list|get|create|append|update|delete. Pass site_code to scope. " +
+      "To add to an entry use 'append', not 'update' — 'update' replaces the whole body and makes you retype every existing character.",
     inputSchema: {
       type: "object",
       properties: {
         action: {
           type: "string",
-          enum: ["list", "get", "create", "update", "delete"],
-          description: "list: filter entries; get: by id; create: new entry; update: edit fields; delete: remove",
+          enum: ["list", "get", "create", "append", "update", "delete"],
+          description: "list: filter entries; get: by id; create: new entry; append: add to the end of the body; update: replace the fields you pass; delete: remove",
         },
-        id: { type: "number", description: "Entry id — required for get/update/delete" },
+        id: { type: "number", description: "Entry id — required for get/append/update/delete" },
         site_code: { type: "string", description: "Client site code, e.g. 'SITE001' (filter on list; required on create)" },
         topic: { type: "string", description: "Topic label (filter on list; field on create/update)" },
         tag: { type: "string", description: "Single tag to filter by (list only)" },
@@ -93,7 +98,7 @@ const tools = [
         limit: { type: "number", description: "Page size (list only; default: all rows)" },
         offset: { type: "number", description: "Page offset (list only; default 0)" },
         summary: { type: "boolean", description: "list only: return id/topic/tags/length per row instead of full bodies — use to browse the catalogue" },
-        content: { type: "string", description: "Entry body (markdown or HTML) — create/update" },
+        content: { type: "string", description: "create/update: the whole entry body (markdown or HTML). append: only the new text to add at the end — never resend the existing body" },
         tags: { type: "array", items: { type: "string" }, description: "Tag list — create/update" },
         contentType: { type: "string", enum: ["markdown", "html"], description: "Defaults to markdown — create/update" },
       },
@@ -102,21 +107,23 @@ const tools = [
   },
   {
     name: "knowledge_self_improving",
-    description: "Manage per-tool self-improving AI instructions in the Knowledge Gateway. action: list|get|create|update|delete. version auto-increments on update.",
+    description:
+      "Manage per-tool self-improving AI instructions in the Knowledge Gateway. action: list|get|create|append|update|delete. version auto-increments on append and update. " +
+      "To add a rule to an existing instruction use 'append', not 'update' — 'update' replaces the whole instruction text.",
     inputSchema: {
       type: "object",
       properties: {
         action: {
           type: "string",
-          enum: ["list", "get", "create", "update", "delete"],
-          description: "list: filter entries; get: by id; create: new instruction; update: revise (bumps version); delete: remove",
+          enum: ["list", "get", "create", "append", "update", "delete"],
+          description: "list: filter entries; get: by id; create: new instruction; append: add to the end of the instruction; update: revise in full (bumps version); delete: remove",
         },
-        id: { type: "number", description: "Entry id — required for get/update/delete" },
+        id: { type: "number", description: "Entry id — required for get/append/update/delete" },
         tool_name: { type: "string", description: "Tool the instruction applies to (filter on list; required on create)" },
         search: { type: "string", description: "Full-text search filter (list only)" },
-        instruction: { type: "string", description: "Instruction text — create/update" },
+        instruction: { type: "string", description: "create/update: the whole instruction text. append: only the new text to add at the end — never resend the existing instruction" },
         notes: { type: "string", description: "Optional context note — create/update" },
-        change_reason: { type: "string", description: "Why the instruction changed — update only" },
+        change_reason: { type: "string", description: "Why the instruction changed — append/update only" },
       },
       required: ["action"],
     },
@@ -182,7 +189,7 @@ export function buildServer(): Server {
 
     const action = args.action as string | undefined;
     const id = args.id as number | undefined;
-    const needsId = (a: string) => ["get", "update", "delete"].includes(a);
+    const needsId = (a: string) => ["get", "append", "update", "delete"].includes(a);
 
     try {
       switch (name) {
@@ -208,6 +215,11 @@ export function buildServer(): Server {
                 tags: args.tags as string[] | undefined,
                 content_type: args.contentType as string | undefined,
               }));
+            case "append": {
+              const addition = args.content as string | undefined;
+              if (!addition) return err("Error: content is required for action 'append' — pass only the new text, not the existing body");
+              return ok(await gateway.appendKnowledge(id as number, addition));
+            }
             case "update":
               return ok(await gateway.updateKnowledge(id as number, {
                 topic: args.topic as string | undefined,
@@ -246,6 +258,11 @@ export function buildServer(): Server {
                 tags: args.tags as string[] | undefined,
                 content_type: args.contentType as string | undefined,
               }));
+            case "append": {
+              const addition = args.content as string | undefined;
+              if (!addition) return err("Error: content is required for action 'append' — pass only the new text, not the existing body");
+              return ok(await gateway.appendClientKnowledge(id as number, addition));
+            }
             case "update":
               return ok(await gateway.updateClientKnowledge(id as number, {
                 site_code: args.site_code as string | undefined,
@@ -278,6 +295,15 @@ export function buildServer(): Server {
                 instruction: args.instruction as string | undefined,
                 notes: args.notes as string | undefined,
               }));
+            case "append": {
+              const addition = args.instruction as string | undefined;
+              if (!addition) return err("Error: instruction is required for action 'append' — pass only the new text, not the existing instruction");
+              return ok(await gateway.appendSelfImproving(
+                id as number,
+                addition,
+                args.change_reason as string | undefined,
+              ));
+            }
             case "update":
               return ok(await gateway.updateSelfImproving(id as number, {
                 instruction: args.instruction as string | undefined,

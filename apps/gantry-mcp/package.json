@@ -6,9 +6,15 @@
   "scripts": {
     "start": "node mcp-server.js",
     "test": "node --test \"test/**/*.test.js\"",
-    "lint": "node --check mcp-server.js && node --check lib/session.js && node --check lib/session-http.js && node --check lib/layout.js && node --check lib/layout-api.js && node --check lib/menu.js && node --check lib/util.js"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "node --check mcp-server.js && node --check lib/session.js && node --check lib/session-http.js && node --check lib/layout.js && node --check lib/layout-api.js && node --check lib/menu.js && node --check lib/util.js",
+    "check": "npm run lint && npm run typecheck && npm test"
   },
   "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "dotenv": "^16.4.5",

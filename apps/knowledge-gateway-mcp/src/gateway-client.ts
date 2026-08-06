@@ -86,6 +86,18 @@ function compact<T extends Record<string, unknown>>(obj: T): Record<string, unkn
   return out;
 }
 
+/**
+ * Join an existing body and an addition with exactly one blank line between
+ * them, so repeated appends can't accumulate trailing whitespace.
+ */
+function joinAppended(existing: string, addition: string): string {
+  const head = existing.replace(/\s+$/, "");
+  const tail = addition.replace(/^\s+/, "").replace(/\s+$/, "");
+  if (!head) return tail;
+  if (!tail) return head;
+  return `${head}\n\n${tail}`;
+}
+
 export class GatewayClient {
   private readonly axios: AxiosInstance;
 
@@ -163,6 +175,59 @@ export class GatewayClient {
     };
   }
 
+  /**
+   * Append to one text field of an existing row without the caller ever
+   * holding the current body.
+   *
+   * The gateway API has no append endpoint, so this is a read-modify-write:
+   * GET the row, concatenate here, PATCH the field back. Keeping the existing
+   * text out of the caller is the whole point. The alternative is an `update`
+   * in which the caller reproduces every existing character, and a character
+   * altered in the carried-over region ships silently — nobody re-reads the
+   * old text to check it.
+   *
+   * The PATCH response carries the saved row, so the write is checked rather
+   * than assumed.
+   */
+  private async appendField(
+    path: string,
+    id: number,
+    field: "content" | "instruction",
+    addition: string,
+    label: string,
+    extra: Record<string, unknown> = {},
+  ): Promise<GatewayResponse> {
+    try {
+      const { data: current } = await this.axios.get(`${path}/${id}`);
+      const existing = (current as Record<string, unknown> | undefined)?.[field];
+      if (existing !== undefined && existing !== null && typeof existing !== "string") {
+        return { success: false, message: `${label} ${id}: ${field} is not text, so it cannot be appended to.` };
+      }
+      const before = (existing as string | undefined) ?? "";
+      const next = joinAppended(before, addition);
+
+      const { data: saved } = await this.axios.patch(`${path}/${id}`, compact({ [field]: next, ...extra }));
+      const savedField = (saved as Record<string, unknown> | undefined)?.[field];
+      if (typeof savedField === "string" && savedField !== next) {
+        return {
+          success: false,
+          message:
+            `${label} ${id}: the gateway stored a different ${field} than was sent ` +
+            `(sent ${next.length} characters, stored ${savedField.length}). ` +
+            `The append may be incomplete — read the record before you retry.`,
+          data: saved,
+        };
+      }
+      return {
+        success: true,
+        message: `${label} ${id} appended — ${field} grew from ${before.length} to ${next.length} characters`,
+        data: saved,
+      };
+    } catch (e) {
+      return this.wrapError(e);
+    }
+  }
+
   // ── Universal knowledge: /knowledge ──────────────────────────────────────
 
   async listKnowledge(filters: KnowledgeListFilters = {}): Promise<GatewayResponse> {
@@ -211,6 +276,11 @@ export class GatewayClient {
     } catch (e) {
       return this.wrapError(e);
     }
+  }
+
+  /** Add text to the end of an entry's body. See appendField. */
+  async appendKnowledge(id: number, addition: string): Promise<GatewayResponse> {
+    return this.appendField("/knowledge", id, "content", addition, "Knowledge");
   }
 
   async deleteKnowledge(id: number): Promise<GatewayResponse> {
@@ -279,6 +349,11 @@ export class GatewayClient {
     }
   }
 
+  /** Add text to the end of a client entry's body. See appendField. */
+  async appendClientKnowledge(id: number, addition: string): Promise<GatewayResponse> {
+    return this.appendField("/client-knowledge", id, "content", addition, "Client knowledge");
+  }
+
   async deleteClientKnowledge(id: number): Promise<GatewayResponse> {
     try {
       await this.axios.delete(`/client-knowledge/${id}`);
@@ -334,6 +409,16 @@ export class GatewayClient {
     } catch (e) {
       return this.wrapError(e);
     }
+  }
+
+  /**
+   * Add text to the end of an instruction. See appendField. The gateway bumps
+   * the version on any PATCH, so an append is a normal revision.
+   */
+  async appendSelfImproving(id: number, addition: string, changeReason?: string): Promise<GatewayResponse> {
+    return this.appendField("/self-improving", id, "instruction", addition, "Self-improving instruction", {
+      changeReason,
+    });
   }
 
   async deleteSelfImproving(id: number): Promise<GatewayResponse> {

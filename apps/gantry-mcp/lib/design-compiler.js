@@ -479,7 +479,7 @@ function compileFooterContainer(footerDef, context) {
  * Compile a design YAML object into a Gantry-compatible layout structure array.
  * @param {object} design   — parsed design YAML
  * @param {object} context  — runtime context variables (overrides design.context)
- * @returns {{ layout: Array, errors: Array, warnings: Array, treeSummary: string }}
+ * @returns {{ layout: Array, errors: Array, warnings: Array, valid: boolean, treeSummary: string }}
  */
 function compile(design, context) {
   resetIds();

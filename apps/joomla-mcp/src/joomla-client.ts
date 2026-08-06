@@ -5345,6 +5345,38 @@ export class JoomlaClient {
     };
   }
 
+  /**
+   * Refuse a menuType the site does not have.
+   *
+   * Joomla's own guard here is client-side only — jform[menutype] is a
+   * `required` <select>, so a direct POST carrying an unlisted value is
+   * accepted and the row is written with no usable menutype. The item then
+   * exists, belongs to no menu, and appears in no menu listing. The save
+   * reports "Menu item saved." while verification reports menuTypeMatches:
+   * false, which reads like a tool bug and historically sent diagnosis down
+   * several wrong paths (see the improvements queue). Fail before the POST
+   * instead, and name the menus that do exist.
+   *
+   * Returns null when the menuType is valid.
+   */
+  private async rejectUnknownMenuType(menuType: string, verb: string): Promise<JoomlaResponse | null> {
+    const menusResult = await this.listMenus();
+    const menus = (menusResult.data || []) as { title?: string; menuType?: string }[];
+    // A failed lookup must not block a legitimate write — only reject on a
+    // list we actually got back.
+    if (!menusResult.success || menus.length === 0) return null;
+    if (menus.some((m) => m.menuType === menuType)) return null;
+    const available = menus.map((m) => `${m.menuType} (${m.title})`).join(", ");
+    return {
+      success: false,
+      message:
+        `Cannot ${verb} menu item: this site has no menu with menuType "${menuType}". ` +
+        `Joomla would accept the save and write an item that belongs to no menu. ` +
+        `Available menus: ${available}. ` +
+        `Use one of those, or create the menu first with joomla_menu{action:"create"}.`,
+    };
+  }
+
   async createMenu(data: {
     title: string;
     menuType?: string;

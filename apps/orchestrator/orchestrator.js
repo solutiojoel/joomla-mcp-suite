@@ -40,6 +40,7 @@ const {
   GetPromptRequestSchema,
 } = require('@modelcontextprotocol/sdk/types.js');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 const kb = require('./kb.js');
@@ -767,6 +768,60 @@ async function collectStatus() {
   };
 }
 
+// ─── Deployment identity ─────────────────────────────────────────────────────
+// An agent session reaches these tools through one URL in its MCP client
+// config, and nothing in a tool response says which process answered. That has
+// cost real time: a fix applied to the local stack appeared not to work,
+// because the session was bound to the deployed copy the whole time, and both
+// were running. `mcp_target_info` answers the question directly.
+
+// Resolved once — the sha cannot change without restarting the process, and
+// shelling out to git on every call is wasteful.
+let cachedGitSha;
+function gitSha() {
+  if (cachedGitSha !== undefined) return cachedGitSha;
+  cachedGitSha = process.env.GIT_SHA || process.env.REPL_SLUG_COMMIT || null;
+  if (!cachedGitSha) {
+    try {
+      cachedGitSha = require('child_process')
+        .execSync('git rev-parse --short HEAD', { cwd: __dirname, stdio: ['ignore', 'pipe', 'ignore'] })
+        .toString().trim() || null;
+    } catch {
+      // No git in the image, or not a checkout — the other fields still identify
+      // the process, so this is not worth failing over.
+      cachedGitSha = null;
+    }
+  }
+  return cachedGitSha;
+}
+
+const PROCESS_STARTED_AT = new Date(Date.now() - Math.round(process.uptime() * 1000)).toISOString();
+
+/**
+ * Where is this process running, and how would a caller tell it apart from the
+ * other copy? `environment` is the one-word answer; the rest is the evidence.
+ */
+function deploymentIdentity() {
+  const replit = process.env.REPLIT_DEPLOYMENT || process.env.REPL_ID || process.env.REPLIT_DEV_DOMAIN;
+  return {
+    environment: replit ? 'replit' : (process.env.NODE_ENV === 'production' ? 'production' : 'local'),
+    hostname: os.hostname(),
+    pid: process.pid,
+    port: process.env.HTTP_PORT || process.env.PORT || null,
+    publicUrl:
+      process.env.PUBLIC_URL ||
+      (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null),
+    gitSha: gitSha(),
+    startedAt: PROCESS_STARTED_AT,
+    uptimeSeconds: Math.round(process.uptime()),
+    nodeVersion: process.version,
+    repoPath: path.join(__dirname, '..', '..'),
+    // The single biggest behavioural difference between the two deployments:
+    // in-process hosting means restarting a downstream means restarting this.
+    inProcessDownstreams: INPROC,
+  };
+}
+
 // Tab-bar icon for the status and connect pages: a green health pulse on the
 // same dark slate the pages use. Inlined as a data URI so no extra route or
 // asset file is needed, and so the browser never falls back to /favicon.ico.
@@ -1203,6 +1258,16 @@ function buildServer(sessionCtx) {
         inputSchema: { type: 'object', properties: {} },
       },
       {
+        name: 'mcp_target_info',
+        description:
+          'Report which orchestrator process this session is actually bound to, and where each downstream runs. ' +
+          'Returns environment (local | replit | production), hostname, pid, port, git sha, start time, and per-downstream mode (inproc | stdio | http), url, tool count and health. ' +
+          'Call this FIRST whenever a code change appears to have no effect: the usual cause is that the session is bound to the deployed copy while the edit was made locally, or the target process started before the change and has not been restarted. ' +
+          'Compare `gitSha` and `startedAt` against the change you made — a startedAt earlier than your edit means the fix is not loaded. ' +
+          'When `inProcessDownstreams` is true, the downstreams are hosted inside this process, so restarting one means restarting the orchestrator.',
+        inputSchema: { type: 'object', properties: {} },
+      },
+      {
         name: 'solutio_style_guide',
         description:
           'Return the Solutio Software house style guide for Gantry 5 site builds. ' +
@@ -1558,6 +1623,32 @@ function buildServer(sessionCtx) {
           text: `Tools reloaded - ${counts}. User registry: ${usersRegistry ? `${Object.keys(usersRegistry).length} token(s) from ${usersRegistrySource}` : 'not found (single-token fallback)'}.`,
         }],
       };
+    }
+
+    if (name === 'mcp_target_info') {
+      const status = await collectStatus();
+      const byName = new Map(status.services.map((s) => [s.name, s]));
+      const info = {
+        orchestrator: deploymentIdentity(),
+        downstreams: DOWNSTREAMS.map((ds) => {
+          const svc = byName.get(ds.label) || {};
+          return {
+            label: ds.label,
+            // 'inproc'/'stdio' means this process hosts it, so its identity is
+            // the orchestrator's above. 'http' means a separate process, and
+            // the url is the only thing that says which one.
+            mode: ds.mode,
+            url: ds.mode === 'http' ? ds.url : null,
+            status: svc.status ?? 'unknown',
+            tools: ds.toolMap.size,
+            disabled: isDownstreamDisabled(ds.label),
+            lastToolLoadAt: ds.lastToolLoadAt || null,
+            error: svc.error ?? null,
+          };
+        }),
+        generatedAt: new Date().toISOString(),
+      };
+      return { content: [{ type: 'text', text: JSON.stringify(info, null, 2) }] };
     }
 
     if (name === 'read_agent_doc') {

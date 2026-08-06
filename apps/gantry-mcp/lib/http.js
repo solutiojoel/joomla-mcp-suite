@@ -85,6 +85,7 @@ class CookieJar {
 async function jarFetch(url, options = {}, jar, opts = {}) {
   const { maxRedirects = 5 } = opts;
   let currentUrl = url;
+  /** @type {RequestInit} */
   let currentOptions = { ...options, redirect: 'manual' };
   let response;
 

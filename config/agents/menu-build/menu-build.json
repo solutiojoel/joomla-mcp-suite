@@ -6,7 +6,7 @@
     "allow": [
       "set_active_site", "get_active_site", "get_agent_instructions",
       "get_site_notes", "append_site_note", "write_site_notes",
-      "read_agent_doc", "reload_tools",
+      "read_agent_doc", "reload_tools", "mcp_target_info",
       "knowledge_universal",
 "agent_audit",
       "run_menu_interpretation", "run_menu_build",

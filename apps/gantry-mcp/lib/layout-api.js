@@ -18,6 +18,32 @@ const { sleep, snap } = require('./util');
 const backup = require('./backup');
 
 /**
+ * One node of a serialized Gantry layout.
+ *
+ * @typedef {object} LayoutNode
+ * @property {string} id Structural id. Gantry reassigns these on save — see resolveSavedNodeId.
+ * @property {string} type container | section | offcanvas | grid | block | particle | system | spacer | position
+ * @property {string|boolean} [subtype] Particle name; `false` on a structural node as posted, and the node's own type on read-back.
+ * @property {string} [title] Display title. Gantry drops the "Untitled" placeholder on grids and blocks.
+ * @property {Record<string, any>} [attributes]
+ * @property {Record<string, any>} [inherit] Non-empty when the node is inherited from a parent outline.
+ * @property {LayoutNode[]} [children]
+ */
+
+/**
+ * What findNode returns. This is NOT a node — it is a node plus where it sits.
+ *
+ * Reading it as a node is the bug that shipped here once already: four call
+ * sites used the result directly and every one failed at runtime with
+ * `Node "X" is type "undefined"`. Destructure `.node`.
+ *
+ * @typedef {object} FoundNode
+ * @property {LayoutNode} node
+ * @property {LayoutNode|null} parent Null when the node is at the root of the structure.
+ * @property {number} index Position within its parent's children (or the root array).
+ */
+
+/**
  * Random id like "branding-7421". Keeps Gantry's existing id convention.
  */
 function freshId(prefix) {
@@ -45,7 +71,14 @@ function walk(structure, cb, parent = null, depth = 0) {
 }
 
 /**
- * Find a node by id (or matching predicate). Returns { node, parent, index } or null.
+ * Find a node by id (or matching predicate).
+ *
+ * Returns a {@link FoundNode} wrapper, not the node — callers must destructure
+ * `.node`. See the FoundNode typedef for why that is spelled out.
+ *
+ * @param {LayoutNode[]} structure
+ * @param {string|((node: LayoutNode) => boolean)} idOrFn
+ * @returns {FoundNode|null}
  */
 function findNode(structure, idOrFn) {
   let result = null;
@@ -1416,7 +1449,9 @@ function resolvePath(obj, pathStr) {
  *   inheritedFrom — { outline, particle, include } describing the source, or null.
  */
 function inspectParticleDeep(structure, particleId) {
+  /** @type {LayoutNode|null} */
   let particle = null;
+  /** @type {LayoutNode|null} */
   let block = null;
 
   walk(structure, (node, parent) => {

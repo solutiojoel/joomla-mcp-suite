@@ -172,9 +172,11 @@ async function listPage(arg1, optsOrArg2) {
 
   if (page && ctx?.mode !== 'http') {
     const fields = await page.evaluate(() => {
-      return Array.from(
-        document.querySelectorAll(
-          'input[name^="page["], select[name^="page["], textarea[name^="page["]'
+      return /** @type {(HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement)[]} */ (
+        Array.from(
+          document.querySelectorAll(
+            'input[name^="page["], select[name^="page["], textarea[name^="page["]'
+          )
         )
       ).map((el) => ({
         name: el.getAttribute('name'),

@@ -59,14 +59,20 @@ async function loadPreset(page, presetName) {
   if (presetName) {
     // Pick by visible text
     await page.evaluate((name) => {
-      const items = Array.from(document.querySelectorAll('.g5-dialog a, [role="dialog"] a, .modal a'));
-      const t = items.find((a) => (a.textContent || '').trim().toLowerCase() === name.toLowerCase());
+      const items = Array.from(
+        document.querySelectorAll('.g5-dialog a, [role="dialog"] a, .modal a')
+      );
+      const t = /** @type {HTMLAnchorElement|undefined} */ (
+        items.find((a) => (a.textContent || '').trim().toLowerCase() === name.toLowerCase())
+      );
       if (t) t.click();
     }, presetName);
   } else {
     // Click the first thumbnail
     await page.evaluate(() => {
-      const t = document.querySelector('.g5-dialog a, [role="dialog"] a, .modal a');
+      const t = /** @type {HTMLAnchorElement|null} */ (
+        document.querySelector('.g5-dialog a, [role="dialog"] a, .modal a')
+      );
       if (t) t.click();
     });
   }
@@ -458,6 +464,9 @@ async function listAvailableParticles(page) {
       const label = (li.querySelector('.particle-title')?.textContent || '').trim();
       // Find the closest preceding text node (the group label "Positions" / "Particles")
       let group = '';
+      // Walks up out of the <ul> and then backwards over arbitrary siblings, so
+      // the cursor is a plain Node, not the HTMLUListElement it started as.
+      /** @type {Node|null} */
       let p = li.closest('ul');
       while (p && p.previousSibling) {
         p = p.previousSibling;
@@ -506,17 +515,20 @@ async function inspectParticleFields(page, particleId) {
   await sleep(300);
 
   const fields = await page.evaluate(() => {
-    return Array.from(
-      document.querySelectorAll('.g5-dialog input, .g5-dialog select, .g5-dialog textarea')
+    return /** @type {(HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement)[]} */ (
+      Array.from(
+        document.querySelectorAll('.g5-dialog input, .g5-dialog select, .g5-dialog textarea')
+      )
     )
       .filter((el) => el.name)
       .map((el) => {
+        /** @type {{name: string, type: string, value: string, options?: {value: string, label: string}[]}} */
         const out = {
           name: el.name,
           type: el.type || el.tagName.toLowerCase(),
           value: el.value || '',
         };
-        if (el.tagName === 'SELECT') {
+        if (el instanceof HTMLSelectElement) {
           out.options = Array.from(el.options).map((o) => ({
             value: o.value,
             label: (o.textContent || '').trim(),

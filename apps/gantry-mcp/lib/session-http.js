@@ -164,6 +164,8 @@ async function detectFrontendTheme(base, jar) {
 
 /**
  * Top-level: log in via HTTP, click Configure, return a fully-formed ctx.
+ *
+ * @param {import('./session').SessionOptions} [opts]
  */
 async function startHttp({ site, user, pass, themeName } = {}) {
   if (!site) throw new Error('site is required');

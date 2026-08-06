@@ -5,7 +5,25 @@ const path = require('path');
 const { normalizeSite, resolveCreds, waitForAny, sleep, snap } = require('./util');
 
 /**
+ * Options accepted by the session entry points. Spelled out so the checker can
+ * see through the `= {}` default — a bare default infers `{}`, which makes
+ * every destructured property an error and hides the real findings.
+ *
+ * @typedef {object} SessionOptions
+ * @property {string} [site] Site URL. Required by start/startBrowser.
+ * @property {'http'|'browser'} [mode] Transport. Defaults to 'http'.
+ * @property {boolean} [headless] Browser mode only. Defaults to headless when no display.
+ * @property {string} [user] Admin username override; otherwise from env.
+ * @property {string} [pass] Admin password override; otherwise from env.
+ * @property {string} [themeName] Gantry theme to open; otherwise auto-detected.
+ * @property {number} [slowMo] Puppeteer slowMo, for debugging.
+ * @property {string} [userDataDir] Chromium profile directory.
+ */
+
+/**
  * Launch puppeteer with sane defaults.
+ *
+ * @param {SessionOptions} [opts]
  */
 async function launch(opts = {}) {
   // Default: headful (visible) when a display is available, otherwise headless.
@@ -26,7 +44,10 @@ async function launch(opts = {}) {
 
   try {
     const browser = await puppeteer.launch({
-      headless: headless ? 'new' : false,
+      // `'new'` was the opt-in flag for Chrome's new headless mode. Puppeteer
+      // 22 made it the default and dropped the value; on v23 the only accepted
+      // strings are booleans and 'shell'. Plain `true` is what 'new' meant.
+      headless: Boolean(headless),
       slowMo,
       defaultViewport: null, // use real window size when headful
       userDataDir,
@@ -133,12 +154,13 @@ async function openThemeAndCaptureKey(page, site, themeName) {
         txt.includes(name.replace(/^rt_/, ''));
       if (!matches) continue;
 
-      const configure =
+      const configure = /** @type {HTMLElement | undefined} */ (
         card.querySelector('a.button-primary') ||
         card.querySelector('a.button.button-primary') ||
         Array.from(card.querySelectorAll('a, button')).find((b) =>
           /^\s*configure\s*$/i.test(b.textContent || '')
-        );
+        )
+      );
       if (!configure) continue;
 
       configure.scrollIntoView({ block: 'center' });
@@ -180,6 +202,8 @@ async function openThemeAndCaptureKey(page, site, themeName) {
 /**
  * Browser-mode start: launch Chromium, log in, click Configure, mint token.
  * Returns ctx with the same shape as the HTTP-mode ctx, plus { browser, page }.
+ *
+ * @param {SessionOptions} [opts]
  */
 async function startBrowser({ site, headless, user, pass, themeName } = {}) {
   if (!site) throw new Error('site is required');
@@ -229,6 +253,8 @@ async function startBrowser({ site, headless, user, pass, themeName } = {}) {
  * Top-level dispatcher. mode = 'http' (default) | 'browser'.
  * The HTTP path has no Chromium dependency; the browser path adds rendered-DOM
  * features like dialog edits and traffic capture.
+ *
+ * @param {SessionOptions} [opts]
  */
 async function start({ mode = 'http', site, headless, user, pass, themeName } = {}) {
   if (mode === 'browser') {
