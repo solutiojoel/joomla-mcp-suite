@@ -20,7 +20,8 @@
     "tool:audit": "tsx scripts/tests/tool-audit.ts",
     "content:correctness": "tsx scripts/tests/content-correctness.ts",
     "check:forms": "tsx scripts/tests/form-parse-check.ts",
-    "check:all": "npm run menu:correctness && npm run content:correctness && npm run menu:e2e && npm run check:forms",
+    "check:lists": "tsx scripts/tests/list-filter-check.ts",
+    "check:all": "npm run menu:correctness && npm run content:correctness && npm run menu:e2e && npm run check:forms && npm run check:lists",
     "inspect": "npx @modelcontextprotocol/inspector tsx src/index.ts",
     "start:http": "cross-env HTTP_PORT=3000 tsx src/index.ts"
   },

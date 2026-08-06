@@ -251,18 +251,18 @@ const tools = [
   },
   {
     name: "joomla_menu_item",
-    description: "Manage menu items. action: list|get|create|update|delete|toggle|checkin.",
+    description: "Manage menu items. action: list|get|create|update|delete|destroy|toggle|checkin. delete trashes the item; the row survives and keeps reserving its alias. destroy removes the row for real, which is the only way to free an alias for reuse.",
     inputSchema: {
       type: "object",
       properties: {
-        action: { type: "string", enum: ["list", "get", "create", "update", "delete", "toggle", "checkin"], description: "Operation to perform" },
-        id: { type: "string", description: "get|update|delete|toggle|checkin: menu item ID" },
+        action: { type: "string", enum: ["list", "get", "create", "update", "delete", "destroy", "toggle", "checkin"], description: "Operation to perform. delete=trash (reversible), destroy=permanent delete (not reversible)" },
+        id: { type: "string", description: "get|update|delete|destroy|toggle|checkin: menu item ID" },
         menuId: { type: "string", description: "list: menu type identifier to scope to one menu (e.g. mainmenu). Omit to search/list across all menus. get: optional scope for title search." },
         search: { type: "string", description: "list: server-side title filter. Combine with an omitted menuId to find an item by title when you don't know which menu it's in." },
         limit: { type: "number", description: "list: per page (default: 0=all, max 500)" },
         page: { type: "number", description: "list: page number, 1-based" },
         title: { type: "string", description: "get: search by title. create|update: item title." },
-        menuType: { type: "string", description: "create: menu type (e.g. mainmenu). update: move to another menu. delete|toggle|checkin: for verification." },
+        menuType: { type: "string", description: "create: menu type (e.g. mainmenu). update: move to another menu. delete|toggle|checkin: for verification. destroy: required unless the item's menu can be read from its edit form." },
         itemType: { type: "string", description: "create|update: matched against joomla_menu_item_type list's title, label, or request key (e.g. \"Heading\", \"Separator\", or com_content.article) — the encoded value also works. \"Heading\" and \"Separator\" are distinct Joomla types; do not use one for the other." },
         alias: { type: "string" },
         link: { type: "string", description: "create|update: explicit link (e.g. index.php?option=com_content&view=article&id=123)" },
@@ -279,8 +279,9 @@ const tools = [
         params: { type: "object", additionalProperties: { type: "string" } },
         fieldOverrides: { type: "object", additionalProperties: { type: "string" } },
         state: { type: "string", description: "toggle: 1=publish, 0=unpublish", enum: ["0", "1"] },
-        expectedTitle: { type: "string", description: "delete|toggle|checkin: safety check — refuse unless title matches" },
-        expectedMenuType: { type: "string", description: "delete|toggle|checkin: safety check — refuse unless menu type matches" },
+        expectedTitle: { type: "string", description: "delete|destroy|toggle|checkin: safety check — refuse unless title matches" },
+        expectedMenuType: { type: "string", description: "delete|destroy|toggle|checkin: safety check — refuse unless menu type matches" },
+        includeChildren: { type: "boolean", description: "destroy: Joomla deletes the whole subtree. The call is refused when the item has children unless this is true. Read the refusal message first — it names every item that would be destroyed." },
       },
       required: ["action"],
     },
@@ -1160,6 +1161,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
             });
             break;
           }
+          case "destroy": {
+            const id = args?.id as string;
+            if (!id) return { content: [{ type: "text", text: "Error: id is required for destroy" }], isError: true };
+            result = await joomla.destroyMenuItem(id, {
+              menuType: args?.menuType as string,
+              expectedTitle: args?.expectedTitle as string,
+              expectedMenuType: args?.expectedMenuType as string,
+              includeChildren: args?.includeChildren as boolean,
+            });
+            break;
+          }
           case "toggle": {
             const id = args?.id as string;
             const state = args?.state as string;
@@ -1180,7 +1192,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
             break;
           }
           default:
-            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|get|create|update|delete|toggle|checkin` }], isError: true };
+            return { content: [{ type: "text", text: `Error: unknown action "${action}". Valid: list|get|create|update|delete|destroy|toggle|checkin` }], isError: true };
         }
 
         return {

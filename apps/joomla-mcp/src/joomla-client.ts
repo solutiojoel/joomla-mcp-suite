@@ -15,6 +15,17 @@ export interface JoomlaConfig {
   menuItemTypeBlacklist?: Set<string>;
 }
 
+/**
+ * Form ids an admin edit view may render, most specific first.
+ *
+ * Joomla 3 is not consistent here and neither are the templates layered on top: the
+ * com_modules edit view renders `module-form` on some live sites and `adminForm` on
+ * others. Anything that needs to scope to "the edit form" must try the candidates in
+ * order rather than assume one — see pickFormId.
+ */
+const EDIT_FORM_IDS = ["item-form", "adminForm"];
+const MODULE_FORM_IDS = ["module-form", "adminForm"];
+
 export interface JoomlaResponse {
   success: boolean;
   message: string;
@@ -324,6 +335,12 @@ export class JoomlaClient {
   private extractFormFields(html: string, formId = "adminForm"): FormDataMap {
     const $ = this.$c(html);
     const form = $(`form[id="${formId}"]`);
+    // The whole-document fallback is deliberate: Joomla 3 admin edit views do not agree
+    // on a form id (item-form, module-form, application-form, adminForm), and most
+    // callers here rely on it. It is also why a page that is NOT the expected edit view
+    // still yields fields — the list view's filter form gets scraped instead, and the
+    // caller sees a half-populated record rather than an error. Callers that need to
+    // know the difference must ask hasForm() first; see diagnoseMissingEditForm().
     const find = (sel: string) => form.length ? form.find(sel) : $(sel);
     const fields: FormDataMap = {};
 
@@ -370,6 +387,55 @@ export class JoomlaClient {
     });
 
     return fields;
+  }
+
+  private hasForm(html: string, formId: string): boolean {
+    return this.$c(html)(`form[id="${formId}"]`).length > 0;
+  }
+
+  /**
+   * Return whichever candidate form id this install actually renders.
+   *
+   * Do not assume one id per component. com_modules renders its edit view as
+   * `module-form` on some Joomla 3 installs and `adminForm` on others — both were
+   * observed on live Solutio sites — so a hardcoded id silently misses on half of
+   * them. Returns null when none match, which is itself the signal that the response
+   * is not the edit view at all.
+   */
+  private pickFormId(html: string, candidates: string[]): string | null {
+    return candidates.find((id) => this.hasForm(html, id)) ?? null;
+  }
+
+  /**
+   * Explain why an edit form could not be read, instead of blaming the parser.
+   *
+   * Joomla refuses `*.edit` for a record another session holds and redirects back to
+   * the list view. The parse then finds no title and the old code reported "Failed to
+   * parse <entity> form" — which reads as a broken scraper and sends the caller looking
+   * in the wrong place. The record is fine; it is locked. Worse, the whole-document
+   * fallback in extractFormFields means the returned data is the list view's filter
+   * form, so the caller gets plausible-looking junk alongside the wrong message.
+   */
+  private diagnoseMissingEditForm(
+    html: string,
+    entity: string,
+    id: string,
+    formIds: string[],
+  ): string {
+    const alert = this.extractAlertMessage(html);
+    if (alert && /checked out|check-in|checkin/i.test(alert)) {
+      return `${entity} ${id} is checked out by another user — run the checkin action for this ${entity.toLowerCase()}, or joomla_bulk_checkin, then retry. Joomla said: ${alert}`;
+    }
+    if (!this.pickFormId(html, formIds)) {
+      // No edit form at all: Joomla served something else, and the most common cause by
+      // far is the checkout redirect back to the list view.
+      const looksLikeList = this.$c(html)("input[name='cid[]']").length > 0;
+      const because = looksLikeList
+        ? "Joomla redirected to the list view, which normally means the record is checked out by another user or the account lacks edit permission."
+        : "the response was not an edit page.";
+      return `${entity} ${id} could not be opened for editing — ${because}${alert ? ` Joomla said: ${alert}` : ""}`;
+    }
+    return `Failed to parse ${entity.toLowerCase()} form for ${id}${alert ? ` — Joomla said: ${alert}` : ""}`;
   }
 
   private getJFormField(fields: FormDataMap, key: string, fallback = ""): string {
@@ -496,7 +562,7 @@ export class JoomlaClient {
     };
   }
 
-  private getMenuItemsListUrl(menuType?: string, search?: string): string {
+  private getMenuItemsListUrl(menuType?: string, search?: string, published?: string): string {
     const params = new URLSearchParams({
       option: "com_menus",
       view: "items",
@@ -511,7 +577,11 @@ export class JoomlaClient {
       // address exactly one row. A plain title search is a LIKE match, so it can pull
       // in siblings and is not a safe basis for verifying one item.
       "filter[search]": search ?? "",
-      "filter[published]": "",
+      // Empty is not "any state": MenusModelItems reads an empty published filter as
+      // `published IN (0, 1)`, so trashed rows drop out — which is what the trash
+      // verification relies on. Pass "*" to suppress the clause entirely and see every
+      // state, and "-2" for trashed only.
+      "filter[published]": published ?? "",
     });
     return this.getAdminUrl(`index.php?${params.toString()}`);
   }
@@ -1117,8 +1187,16 @@ export class JoomlaClient {
       if (text) messages.push(text);
     });
 
-    const unique = Array.from(new Set(messages)).filter(Boolean);
-    return unique.length ? unique.join(" | ") : null;
+    // Alert containers nest, so the outer element's text already contains the inner
+    // ones and a plain Set leaves the same sentence in three times. Keep the longest
+    // form of each message and drop anything wholly contained in one already kept —
+    // otherwise a single Joomla error arrives as a paragraph of repeats.
+    const unique = Array.from(new Set(messages)).filter(Boolean).sort((a, b) => b.length - a.length);
+    const kept: string[] = [];
+    for (const message of unique) {
+      if (!kept.some((k) => k.includes(message))) kept.push(message);
+    }
+    return kept.length ? kept.join(" | ") : null;
   }
 
   private parseAdminLinks(html: string): Array<Record<string, string>> {
@@ -2790,7 +2868,9 @@ export class JoomlaClient {
     const article = this.parseArticleForm(html);
     return {
       success: !!article.title,
-      message: article.title ? "Article retrieved" : "Failed to parse article form",
+      message: article.title
+        ? "Article retrieved"
+        : this.diagnoseMissingEditForm(html, "Article", id, EDIT_FORM_IDS),
       data: article,
       html,
       token,
@@ -3204,7 +3284,9 @@ export class JoomlaClient {
       "limit": String(effectiveLimit),
       "limitstart": String(limitStart),
     });
-    if (search) params.set("filter[search]", search);
+    // Always send the filter — see listArticles: an omitted filter is inherited from
+    // the session, not cleared.
+    params.set("filter[search]", search ?? "");
     const url = this.getAdminUrl(`index.php?${params.toString()}`);
     const { html } = await this.getPage(url);
     const categories = this.parseCategoryList(html);
@@ -3216,23 +3298,53 @@ export class JoomlaClient {
     };
   }
 
+  /**
+   * Categories come back as a flat table; the nesting is recoverable, but only when
+   * Joomla rendered the tree prefix.
+   *
+   * Joomla renders (level - 1) repetitions of `<span class="gtr">` ahead of the title
+   * link and lists rows in tree order, so tracking the ancestor at each level as we
+   * walk down reconstructs the real parent.
+   *
+   * This used to report `parent: "Root"` for every row unconditionally — a fabricated
+   * value that reads as "top level" for categories nested several deep. Deriving it is
+   * only half the fix: when a page carries no prefix markup at all, "every row is
+   * level 1" and "this install does not render the prefix" look identical, and
+   * answering "Root" for the second case would re-introduce the same lie. So the
+   * prefix has to be observed somewhere on the page before any parent is claimed;
+   * otherwise parent is reported as "" (unknown) and callers that need the real answer
+   * use getCategory, which reads the authoritative parent select off the edit form.
+   */
   private parseCategoryList(html: string): Array<Record<string, string>> {
     const $ = this.$c(html);
     const categories: Array<Record<string, string>> = [];
+    const treePrefixRendered = $("span.gtr").length > 0;
+    // ancestorAtLevel[n] is the title of the row at depth n + 1 seen most recently.
+    const ancestorAtLevel: string[] = [];
     $("tr").each((_, el) => {
       const $row = $(el);
       const cid = $row.find("input[name='cid[]']").attr("value");
       if (!cid) return;
       const rowText = $row.text();
       if (rowText.includes("JSelect") || rowText.includes("JAll")) return;
-      const title = $row.find("a[href*='task=category.edit']").first().text().trim();
+      const $link = $row.find("a[href*='task=category.edit']").first();
+      const title = $link.text().trim();
       if (!title) return;
       const rowHtml = $.html($row) || "";
+
+      const level = $link.closest("td").find("span.gtr").length + 1;
+      ancestorAtLevel[level - 1] = title;
+      // Drop stale deeper ancestors so a later shallow row cannot inherit them.
+      ancestorAtLevel.length = level;
+
       categories.push({
         id: cid,
         title,
         state: this.extractPublishedState(rowHtml),
-        parent: "Root",
+        // Both only mean something once the prefix is known to render.
+        ...(treePrefixRendered
+          ? { level: String(level), parent: level > 1 ? (ancestorAtLevel[level - 2] ?? "") : "Root" }
+          : { parent: "" }),
         checkedOut: /checked[-_ ]?out|icon-lock|fa-lock/i.test(rowHtml) ? "1" : "0",
       });
     });
@@ -3247,7 +3359,11 @@ export class JoomlaClient {
 
     return {
       success: !!category.title,
-      message: category.title ? "Category retrieved" : "Failed to parse category form",
+      message: category.title
+        ? "Category retrieved"
+        // com_categories renders its edit view with id="item-form", same as com_content
+        // and com_menus — only com_modules uses a component-specific id.
+        : this.diagnoseMissingEditForm(html, "Category", id, EDIT_FORM_IDS),
       data: category,
       html,
       token,
@@ -3685,7 +3801,15 @@ export class JoomlaClient {
       "limit": String(effectiveLimit),
       "limitstart": String(limitStart),
     });
-    if (search) params.set("filter[search]", search);
+    // Always send the filter — see listArticles. Omitting it made an unfiltered module
+    // list return the previous search's rows, and createModule verifies new modules
+    // against this list, so a stale filter could report a successful create as missing.
+    params.set("filter[search]", search ?? "");
+    // The other com_modules filters are session-backed too, and this tool exposes no
+    // parameter for any of them, so "no filter" is the only correct value to send.
+    for (const name of ["position", "module", "state", "menuitem", "access", "language"]) {
+      params.set(`filter[${name}]`, "");
+    }
     const url = this.getAdminUrl(`index.php?${params.toString()}`);
     const { html } = await this.getPage(url);
     const modules = this.parseModuleList(html);
@@ -3801,7 +3925,7 @@ export class JoomlaClient {
   }
 
   private parseModuleForm(html: string): Record<string, unknown> {
-    const fields = this.extractFormFields(html, "module-form");
+    const fields = this.extractFormFields(html, this.pickFormId(html, MODULE_FORM_IDS) ?? "module-form");
     const module: Record<string, unknown> = {};
     const params: Record<string, string> = {};
     const advanced: Record<string, string> = {};
@@ -3877,7 +4001,7 @@ export class JoomlaClient {
   }
 
   private parseModuleFieldCatalog(html: string): Record<string, unknown> {
-    const fields = this.extractFormFields(html, "module-form");
+    const fields = this.extractFormFields(html, this.pickFormId(html, MODULE_FORM_IDS) ?? "module-form");
     const fieldNames = Object.keys(fields);
     const paramFields = fieldNames
       .map((name) => name.match(/^jform\[params\]\[([^\]]+)\]$/)?.[1])
@@ -3896,17 +4020,37 @@ export class JoomlaClient {
     };
   }
 
+  /**
+   * A blacklist entry blocks CREATING that module type. It never blocks reading or
+   * editing an existing module of that type: none of listModules, getModule,
+   * updateModule, toggleModule, deleteModule or checkInModule consult this list, and
+   * updateModule takes the type from the module's own form. Retiring a type therefore
+   * stops new ones appearing without stranding the ones already on a site.
+   *
+   * Matching is by substring, not equality. Entries name a family ("roksprocket"), and
+   * an install can expose several titles in that family; exact-match would block the
+   * one title someone happened to write down and silently allow the rest.
+   */
+  private isBlacklistedModuleType(title: string): boolean {
+    const blacklist = this.config.moduleTypeBlacklist;
+    if (!blacklist || blacklist.size === 0) return false;
+    const lowered = title.toLowerCase();
+    for (const entry of blacklist) {
+      if (entry && lowered.includes(entry)) return true;
+    }
+    return false;
+  }
+
   async listModuleTypes(clientId = "0"): Promise<JoomlaResponse> {
     const url = this.getAdminUrl(`index.php?option=com_modules&view=select&client_id=${clientId}`);
     const { html } = await this.getPage(url);
-    const blacklist = this.config.moduleTypeBlacklist;
-    const types = this.parseModuleTypes(html).filter(
-      (t) => !blacklist || !blacklist.has(t.title.toLowerCase())
-    );
+    const all = this.parseModuleTypes(html);
+    const types = all.filter((t) => !this.isBlacklistedModuleType(t.title));
+    const hidden = all.length - types.length;
 
     return {
       success: true,
-      message: `Found ${types.length} module types`,
+      message: `Found ${types.length} module types${hidden > 0 ? ` (${hidden} retired type(s) hidden — existing modules of those types can still be read and edited)` : ""}`,
       data: types,
       html,
     };
@@ -3940,7 +4084,9 @@ export class JoomlaClient {
     if (!type) {
       return {
         success: false,
-        message: `Module type not found: ${moduleType}`,
+        message: this.isBlacklistedModuleType(moduleType)
+          ? `Module type "${moduleType}" is retired, so its settings catalogue is not offered for new modules. To see the settings of an existing module of this type, call joomla_module get with its id — reading and editing are not blocked.`
+          : `Module type not found: ${moduleType}`,
         data: types,
       };
     }
@@ -3978,7 +4124,9 @@ export class JoomlaClient {
 
     return {
       success: !!module.title,
-      message: module.title ? "Module retrieved" : "Failed to parse module form",
+      message: module.title
+        ? "Module retrieved"
+        : this.diagnoseMissingEditForm(html, "Module", id, MODULE_FORM_IDS),
       data: module,
       html,
       token,
@@ -4196,8 +4344,17 @@ export class JoomlaClient {
       return { success: false, message: "Failed to extract CSRF token" };
     }
 
+    if (!existingModule.title) {
+      return { success: false, message: this.diagnoseMissingEditForm(html, "Module", id, MODULE_FORM_IDS) };
+    }
+
     const formData: FormDataMap = {
-      ...this.extractFormFields(html),
+      // Scope to whichever edit-form id this install renders. The old code asked for
+      // the default "adminForm"; on installs that use "module-form" that matched
+      // nothing and fell through to extractFormFields' whole-document scrape, which
+      // swept in the modules list filter form (filter[search] et al) and posted it
+      // back with the save.
+      ...this.extractFormFields(html, this.pickFormId(html, MODULE_FORM_IDS) ?? "module-form"),
       // "apply" rather than "save": both persist identically, but apply redirects back
       // to this module's edit form, so the response IS the verification readback.
       task: "module.apply",
@@ -4307,6 +4464,17 @@ export class JoomlaClient {
     content?: string;
     fieldOverrides?: Record<string, string>;
   }): Promise<JoomlaResponse> {
+    // Check the blacklist before resolving, so a retired type reports why it was
+    // refused. Left to resolveModuleType it comes back as "Module type not found",
+    // which reads as "this site does not have it" and sends the caller hunting for a
+    // missing extension instead of choosing a different type.
+    if (this.isBlacklistedModuleType(data.moduleType)) {
+      return {
+        success: false,
+        message: `Module type "${data.moduleType}" is retired and cannot be used for new modules. Existing modules of this type can still be read and edited — only creation is blocked. Pick a current module type, or use joomla_module_type list to see what is available.`,
+      };
+    }
+
     const typesResult = await this.listModuleTypes(data.clientId || "0");
     const type = await this.resolveModuleType((typesResult.data || []) as ModuleType[], data.moduleType, data.clientId || "0");
     if (!type) {
@@ -4323,7 +4491,7 @@ export class JoomlaClient {
 
     const existingModule = this.parseModuleForm(html);
     const formData: FormDataMap = {
-      ...this.extractFormFields(html, "module-form"),
+      ...this.extractFormFields(html, this.pickFormId(html, MODULE_FORM_IDS) ?? "module-form"),
       // See createArticle: "apply" gives a reliable &id= on redirect, "save" doesn't.
       task: "module.apply",
       "jform[title]": data.title,
@@ -5549,7 +5717,9 @@ export class JoomlaClient {
 
     return {
       success: !!item.title,
-      message: item.title ? "Menu item retrieved" : "Failed to parse menu item form",
+      message: item.title
+        ? "Menu item retrieved"
+        : this.diagnoseMissingEditForm(html, "Menu item", id, EDIT_FORM_IDS),
       data: item,
       html,
       token,
@@ -6093,6 +6263,135 @@ export class JoomlaClient {
           preflightVerified: true,
           listCheckAttempted: !!menuType,
           stillListed,
+          verified,
+        },
+      }),
+      html: result.html,
+    };
+  }
+
+  /**
+   * Return every descendant of one menu item, from a parsed list of its whole menu.
+   *
+   * parseMenuItemList derives parentId from the en-dash indent Joomla renders, so this
+   * needs the unscoped list of one menu. An "id:<n>" search returns a single row with no
+   * depth context around it, and would report a subtree of zero for a parent of ten.
+   */
+  private collectMenuDescendants(rows: Array<Record<string, string>>, id: string): Array<Record<string, string>> {
+    const byParent = new Map<string, Array<Record<string, string>>>();
+    for (const row of rows) {
+      const siblings = byParent.get(row.parentId) || [];
+      siblings.push(row);
+      byParent.set(row.parentId, siblings);
+    }
+    const descendants: Array<Record<string, string>> = [];
+    const queue: string[] = [id];
+    const seen = new Set<string>([id]);
+    while (queue.length) {
+      const parentId = queue.shift() as string;
+      for (const child of byParent.get(parentId) || []) {
+        if (seen.has(child.id)) continue;
+        seen.add(child.id);
+        descendants.push(child);
+        queue.push(child.id);
+      }
+    }
+    return descendants;
+  }
+
+  /**
+   * Permanently delete a menu item — Joomla's "Empty trash", not its "Trash".
+   *
+   * deleteMenuItem only trashes, and a trashed row is still a row, so it keeps reserving
+   * its alias. Re-creating the same page under the same alias then fails, and the only
+   * way out is to remove the old row for real. This is that path.
+   *
+   * Two POSTs, because Joomla wants both. MenusModelItem::canDelete refuses any item
+   * whose published state is not -2, so the item is trashed first even when the caller
+   * asked to destroy it outright. Trashing an already-trashed item is a no-op, so the
+   * unconditional first POST costs one request and never changes the outcome.
+   *
+   * The subtree guard is why this is a separate action and not a flag on delete.
+   * JTableMenu extends JTableNested, whose delete() removes the whole subtree, and it
+   * does that at the table layer where canDelete never runs — so destroying a parent
+   * destroys its published children with it and reports plain success. Descendants are
+   * counted before anything is written, and the call is refused unless includeChildren
+   * says the caller means it.
+   */
+  async destroyMenuItem(
+    id: string,
+    options: { expectedTitle?: string; expectedMenuType?: string; menuType?: string; includeChildren?: boolean } = {},
+  ): Promise<JoomlaResponse> {
+    const pre = await this.menuItemPreflight(id, options.menuType, "permanently delete", options);
+    if (!pre.ok) return { success: false, message: pre.message };
+    const { title, menuType, token } = pre;
+
+    if (!menuType) {
+      return {
+        success: false,
+        message: `Refusing to permanently delete menu item ${id}: its menu could not be determined, so its child items cannot be checked. Pass menuType.`,
+      };
+    }
+
+    // "*" suppresses the published clause, so this sees trashed children too. A child
+    // trashed earlier is still a row Joomla will delete along with its parent.
+    const treeUrl = this.getMenuItemsListUrl(menuType, "", "*");
+    const treeRows = this.parseMenuItemList((await this.getPage(treeUrl)).html);
+    if (!treeRows.some((row) => row.id === id)) {
+      return {
+        success: false,
+        message: `Refusing to permanently delete menu item ${id}: it is not listed in menu "${menuType}", so its child items cannot be checked.`,
+      };
+    }
+    const descendants = this.collectMenuDescendants(treeRows, id);
+    if (descendants.length > 0 && !options.includeChildren) {
+      const listed = descendants.map((row) => `${row.id} (${row.title})`).join(", ");
+      return {
+        success: false,
+        message:
+          `Refusing to permanently delete menu item ${id} ("${title}"): Joomla deletes the whole subtree, ` +
+          `so ${descendants.length} child item(s) would be destroyed with it — ${listed}. ` +
+          `Move them to another parent first, or pass includeChildren:true to destroy all of them.`,
+        data: this.buildOperationData("menuItem", id, {
+          title,
+          menuType,
+          descendants: descendants.map((row) => ({ id: row.id, title: row.title })),
+        }),
+      };
+    }
+
+    const scopedUrl = this.getMenuItemsListUrl(menuType, `id:${id}`, "*");
+    await this.postPage(scopedUrl, { task: "items.trash", "cid[]": id, boxchecked: "1" }, { token, noFollow: true });
+    const result = await this.postPage(scopedUrl, { task: "items.delete", "cid[]": id, boxchecked: "1" }, { token, noFollow: true });
+
+    // Absence from an unfiltered read of the whole menu is the check. It covers the
+    // descendants in the same request, and it is the one signal a trashed row cannot
+    // fake — deleteMenuItem's row is still there, this one is not.
+    const verifyPage = await this.getPage(treeUrl);
+    const remaining = this.parseMenuItemList(verifyPage.html);
+    const errorMsg = this.extractAlertMessage(verifyPage.html);
+    const stillListed = remaining.some((row) => row.id === id);
+    const orphanedChildren = descendants.filter((child) => remaining.some((row) => row.id === child.id));
+    const verified = !stillListed && orphanedChildren.length === 0;
+
+    return {
+      success: verified,
+      message: verified
+        ? `Menu item permanently deleted${descendants.length ? ` with ${descendants.length} child item(s)` : ""} — the alias is now free to reuse`
+        : (errorMsg ??
+          (stillListed
+            ? "Menu item permanently delete was submitted, but the item is still listed. Joomla refuses to delete an item it could not trash first — check whether it is the menu's home item."
+            : "Menu item was deleted, but some of its child items are still listed")),
+      data: this.buildOperationData("menuItem", id, {
+        title,
+        menuType,
+        childrenDeleted: descendants.length,
+        verification: {
+          attempted: true,
+          preflightVerified: true,
+          subtreeChecked: true,
+          stillListed,
+          orphanedChildren: orphanedChildren.map((row) => row.id),
           verified,
         },
       }),
@@ -7131,18 +7430,21 @@ export class JoomlaClient {
     const { html } = await this.getPage(url);
     const $ = this.$c(html);
 
-    const items: Array<{ id: string; title: string; type: string; editor: string; time: string }> = [];
+    // com_checkin lists database TABLES with a count of locked rows — not individual
+    // records. The old field names promised otherwise: cells[2] (the count) was
+    // reported as "type", and "editor"/"time" were always empty because the view has
+    // no such columns. A caller reading `type: "3"` learned nothing and could not tell
+    // which module was locked. Name the columns for what they actually are, and point
+    // at the tool that does resolve a specific row.
+    const items: Array<{ table: string; checkedOutCount: string }> = [];
     $("tr").each((_, el) => {
       const $row = $(el);
       const cid = $row.find("input[name='cid[]']").attr("value");
       if (!cid) return;
       const cells = $row.find("td");
       items.push({
-        id: cid,
-        title: $(cells[1]).text().trim(),
-        type: $(cells[2]).text().trim(),
-        editor: $(cells[3]).text().trim(),
-        time: $(cells[4]).text().trim(),
+        table: cid,
+        checkedOutCount: $(cells[2]).text().trim(),
       });
     });
 
@@ -7150,10 +7452,12 @@ export class JoomlaClient {
       return { success: true, message: "No checked-out items found — nothing to check in", data: { items: [] } };
     }
 
+    const totalRows = items.reduce((sum, i) => sum + (parseInt(i.checkedOutCount, 10) || 0), 0);
+
     if (data.dryRun || !data.confirm) {
       return {
         success: true,
-        message: `[DRY RUN] Found ${items.length} checked-out item(s). Pass confirm=true to check them all in.`,
+        message: `[DRY RUN] ${totalRows || "Some"} locked row(s) across ${items.length} table(s). com_checkin reports tables, not records — to find which record is locked, list that entity and read its checkedOut flag. Pass confirm=true to check in every table.`,
         data: { items, dryRun: true },
       };
     }
@@ -7167,7 +7471,7 @@ export class JoomlaClient {
       task: "checkin.checkin",
       [token.name]: token.value,
       boxchecked: String(items.length),
-      "cid[]": items.map((i) => i.id),
+      "cid[]": items.map((i) => i.table),
     };
 
     await this.postPage(url, formData);
@@ -7180,8 +7484,8 @@ export class JoomlaClient {
     return {
       success,
       message: success
-        ? `Checked in ${items.length} item(s)`
-        : `Check-in submitted, but ${remaining} item(s) still appear checked out`,
+        ? `Checked in ${totalRows || "all"} locked row(s) across ${items.length} table(s)`
+        : `Check-in submitted, but ${remaining} table(s) still report locked rows`,
       data: { checkedIn: items, remainingCount: remaining },
     };
   }
@@ -7198,9 +7502,11 @@ export class JoomlaClient {
       limit: String(effectiveLimit),
       limitstart: String(limitStart),
     });
-    if (search) params.set("filter[search]", search);
-    if (groupId) params.set("filter[group_id]", groupId);
-    if (state !== undefined && state !== "") params.set("filter[state]", state);
+    // Always send every filter — see listArticles: an omitted filter is inherited from
+    // the session, not cleared.
+    params.set("filter[search]", search ?? "");
+    params.set("filter[group_id]", groupId ?? "");
+    params.set("filter[state]", state ?? "");
     const url = this.getAdminUrl(`index.php?${params.toString()}`);
     const { html } = await this.getPage(url);
     const users = this.parseUserList(html);
