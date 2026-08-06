@@ -6311,12 +6311,14 @@ export class JoomlaClient {
    * asked to destroy it outright. Trashing an already-trashed item is a no-op, so the
    * unconditional first POST costs one request and never changes the outcome.
    *
-   * The subtree guard is why this is a separate action and not a flag on delete.
-   * JTableMenu extends JTableNested, whose delete() removes the whole subtree, and it
-   * does that at the table layer where canDelete never runs — so destroying a parent
-   * destroys its published children with it and reports plain success. Descendants are
-   * counted before anything is written, and the call is refused unless includeChildren
-   * says the caller means it.
+   * The subtree guard is why this is a separate action and not a flag on delete. Joomla
+   * does not delete a destroyed item's children and it does not refuse the delete either
+   * — it repairs the nested set by promoting every child to the root of the menu. That
+   * was measured here, not assumed: destroying a parent left its child in place with
+   * parent_id rewritten from the parent to 1. A child page therefore reappears as a
+   * top-level entry in the site's navigation, from an operation whose stated purpose was
+   * to remove a menu entry. So descendants are counted before anything is written, and
+   * the call is refused unless includeChildren says to remove the whole branch.
    */
   async destroyMenuItem(
     id: string,
@@ -6334,7 +6336,7 @@ export class JoomlaClient {
     }
 
     // "*" suppresses the published clause, so this sees trashed children too. A child
-    // trashed earlier is still a row Joomla will delete along with its parent.
+    // trashed earlier is still a row, and still one Joomla will promote to the root.
     const treeUrl = this.getMenuItemsListUrl(menuType, "", "*");
     const treeRows = this.parseMenuItemList((await this.getPage(treeUrl)).html);
     if (!treeRows.some((row) => row.id === id)) {
@@ -6349,9 +6351,9 @@ export class JoomlaClient {
       return {
         success: false,
         message:
-          `Refusing to permanently delete menu item ${id} ("${title}"): Joomla deletes the whole subtree, ` +
-          `so ${descendants.length} child item(s) would be destroyed with it — ${listed}. ` +
-          `Move them to another parent first, or pass includeChildren:true to destroy all of them.`,
+          `Refusing to permanently delete menu item ${id} ("${title}"): it has ${descendants.length} child item(s) — ${listed}. ` +
+          `Joomla does not delete them, it moves them to the top level of menu "${menuType}", where they show up in the site navigation. ` +
+          `Re-parent them first, or pass includeChildren:true to permanently delete the whole branch.`,
         data: this.buildOperationData("menuItem", id, {
           title,
           menuType,
@@ -6360,28 +6362,30 @@ export class JoomlaClient {
       };
     }
 
-    const scopedUrl = this.getMenuItemsListUrl(menuType, `id:${id}`, "*");
-    await this.postPage(scopedUrl, { task: "items.trash", "cid[]": id, boxchecked: "1" }, { token, noFollow: true });
-    const result = await this.postPage(scopedUrl, { task: "items.delete", "cid[]": id, boxchecked: "1" }, { token, noFollow: true });
+    // Every id in one pair of POSTs. cid[] is an array on both tasks, and Joomla loops
+    // over it, so the branch goes in one trash and one delete rather than two per node.
+    // Order does not matter: a promoted child is still addressable by its own id.
+    const targets = [...descendants.map((row) => row.id), id];
+    const boxchecked = String(targets.length);
+    await this.postPage(treeUrl, { task: "items.trash", "cid[]": targets, boxchecked }, { token, noFollow: true });
+    const result = await this.postPage(treeUrl, { task: "items.delete", "cid[]": targets, boxchecked }, { token, noFollow: true });
 
-    // Absence from an unfiltered read of the whole menu is the check. It covers the
-    // descendants in the same request, and it is the one signal a trashed row cannot
-    // fake — deleteMenuItem's row is still there, this one is not.
+    // Absence from an unfiltered read of the whole menu is the check. It covers every
+    // target in one request, and it is the one signal a trashed row cannot fake —
+    // deleteMenuItem's row is still listed under this filter, a destroyed one is not.
     const verifyPage = await this.getPage(treeUrl);
     const remaining = this.parseMenuItemList(verifyPage.html);
     const errorMsg = this.extractAlertMessage(verifyPage.html);
-    const stillListed = remaining.some((row) => row.id === id);
-    const orphanedChildren = descendants.filter((child) => remaining.some((row) => row.id === child.id));
-    const verified = !stillListed && orphanedChildren.length === 0;
+    const stillListed = targets.filter((target) => remaining.some((row) => row.id === target));
+    const verified = stillListed.length === 0;
 
     return {
       success: verified,
       message: verified
         ? `Menu item permanently deleted${descendants.length ? ` with ${descendants.length} child item(s)` : ""} — the alias is now free to reuse`
         : (errorMsg ??
-          (stillListed
-            ? "Menu item permanently delete was submitted, but the item is still listed. Joomla refuses to delete an item it could not trash first — check whether it is the menu's home item."
-            : "Menu item was deleted, but some of its child items are still listed")),
+          `Menu item permanent delete was submitted, but ${stillListed.length} of ${targets.length} item(s) are still listed: ${stillListed.join(", ")}. ` +
+            `Joomla refuses to delete an item it could not trash first — check whether one of them is the menu's home item.`),
       data: this.buildOperationData("menuItem", id, {
         title,
         menuType,
@@ -6390,8 +6394,8 @@ export class JoomlaClient {
           attempted: true,
           preflightVerified: true,
           subtreeChecked: true,
+          targets,
           stillListed,
-          orphanedChildren: orphanedChildren.map((row) => row.id),
           verified,
         },
       }),

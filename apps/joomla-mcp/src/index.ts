@@ -281,7 +281,7 @@ const tools = [
         state: { type: "string", description: "toggle: 1=publish, 0=unpublish", enum: ["0", "1"] },
         expectedTitle: { type: "string", description: "delete|destroy|toggle|checkin: safety check — refuse unless title matches" },
         expectedMenuType: { type: "string", description: "delete|destroy|toggle|checkin: safety check — refuse unless menu type matches" },
-        includeChildren: { type: "boolean", description: "destroy: Joomla deletes the whole subtree. The call is refused when the item has children unless this is true. Read the refusal message first — it names every item that would be destroyed." },
+        includeChildren: { type: "boolean", description: "destroy: permanently delete the item's children too. destroy is refused when the item has children unless this is set, because Joomla moves the children to the top level of the menu instead of deleting them — they then appear in the site navigation. The refusal message names every child." },
       },
       required: ["action"],
     },
