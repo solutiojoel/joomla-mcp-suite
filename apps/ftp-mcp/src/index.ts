@@ -56,7 +56,10 @@ const tools = [
   {
     name: "ftp_upload_file",
     description:
-      "Upload text content to a file on the FTP server. Target path must be within upload_path if configured. " +
+      "Upload text content to a file on the FTP server, replacing it entirely. Target path must be within upload_path if configured. " +
+      "USE ftp_append_file INSTEAD when the file already exists and you are adding to the end of it. This tool makes you " +
+      "resend every existing byte, and a character altered in that carried-over text ships silently — checking the part you " +
+      "meant to change never looks at it. " +
       "Returns the sha256 of the bytes written: when you assembled `content` from anything other than a direct copy, " +
       "compare that hash against the local file (sha256sum / Get-FileHash) to confirm the WHOLE file round-tripped. " +
       "Spot-checking a few lines of a whole-file write does not verify it.",
