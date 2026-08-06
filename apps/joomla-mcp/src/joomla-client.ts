@@ -1315,6 +1315,31 @@ export class JoomlaClient {
     return result;
   }
 
+  // Joomla <select> fields use short codes as values ("", "0", "1"), not the
+  // option's label text or an intended-meaning word like "hide". Joomla's own
+  // form validation accepts an override value that matches no real option —
+  // the save reports success and fieldsMatched can even read true, but the
+  // write has no effect. Check the override against the field's real
+  // options[].value before the POST so a bad value fails loud instead of
+  // silently no-op-ing (found on ticket #36012, stant-northport, 2026-08-06).
+  private findInvalidSelectOverride(
+    fields: AdminFieldDetails[],
+    overrides: Record<string, string>
+  ): { field: string; attemptedValue: string; validOptions: Array<{ value: string; label: string }> } | null {
+    const fieldsByName = new Map(fields.map((f) => [f.name, f]));
+    for (const [key, value] of Object.entries(overrides)) {
+      const field = fieldsByName.get(key);
+      if (!field || field.kind !== "select" || !Array.isArray(field.options)) continue;
+      if (field.options.some((option) => option.value === value)) continue;
+      return {
+        field: key,
+        attemptedValue: value,
+        validOptions: field.options.map((o) => ({ value: o.value, label: o.label })),
+      };
+    }
+    return null;
+  }
+
   private matchesVerificationField(key: string, actualValue: string, expectedValue: string): boolean {
     if (key === "jform[articletext]" || key === "jform[description]" || key === "jform[content]") {
       return this.isEquivalentRichText(actualValue, expectedValue);
@@ -1448,6 +1473,23 @@ export class JoomlaClient {
             },
           };
         }
+      }
+    }
+
+    if (data.overrides) {
+      const invalidSelect = this.findInvalidSelectOverride((form.fields || []) as AdminFieldDetails[], data.overrides);
+      if (invalidSelect) {
+        return {
+          success: false,
+          message: `Refusing to submit: "${invalidSelect.attemptedValue}" is not a valid option for ${invalidSelect.field}. ` +
+            `Valid values: ${invalidSelect.validOptions.map((o) => `"${o.value}"${o.label ? ` (${o.label})` : ""}`).join(", ") || "(select has no options)"}`,
+          data: {
+            path: pathOrUrl,
+            field: invalidSelect.field,
+            attemptedValue: invalidSelect.attemptedValue,
+            validOptions: invalidSelect.validOptions,
+          },
+        };
       }
     }
 
@@ -6744,6 +6786,12 @@ export class JoomlaClient {
 
     const page = await this._browser.newPage();
     try {
+      // The browser instance is pooled and reused across calls (see `this._browser`
+      // above), and Puppeteer pages share that browser's HTTP cache by default. A
+      // CSS/JS file re-fetched after an FTP re-upload could keep serving the old
+      // bytes here even though a plain curl saw the new ones. Disable the cache for
+      // this page so every screenshot/inspect call reflects what the server has now.
+      await page.setCacheEnabled(false);
       await page.setUserAgent(userAgentFor(url));
       await page.setViewport({ width, height });
 

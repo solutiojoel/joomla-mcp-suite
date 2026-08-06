@@ -509,19 +509,41 @@ function findRowIndex(rows, selector = {}) {
   throw new Error('Could not find matching row. Provide index, name, or location.');
 }
 
+// `name`/`location` on the action object double as the selector for edit/remove,
+// so row content is meant to live under `item`. Callers routinely put it directly
+// on the action instead (the field names are identical and nothing in the schema
+// stops it), which used to mean 'add' silently pushed an all-defaults blank row
+// and 'edit' silently kept the row unchanged. Accept both shapes: any recognized
+// content key (i.e. any key `defaults` declares) is read off the action itself,
+// then `item` is layered on top so the documented nested form still wins on conflict.
+function extractRowContent(action, defaults) {
+  const content = {};
+  for (const key of Object.keys(defaults || {})) {
+    if (Object.prototype.hasOwnProperty.call(action, key)) content[key] = action[key];
+  }
+  if (action.item && typeof action.item === 'object' && !Array.isArray(action.item)) {
+    Object.assign(content, action.item);
+  }
+  return content;
+}
+
 function applyListActions(rows, actions = [], defaults = {}) {
   const next = Array.isArray(rows) ? rows.map((row) => ({ ...row })) : [];
   for (const action of actions || []) {
     const type = action.action || 'edit';
     if (type === 'add') {
-      next.push({ ...defaults, ...(action.item || {}) });
+      const content = extractRowContent(action, defaults);
+      if (Object.keys(content).length === 0) {
+        throw new Error('Add action requires at least one row field (e.g. name, location), either directly on the action or nested under item.');
+      }
+      next.push({ ...defaults, ...content });
       continue;
     }
     const index = findRowIndex(next, action);
     if (type === 'remove') {
       next.splice(index, 1);
     } else if (type === 'edit') {
-      next[index] = { ...next[index], ...(action.item || {}) };
+      next[index] = { ...next[index], ...extractRowContent(action, defaults) };
     } else {
       throw new Error(`Unsupported list action: ${type}`);
     }
@@ -721,4 +743,5 @@ module.exports = {
   buildPageSharedHeadAssetEdits,
   ensureSiteDefaults,
   buildSiteDefaults,
+  applyListActions,
 };

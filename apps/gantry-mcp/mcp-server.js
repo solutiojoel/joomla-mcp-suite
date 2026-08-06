@@ -1628,7 +1628,7 @@ const LEGACY_TOOLS = [
         ...OUTLINE_FIELD,
         cssActions: {
           type: 'array',
-          description: 'CSS row actions. Select an existing row with index, name, or location. item can include name, location, inline, priority, extra.',
+          description: 'CSS row actions. For edit/remove, index/name/location select the existing row. For add, put the new row\'s fields (name, location, inline, priority, extra) either directly on the action or nested under item — both are accepted, and item wins if both are given.',
           items: {
             type: 'object',
             properties: {
@@ -1636,8 +1636,12 @@ const LEGACY_TOOLS = [
               index: { type: 'number' },
               name: { type: 'string' },
               location: { type: 'string' },
+              inline: { type: 'string' },
+              priority: { type: 'string' },
+              extra: { type: 'array', items: { type: 'object' } },
               item: {
                 type: 'object',
+                description: 'Optional nesting for the same fields (name, location, inline, priority, extra); overrides the flat ones above on conflict.',
                 properties: {
                   name: { type: 'string' },
                   location: { type: 'string' },
@@ -1652,7 +1656,7 @@ const LEGACY_TOOLS = [
         },
         javascriptActions: {
           type: 'array',
-          description: 'JavaScript row actions. Select an existing row with index, name, or location. item can include name, location, inline, in_footer, priority, extra.',
+          description: 'JavaScript row actions. For edit/remove, index/name/location select the existing row. For add, put the new row\'s fields (name, location, inline, in_footer, priority, extra) either directly on the action or nested under item — both are accepted, and item wins if both are given.',
           items: {
             type: 'object',
             properties: {
@@ -1660,8 +1664,13 @@ const LEGACY_TOOLS = [
               index: { type: 'number' },
               name: { type: 'string' },
               location: { type: 'string' },
+              inline: { type: 'string' },
+              in_footer: { type: 'string' },
+              priority: { type: 'string' },
+              extra: { type: 'array', items: { type: 'object' } },
               item: {
                 type: 'object',
+                description: 'Optional nesting for the same fields (name, location, inline, in_footer, priority, extra); overrides the flat ones above on conflict.',
                 properties: {
                   name: { type: 'string' },
                   location: { type: 'string' },
