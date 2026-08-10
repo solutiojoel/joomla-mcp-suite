@@ -20,6 +20,12 @@
  * 3. Category nesting. parseCategoryList derives each category's parent from the
  *    span.gtr tree prefix, and reports parent "" when the page renders no prefix at
  *    all rather than claiming everything is "Root".
+ * 4. User enabled state. parseUserList reads the row's block/unblock toggle, which Joomla
+ *    renders as onclick="return listItemTask('cb0','users.block')". A pattern that
+ *    expected "task=users.block" matched no row, so every account — including accounts
+ *    that had signed in that day — reported enabled:false. The list filter is the ground
+ *    truth here: filter[state]=0 returns only enabled users, =1 only blocked ones, so the
+ *    rows can be checked against Joomla's own answer without writing anything.
  */
 import "../../src/env.js";
 import { JoomlaClient } from "../../src/joomla-client.js";
@@ -117,6 +123,35 @@ async function main() {
         (nested.length ? `, e.g. "${nested[0].title}" parent="${nested[0].parent}"` : "")
       : `${rows.length} categories, no tree prefix on the page — parent reported as unknown, not "Root"`,
   );
+
+  // --- 4. user enabled state --------------------------------------------
+  // enabled is null only where the page renders no toggle — the logged-in account, or a
+  // row this operator cannot change. Any other null, and any row that disagrees with the
+  // state filter it came back under, is the regression.
+  type UserRow = { email?: string; enabled?: boolean | null; blocked?: boolean | null };
+  const enabledRows = ((await joomla.listUsers(undefined, undefined, "0")).data || []) as UserRow[];
+  const blockedRows = ((await joomla.listUsers(undefined, undefined, "1")).data || []) as UserRow[];
+
+  const misread = enabledRows.filter((u) => u.enabled === false);
+  const noToggle = enabledRows.filter((u) => u.enabled === null);
+  check(
+    "enabled users read as enabled",
+    misread.length === 0 && enabledRows.some((u) => u.enabled === true),
+    `${enabledRows.length} enabled row(s): ${enabledRows.filter((u) => u.enabled === true).length} true, ${misread.length} misread as disabled, ${noToggle.length} no toggle`,
+  );
+
+  check(
+    "blocked users read as blocked",
+    blockedRows.every((u) => u.enabled === false),
+    blockedRows.length
+      ? `${blockedRows.length} blocked row(s), ${blockedRows.filter((u) => u.enabled === false).length} correct`
+      : "no blocked users on this site — direction not covered here",
+  );
+
+  const inconsistent = [...enabledRows, ...blockedRows].filter((u) =>
+    u.enabled === null ? u.blocked !== null : u.blocked !== !u.enabled,
+  );
+  check("enabled and blocked agree", inconsistent.length === 0, `${inconsistent.length} row(s) disagree`);
 
   console.log(failures ? `\n${failures} check(s) failed` : "\nAll checks passed");
   if (failures) process.exit(1);

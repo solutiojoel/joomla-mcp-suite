@@ -649,7 +649,7 @@ const tools = [
         groups: {
           type: "array",
           items: { type: "string" },
-          description: "Group IDs. Required for create; replaces all groups on update. Grade groups: 15=1st, 16=2nd, 17=3rd, 18=4th, 19=5th, 20=6th, 33=7th, 23=8th, 14=Kinder, 26=Pre-K, 12=Basic Editor.",
+          description: "Group IDs. Required for create. On update this REPLACES every group the user has — read the user with action: \"get\" first, then send the full intended list, or you strip the rest (including backend access). Group IDs differ per site: call joomla_group { action: \"list\" } on the active site and use those IDs. Never carry IDs over from another site.",
         },
         block: { type: "boolean", description: "true=block/create-blocked, false=enable." },
         requireReset: { type: "boolean", description: "Require password reset on next login. Defaults to true on create. Pass false to disable." },

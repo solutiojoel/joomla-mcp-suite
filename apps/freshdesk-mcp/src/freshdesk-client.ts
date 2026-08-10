@@ -216,6 +216,14 @@ function escapeInlineMarkdown(text: string): string {
     .replace(/_(.+?)_/g, "<em>$1</em>");
 }
 
+// Every note Shannon writes carries this attribution line. It lives here, next to the
+// converter, because the order of the two is load-bearing: addNote converts the caller's
+// body FIRST and prepends the attribution after. A caller that prepends it itself hands
+// markdownToHtmlIfNeeded a body that already opens with "<p", so the HTML check below
+// passes and the caller's markdown ships to Freshdesk verbatim — literal "**bold**" and
+// "- " bullets in the note. Do not prepend this at a call site.
+export const NOTE_ATTRIBUTION = "<p>— Shannon (AI Assistant)</p>";
+
 export function markdownToHtmlIfNeeded(body: string): string {
   if (/<(p|ul|ol|li|div|br|strong|em|b|i|h[1-6])\b/i.test(body)) return body;
 
@@ -387,7 +395,7 @@ export class FreshdeskClient {
     isPrivate = true
   ): Promise<FreshdeskResponse> {
     try {
-      const htmlBody = markdownToHtmlIfNeeded(body);
+      const htmlBody = `${NOTE_ATTRIBUTION}${markdownToHtmlIfNeeded(body)}`;
       const { data } = await this.axios.post(
         `/tickets/${ticketId}/notes`,
         { body: htmlBody, private: isPrivate, notify_emails: [] }

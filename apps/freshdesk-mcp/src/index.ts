@@ -101,7 +101,7 @@ const tools = [
       type: "object",
       properties: {
         ticket_id: { type: "number" },
-        body: { type: "string", description: "Note body. Real HTML is passed through as-is. Plain text/markdown (blank-line paragraphs, \"- \" or \"1. \" lists, **bold**, *italic*) is auto-converted to HTML — Freshdesk itself does not render markdown. Describe what was checked and changed." },
+        body: { type: "string", description: "Note body, in HTML or markdown. Real HTML passes through as-is. Plain text/markdown (blank-line paragraphs, \"- \" or \"1. \" lists, **bold**, *italic*) is converted to HTML first, then the attribution line is added — Freshdesk itself does not render markdown. Do not add the attribution line yourself. Describe what was checked and changed." },
       },
       required: ["ticket_id", "body"],
     },
@@ -186,8 +186,9 @@ export function buildServer(): Server {
           const ticketId = args?.ticket_id as number | undefined;
           const body = args?.body as string | undefined;
           if (!ticketId || !body) return { content: [{ type: "text", text: "Error: ticket_id and body are required" }], isError: true };
-          const taggedBody = `<p>— Shannon (AI Assistant)</p>${body}`;
-          const result = await freshdesk.addNote(ticketId, taggedBody, true);
+          // Pass the caller's body through untouched. addNote converts markdown first,
+          // then adds the "— Shannon (AI Assistant)" line — see NOTE_ATTRIBUTION.
+          const result = await freshdesk.addNote(ticketId, body, true);
           return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
         }
 

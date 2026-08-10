@@ -78,7 +78,10 @@
       "mcp__joomla-suite__write_site_notes",
       "mcp__joomla-suite__agent_audit",
       "mcp__joomla-suite__reload_tools",
-      "mcp__joomla-suite__knowledge_universal"
+      "mcp__joomla-suite__knowledge_universal",
+      "mcp__joomla-suite__knowledge_self_improving",
+      "Bash(git log *)",
+      "mcp__joomla-suite__mcp_target_info"
     ],
     "additionalDirectories": [
       "\\tmp",

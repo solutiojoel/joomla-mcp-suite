@@ -7562,9 +7562,14 @@ export class JoomlaClient {
     const url = this.getAdminUrl(`index.php?${params.toString()}`);
     const { html } = await this.getPage(url);
     const users = this.parseUserList(html);
+    const unknownState = users.filter((u) => u.enabled === null).length;
     return {
       success: true,
-      message: `Found ${users.length} user(s)${search ? `, search="${search}"` : ""}`,
+      message:
+        `Found ${users.length} user(s)${search ? `, search="${search}"` : ""}` +
+        (unknownState
+          ? `. ${unknownState} row(s) render no block/unblock toggle (the logged-in account, or a row this operator cannot change), so enabled/blocked is null there — read those with action: "get".`
+          : ""),
       data: users,
     };
   }
@@ -7582,17 +7587,26 @@ export class JoomlaClient {
       const name = nameLink.text().trim();
       if (!name) return;
       const username = $cells.eq(2).text().trim();
-      // Enabled = the row's toggle link offers "task=users.block" — you can only block
-      // an account that isn't already blocked. The icon-class check this used to OR in
-      // (icon-unpublish) was backwards: that class marks the row's CURRENT disabled-state
-      // icon, not an available action, so it made every blocked user read as enabled.
-      // Task-string only, since it can't collide with the unblock task's "users.unblock".
-      const enabled = /task=users\.block\b/.test(rowHtml);
+      // Enabled = the row's toggle offers the block action; a blocked row offers unblock
+      // instead. Joomla 3 renders that toggle as
+      // onclick="return listItemTask('cb0','users.block')" — the markup carries no
+      // "task=", so the previous /task=users\.block\b/ pattern matched nothing and read
+      // every account, active or not, as disabled. Match the same row shape
+      // extractPublishedState reads for publish state.
+      const offersBlock = /listItemTask\('[^']+','users\.block'\)/.test(rowHtml);
+      const offersUnblock = /listItemTask\('[^']+','users\.unblock'\)/.test(rowHtml);
+      // Some rows carry no toggle at all — Joomla renders a plain state icon for the
+      // logged-in account and for rows the operator cannot change. The icon class alone
+      // is not a safe signal here: com_users points it at the CURRENT state, while
+      // com_content points it at the available action. Report null instead of guessing,
+      // and let the caller read that row with getUser.
+      const enabled = offersBlock ? true : offersUnblock ? false : null;
+      const blocked = enabled === null ? null : !enabled;
       const groupsText = $cells.eq(5).text().trim();
       const email = $cells.eq(6).text().trim();
       const lastVisitDate = $cells.eq(7).text().trim();
       const registrationDate = $cells.eq(8).text().trim();
-      users.push({ id: cid, name, username, enabled, groups: groupsText, email, lastVisitDate, registrationDate });
+      users.push({ id: cid, name, username, enabled, blocked, groups: groupsText, email, lastVisitDate, registrationDate });
     });
     return users;
   }
