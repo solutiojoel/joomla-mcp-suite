@@ -132,6 +132,7 @@ Every doc below is a Knowledge Gateway row. Call `read_agent_doc(doc: "<name>")`
 | `workflows/content-build-workflow` | Content build — Content Schematic → written pages on the skeleton (Phase 5). Open-question resolution, deterministic fetch, batched writer, auto-apply. |
 | `workflows/content-agent` | Standard article text, SEO, and publish state edits |
 | `workflows/custom-page-agent` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
+| `workflows/page-animation` | Animation and hover baseline for a custom page — scroll reveal, hover states, reduced-motion and no-JS fallbacks. Read it with `workflows/custom-page-agent` on every custom page build. |
 | `workflows/gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |
 | `workflows/gantry-particle-map` | Gantry particle settings, rendered HTML anchors, and particle selection/CSS targeting map |
 | `workflows/gantry-visual-qa` | Visual QA loop after any layout or CSS work — screenshots, checklist, CSS iteration |
@@ -146,6 +147,7 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 
 | Doc name | Topic |
 |----------|-------|
+| `kb/tinymce-safe-html` | Article HTML rules that survive a human TinyMCE save — empty-element bug, CSS `::before` icons, growable lists. Read with `workflows/custom-page-agent`. |
 | `kb/staff-grid` | Staff/team grid using contentarray particle |
 | `kb/staff-pages` | All staff page layouts (grid, teacherbox, table, contact form) |
 | `kb/teacher-pages` | Teacher/classroom pages with sidebar nav and user groups |
@@ -234,15 +236,3 @@ Agent access is still controlled by `docs.allow` in each agent's JSON config
 No server code change or container rebuild is needed for a doc change. Two migration scripts
 remain in `scripts/archive/` for reference: `migrate-docs-to-gateway.js` and
 `migrate-site-notes-to-gateway.js`, both idempotent, both with `--dry-run` and `--verify-only`.
-
-## graphify
-
-**Only applies when the `graphify` CLI is installed and `graphify-out/graph.json` exists.** Not every team machine has graphify set up — if either is missing, skip this section entirely and never attempt to run `graphify`.
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"`. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
