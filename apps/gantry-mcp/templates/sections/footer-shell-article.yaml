@@ -28,7 +28,9 @@ grids:
               columns: "1"
             display:
               pagination_buttons: ""
-              title: { enabled: "hide" }
+              # "" is the value that hides the article title. "hide" does not —
+              # the title renders anyway. Do not "correct" this to "hide".
+              title: { enabled: "" }
             sort:
               orderby: ordering
               ordering: ASC

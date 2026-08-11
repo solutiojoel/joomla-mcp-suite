@@ -51,7 +51,11 @@ attributes:
   title:
     type: string
     default: ""
-    description: Optional heading shown above the article list.
+    description: >
+      Gantry admin/layout-manager label only — it does NOT render to the
+      frontend. For a visible on-page heading above the article list, add a
+      separate custom particle with literal <h2> HTML in its own block.
+      Verified 2026-08-11 on strose-hampton.
 
   enabled:
     type: integer
@@ -145,8 +149,12 @@ attributes:
               enabled:
                 type: string
                 default: ""
-                options: ["", "show", "hide"]
-                description: Show or hide the article title.
+                options: ["", "show"]
+                description: >
+                  "" = hide the article title, "show" = render it.
+                  "hide" is NOT a working value — the admin select offers it,
+                  but a particle saved with "hide" still renders the title.
+                  Use "" to hide. Verified 2026-08-11 on strose-hampton.
           text:
             type: object
             description: Intro text display settings.
@@ -243,7 +251,7 @@ examples:
           total: "1"
           columns: "1"
         display:
-          title: { enabled: "hide" }
+          title: { enabled: "" }   # "" hides the title; "hide" does not
           pagination_buttons: ""
         sort:
           orderby: ordering

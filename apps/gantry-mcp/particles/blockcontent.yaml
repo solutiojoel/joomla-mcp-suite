@@ -50,8 +50,10 @@ attributes:
     type: string
     default: ""
     description: >
-      Section heading shown above sub-items. Leave blank to suppress
-      the heading entirely. Most parish site quicklinks have no title.
+      Gantry admin/layout-manager label only — it does NOT render to the
+      frontend. For a visible section heading above the sub-items, add a
+      separate custom particle with literal <h2> HTML in its own block.
+      Verified 2026-08-11 on strose-hampton.
 
   class:
     type: string
