@@ -11,6 +11,8 @@ export interface MenuBuilderArgs {
   spec_filename?: string;
   /** Gantry outline ID applied to every created menu item unless the spec item sets its own. */
   default_template_style_id?: string;
+  /** Identity (email) of the triggering user — resolved to their personal Claude token. */
+  triggered_by?: string;
 }
 
 export interface MenuBuilderResult {
@@ -202,6 +204,7 @@ export async function runMenuBuilder(
 
   const result = await runSubAgent({
     agentName: "menu-builder",
+    triggeredBy: args.triggered_by,
     systemPrompt: config.instructions,
     userMessage: promptLines.join("\n"),
     mcpServers: { joomla: joomlaServer },

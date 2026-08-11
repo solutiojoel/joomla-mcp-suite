@@ -348,6 +348,7 @@ function buildServer(): Server {
             menu_text: request.params.arguments?.menu_text as string | undefined,
             pdf_path: request.params.arguments?.pdf_path as string | undefined,
             source_filename: request.params.arguments?.source_filename as string | undefined,
+            triggered_by: request.params.arguments?.triggered_by as string | undefined,
           },
           async (progress, total) => {
             iterCount = progress;
@@ -371,6 +372,7 @@ function buildServer(): Server {
             spec: request.params.arguments?.spec as Record<string, unknown>,
             spec_filename: request.params.arguments?.spec_filename as string | undefined,
             default_template_style_id: request.params.arguments?.default_template_style_id as string | undefined,
+            triggered_by: request.params.arguments?.triggered_by as string | undefined,
           },
           async (progress, total) => {
             iterCount = progress;
@@ -457,6 +459,7 @@ function buildServer(): Server {
             schematic: request.params.arguments?.schematic as ContentSchematic | undefined,
             schematic_filename: request.params.arguments?.schematic_filename as string | undefined,
             source_filename: request.params.arguments?.source_filename as string | undefined,
+            triggered_by: request.params.arguments?.triggered_by as string | undefined,
           },
           async (progress, total) => {
             iterCount = progress;
@@ -570,6 +573,7 @@ function buildServer(): Server {
               batch_size: request.params.arguments?.batch_size as number | undefined,
               node_keys: request.params.arguments?.node_keys as string[] | undefined,
               dry_run,
+              triggered_by: request.params.arguments?.triggered_by as string | undefined,
             },
             sendProgress,
             (event) => {

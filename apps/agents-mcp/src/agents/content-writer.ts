@@ -29,6 +29,8 @@ export interface ContentWriterArgs {
   node_keys?: string[];
   /** Report the batch plan without running the sub-agent. */
   dry_run?: boolean;
+  /** Identity (email) of the triggering user — resolved to their personal Claude token. */
+  triggered_by?: string;
 }
 
 export interface BatchFailure {
@@ -247,6 +249,7 @@ export async function runContentWriter(
     await sendProgress(b, totalBatches);
     const run = await runSubAgent({
       agentName: "content-writer",
+      triggeredBy: args.triggered_by,
       systemPrompt: config.instructions,
       userMessage: promptLines.join("\n"),
       mcpServers: { joomla: joomlaServer },

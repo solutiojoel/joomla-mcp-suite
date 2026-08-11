@@ -1948,6 +1948,10 @@ function buildServer(sessionCtx) {
     }
 
     const dsArgs = { ...args, [ds.inject]: activeSiteUrl };
+    // Sub-agent jobs carry the triggering user's identity (never a raw token):
+    // agents-mcp resolves it to the user's personal Claude token so their runs
+    // bill to their own subscription. Overwrites any caller-supplied value.
+    if (ds.label === 'agents-mcp') dsArgs.triggered_by = user;
     try {
       return await callDownstream(ds, name, dsArgs, relayProgress);
     } catch (err) {

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createRunLog } from "@solutio/logging";
+import { resolveClaudeEnv } from "./credentials.js";
 
 /**
  * Sub-agent runtime on the Claude Agent SDK.
@@ -36,6 +37,13 @@ export interface RunSubAgentParams {
   builtinTools?: string[];
   model?: string;
   maxTurns?: number;
+  /**
+   * Identity (email) of the user who triggered this job — injected by the
+   * orchestrator. When set and the user has a personal Claude token in
+   * config/runtime-users.json, the run bills to their own subscription;
+   * otherwise the shared credential in this process's environment applies.
+   */
+  triggeredBy?: string;
   cwd?: string;
   onIteration?: (current: number, max: number) => Promise<void>;
   /** Called for each notable event — lets the CLI runner stream the run live. */
@@ -72,6 +80,10 @@ export async function runSubAgent(params: RunSubAgentParams): Promise<RunSubAgen
     }
   };
 
+  // Per-job credential resolution: personal token (triggering user) →
+  // shared CLAUDE_CODE_OAUTH_TOKEN → ANTHROPIC_API_KEY.
+  const { env, credentialSource } = resolveClaudeEnv(params.triggeredBy);
+
   await runLog.append({
     type: "start",
     runId,
@@ -79,6 +91,8 @@ export async function runSubAgent(params: RunSubAgentParams): Promise<RunSubAgen
     model: params.model,
     maxTurns,
     userMessage: params.userMessage,
+    triggeredBy: params.triggeredBy,
+    credentialSource,
   });
 
   // Cross-process stop signal: the dashboard writes logs/<runId>.stop and this
@@ -115,6 +129,7 @@ export async function runSubAgent(params: RunSubAgentParams): Promise<RunSubAgen
       permissionMode: "bypassPermissions",
       allowDangerouslySkipPermissions: true,
       abortController,
+      env,
     },
   });
 

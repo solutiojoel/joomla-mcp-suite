@@ -13,6 +13,8 @@ export interface MenuInterpreterArgs {
    *  directly, keeping the document out of the caller's context window. */
   pdf_path?: string;
   source_filename?: string;
+  /** Identity (email) of the triggering user — resolved to their personal Claude token. */
+  triggered_by?: string;
 }
 
 export interface MenuInterpreterResult {
@@ -39,7 +41,7 @@ export async function runMenuInterpreter(
   sendProgress: (progress: number, total: number) => Promise<void>,
   onEvent?: (event: SubAgentEvent) => void
 ): Promise<MenuInterpreterResult> {
-  const { site_url, menu_text, pdf_path, source_filename } = args;
+  const { site_url, menu_text, pdf_path, source_filename, triggered_by } = args;
 
   if (!menu_text && !pdf_path) {
     return { success: false, error: "Provide either menu_text or pdf_path" };
@@ -111,6 +113,7 @@ export async function runMenuInterpreter(
 
   const result = await runSubAgent({
     agentName: "menu-interpreter",
+    triggeredBy: triggered_by,
     systemPrompt: config.instructions,
     userMessage: promptLines.join("\n"),
     mcpServers: { joomla: joomlaServer },

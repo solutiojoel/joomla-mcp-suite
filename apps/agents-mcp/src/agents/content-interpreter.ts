@@ -25,6 +25,8 @@ export interface ContentInterpreterArgs {
   /** Workspace filename to persist to. Defaults to {site-slug}-content-schematic.json. */
   schematic_filename?: string;
   source_filename?: string;
+  /** Identity (email) of the triggering user — resolved to their personal Claude token. */
+  triggered_by?: string;
 }
 
 export interface ContentInterpreterResult {
@@ -131,6 +133,7 @@ export async function runContentInterpreter(
 
   const result = await runSubAgent({
     agentName: "content-interpreter",
+    triggeredBy: args.triggered_by,
     systemPrompt: config.instructions,
     userMessage: promptLines.join("\n"),
     mcpServers: { joomla: joomlaServer },
