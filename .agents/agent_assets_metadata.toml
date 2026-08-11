@@ -1,0 +1,9 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "WkxFwWsXgrCS0CHiCq1Lr"
+uri = "file://docs/firewall-traffic-schematic.md"
+type = "text"
+title = "Firewall Traffic Schematic"
+description = "Request fingerprints, source-IP caveats, and recommended firewall/throttling rules for MCP traffic to your servers."
