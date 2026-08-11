@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import crypto from "node:crypto";
+import { decryptSecret } from "@solutio/env";
 
 /**
  * Per-job Claude credential resolution.
@@ -26,27 +26,6 @@ const USERS_PATH =
 
 interface RuntimeUserRecord {
   claudeOauthToken?: string;
-}
-
-function encKey(): Buffer {
-  const raw = process.env.RUNTIME_ENC_KEY;
-  if (!raw) {
-    throw new Error("RUNTIME_ENC_KEY is not set (required for encrypted claudeOauthToken values)");
-  }
-  return crypto.createHash("sha256").update(raw).digest();
-}
-
-/** Decrypt an enc:v1:<iv>:<ct>:<tag> value (base64url). Plaintext passes through. */
-function decryptSecret(value: string): string {
-  if (!value.startsWith("enc:")) return value; // plaintext passthrough (discouraged)
-  const parts = value.split(":");
-  if (parts.length !== 5 || parts[1] !== "v1") {
-    throw new Error("Unrecognized encrypted-secret format");
-  }
-  const [, , ivB64, ctB64, tagB64] = parts;
-  const decipher = crypto.createDecipheriv("aes-256-gcm", encKey(), Buffer.from(ivB64, "base64url"));
-  decipher.setAuthTag(Buffer.from(tagB64, "base64url"));
-  return Buffer.concat([decipher.update(Buffer.from(ctB64, "base64url")), decipher.final()]).toString("utf8");
 }
 
 /** The decrypted personal Claude token for an identity, or null (fail-open). */

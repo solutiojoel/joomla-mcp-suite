@@ -10,10 +10,9 @@
 //       → enc:v1:… value for the "claudeOauthToken" field
 //         (requires RUNTIME_ENC_KEY in the environment or a .env file)
 //
-// Encryption format must stay in sync with apps/agent-runtime/src/users.ts:
-// AES-256-GCM, key = sha256(RUNTIME_ENC_KEY), enc:v1:<iv>:<ct>:<tag> base64url.
+// Encryption is handled by @solutio/env (packages/env) — the single source of
+// truth for the AES-256-GCM enc:v1 format.
 
-const crypto = require('crypto');
 const path = require('path');
 
 function loadDotenv() {
@@ -36,17 +35,12 @@ if (command === 'hash-password') {
   console.log(bcrypt.hashSync(value, 12));
 } else if (command === 'encrypt-token') {
   loadDotenv();
-  const raw = process.env.RUNTIME_ENC_KEY;
-  if (!raw) {
+  if (!process.env.RUNTIME_ENC_KEY) {
     console.error('RUNTIME_ENC_KEY is not set (add it to .env or the environment first).');
     process.exit(1);
   }
-  const key = crypto.createHash('sha256').update(raw).digest();
-  const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-  const ct = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
-  const tag = cipher.getAuthTag();
-  console.log(`enc:v1:${iv.toString('base64url')}:${ct.toString('base64url')}:${tag.toString('base64url')}`);
+  const { encryptSecret } = require('@solutio/env');
+  console.log(encryptSecret(value));
 } else {
   console.error(`Unknown command: ${command} (expected hash-password or encrypt-token)`);
   process.exit(1);

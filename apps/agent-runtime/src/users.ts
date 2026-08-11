@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
+import { encryptSecret, decryptSecret } from "@solutio/env";
 
 /**
  * config/runtime-users.json — dashboard user registry, keyed by email.
@@ -91,43 +91,7 @@ export function publicUser(user: RuntimeUser): PublicUser {
   };
 }
 
-// ── Secret encryption (AES-256-GCM, format enc:v1:<iv>:<ct>:<tag>, base64url) ──
-// Keep in sync with scripts/runtime-user-tool.js.
-
-function encKey(): Buffer {
-  const raw = process.env.RUNTIME_ENC_KEY;
-  if (!raw) {
-    throw new Error("RUNTIME_ENC_KEY is not set (required for encrypted claudeOauthToken values)");
-  }
-  return crypto.createHash("sha256").update(raw).digest();
-}
-
-export function encryptSecret(plain: string): string {
-  const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv("aes-256-gcm", encKey(), iv);
-  const ct = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
-  const tag = cipher.getAuthTag();
-  return `enc:v1:${iv.toString("base64url")}:${ct.toString("base64url")}:${tag.toString("base64url")}`;
-}
-
-export function decryptSecret(value: string): string {
-  if (!value.startsWith("enc:")) return value; // plaintext passthrough (discouraged)
-  const parts = value.split(":");
-  if (parts.length !== 5 || parts[1] !== "v1") {
-    throw new Error("Unrecognized encrypted-secret format");
-  }
-  const [, , ivB64, ctB64, tagB64] = parts;
-  const decipher = crypto.createDecipheriv(
-    "aes-256-gcm",
-    encKey(),
-    Buffer.from(ivB64, "base64url")
-  );
-  decipher.setAuthTag(Buffer.from(tagB64, "base64url"));
-  return Buffer.concat([
-    decipher.update(Buffer.from(ctB64, "base64url")),
-    decipher.final(),
-  ]).toString("utf8");
-}
+export { encryptSecret, decryptSecret } from "@solutio/env";
 
 /** Decrypted personal Claude token, or null if the user has none. */
 export function claudeTokenFor(user: RuntimeUser): string | null {
