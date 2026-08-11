@@ -32,6 +32,10 @@ interface RunSummary {
   toolErrors: number;
   lastActivityAt: string;
   error?: string;
+  /** Email of the teammate who triggered the run; absent for direct MCP/CLI runs. */
+  triggeredBy?: string;
+  /** "personal" (teammate's own subscription) or "shared" (shared credential). */
+  credentialSource: string;
 }
 
 interface TimelineEvent {
@@ -130,6 +134,9 @@ function summarizeRun(file: string): RunSummary | null {
     toolErrors,
     lastActivityAt,
     error: errorLine?.error as string | undefined,
+    triggeredBy: start.triggeredBy as string | undefined,
+    // Older logs predate credentialSource; without an identity they used the shared credential.
+    credentialSource: (start.credentialSource as string | undefined) ?? "shared",
   };
 }
 
@@ -143,7 +150,7 @@ function runDetail(file: string): { summary: RunSummary | null; timeline: Timeli
       timeline.push({
         ts,
         kind: "meta",
-        text: `Started — agent=${l.agentName ?? "unknown"} model=${l.model ?? "?"} maxTurns=${l.maxTurns ?? "?"}\n\n${l.userMessage ?? ""}`,
+        text: `Started — agent=${l.agentName ?? "unknown"} model=${l.model ?? "?"} maxTurns=${l.maxTurns ?? "?"} triggeredBy=${l.triggeredBy ?? "(none)"} credentials=${l.credentialSource ?? "shared"}\n\n${l.userMessage ?? ""}`,
       });
     } else if (l.type === "end") {
       timeline.push({
@@ -248,6 +255,10 @@ const HTML = `<!doctype html>
   .badge.stalled { background: #9e6a0333; color: #d29922; }
   .badge.stopping { background: #9e6a0333; color: #d29922; }
   .badge.stopped { background: #6e768133; color: #8b949e; }
+  .cred { font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 600; }
+  .cred.personal { background: #8957e533; color: #a371f7; }
+  .cred.shared { background: #6e768133; color: #8b949e; }
+  .who { font-size: 12px; opacity: 0.75; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
   .stopbtn { background: #f8514922; border: 1px solid #f85149; color: #f85149; border-radius: 6px; padding: 2px 10px; font-size: 11px; cursor: pointer; }
   .stopbtn:hover { background: #f8514944; }
   .stopbtn:disabled { opacity: 0.5; cursor: default; }
@@ -298,6 +309,11 @@ function fmtTime(iso) {
 }
 function esc(s) {
   return String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+function credBadge(r) {
+  const src = r.credentialSource === "personal" ? "personal" : "shared";
+  return '<span class="cred ' + src + '">' + src + '</span>';
 }
 
 function stopButtonHtml(summary) {
@@ -360,6 +376,7 @@ function render() {
           </span>
         </div>
         <div class="meta-line">\${fmtTime(r.startedAt)} · \${fmtDuration(r.durationMs)} · \${r.toolCalls} tool call(s)\${r.toolErrors ? " · " + r.toolErrors + " tool error(s)" : ""}\${r.turns ? " · " + r.turns + " turn(s)" : ""}</div>
+        <div class="who">\${credBadge(r)}<span>\${esc(r.triggeredBy || "no identity (direct MCP/CLI)")}</span></div>
         <div class="preview">\${esc(r.userMessagePreview)}</div>
         <div class="runid">\${r.runId}</div>
       </div>\`
@@ -396,7 +413,8 @@ async function loadDetail(runId, silent) {
   const kindClass = (ev) => ev.kind + (ev.kind === "tool_result" && ev.isError ? " err" : "");
   detail.innerHTML =
     '<h2>' + esc(summary.agentName) + ' <span class="badge ' + summary.status + '">' + summary.status + '</span> ' + stopButtonHtml(summary) + '</h2>' +
-    '<div class="meta-line">' + summary.runId + ' · model=' + esc(summary.model) + ' · ' + fmtDuration(summary.durationMs) + '</div><br/>' +
+    '<div class="meta-line">' + summary.runId + ' · model=' + esc(summary.model) + ' · ' + fmtDuration(summary.durationMs) + '</div>' +
+    '<div class="who">' + credBadge(summary) + '<span>' + esc(summary.triggeredBy || "no identity (direct MCP/CLI)") + '</span></div><br/>' +
     timeline
       .map(
         (ev) => \`
