@@ -1557,10 +1557,26 @@ function replaceRepeater(structure, particleId, repeaterPath, newArray) {
 function editBlockAttrs(structure, blockId, patch) {
   // findNode returns { node, parent, index } — the node itself is .node.
   const found = findNode(structure, blockId);
-  if (!found) throw new Error(`Block "${blockId}" not found`);
-  const node = found.node;
+  if (!found) {
+    throw new Error(
+      `Block "${blockId}" not found. Pass the block's own id, or the id of the node it wraps ` +
+      `(a section id such as "mainbar" works, and is the supported way to resize the ` +
+      `sidebar/mainbar/aside blocks).`
+    );
+  }
+  let node = found.node;
+  // Accept the id of the node the block WRAPS, not only the block's own id.
+  // The blocks around main-container sections carry generated ids a caller has
+  // no handy way to read, so resizing sidebar / mainbar / aside failed with
+  // "Block not found" and had no supported path at all.
   if (node.type !== 'block') {
-    throw new Error(`Node "${blockId}" is not a block (type: ${node.type})`);
+    if (found.parent && found.parent.type === 'block') {
+      node = found.parent;
+    } else {
+      throw new Error(
+        `Node "${blockId}" is type "${node.type}", not a block, and is not wrapped by one.`
+      );
+    }
   }
   node.attributes = { ...(node.attributes || {}), ...patch };
   return structure;

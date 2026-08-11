@@ -133,7 +133,10 @@ const tools = [
   },
   {
     name: "joomla_article",
-    description: "Manage articles. action: list|get|create|update|delete|checkin.",
+    description:
+      "Manage articles. action: list|get|create|update|delete|checkin. " +
+      "list reports a warning in its message whenever Joomla applied a different filter than the one requested — " +
+      "read the message, and treat the rows as incomplete when it does.",
     inputSchema: {
       type: "object",
       properties: {
@@ -155,7 +158,8 @@ const tools = [
         featuredImage: { type: "string", description: "Used in listing/blog views" },
         featuredImageAlt: { type: "string" },
         search: { type: "string", description: "Server-side title filter (list only)" },
-        category_id: { type: "string", description: "Filter by category ID (list only)" },
+        category_id: { type: "string", description: "Filter by category ID (list only). Exact by default — Joomla's own filter also returns subcategories, so those rows are trimmed out." },
+        includeSubcategories: { type: "boolean", description: "list only: keep articles from subcategories of category_id (default false)." },
         limit: { type: "number", description: "Per page, default 200 (list only)" },
         page: { type: "number", description: "Page number, 1-based (list only)" },
         expectedTitle: { type: "string", description: "Safety check: refuse unless title matches (delete/checkin)" },
@@ -376,7 +380,11 @@ const tools = [
   },
   {
     name: "joomla_media",
-    description: "Manage Joomla Media Manager files and folders. action: list|create_folder|upload|delete|rename|move. Destructive actions are dry-run by default — pass confirm:true to execute.",
+    description:
+      "Manage Joomla Media Manager IMAGES and folders. action: list|create_folder|upload|delete|rename|move. " +
+      "Destructive actions are dry-run by default — pass confirm:true to execute. " +
+      "After an upload, use the returned data.src as the article image path. Never build a path from data.uploadedPath: " +
+      "it is relative to the media root, which is not the web root and is not images/ on every site (some sites serve from images/stories/).",
     inputSchema: {
       type: "object",
       properties: {
@@ -399,14 +407,22 @@ const tools = [
   },
   {
     name: "joomla_docman_document",
-    description: "Manage DOCman documents. action: list|get|create|update|delete.",
+    description:
+      "Manage DOCman documents. action: list|get|create|update|delete. " +
+      "list reads every document on the site, then filters by search/categoryId and paginates — " +
+      "use it to find a document by name on sites with hundreds of documents. " +
+      "get accepts either id or slug.",
     inputSchema: {
       type: "object",
       properties: {
         action: { type: "string", enum: ["list", "get", "create", "update", "delete"], description: "Operation to perform." },
-        id: { type: "string", description: "Document ID (required for get/update/delete)." },
+        id: { type: "string", description: "Document ID (required for update/delete; get takes id or slug)." },
+        slug: { type: "string", description: "Document slug — an alternative to id for get." },
+        search: { type: "string", description: "list: case-insensitive substring match on title or slug." },
+        page: { type: "number", description: "list: 1-based page number (default 1)." },
+        limit: { type: "number", description: "list: rows per page, 1-200 (default 50)." },
         title: { type: "string", description: "Required for create." },
-        categoryId: { type: "string", description: "Required for create." },
+        categoryId: { type: "string", description: "Required for create. On list, filters to this category exactly." },
         storagePath: { type: "string", description: "Relative path within DOCman files (e.g. 'bulletin/MyFile.pdf')" },
         storageType: { type: "string", description: "Defaults to 'file'" },
         description: { type: "string" },
@@ -772,6 +788,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
               (args?.limit as number) || undefined,
               (args?.page as number) || undefined,
               (args?.search as string) || undefined,
+              (args?.includeSubcategories as boolean) || false,
             );
             break;
           case "get":
@@ -1387,12 +1404,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
         let result: JoomlaResponse;
         switch (action) {
           case "list": {
-            result = await joomla.listDocmanDocuments();
+            result = await joomla.listDocmanDocuments({
+              search: args?.search !== undefined ? String(args.search) : undefined,
+              categoryId: args?.categoryId !== undefined ? String(args.categoryId) : undefined,
+              page: args?.page !== undefined ? Number(args.page) : undefined,
+              limit: args?.limit !== undefined ? Number(args.limit) : undefined,
+            });
             break;
           }
           case "get": {
-            if (!args?.id) return { content: [{ type: "text", text: "Error: id is required for get" }], isError: true };
-            result = await joomla.getDocmanDocument(String(args.id));
+            if (!args?.id && !args?.slug) return { content: [{ type: "text", text: "Error: id or slug is required for get" }], isError: true };
+            result = args?.id
+              ? await joomla.getDocmanDocument(String(args.id))
+              : await joomla.getDocmanDocumentBySlug(String(args.slug));
             break;
           }
           case "create": {

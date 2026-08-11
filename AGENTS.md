@@ -158,6 +158,7 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 | `kb/css-table-classes` | CSS table classes, button classes, site fonts/colors |
 | `kb/site-config` | Site title, meta, timezone, reCAPTCHA, GA4, Webmaster Verification |
 | `kb/business-directory` | Business Directory & Sponsorship passcode setup |
+| `kb/docman-documents` | DOCman documents — find by search/slug, the required `COM_DOCMAN_VIEW_DOCUMENT` Itemid anchor for article links, and how to open a DOCman files root for uploads |
 | `kb/user-accounts` | User account creation, groups, and category permissions |
 | `kb/quick-galleries` | QuickGallery setup and broken gallery link fix |
 | `kb/ministry-platform-widget` | Ministry Platform event/opportunity widget integration |

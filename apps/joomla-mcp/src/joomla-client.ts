@@ -1767,9 +1767,13 @@ export class JoomlaClient {
     const params = new URLSearchParams({
       "option": "com_content",
       "view": "articles",
-      "filter[search]": title,
       "limit": "50",
     });
+    // Reset every session-persisted filter before applying the search. Sending
+    // only filter[search] left category/published/access inherited from an
+    // earlier call, so a title that does exist could come back as "not found".
+    for (const f of JoomlaClient.ARTICLE_LIST_FILTERS) params.set(`filter[${f}]`, "");
+    params.set("filter[search]", title);
     const url = this.getAdminUrl(`index.php?${params.toString()}`);
     const { html } = await this.getPage(url);
     return this.parseArticleList(html);
@@ -2540,14 +2544,113 @@ export class JoomlaClient {
     };
   }
 
-  async listDocmanDocuments(): Promise<JoomlaResponse> {
-    const result = await this.docmanApiCall("index.php?option=com_docman&view=documents&format=json");
-    if (!result.success) return { success: false, message: result.error || "Failed to list documents" };
-    const total = (result.meta as Record<string, unknown>)?.total ?? result.entities.length;
+  /**
+   * Page through the DOCman documents JSON API and collect every row.
+   *
+   * A single response is capped (30 rows on the sites measured) and the
+   * endpoint ignored the filter params sent to it, so `list` could only ever
+   * see the first 30 of 161 documents and had no way to reach the rest.
+   * Paging here makes the whole set available; the caller filters and
+   * paginates in memory, which works whether or not the remote honors params.
+   */
+  private async fetchAllDocmanDocuments(
+    maxRows = 2000
+  ): Promise<
+    | { ok: true; rows: Array<Record<string, unknown>>; siteTotal: number; complete: boolean }
+    | { ok: false; error: string }
+  > {
+    const pageSize = 100;
+    const rows: Array<Record<string, unknown>> = [];
+    const seenFirstIds = new Set<string>();
+    let siteTotal: number | null = null;
+
+    for (let offset = 0; offset < maxRows; offset += pageSize) {
+      const result = await this.docmanApiCall(
+        `index.php?option=com_docman&view=documents&format=json&limit=${pageSize}&offset=${offset}`
+      );
+      if (!result.success) return { ok: false, error: result.error || "Failed to list documents" };
+      if (siteTotal === null) {
+        const t = Number((result.meta as Record<string, unknown>)?.total);
+        siteTotal = Number.isFinite(t) ? t : null;
+      }
+      if (result.entities.length === 0) break;
+
+      // Guard: when the endpoint ignores `offset`, every page repeats page one.
+      // Stop instead of looping forever over the same rows.
+      const firstId = String(result.entities[0]?.id ?? "");
+      if (offset > 0 && seenFirstIds.has(firstId)) break;
+      seenFirstIds.add(firstId);
+
+      rows.push(...result.entities);
+      if (siteTotal !== null && rows.length >= siteTotal) break;
+      if (result.entities.length < pageSize) break;
+    }
+
+    // De-duplicate by id in case two pages overlapped.
+    const byId = new Map<string, Record<string, unknown>>();
+    for (const r of rows) byId.set(String(r.id), r);
+    const unique = [...byId.values()];
+    return {
+      ok: true,
+      rows: unique,
+      siteTotal: siteTotal ?? unique.length,
+      complete: siteTotal === null || unique.length >= siteTotal,
+    };
+  }
+
+  async listDocmanDocuments(opts: {
+    search?: string;
+    categoryId?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<JoomlaResponse> {
+    const fetched = await this.fetchAllDocmanDocuments();
+    if (!fetched.ok) return { success: false, message: fetched.error };
+
+    const search = (opts.search || "").trim().toLowerCase();
+    const categoryId = (opts.categoryId || "").trim();
+
+    let rows = fetched.rows;
+    if (categoryId) rows = rows.filter(r => String(r.docman_category_id ?? "") === categoryId);
+    if (search) {
+      rows = rows.filter(r =>
+        String(r.title ?? "").toLowerCase().includes(search) ||
+        String(r.slug ?? "").toLowerCase().includes(search)
+      );
+    }
+
+    const matched = rows.length;
+    const limit = Math.max(1, Math.min(Number(opts.limit) || 50, 200));
+    const page = Math.max(1, Number(opts.page) || 1);
+    const pageCount = Math.max(1, Math.ceil(matched / limit));
+    const pageRows = rows.slice((page - 1) * limit, (page - 1) * limit + limit);
+
+    const filters: string[] = [];
+    if (search) filters.push(`search="${opts.search}"`);
+    if (categoryId) filters.push(`categoryId=${categoryId}`);
+    const filterText = filters.length ? ` matching ${filters.join(" + ")}` : "";
+
+    let message =
+      `${matched} document(s)${filterText} of ${fetched.siteTotal} on the site — ` +
+      `page ${page} of ${pageCount}, showing ${pageRows.length}.`;
+    if (!fetched.complete) {
+      message +=
+        ` WARNING: only ${fetched.rows.length} of ${fetched.siteTotal} rows could be read from the DOCman API, ` +
+        `so this result may be missing documents.`;
+    }
+
     return {
       success: true,
-      message: `Found ${total} document(s)`,
-      data: result.entities.map(e => this.mapDocmanDocument(e)),
+      message,
+      data: {
+        documents: pageRows.map(e => this.mapDocmanDocument(e)),
+        matched,
+        siteTotal: fetched.siteTotal,
+        page,
+        pageCount,
+        limit,
+        complete: fetched.complete,
+      },
     };
   }
 
@@ -2567,6 +2670,37 @@ export class JoomlaClient {
     if (!result.success) return { success: false, message: result.error || "Failed to get document" };
     if (!result.entity) return { success: false, message: "Document not found" };
     return { success: true, message: "OK", data: this.mapDocmanDocument(result.entity) };
+  }
+
+  /**
+   * Get one document by slug. The DOCman JSON API resolves a document by
+   * numeric id only, and an agent that starts from a page URL or a link has
+   * the slug, not the id — so resolve the slug against the full listing first.
+   */
+  async getDocmanDocumentBySlug(slug: string): Promise<JoomlaResponse> {
+    const wanted = slug.trim().toLowerCase();
+    if (!wanted) return { success: false, message: "slug is required" };
+
+    const fetched = await this.fetchAllDocmanDocuments();
+    if (!fetched.ok) return { success: false, message: fetched.error };
+
+    const exact = fetched.rows.find(r => String(r.slug ?? "").toLowerCase() === wanted);
+    if (exact) return this.getDocmanDocument(String(exact.id));
+
+    const near = fetched.rows
+      .filter(r =>
+        String(r.slug ?? "").toLowerCase().includes(wanted) ||
+        String(r.title ?? "").toLowerCase().includes(wanted)
+      )
+      .slice(0, 10)
+      .map(r => `${r.id}: ${r.title} (${r.slug})`);
+
+    return {
+      success: false,
+      message: near.length
+        ? `No document has slug "${slug}". Closest matches — ${near.join("; ")}.`
+        : `No document has slug "${slug}" (searched ${fetched.rows.length} of ${fetched.siteTotal} documents).`,
+    };
   }
 
   async getDocmanCategory(id: string): Promise<JoomlaResponse> {
@@ -2837,7 +2971,42 @@ export class JoomlaClient {
 
   // ==================== ARTICLES ====================
 
-  async listArticles(categoryId?: string, state?: string, limit?: number, page?: number, search?: string): Promise<JoomlaResponse> {
+  /**
+   * Every com_content list filter Joomla persists in the admin session.
+   * Resetting only some of them left the rest inherited from an earlier call,
+   * so an "unfiltered" list could still be narrowed by something no caller set.
+   */
+  private static readonly ARTICLE_LIST_FILTERS = [
+    "search", "published", "category_id", "access", "author_id", "tag", "level", "language",
+  ] as const;
+
+  /**
+   * Read back the filter controls the list page actually rendered.
+   *
+   * Joomla answers with the filters it applied, not the ones that were asked
+   * for — a session filter that failed to reset silently narrows the result and
+   * still returns success. Comparing rendered against requested turns that into
+   * a reported mismatch.
+   */
+  private parseArticleListFilters(html: string): { search: string; categoryId: string; published: string } {
+    const $ = this.$c(html);
+    const selected = (name: string) =>
+      ($(`select[name='filter[${name}]'] option[selected]`).attr("value") ?? "").trim();
+    return {
+      search: ($("input[name='filter[search]']").attr("value") ?? "").trim(),
+      categoryId: selected("category_id"),
+      published: selected("published"),
+    };
+  }
+
+  async listArticles(
+    categoryId?: string,
+    state?: string,
+    limit?: number,
+    page?: number,
+    search?: string,
+    includeSubcategories = false
+  ): Promise<JoomlaResponse> {
     const effectiveLimit = Math.min(limit ?? 200, 500);
     const effectivePage = Math.max(page ?? 1, 1);
     const limitStart = (effectivePage - 1) * effectiveLimit;
@@ -2852,15 +3021,62 @@ export class JoomlaClient {
     // whatever the previous call set. Sending "" is what actually resets the filter.
     // Omitting them made an unfiltered list silently return the previous call's
     // filtered rows with success:true — a wrong answer no caller could detect.
+    for (const f of JoomlaClient.ARTICLE_LIST_FILTERS) params.set(`filter[${f}]`, "");
     params.set("filter[category_id]", categoryId ?? "");
     params.set("filter[published]", state ?? "");
     params.set("filter[search]", search ?? "");
+
     const url = this.getAdminUrl(`index.php?${params.toString()}`);
     const { html } = await this.getPage(url);
-    const articles = this.parseArticleList(html);
+    const parsed = this.parseArticleList(html);
+    const warnings: string[] = [];
+
+    // Joomla's category filter is subcategory-inclusive: filtering by a parent
+    // also returns every article in its descendants. That read as an
+    // over-inclusive filter (asking for category 47 also returned category 51).
+    // Trim to the exact category unless the caller opts in to descendants.
+    let articles = parsed;
+    if (categoryId && !includeSubcategories) {
+      const unparsed = parsed.filter(a => !a.categoryId).length;
+      articles = parsed.filter(a => !a.categoryId || a.categoryId === categoryId);
+      const dropped = parsed.length - articles.length;
+      if (dropped > 0) {
+        warnings.push(
+          `${dropped} article(s) in subcategories of ${categoryId} were removed — ` +
+          `Joomla's category filter includes descendants. Pass includeSubcategories:true to keep them.`
+        );
+      }
+      if (unparsed > 0) {
+        warnings.push(`${unparsed} row(s) had no readable category link and were kept unchecked — confirm with action:"get".`);
+      }
+    }
+
+    // Verify Joomla applied the filters that were asked for, not leftovers.
+    const applied = this.parseArticleListFilters(html);
+    const mismatches: string[] = [];
+    if (applied.search !== (search ?? "")) mismatches.push(`search="${applied.search}" (asked for "${search ?? ""}")`);
+    if (applied.categoryId !== (categoryId ?? "")) mismatches.push(`category_id="${applied.categoryId}" (asked for "${categoryId ?? ""}")`);
+    if (applied.published !== (state ?? "")) mismatches.push(`published="${applied.published}" (asked for "${state ?? ""}")`);
+    if (mismatches.length) {
+      warnings.push(
+        `Joomla applied different filters than requested — ${mismatches.join(", ")}. ` +
+        `A stale session filter is narrowing this result; treat the rows as incomplete.`
+      );
+    }
+
+    const pageMatch = html.match(/Page\s+(\d+)\s+of\s+(\d+)/i);
+    const pageCount = pageMatch ? Number(pageMatch[2]) : null;
+    if (pageCount && pageCount > effectivePage) {
+      warnings.push(`Page ${effectivePage} of ${pageCount} — pass page:${effectivePage + 1} for the rest.`);
+    }
+
     return {
-      success: true,
-      message: `Found ${articles.length} articles (page ${effectivePage}, limit ${effectiveLimit}${search ? `, search="${search}"` : ""})`,
+      success: mismatches.length === 0,
+      message:
+        `Found ${articles.length} articles (page ${effectivePage}${pageCount ? ` of ${pageCount}` : ""}, ` +
+        `limit ${effectiveLimit}${search ? `, search="${search}"` : ""}` +
+        `${categoryId ? `, category=${categoryId}${includeSubcategories ? " +subcategories" : " exact"}` : ""})` +
+        (warnings.length ? ` — ${warnings.join(" ")}` : ""),
       data: articles,
       html,
     };
@@ -4712,33 +4928,60 @@ export class JoomlaClient {
   }
 
   async checkInModule(id: string, options: { expectedTitle?: string; expectedModuleType?: string } = {}): Promise<JoomlaResponse> {
-    const before = await this.fetchModuleForm(id);
-    const moduleBefore = (before.data || {}) as Record<string, unknown>;
-    const title = String(moduleBefore.title || "");
-    const moduleType = String(moduleBefore.moduleType || "");
-    if (!before.success) {
-      return { success: false, message: `Refusing to check in module ${id} because the current target could not be verified` };
+    // Verify the target from the LIST row, never from the edit form.
+    //
+    // The old preflight called fetchModuleForm, which opens task=module.edit.
+    // Joomla refuses that on a record another user holds, so the guard failed
+    // on exactly the modules that need a check-in: every locked module was
+    // refused with "the current target could not be verified", and the tool
+    // could never release a lock. The list row carries title, type and the
+    // checked-out flag, and reading it locks nothing.
+    let clientId = "0";
+    let listUrl = this.getModulesListUrl(`id:${id}`, clientId);
+    let page = await this.getPage(listUrl);
+    let listedBefore = this.parseModuleList(page.html).find((entry) => entry.id === id);
+    if (!listedBefore) {
+      // Administrator modules live under client_id=1 and never appear in the
+      // site list, so fall back rather than report the module as missing.
+      clientId = "1";
+      listUrl = this.getModulesListUrl(`id:${id}`, clientId);
+      page = await this.getPage(listUrl);
+      listedBefore = this.parseModuleList(page.html).find((entry) => entry.id === id);
+    }
+    if (!listedBefore) {
+      return { success: false, message: `Refusing to check in module ${id}: no module with that id is listed on this site` };
     }
 
-    const token = before.token ?? null;
+    const title = String(listedBefore.title || "");
+    const moduleType = String(listedBefore.moduleType || "");
+
+    const token = page.token ?? null;
     if (!token) {
       return { success: false, message: "Failed to extract CSRF token" };
     }
-    // Release before the guards below, not after: the read above checked the module out,
-    // and a check-in tool that refuses must not itself leave the record locked.
-    await this.quickCheckInModule(id, token);
     if (options.expectedTitle && title !== options.expectedTitle) {
       return { success: false, message: `Refusing to check in module ${id}: expected title ${options.expectedTitle}, found ${title}` };
     }
     if (options.expectedModuleType && moduleType !== options.expectedModuleType) {
       return { success: false, message: `Refusing to check in module ${id}: expected moduleType ${options.expectedModuleType}, found ${moduleType}` };
     }
+    if (listedBefore.checkedOut !== "1") {
+      return {
+        success: true,
+        message: `Module ${id} ("${title}") is not checked out — nothing to release`,
+        data: this.buildOperationData("module", id, {
+          title,
+          state: String(listedBefore.state || ""),
+          moduleType,
+          verification: { attempted: true, preflightVerified: true, alreadyCheckedIn: true, checkedOutCleared: true },
+        }),
+      };
+    }
 
     // Address exactly this row. The old code verified against listModules(), which caps
     // at 200 rows — a module outside that window read as "not listed" and reported a
     // false negative even though the check-in had worked. The preflight above supplies
     // the token, and the task's redirect target is this same single-row list.
-    const listUrl = this.getModulesListUrl(`id:${id}`, String(moduleBefore.clientId || "0"));
     const result = await this.postPage(listUrl, {
       task: "modules.checkin",
       "cid[]": id,
@@ -7266,6 +7509,39 @@ export class JoomlaClient {
 
   // ==================== MEDIA UPLOAD ====================
 
+  /**
+   * Resolve the public src of a file that was just uploaded to the media manager.
+   *
+   * `uploadedPath` is relative to the Joomla media root, which is NOT the web
+   * root and is not `images/` on every site — stpat-bluff serves its media root
+   * from `images/stories/`. Writing `uploadedPath` straight into an article src
+   * produced broken images, so upload now reports the same absolute src that
+   * `mediaList` already returns for every file it lists.
+   *
+   * Doubles as verification: a resolved src means the file is really in the
+   * listing, not just that the POST returned no error alert.
+   */
+  private async resolveMediaSrc(
+    targetFolder: string,
+    fileName: string
+  ): Promise<{ src: string | null; url: string | null; found: boolean }> {
+    try {
+      const listing = await this.mediaList(targetFolder || "index.php?option=com_media");
+      const files = (((listing.data || {}) as Record<string, unknown>).files || []) as Array<{ name?: string; src?: string }>;
+      const match = files.find(
+        (f) => decodeURIComponent(f.src || "").split("/").pop() === fileName || f.name === fileName
+      );
+      const src = match?.src || null;
+      if (!src) return { src: null, url: null, found: false };
+      const url = src.startsWith("http")
+        ? src
+        : `${this.getBaseUrl().replace(/\/$/, "")}/${src.replace(/^\//, "")}`;
+      return { src, url, found: true };
+    } catch {
+      return { src: null, url: null, found: false };
+    }
+  }
+
   async uploadMediaFile(data: {
     fileUrl?: string;
     base64Content?: string;
@@ -7354,10 +7630,24 @@ export class JoomlaClient {
     const uploadedPath = targetFolder ? `${targetFolder}/${fileName}` : fileName;
 
     if (isSuccess) {
+      const resolved = await this.resolveMediaSrc(targetFolder, fileName);
       return {
         success: true,
-        message: `Uploaded: ${uploadedPath}`,
-        data: { fileName, fileSize: fileContent.length, targetFolder, uploadedPath },
+        message: resolved.src
+          ? `Uploaded: ${uploadedPath} — use src "${resolved.src}" in article HTML`
+          : `Uploaded: ${uploadedPath}, but the public src could not be resolved from the media listing. ` +
+            `Do NOT use uploadedPath as an image src — call joomla_media list on folder "${targetFolder}" and read src.`,
+        data: {
+          fileName,
+          fileSize: fileContent.length,
+          targetFolder,
+          uploadedPath,
+          // The value to paste into an article. uploadedPath is media-root
+          // relative and is not a usable web path on every site.
+          src: resolved.src,
+          url: resolved.url,
+          verifiedInListing: resolved.found,
+        },
       };
     }
 
@@ -7419,10 +7709,28 @@ export class JoomlaClient {
     const files = (listingData.files || []) as Array<Record<string, unknown>>;
     const uploaded = files.some((f) => String(f.name || "") === fileName);
 
+    // Same reasoning as the com_media path: report the src an article can use,
+    // not the media-root-relative path.
+    const resolved = uploaded ? await this.resolveMediaSrc(cleanFolder, fileName) : { src: null, url: null, found: false };
+
     return {
       success: uploaded,
-      message: uploaded ? `Uploaded via FILEman: ${uploadedPath}` : "FILEman upload submitted, but the file was not verified in the listing",
-      data: { fileName, fileSize: fileContent.length, targetFolder: cleanFolder, uploadedPath, route: "fileman" },
+      message: uploaded
+        ? resolved.src
+          ? `Uploaded via FILEman: ${uploadedPath} — use src "${resolved.src}" in article HTML`
+          : `Uploaded via FILEman: ${uploadedPath}, but the public src could not be resolved. ` +
+            `Do NOT use uploadedPath as an image src — call joomla_media list on folder "${cleanFolder}" and read src.`
+        : "FILEman upload submitted, but the file was not verified in the listing",
+      data: {
+        fileName,
+        fileSize: fileContent.length,
+        targetFolder: cleanFolder,
+        uploadedPath,
+        src: resolved.src,
+        url: resolved.url,
+        verifiedInListing: uploaded,
+        route: "fileman",
+      },
     };
   }
 
@@ -7519,26 +7827,48 @@ export class JoomlaClient {
       return { success: false, message: "Failed to extract CSRF token from checkin page" };
     }
 
-    const formData: FormDataMap = {
-      task: "checkin.checkin",
-      [token.name]: token.value,
-      boxchecked: String(items.length),
-      "cid[]": items.map((i) => i.table),
-    };
+    // com_checkin has only a default controller, so its task is the bare
+    // "checkin". The hardcoded "checkin.checkin" addressed a controller that
+    // does not exist: Joomla accepted the POST, checked nothing in, and the
+    // verify pass reported the same counts as the dry run with no error to
+    // read. Prefer the task the page's own toolbar button emits, then fall
+    // back through both spellings and report which one worked.
+    const toolbarTask = html.match(/submitbutton\(\s*['"]([A-Za-z0-9_.]*checkin[A-Za-z0-9_.]*)['"]/i)?.[1];
+    const candidateTasks = ["checkin", "checkin.checkin"];
+    if (toolbarTask) candidateTasks.unshift(toolbarTask);
+    const tasks = candidateTasks.filter((t, i, a) => a.indexOf(t) === i);
 
-    await this.postPage(url, formData);
+    let remaining = items.length;
+    let taskUsed: string | null = null;
+    const attempts: Array<{ task: string; remainingTables: number }> = [];
 
-    // Verify by re-loading the checkin page
-    const verify = await this.getPage(url);
-    const remaining = this.$c(verify.html)("input[name='cid[]']").length;
+    for (const task of tasks) {
+      const formData: FormDataMap = {
+        task,
+        [token.name]: token.value,
+        boxchecked: String(items.length),
+        "cid[]": items.map((i) => i.table),
+      };
+      await this.postPage(url, formData);
+
+      // Verify by re-loading the checkin page.
+      const verify = await this.getPage(url);
+      remaining = this.$c(verify.html)("input[name='cid[]']").length;
+      attempts.push({ task, remainingTables: remaining });
+      taskUsed = task;
+      if (remaining === 0) break;
+    }
+
     const success = remaining === 0;
 
     return {
       success,
       message: success
-        ? `Checked in ${totalRows || "all"} locked row(s) across ${items.length} table(s)`
-        : `Check-in submitted, but ${remaining} table(s) still report locked rows`,
-      data: { checkedIn: items, remainingCount: remaining },
+        ? `Checked in ${totalRows || "all"} locked row(s) across ${items.length} table(s) (task=${taskUsed})`
+        : `Check-in did not release the locks — ${remaining} table(s) still report locked rows after trying ${tasks.join(", ")}. ` +
+          `Joomla accepted the POST but changed nothing, which usually means the logged-in account lacks Global Check-in rights. ` +
+          `A human must run System → Global Check-in in the Joomla admin.`,
+      data: { checkedIn: items, remainingCount: remaining, taskUsed, attempts },
     };
   }
 

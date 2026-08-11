@@ -2487,7 +2487,10 @@
     "host": "yale.solutiosoftware.net",
     "port": 990,
     "web_root": "/lincoln/stm-lincoln",
-    "upload_path": "/lincoln/stm-lincoln/pub"
+    "upload_path": "/lincoln/stm-lincoln/pub",
+    "write_paths": [
+      "/lincoln/stm-lincoln/content/documents"
+    ]
   },
   "stm-man.solutiosoftware.com": {
     "host": "underhill.solutiosoftware.net",

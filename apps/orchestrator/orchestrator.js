@@ -105,6 +105,29 @@ function downstreamMode(label) {
   return 'http';
 }
 
+// Opt-in downstreams: agents-mcp is not launched by scripts/start-all.sh, so
+// including it by default made every boot log a spurious "could not load
+// agents-mcp tools" warning. It joins the routing table when explicitly
+// configured — via config/downstreams.json or an AGENTS_MCP_URL env var — or
+// when a probe finds it answering on its registry port (see
+// attachOptInDownstreams, run at boot and on every reload_tools).
+const OPT_IN_LABELS = ['agents-mcp'];
+
+function makeDownstream(d) {
+  const prefix = dsRegistry.envPrefix(d.label);
+  const def = dsRegistry.getDownstreamDef(d.label);
+  const url = process.env[`${prefix}_URL`] || d.url ||
+    (def ? `http://${DOWNSTREAM_HOST}:${def.port}/mcp` : undefined);
+  return {
+    label: d.label,
+    url,
+    token: process.env[`${prefix}_TOKEN`] || d.token || '',
+    inject: d.inject !== undefined ? d.inject : dsRegistry.getInject(d.label),
+    mode: downstreamMode(d.label), // 'http' | 'inproc' | 'stdio'
+    toolMap: new Map(), // tool name → tool definition
+  };
+}
+
 function loadDownstreams() {
   const cfgPath = path.join(__dirname, '..', '..', 'config', 'downstreams.json');
   let defs = null;
@@ -117,32 +140,13 @@ function loadDownstreams() {
   }
   // Default to the shared registry (label + inject); URLs derive from the
   // registry port on DOWNSTREAM_HOST unless a config/env override is present.
-  //
-  // Opt-in downstreams: agents-mcp is not launched by scripts/start-all.sh, so
-  // including it by default made every boot log a spurious "could not load
-  // agents-mcp tools" warning. It only joins the routing table when explicitly
-  // configured — via config/downstreams.json or an AGENTS_MCP_URL env var.
-  const OPT_IN_LABELS = ['agents-mcp'];
   if (!defs) {
     defs = dsRegistry.DOWNSTREAM_DEFAULTS
       .filter(d => !OPT_IN_LABELS.includes(d.label) || process.env[`${dsRegistry.envPrefix(d.label)}_URL`])
       .map(d => ({ label: d.label, inject: d.inject }));
   }
 
-  return defs.map(d => {
-    const prefix = dsRegistry.envPrefix(d.label);
-    const def = dsRegistry.getDownstreamDef(d.label);
-    const url = process.env[`${prefix}_URL`] || d.url ||
-      (def ? `http://${DOWNSTREAM_HOST}:${def.port}/mcp` : undefined);
-    return {
-      label: d.label,
-      url,
-      token: process.env[`${prefix}_TOKEN`] || d.token || '',
-      inject: d.inject !== undefined ? d.inject : dsRegistry.getInject(d.label),
-      mode: downstreamMode(d.label), // 'http' | 'inproc' | 'stdio'
-      toolMap: new Map(), // tool name → tool definition
-    };
-  });
+  return defs.map(makeDownstream);
 }
 
 const DOWNSTREAMS = loadDownstreams();
@@ -551,8 +555,72 @@ async function loadToolMap(ds) {
   }
 }
 
+/**
+ * Probe every opt-in downstream that is not already in the routing table and
+ * attach the ones that answer.
+ *
+ * DOWNSTREAMS is built once at boot, so without this an opt-in server started
+ * mid-session could never become reachable: reload_tools kept iterating a list
+ * the server was never in, and agent_audit (agents-mcp only) stayed missing no
+ * matter what was done downstream. Returns one report line per opt-in label so
+ * the caller can name the ones still absent instead of silently omitting them.
+ */
+async function attachOptInDownstreams() {
+  const report = [];
+  const attached = new Set();
+  for (const label of OPT_IN_LABELS) {
+    if (getDownstream(label)) continue; // already routed
+    const def = dsRegistry.getDownstreamDef(label);
+    // DOWNSTREAM_HOST defaults to host.docker.internal, which does not resolve
+    // on a developer machine — probing only that address would find nothing and
+    // the server would still have to be pinned with an explicit *_URL. Try
+    // loopback too, since that is where a hand-started opt-in server listens.
+    const candidates = [];
+    const override = process.env[`${dsRegistry.envPrefix(label)}_URL`];
+    if (override) candidates.push(override);
+    if (def) {
+      candidates.push(`http://${DOWNSTREAM_HOST}:${def.port}/mcp`);
+      candidates.push(`http://127.0.0.1:${def.port}/mcp`);
+    }
+    const urls = candidates.filter((u, i, a) => u && a.indexOf(u) === i);
+
+    let joined = false;
+    for (const url of urls) {
+      const ds = { ...makeDownstream({ label }), url, toolMap: new Map() };
+      try {
+        await loadToolMap(ds);
+        ds.lastToolError = null;
+        ds.lastToolLoadAt = new Date().toISOString();
+        DOWNSTREAMS.push(ds);
+        attached.add(label);
+        joined = true;
+        report.push(`${label}: attached at ${url} (${ds.toolMap.size} tools)`);
+        log(`opt-in downstream ${label} attached at ${url}`);
+        break;
+      } catch {
+        // Not an error — an opt-in server is allowed to be off. Try the next
+        // address before giving up.
+      }
+    }
+    if (!joined) {
+      // Report the gap so it is visible without a netstat.
+      report.push(`${label}: not answering at ${urls.join(' or ')} — start it, then call reload_tools`);
+    }
+  }
+  return { report, attached };
+}
+
+/** Opt-in labels with no routing-table entry, for status reporting. */
+function unattachedOptInLabels() {
+  return OPT_IN_LABELS.filter(label => !getDownstream(label));
+}
+
 async function loadDownstreamTools() {
-  await Promise.all(DOWNSTREAMS.map(ds =>
+  // Probe opt-in servers first. A label attached by this call is already
+  // loaded, so it is skipped below rather than fetched twice. A label attached
+  // by an earlier call is not in `attached` and refreshes normally.
+  const { report: optInReport, attached } = await attachOptInDownstreams();
+  await Promise.all(DOWNSTREAMS.filter(ds => !attached.has(ds.label)).map(ds =>
     loadToolMap(ds)
       .then(() => { ds.lastToolError = null; ds.lastToolLoadAt = new Date().toISOString(); })
       .catch(err => {
@@ -560,6 +628,7 @@ async function loadDownstreamTools() {
         log(`WARNING: could not load ${ds.label} tools - ${err.message}`);
       })
   ));
+  return optInReport;
 }
 
 /** Find the registry entry that owns a tool name (first match wins).
@@ -1253,8 +1322,12 @@ function buildServer(sessionCtx) {
       {
         name: 'reload_tools',
         description:
-          'Reload the tool lists from both joomla-mcp and gantry-mcp. ' +
-          'Call this if tools appear missing or if either downstream server was restarted.',
+          'Reload the tool lists from every downstream server. ' +
+          'Call this if tools appear missing or if a downstream server was restarted. ' +
+          'Also probes opt-in downstreams (agents-mcp, which owns agent_audit) and attaches ' +
+          'any that are now answering, so starting one mid-session then calling this is enough ' +
+          'to make its tools callable. The response names every opt-in server and says whether ' +
+          'it attached or is still not running.',
         inputSchema: { type: 'object', properties: {} },
       },
       {
@@ -1606,7 +1679,7 @@ function buildServer(sessionCtx) {
     }
 
     if (name === 'reload_tools') {
-      await loadDownstreamTools();
+      const optIn = await loadDownstreamTools();
       // Docs are gateway-hosted and cached; drop the snapshot so a doc edited in
       // the gateway shows up without waiting out the TTL.
       gatewayStore.invalidateDocs();
@@ -1617,10 +1690,14 @@ function buildServer(sessionCtx) {
       // This only reaches the client because capabilities.tools.listChanged is
       // declared at construction — without it the notification is dropped.
       notifyToolListChanged('reload_tools');
+      // Name every opt-in downstream explicitly. Omitting an absent one made a
+      // missing agent_audit look like a tool-name problem rather than a server
+      // that was never started.
+      const optInText = optIn.length ? ` Opt-in downstreams - ${optIn.join('; ')}.` : '';
       return {
         content: [{
           type: 'text',
-          text: `Tools reloaded - ${counts}. User registry: ${usersRegistry ? `${Object.keys(usersRegistry).length} token(s) from ${usersRegistrySource}` : 'not found (single-token fallback)'}.`,
+          text: `Tools reloaded - ${counts}.${optInText} User registry: ${usersRegistry ? `${Object.keys(usersRegistry).length} token(s) from ${usersRegistrySource}` : 'not found (single-token fallback)'}.`,
         }],
       };
     }
@@ -1646,6 +1723,10 @@ function buildServer(sessionCtx) {
             error: svc.error ?? null,
           };
         }),
+        // Opt-in servers with no routing-table entry. Listed so a tool that
+        // lives only on one of them reads as "server not started", not
+        // "tool does not exist".
+        optInNotAttached: unattachedOptInLabels(),
         generatedAt: new Date().toISOString(),
       };
       return { content: [{ type: 'text', text: JSON.stringify(info, null, 2) }] };

@@ -305,19 +305,34 @@ function compileMainContainer(mainDef, context) {
   let sections = [];
 
   if (mainDef.layout === 'sidebar-main-aside') {
-    // 55/30/15 split
-    const sidebarSections  = compileSectionGroup(mainDef.sidebar,  context);
-    const mainbarSections  = compileSectionGroup(mainDef.mainbar,  context);
-    const asideSections    = compileSectionGroup(mainDef.aside,    context);
+    // Block widths default to the 55/30/15 school split but are overridable
+    // per group: `size` under main_container.sidebar/mainbar/aside used to be
+    // read by nothing, so a design asking for 2/83/15 silently compiled to
+    // 55/30/15 and had to be corrected with CSS afterwards.
+    const size = (def, fallback) => {
+      const n = parseFloat(def && def.size);
+      return Number.isFinite(n) ? n : fallback;
+    };
+    const sidebarSize = size(mainDef.sidebar, 55);
+    const mainbarSize = size(mainDef.mainbar, 30);
+    const asideSize   = size(mainDef.aside,   15);
+
+    // Default the section ids and type to what real outlines carry. Generated
+    // ids and a non-"section" type made assertSectionsPreserved read sidebar /
+    // mainbar / aside as deleted on every real save, while the dry run — which
+    // did not run the check at all — reported the same YAML as clean.
+    const sidebarSections = compileSectionGroup(mainContainerDefaults(mainDef.sidebar, 'sidebar'), context);
+    const mainbarSections = compileSectionGroup(mainContainerDefaults(mainDef.mainbar, 'mainbar'), context);
+    const asideSections   = compileSectionGroup(mainContainerDefaults(mainDef.aside,   'aside'),   context);
 
     const mainGrid = makeGrid([
-      makeBlock(55, '', wrapInSection(sidebarSections, mainDef.sidebar, 'aside')),
-      makeBlock(30, '', wrapInSection(mainbarSections, mainDef.mainbar, 'main')),
-      makeBlock(15, '', wrapInSection(asideSections,   mainDef.aside,   'aside')),
+      makeBlock(sidebarSize, '', wrapInSection(sidebarSections, mainDef.sidebar, 'aside')),
+      makeBlock(mainbarSize, '', wrapInSection(mainbarSections, mainDef.mainbar, 'main')),
+      makeBlock(asideSize,   '', wrapInSection(asideSections,   mainDef.aside,   'aside')),
     ]);
 
     return {
-      id:       genId('container'),
+      id:       'container-main',
       type:     'container',
       subtype:  'container',
       layout:   true,
@@ -332,6 +347,22 @@ function compileMainContainer(mainDef, context) {
     sections.push(compileSection(sectionDef, context));
   }
   return buildContainerFromSections('container-main', 'Container-main', sections);
+}
+
+/**
+ * Give a main_container group the id and type real outlines carry.
+ *
+ * An omitted group still compiles to its named empty section, so the outline
+ * keeps sidebar / mainbar / aside rather than gaining a generated wrapper id
+ * that the section-preservation check reads as a deletion.
+ */
+function mainContainerDefaults(def, defaultId) {
+  const base = def || {};
+  return {
+    ...base,
+    section_id: base.section_id || base.id || defaultId,
+    type: base.type || 'section',
+  };
 }
 
 function compileSectionGroup(def, context) {
@@ -558,6 +589,71 @@ function compile(design, context) {
   };
 }
 
+/* ─── Particle settings traps ────────────────────────────────────────────── */
+
+// Values a particle accepts silently but that do not do what the Gantry admin
+// UI implies. `display.title.enabled: "hide"` is offered in the admin select
+// yet the title renders anyway — "" is the value that hides it. Nothing in the
+// stack rejected it, so a hand-written YAML shipped visible titles and cost a
+// screenshot cycle to find. Reject it here instead.
+const PARTICLE_VALUE_TRAPS = [
+  {
+    subtypes: ['contentarray', 'blockcontent'],
+    path: ['display', 'title', 'enabled'],
+    bad: 'hide',
+    message:
+      'does not hide the title — the title renders anyway. Use "" to hide it, or "show" to show it.',
+  },
+];
+
+function readPath(obj, path) {
+  let cur = obj;
+  for (const key of path) {
+    if (!cur || typeof cur !== 'object') return undefined;
+    cur = cur[key];
+  }
+  return cur;
+}
+
+/**
+ * Check one particle's settings for values the stack accepts but that behave
+ * differently from what the admin UI implies.
+ *
+ * @param {string} subtype  particle subtype, e.g. 'contentarray'
+ * @param {object} attributes  the particle's settings object
+ * @returns {string[]} error strings; empty means clean
+ */
+function checkParticleSettings(subtype, attributes) {
+  if (!subtype || !attributes || typeof attributes !== 'object') return [];
+  const out = [];
+  for (const trap of PARTICLE_VALUE_TRAPS) {
+    if (!trap.subtypes.includes(subtype)) continue;
+    if (readPath(attributes, trap.path) === trap.bad) {
+      out.push(`${subtype} ${trap.path.join('.')}: "${trap.bad}" ${trap.message}`);
+    }
+  }
+  return out;
+}
+
+/**
+ * Run checkParticleSettings over every particle in a compiled node tree.
+ * Used by the section-apply path, which compiles a section directly and so
+ * never reaches validateLayout.
+ *
+ * @param {Array|object} nodes  compiled layout nodes
+ * @returns {string[]} error strings; empty means clean
+ */
+function validateParticleTree(nodes) {
+  const out = [];
+  walk(nodes, (node) => {
+    if (node.type !== 'particle' || !node.subtype) return;
+    for (const err of checkParticleSettings(node.subtype, node.attributes)) {
+      out.push(`${err} (id: ${node.id})`);
+    }
+  });
+  return out;
+}
+
 /* ─── Validation ─────────────────────────────────────────────────────────── */
 
 function validateLayout(layout, errors, warnings) {
@@ -571,6 +667,9 @@ function validateLayout(layout, errors, warnings) {
           `Gantry will render "Missing content: particle cannot be found". ` +
           `Valid subtypes: ${Object.keys(catalog).sort().join(', ')}`
         );
+      }
+      for (const err of checkParticleSettings(node.subtype, node.attributes)) {
+        errors.push(`${err} (id: ${node.id})`);
       }
     }
     // Validate grid sizes sum to ~100
@@ -1085,4 +1184,6 @@ module.exports = {
   briefToDesignYaml,
   getHomepageExamples,
   decompile,
+  checkParticleSettings,
+  validateParticleTree,
 };

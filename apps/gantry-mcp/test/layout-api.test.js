@@ -298,3 +298,51 @@ test('a changed node type is reported', () => {
   const mismatch = api.firstStructuralMismatch(after, saved);
   assert.match(mismatch, /subtype is "image", expected "logo"/);
 });
+
+/* ── editBlockAttrs: resolve a block from the node it wraps ──────────────── */
+//
+// The blocks around the main-container sections carry generated ids a caller
+// has no handy way to read, so resizing sidebar / mainbar / aside failed with
+// "Block not found" and had no supported path at all.
+
+/** A main container: one grid holding three section-wrapping blocks. */
+function mainContainerStructure() {
+  return [
+    {
+      id: 'container-main', type: 'container', children: [
+        {
+          id: 'grid-1', type: 'grid', children: [
+            { id: 'block-1', type: 'block', attributes: { size: 55 }, children: [{ id: 'sidebar', type: 'section', children: [] }] },
+            { id: 'block-2', type: 'block', attributes: { size: 30 }, children: [{ id: 'mainbar', type: 'section', children: [] }] },
+            { id: 'block-3', type: 'block', attributes: { size: 15 }, children: [{ id: 'aside', type: 'section', children: [] }] },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
+test('editBlockAttrs accepts the id of the section a block wraps', () => {
+  const s = mainContainerStructure();
+  api.editBlockAttrs(s, 'mainbar', { size: 83 });
+  assert.equal(s[0].children[0].children[1].attributes.size, 83);
+  // The wrapped section itself must not gain the attribute.
+  assert.equal(s[0].children[0].children[1].children[0].attributes, undefined);
+});
+
+test('editBlockAttrs still accepts the block id directly', () => {
+  const s = mainContainerStructure();
+  api.editBlockAttrs(s, 'block-1', { size: 2, class: 'g-offset-20' });
+  assert.equal(s[0].children[0].children[0].attributes.size, 2);
+  assert.equal(s[0].children[0].children[0].attributes.class, 'g-offset-20');
+});
+
+test('editBlockAttrs names the child-id fallback when nothing matches', () => {
+  const s = mainContainerStructure();
+  assert.throws(() => api.editBlockAttrs(s, 'nope', { size: 1 }), /the id of the node it wraps/);
+});
+
+test('editBlockAttrs refuses a node that is not wrapped by a block', () => {
+  const s = mainContainerStructure();
+  assert.throws(() => api.editBlockAttrs(s, 'grid-1', { size: 1 }), /not a block, and is not wrapped by one/);
+});

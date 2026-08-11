@@ -171,6 +171,41 @@ async function resolveOutlineArg(ctx, args) {
   return (await outlines.resolveOutline(ctx, raw)).id;
 }
 
+/**
+ * Run the section-preservation check that a real save runs, without saving.
+ *
+ * Dry runs used to skip it entirely, so a design that a real save would reject
+ * came back clean. Returns a report rather than throwing: a genuine violation
+ * sets `violation: true`, while a failure to reach the outline is reported as a
+ * plain error so a network problem is not mistaken for a bad design.
+ *
+ * @typedef {{ok: boolean|null, violation: boolean, outline: string|null, error: string|null, skipped: string|null}} PreservationReport
+ * @returns {Promise<PreservationReport>}
+ */
+async function checkPreservationDryRun(args, newLayout) {
+  try {
+    const ctx = await getCtx(args);
+    const outline = await resolveOutlineArg(ctx, args);
+    const before = await layoutApi.fetchSavedLayout(ctx, outline);
+    layoutApi.assertSectionsPreserved(layoutApi.snapshotSections(before), newLayout, { checkParent: false });
+    return { ok: true, violation: false, outline: String(outline), error: null, skipped: null };
+  } catch (e) {
+    const message = String((e && e.message) || e);
+    return {
+      ok: false,
+      violation: message.includes('SECTION_PRESERVATION_VIOLATION'),
+      outline: null,
+      error: message,
+      skipped: null,
+    };
+  }
+}
+
+/** @returns {PreservationReport} */
+function preservationSkipped(reason) {
+  return { ok: null, violation: false, outline: null, error: null, skipped: reason };
+}
+
 async function resolveOutlineWithTitle(ctx, ref) {
   const raw = String(ref || '').trim();
   await outlines.openOutlines(ctx);
@@ -1333,7 +1368,59 @@ const LEGACY_TOOLS = [
       const outline = String(args.outline || 'default');
       const localFields = args.localFields || {};
       const result = await pageMod.savePageMinimal(ctx, outline, localFields);
-      return { restored: true, localFieldsStored: Object.keys(localFields), outline, result };
+
+      // Verify, do not assert. This used to return `restored: true`
+      // unconditionally, so an outline whose Page Settings did not actually
+      // change still reported success — the caller only found out by re-reading
+      // `breakdown` themselves. Inheritance means the outline's effective
+      // settings equal Base Outline's for every field not deliberately kept
+      // local, so compare the two and report the fields that disagree.
+      await pageMod.openPage(ctx, outline);
+      const after = await pageMod.getPageBreakdown(ctx);
+      await pageMod.openPage(ctx, 'default'); // Base Outline
+      const base = await pageMod.getPageBreakdown(ctx);
+
+      const localNames = new Set(Object.keys(localFields));
+      // Per-outline identity, never inherited — comparing them is meaningless.
+      const SKIP = new Set(['page[current_outline]', 'page[origin]']);
+      const baseMap = new Map(base.fields.map((f) => [f.name, f.value || '']));
+      const clip = (v) => (v.length > 120 ? v.slice(0, 120) + '…' : v);
+
+      const stillLocal = [];
+      for (const f of after.fields) {
+        if (localNames.has(f.name) || SKIP.has(f.name)) continue;
+        const baseValue = baseMap.get(f.name);
+        if (baseValue === undefined) continue; // field Base does not have
+        if ((f.value || '') !== baseValue) {
+          stillLocal.push({ field: f.name, outline: clip(f.value || ''), base: clip(baseValue) });
+        }
+      }
+
+      // The fields that were meant to stay local must also have taken.
+      const localNotStored = Object.entries(localFields)
+        .filter(([name, want]) => {
+          const got = after.fields.find((f) => f.name === name);
+          return !got || (got.value || '') !== String(want || '');
+        })
+        .map(([name]) => name);
+
+      const restored = stillLocal.length === 0 && localNotStored.length === 0;
+      return {
+        restored,
+        outline,
+        verifiedAgainst: 'default (Base Outline)',
+        localFieldsStored: Object.keys(localFields),
+        localNotStored,
+        stillLocalCount: stillLocal.length,
+        stillLocal: stillLocal.slice(0, 25),
+        warning: restored
+          ? null
+          : `Page Settings on "${outline}" still differ from Base Outline after the restore` +
+            (stillLocal.length ? ` in ${stillLocal.length} field(s)` : '') +
+            (localNotStored.length ? `; these localFields did not store: ${localNotStored.join(', ')}` : '') +
+            '. Edit the outline\'s head/assets directly instead of relying on inheritance.',
+        result,
+      };
     },
   },
   {
@@ -1782,7 +1869,27 @@ const LEGACY_TOOLS = [
       const mergedLayout = baseTemplate.mergeWithBaseTemplate(args.layout);
       const before = await layoutApi.fetchSavedLayout(ctx, args.outline || 'default');
       const diff = layoutApi.diffStructures(before, mergedLayout);
-      if (args.dryRun) return { dryRun: true, diff };
+      if (args.dryRun) {
+        // Same reasoning as gantry_layout_design: a dry run that skips the
+        // preservation check reports clean for a layout the real save rejects.
+        let preservation = preservationSkipped('force_section_delete');
+        if (!args.force_section_delete) {
+          try {
+            layoutApi.assertSectionsPreserved(layoutApi.snapshotSections(before), mergedLayout, { checkParent: false });
+            preservation = { ok: true, violation: false, outline: null, error: null, skipped: null };
+          } catch (e) {
+            const message = String((e && e.message) || e);
+            preservation = {
+              ok: false,
+              violation: message.includes('SECTION_PRESERVATION_VIOLATION'),
+              outline: null,
+              error: message,
+              skipped: null,
+            };
+          }
+        }
+        return { dryRun: true, valid: preservation.ok !== false, preservation, diff };
+      }
       // Section preservation: reject if any existing section would be deleted or moved
       if (!args.force_section_delete) {
         layoutApi.assertSectionsPreserved(layoutApi.snapshotSections(before), mergedLayout, { checkParent: false });
@@ -1937,8 +2044,10 @@ const LEGACY_TOOLS = [
     name: 'gantry_block_edit',
     description:
       'Edit a block node\'s attributes — most commonly to set or change the CSS class ' +
-      '(e.g. `{"class": "g-offset-20"}`) or size. The block is the wrapper around a ' +
-      'particle; get its id from gantry_particle_inspect (result.block.id).',
+      '(e.g. `{"class": "g-offset-20"}`) or size (e.g. `{"size": 83}`). The block is the wrapper ' +
+      'around a particle OR around a section; get its id from gantry_particle_inspect ' +
+      '(result.block.id), or just pass the id of the node it wraps. Passing a section id ' +
+      '("sidebar", "mainbar", "aside") is the supported way to resize the main-container blocks.',
     schema: {
       type: 'object',
       properties: {
@@ -2150,6 +2259,17 @@ const LEGACY_TOOLS = [
             const node = found.node;
             if (!['particle', 'system', 'position', 'spacer'].includes(node.type)) {
               throw new Error(`Node "${args.id}" is type "${node.type}", not a particle`);
+            }
+            // Reject settings values the particle accepts silently but that do
+            // not behave the way the Gantry admin select implies. Merge the
+            // patch onto the current attributes first, so a trap value already
+            // on the node is caught too, not only one arriving in this patch.
+            const settingsErrors = compiler.checkParticleSettings(
+              String(node.subtype || ''),
+              layoutApi.deepMerge(JSON.parse(JSON.stringify(node.attributes || {})), args.attributes)
+            );
+            if (settingsErrors.length) {
+              throw new Error(`Refusing to save particle "${args.id}": ${settingsErrors.join('; ')}`);
             }
             // A particle can carry its own `inherit` block (independent of the
             // section it lives in) that re-resolves `attributes` from a paired
@@ -2392,7 +2512,11 @@ const LEGACY_TOOLS = [
       'Context variables in the YAML ({{news_category_id}}) are substituted from the ' +
       'context object. ' +
       'Design YAML top-level keys: schema, outline, context, top_container, sections, ' +
-      'main_container, extra_sections, footer_container, offcanvas.',
+      'main_container, extra_sections, footer_container, offcanvas. ' +
+      'main_container with layout: sidebar-main-aside accepts a `size` (block width percent) ' +
+      'under each of sidebar/mainbar/aside — default 55/30/15. ' +
+      'dryRun runs the same section-preservation check as a real save and reports it under `preservation`, ' +
+      'so a YAML that would be rejected on save is rejected on the dry run too.',
     schema: {
       type: 'object',
       properties: {
@@ -2429,11 +2553,22 @@ const LEGACY_TOOLS = [
       }
 
       if (args.dryRun) {
+        // Run the same section-preservation check the real save runs. Skipping
+        // it here meant a dry run passed cleanly and the identical YAML then
+        // failed with SECTION_PRESERVATION_VIOLATION on save — the one failure
+        // a dry run exists to catch. Report it instead of throwing, so the dry
+        // run still returns its tree summary.
+        const preservation = args.force_section_delete
+          ? preservationSkipped('force_section_delete')
+          : await checkPreservationDryRun(args, result.layout);
         return {
-          valid: true,
+          valid: preservation.violation ? false : true,
           dryRun: true,
-          errors: result.errors,
-          warnings: result.warnings,
+          errors: preservation.violation ? [...result.errors, preservation.error] : result.errors,
+          warnings: preservation.error && !preservation.violation
+            ? [...result.warnings, `Could not run the section-preservation check: ${preservation.error}`]
+            : result.warnings,
+          preservation,
           treeSummary: result.treeSummary,
           nodeCount: result.layout.length,
         };
@@ -3164,6 +3299,14 @@ const LEGACY_TOOLS = [
             valid: false,
             error: 'Compiled section has no grids. Check that section_yaml has a non-empty grids array.',
           };
+        }
+
+        // This path compiles a section directly and never reaches
+        // validateLayout, so trap values in section_yaml would otherwise save
+        // unchallenged. Fail before the mutation, on dry runs too.
+        const settingsErrors = compiler.validateParticleTree(newGrids);
+        if (settingsErrors.length) {
+          return { valid: false, error: settingsErrors.join('; ') };
         }
       }
 

@@ -19,6 +19,16 @@ interface FtpSiteConfig {
   host: string;
   web_root: string;
   upload_path: string | null;
+  /**
+   * Extra directories this site accepts writes into, beyond `upload_path`.
+   *
+   * `upload_path` is the images/pub asset bucket, meant for CSS/JS/Gantry Raw
+   * Tags assets. A site whose DOCman files live elsewhere (e.g.
+   * "/lincoln/stm-lincoln/content/documents") could not take a new document at
+   * all — every write outside images/pub was refused and the ticket had to be
+   * finished by hand. List those roots here to open them deliberately.
+   */
+  write_paths?: string[];
   port?: number;
   secure?: "implicit" | "explicit";
   credential_set?: string;
@@ -260,6 +270,19 @@ export class FtpClient {
     return t === b || t.startsWith(b === "/" ? "/" : b + "/");
   }
 
+  /** Every directory this site accepts writes into. */
+  private writeRoots(config: FtpSiteConfig): string[] {
+    const roots: string[] = [];
+    if (config.upload_path) roots.push(config.upload_path);
+    for (const p of config.write_paths || []) if (p) roots.push(p);
+    return roots;
+  }
+
+  /** True when `remotePath` sits inside any configured write root. */
+  private isAllowedWrite(config: FtpSiteConfig, remotePath: string): boolean {
+    return this.writeRoots(config).some((root) => this.isWithin(root, remotePath));
+  }
+
   /**
    * Explain a refused write. Callers reach for `pub_path` because that is what
    * they just read the file from, so name the alias and hand back the rewritten
@@ -273,8 +296,11 @@ export class FtpClient {
         `pub_path ("${pubPath}") and upload_path ("${config.upload_path}") are the same directory on the ` +
         `server — read from pub_path, write to upload_path. Retry with "${rewritten}".`;
     }
-    return `${verb} refused: "${remotePath}" is outside the allowed upload directory ` +
-      `"${config.upload_path}". Writes go to upload_path; the same files read back from "${pubPath}".`;
+    const roots = this.writeRoots(config);
+    return `${verb} refused: "${remotePath}" is outside every allowed write directory ` +
+      `(${roots.map((r) => `"${r}"`).join(", ")}). The same files read back from "${pubPath}". ` +
+      `If this path is a legitimate write target for this site — a DOCman files root, for example — ` +
+      `add it to "write_paths" for this domain in ftp-sites.json.`;
   }
 
   /**
@@ -321,8 +347,8 @@ export class FtpClient {
     const { client, config } = conn;
     const warnings: string[] = [];
 
-    if (config.upload_path) {
-      if (!this.isWithin(config.upload_path, remotePath)) {
+    if (this.writeRoots(config).length) {
+      if (!this.isAllowedWrite(config, remotePath)) {
         client.close();
         return {
           success: false,
@@ -330,7 +356,7 @@ export class FtpClient {
         };
       }
     } else {
-      warnings.push(`No upload_path configured for ${domain} — write access is unrestricted. Consider adding upload_path to ftp-sites.json.`);
+      warnings.push(`No upload_path or write_paths configured for ${domain} — write access is unrestricted. Consider adding upload_path to ftp-sites.json.`);
     }
 
     try {
@@ -384,8 +410,8 @@ export class FtpClient {
     const { client, config } = conn;
     const warnings: string[] = [];
 
-    if (config.upload_path) {
-      if (!this.isWithin(config.upload_path, remotePath)) {
+    if (this.writeRoots(config).length) {
+      if (!this.isAllowedWrite(config, remotePath)) {
         client.close();
         return {
           success: false,
@@ -393,7 +419,7 @@ export class FtpClient {
         };
       }
     } else {
-      warnings.push(`No upload_path configured for ${domain} — write access is unrestricted. Consider adding upload_path to ftp-sites.json.`);
+      warnings.push(`No upload_path or write_paths configured for ${domain} — write access is unrestricted. Consider adding upload_path to ftp-sites.json.`);
     }
 
     try {
@@ -490,7 +516,7 @@ export class FtpClient {
 
     const { client, config } = conn;
 
-    if (config.upload_path && !this.isWithin(config.upload_path, remotePath)) {
+    if (this.writeRoots(config).length && !this.isAllowedWrite(config, remotePath)) {
       client.close();
       return {
         success: false,
@@ -514,7 +540,7 @@ export class FtpClient {
 
     const { client, config } = conn;
 
-    if (config.upload_path && !this.isWithin(config.upload_path, remotePath)) {
+    if (this.writeRoots(config).length && !this.isAllowedWrite(config, remotePath)) {
       client.close();
       return {
         success: false,
@@ -558,8 +584,8 @@ export class FtpClient {
     const { client, config } = conn;
     const warnings: string[] = [];
 
-    if (config.upload_path) {
-      if (!this.isWithin(config.upload_path, remotePath)) {
+    if (this.writeRoots(config).length) {
+      if (!this.isAllowedWrite(config, remotePath)) {
         client.close();
         return {
           success: false,
@@ -567,7 +593,7 @@ export class FtpClient {
         };
       }
     } else {
-      warnings.push(`No upload_path configured for ${domain} — write access is unrestricted. Consider adding upload_path to ftp-sites.json.`);
+      warnings.push(`No upload_path or write_paths configured for ${domain} — write access is unrestricted. Consider adding upload_path to ftp-sites.json.`);
     }
 
     try {
@@ -616,6 +642,11 @@ export class FtpClient {
         host: config.host,
         web_root: config.web_root,
         upload_path: config.upload_path ?? "(not set — write access is unrestricted)",
+        // Every directory writes are accepted into, so a caller can see up
+        // front whether a target such as a DOCman files root is reachable
+        // instead of discovering the refusal mid-task.
+        write_paths: config.write_paths ?? [],
+        allowed_write_roots: this.writeRoots(config),
         pub_path: this.pubPathFor(config),
         pub_url: `https://${domain}/images/pub`,
         // Stated explicitly because the two paths look like different
@@ -624,7 +655,9 @@ export class FtpClient {
         note:
           "upload_path and pub_path are the SAME directory behind a server-side FTP alias. " +
           "Write with upload_path, read/list with pub_path, and serve from pub_url. " +
-          "Do not change upload_path to match pub_path.",
+          "Do not change upload_path to match pub_path. " +
+          "upload_path is the images/pub asset bucket; a write target outside it (a DOCman files " +
+          "root, for example) must be listed in write_paths for this domain in ftp-sites.json.",
       },
     };
   }
