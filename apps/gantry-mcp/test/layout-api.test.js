@@ -346,3 +346,197 @@ test('editBlockAttrs refuses a node that is not wrapped by a block', () => {
   const s = mainContainerStructure();
   assert.throws(() => api.editBlockAttrs(s, 'grid-1', { size: 1 }), /not a block, and is not wrapped by one/);
 });
+
+/* ── block sizing on add ──────────────────────────────────────────────────
+ *
+ * `gantry_particle add` accepted a `size` and then dropped it on the `to`
+ * path: addParticleToSection never read the option, and its firstGrid branch
+ * always wrote an equal split. A caller who asked for 70/30 got 50/50 with a
+ * successful-looking save, which read as a platform bug for months.
+ *
+ * The other half is real Gantry behaviour: a block size of 0 means "unset", so
+ * Gantry re-splits the row equally on save. A split that zeroes a block is now
+ * refused up front rather than saved as a lie.
+ */
+
+/** One section holding one grid with a single full-width block. */
+function oneBlockGrid() {
+  return [
+    {
+      id: 'expanded',
+      type: 'section',
+      subtype: false,
+      title: 'Expanded',
+      attributes: {},
+      inherit: {},
+      children: [
+        {
+          id: 'grid-9',
+          type: 'grid',
+          subtype: false,
+          title: 'Untitled',
+          attributes: {},
+          inherit: {},
+          children: [
+            {
+              id: 'block-9',
+              type: 'block',
+              subtype: false,
+              title: 'Untitled',
+              attributes: { size: 100 },
+              inherit: {},
+              children: [
+                {
+                  id: 'swiper-1',
+                  type: 'particle',
+                  subtype: 'swiper',
+                  title: 'Hero',
+                  attributes: { enabled: 1 },
+                  inherit: {},
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
+const gridBlocks = (s) => s[0].children[0].children;
+
+test('addParticleToSection firstGrid honours an unequal size', () => {
+  const s = oneBlockGrid();
+  api.addParticleToSection(s, 'expanded', 'particle', 'custom', {
+    title: 'Side',
+    mode: 'firstGrid',
+    size: 30,
+  });
+  assert.deepEqual(gridBlocks(s).map((b) => b.attributes.size), [70, 30]);
+});
+
+test('addParticleToSection firstGrid still equal-splits with no size', () => {
+  const s = oneBlockGrid();
+  api.addParticleToSection(s, 'expanded', 'particle', 'custom', { mode: 'firstGrid' });
+  assert.deepEqual(gridBlocks(s).map((b) => b.attributes.size), [50, 50]);
+});
+
+test('addParticleToSection refuses a size that zeroes a sibling', () => {
+  const s = oneBlockGrid();
+  assert.throws(
+    () => api.addParticleToSection(s, 'expanded', 'particle', 'custom', { mode: 'firstGrid', size: 100 }),
+    /leaves a block below 1%/
+  );
+  // The refusal must happen before any mutation.
+  assert.equal(gridBlocks(s).length, 1);
+  assert.equal(gridBlocks(s)[0].attributes.size, 100);
+});
+
+test('addParticleToSection refuses size 0 for the new block', () => {
+  const s = oneBlockGrid();
+  assert.throws(
+    () => api.addParticleToSection(s, 'expanded', 'particle', 'custom', { mode: 'firstGrid', size: 0 }),
+    /leaves a block below 1%/
+  );
+});
+
+test('the zero-size refusal points at the CSS overlay route', () => {
+  const s = oneBlockGrid();
+  assert.throws(
+    () => api.addParticleToSection(s, 'expanded', 'particle', 'custom', { mode: 'firstGrid', size: 100 }),
+    /set a `class` on the block and position it in CSS/
+  );
+});
+
+test('addParticleToSection refuses size with mode newGrid', () => {
+  const s = oneBlockGrid();
+  assert.throws(
+    () => api.addParticleToSection(s, 'expanded', 'particle', 'custom', { size: 70 }),
+    /no meaning with mode "newGrid"/
+  );
+});
+
+test('addParticleNextTo honours an unequal size', () => {
+  const s = oneBlockGrid();
+  api.addParticleNextTo(s, 'swiper-1', 'particle', 'custom', { title: 'Side', size: 25 });
+  assert.deepEqual(gridBlocks(s).map((b) => b.attributes.size), [75, 25]);
+});
+
+test('addParticleNextTo refuses a size that zeroes a sibling', () => {
+  const s = oneBlockGrid();
+  assert.throws(
+    () => api.addParticleNextTo(s, 'swiper-1', 'particle', 'custom', { size: 100 }),
+    /leaves a block below 1%/
+  );
+  assert.equal(gridBlocks(s).length, 1);
+});
+
+test('splitSiblingSizes rescales two siblings in proportion', () => {
+  const blocks = [{ attributes: { size: 75 } }, { attributes: { size: 25 } }];
+  const newSize = api.splitSiblingSizes(blocks, 40, 'test row');
+  assert.equal(newSize, 40);
+  assert.deepEqual(blocks.map((b) => b.attributes.size), [45, 15]);
+});
+
+test('splitSiblingSizes treats a missing sibling size as an equal share', () => {
+  const blocks = [{ attributes: {} }, { attributes: {} }];
+  api.splitSiblingSizes(blocks, 50, 'test row');
+  assert.deepEqual(blocks.map((b) => b.attributes.size), [25, 25]);
+});
+
+test('splitSiblingSizes rejects a non-numeric size', () => {
+  assert.throws(
+    // A string arrives here from a hand-written MCP call, which is the point.
+    () => api.splitSiblingSizes([{ attributes: { size: 100 } }], /** @type {any} */ ('70'), 'test row'),
+    /must be a finite number/
+  );
+});
+
+/* ── whole-percent rounding ───────────────────────────────────────────────
+ *
+ * Gantry rewrites block sizes at low precision. A row saved as
+ * 26.67/26.67/26.67/20 read back 27/27/27/20 on shannon.forge, so the
+ * post-save check reported "attributes did not survive the save" on a save
+ * that had worked. Whole percents make the written value the read-back value.
+ */
+
+test('equalSizes splits three ways as whole percents totalling 100', () => {
+  assert.deepEqual(api.equalSizes(3), [34, 33, 33]);
+  assert.equal(api.equalSizes(3).reduce((a, b) => a + b, 0), 100);
+});
+
+test('equalSizes is exact when the split divides evenly', () => {
+  assert.deepEqual(api.equalSizes(2), [50, 50]);
+  assert.deepEqual(api.equalSizes(4), [25, 25, 25, 25]);
+});
+
+test('roundSizesTo100 gives the leftover to the largest fractions', () => {
+  assert.deepEqual(api.roundSizesTo100([26.67, 26.67, 26.67, 20]), [27, 27, 26, 20]);
+  assert.equal(api.roundSizesTo100([26.67, 26.67, 26.67, 20]).reduce((a, b) => a + b, 0), 100);
+});
+
+test('a fractional split is rounded to whole percents before it is written', () => {
+  const s = oneBlockGrid();
+  api.addParticleToSection(s, 'expanded', 'particle', 'custom', { mode: 'firstGrid', size: 33.4 });
+  const row = gridBlocks(s).map((b) => b.attributes.size);
+  assert.ok(row.every((n) => Number.isInteger(n)), `not whole percents: ${row}`);
+  assert.equal(row.reduce((a, b) => a + b, 0), 100);
+});
+
+test('a three-way rebalance after a size add still totals 100', () => {
+  const s = oneBlockGrid();
+  api.addParticleToSection(s, 'expanded', 'particle', 'custom', { mode: 'firstGrid' });
+  api.addParticleToSection(s, 'expanded', 'particle', 'custom', { mode: 'firstGrid' });
+  const row = gridBlocks(s).map((b) => b.attributes.size);
+  assert.equal(row.reduce((a, b) => a + b, 0), 100);
+  assert.ok(row.every((n) => Number.isInteger(n)), `not whole percents: ${row}`);
+});
+
+test('a split that rounds a sibling below one percent is refused', () => {
+  const s = oneBlockGrid();
+  assert.throws(
+    () => api.addParticleToSection(s, 'expanded', 'particle', 'custom', { mode: 'firstGrid', size: 99.7 }),
+    /leaves a block below 1%/
+  );
+});

@@ -109,3 +109,70 @@ test('compile rejects a design carrying the title.enabled trap', () => {
   assert.equal(r.valid, false);
   assert.ok(r.errors.some((e) => /does not hide the title/.test(e)), JSON.stringify(r.errors));
 });
+
+/* ── the shape a live particle actually uses ──────────────────────────────
+ *
+ * The first version of PARTICLE_VALUE_TRAPS matched `display.title.enabled`.
+ * Every test above used that shape too, so the suite passed while the check
+ * never fired on a real particle: Gantry nests these settings under `article`,
+ * and a live dryRun on shannon.forge accepted `hide` without complaint. These
+ * cases pin the real shape so the check cannot silently miss it again.
+ */
+
+test('contentarray article.display.title.enabled "hide" is rejected', () => {
+  const errors = compiler.checkParticleSettings('contentarray', {
+    article: { display: { title: { enabled: 'hide' } } },
+  });
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /article\.display\.title\.enabled/);
+  assert.match(errors[0], /does not hide the title/);
+});
+
+test('blockcontent article.display.title.enabled "hide" is rejected', () => {
+  const errors = compiler.checkParticleSettings('blockcontent', {
+    article: { display: { title: { enabled: 'hide' } } },
+  });
+  assert.equal(errors.length, 1);
+});
+
+test('the full live attribute tree from a real contentarray is checked', () => {
+  // Copied from gantry_particle inspect on shannon.forge outline 75.
+  const errors = compiler.checkParticleSettings('contentarray', {
+    article: {
+      filter: { categories: '', articles: '36', featured: 'include' },
+      limit: { total: '1', columns: '1', start: '0' },
+      display: { pagination_buttons: '', title: { enabled: 'hide' } },
+      sort: { orderby: 'ordering', ordering: 'ASC' },
+    },
+    enabled: 1,
+  });
+  assert.equal(errors.length, 1);
+});
+
+test('"" and "show" are accepted under the article wrapper too', () => {
+  assert.deepEqual(
+    compiler.checkParticleSettings('contentarray', { article: { display: { title: { enabled: '' } } } }),
+    []
+  );
+  assert.deepEqual(
+    compiler.checkParticleSettings('contentarray', { article: { display: { title: { enabled: 'show' } } } }),
+    []
+  );
+});
+
+test('validateParticleTree catches the article-wrapped shape', () => {
+  const errors = compiler.validateParticleTree([
+    { type: 'grid', children: [
+      { type: 'block', children: [
+        {
+          type: 'particle',
+          subtype: 'contentarray',
+          id: 'p9',
+          attributes: { article: { display: { title: { enabled: 'hide' } } } },
+        },
+      ] },
+    ] },
+  ]);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /\(id: p9\)/);
+});

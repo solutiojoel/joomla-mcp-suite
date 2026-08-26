@@ -2990,8 +2990,17 @@ export class JoomlaClient {
    */
   private parseArticleListFilters(html: string): { search: string; categoryId: string; published: string } {
     const $ = this.$c(html);
+    // com_content renders the category filter as a MULTI-select, so its control
+    // is name="filter[category_id][]" — with the trailing []. Matching only the
+    // bare name found nothing, read the applied filter as "", and reported a
+    // "stale session filter is narrowing this result" warning with success:false
+    // on calls where the filter had in fact been applied correctly.
     const selected = (name: string) =>
-      ($(`select[name='filter[${name}]'] option[selected]`).attr("value") ?? "").trim();
+      (
+        $(`select[name='filter[${name}]'] option[selected]`).attr("value") ??
+        $(`select[name='filter[${name}][]'] option[selected]`).attr("value") ??
+        ""
+      ).trim();
     return {
       search: ($("input[name='filter[search]']").attr("value") ?? "").trim(),
       categoryId: selected("category_id"),
@@ -3097,15 +3106,23 @@ export class JoomlaClient {
       const rowHtml = $.html($row) || "";
       const $titleTd = $titleLink.closest("td");
       const $smallDiv = $titleTd.find("div.small").first();
-      const $catLink = $smallDiv.find("a").first();
+      // For an article in a SUBcategory, com_content renders the whole path as a
+      // breadcrumb — "Category: <a>Parent</a> » <a>Child</a>" — so the article's
+      // own category is the LAST link, not the first. Reading .first() reported
+      // every nested article as belonging to its parent, which also defeated the
+      // exact-category trim in listArticles: the row looked like a match.
+      const $catLink = $smallDiv.find("a").last();
       let category = $catLink.text().trim();
       if (!category) {
         const smallText = $smallDiv.text().trim();
         const colonIdx = smallText.indexOf(": ");
         category = colonIdx >= 0 ? smallText.slice(colonIdx + 2).trim() : smallText;
       }
+      // Joomla emits a malformed href for the ANCESTOR links in that breadcrumb
+      // ("filter[category_id]id=50"), so tolerate the stray "id" rather than
+      // silently returning no category for the row.
       const catHref = $catLink.attr("href") || "";
-      const catIdMatch = catHref.match(/filter\[category_id\]=(\d+)/);
+      const catIdMatch = catHref.match(/filter\[category_id\](?:id)?=(\d+)/);
       const categoryId = catIdMatch ? catIdMatch[1] : "";
       articles.push({
         id: cid,

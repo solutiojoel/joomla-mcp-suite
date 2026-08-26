@@ -163,6 +163,90 @@ function makeGridNode(blocks) {
   };
 }
 
+// Gantry reads a block `size` of 0 as "unset" and re-splits the row equally when
+// it saves, so a 100/0 request comes back 50/50 and the save still reports
+// success. Refuse a split that zeroes a block instead of letting the save lie.
+// A whole percent is the smallest width that survives the round trip below.
+const MIN_BLOCK_SIZE = 1;
+
+/**
+ * Round a row of block widths to whole percents that still sum to 100.
+ *
+ * Gantry rewrites block sizes at low precision: a row saved as 26.67/26.67/
+ * 26.67/20 came back 27/27/27/20 on shannon.forge, so the post-save check
+ * reported "attributes did not survive the save" on every fractional split.
+ * A `verified: false` on a save that actually worked is worse than the rounding
+ * itself — it trains an agent to distrust a correct result. Send whole numbers
+ * so the value written is the value read back.
+ *
+ * The leftover percent goes to the largest fractional parts first, so the row
+ * always totals exactly 100.
+ */
+function roundSizesTo100(values) {
+  const out = values.map((v) => Math.floor(v));
+  const order = values
+    .map((v, i) => ({ i, frac: v - Math.floor(v) }))
+    .sort((a, b) => b.frac - a.frac);
+  let deficit = 100 - out.reduce((sum, n) => sum + n, 0);
+  for (let k = 0; deficit > 0 && k < order.length; k += 1, deficit -= 1) {
+    out[order[k].i] += 1;
+  }
+  return out;
+}
+
+/**
+ * Give `size`% of a row to a new block and rescale the existing siblings into
+ * the remainder, in proportion to the widths they already had.
+ *
+ * Returns the new block's size. Throws — before it mutates anything — when the
+ * requested split would leave any block below one percent.
+ *
+ * @param {Array}  blocks   Sibling block nodes already in the grid
+ * @param {number} size     Requested width % for the new block
+ * @param {string} context  Where the row is, for the error message
+ */
+function splitSiblingSizes(blocks, size, context) {
+  if (typeof size !== 'number' || !Number.isFinite(size)) {
+    throw new Error(`size must be a finite number; got ${JSON.stringify(size)}.`);
+  }
+  const remaining = 100 - size;
+
+  // A block in a hand-built layout can arrive with no size at all. Treat that as
+  // an equal share so a missing attribute does not read as a zero-width block.
+  const current = blocks.map((b) => {
+    const n = Number(b.attributes?.size);
+    return Number.isFinite(n) && n > 0 ? n : 100 / blocks.length;
+  });
+  const oldTotal = current.reduce((sum, n) => sum + n, 0) || 100;
+  const raw = [size, ...current.map((n) => (n / oldTotal) * remaining)];
+  const row = remaining <= 0 ? raw : roundSizesTo100(raw);
+  const [newSize, ...scaled] = row;
+
+  if (row.some((s) => s < MIN_BLOCK_SIZE)) {
+    throw new Error(
+      `size ${size} leaves a block below 1% in ${context} (the row would be ` +
+        `${row.join('/')}). Gantry reads a block size of 0 as unset and re-splits the row ` +
+        `equally when it saves, so the layout comes back evenly split while the save still ` +
+        `reports success. Pick a split that gives every block in the row a real width. ` +
+        `To stack one particle on top of another instead of beside it, do not use size at ` +
+        `all: set a \`class\` on the block and position it in CSS.`
+    );
+  }
+
+  blocks.forEach((b, i) => {
+    if (b.attributes) b.attributes.size = scaled[i];
+  });
+  return newSize;
+}
+
+/**
+ * Split a row of `count` blocks as evenly as whole percents allow.
+ * Returns the size for each position, largest first (34/33/33 for three).
+ */
+function equalSizes(count) {
+  return roundSizesTo100(new Array(count).fill(100 / count));
+}
+
 /**
  * Add a new node (particle / position / spacer / system) to a section.
  *
@@ -173,12 +257,14 @@ function makeGridNode(blocks) {
  *   addParticleToSection(structure, "navigation","position","module")         // Module Instance
  *
  * mode = "newGrid" (default): drops a new full-width grid below existing.
- * mode = "firstGrid": appends as a sibling block in the first grid (auto-resize).
+ * mode = "firstGrid": appends as a sibling block in the first grid. Splits the
+ *   row equally by default, or gives the new block `opts.size`% and rescales the
+ *   existing siblings into the remainder.
  *
  * Returns the new node (so the caller can read its id).
  */
 function addParticleToSection(structure, sectionId, blocktype, subtype, opts = {}) {
-  const { title, attrs, mode = 'newGrid' } = opts;
+  const { title, attrs, mode = 'newGrid', size } = opts;
   const target = findNode(structure, sectionId);
   if (!target) throw new Error(`Section "${sectionId}" not found in layout`);
   if (!['section', 'container', 'offcanvas'].includes(target.node.type)) {
@@ -191,6 +277,15 @@ function addParticleToSection(structure, sectionId, blocktype, subtype, opts = {
   // Initialize it so both modes can safely push into it.
   if (!Array.isArray(target.node.children)) target.node.children = [];
   if (mode === 'newGrid') {
+    // A new grid holds one block, which always spans the row. `size` used to be
+    // accepted here and dropped on the floor, which read as a platform bug.
+    if (size !== undefined) {
+      throw new Error(
+        `size has no meaning with mode "newGrid": the new grid holds a single block that ` +
+          `always spans the full row. Pass mode:"firstGrid" to place the particle beside what ` +
+          `is already in section "${sectionId}", or use nextTo with a sibling particle id.`
+      );
+    }
     const block = makeBlockNode(node, 100);
     const grid = makeGridNode(block);
     target.node.children.push(grid);
@@ -202,11 +297,17 @@ function addParticleToSection(structure, sectionId, blocktype, subtype, opts = {
       target.node.children.push(makeGridNode(block));
     } else {
       const blocks = grid.children || (grid.children = []);
-      const newSize = Number((100 / (blocks.length + 1)).toFixed(2));
-      blocks.forEach((b) => {
-        if (b.attributes) b.attributes.size = newSize;
-      });
-      blocks.push(makeBlockNode(node, newSize));
+      if (size !== undefined) {
+        // Honour the requested split. Before this, `size` was never read on this
+        // path, so an unequal split silently saved as an equal one.
+        blocks.push(makeBlockNode(node, splitSiblingSizes(blocks, size, `section "${sectionId}"`)));
+      } else {
+        const row = equalSizes(blocks.length + 1);
+        blocks.forEach((b, i) => {
+          if (b.attributes) b.attributes.size = row[i];
+        });
+        blocks.push(makeBlockNode(node, row[row.length - 1]));
+      }
     }
   }
   return node;
@@ -338,24 +439,18 @@ function addParticleNextTo(structure, siblingId, blocktype, subtype, opts = {}) 
   const node = makeParticleNode(blocktype, subtype, title, attrs);
   const blocks = grid.node.children;
 
-  if (typeof size === 'number') {
+  if (size !== undefined) {
     // Caller specified a width for the new block; rescale others to fit.
-    const remaining = 100 - size;
-    const oldTotal = blocks.reduce((sum, b) => sum + (Number(b.attributes?.size) || 0), 0) || 100;
-    blocks.forEach((b) => {
-      if (b.attributes) {
-        const cur = Number(b.attributes.size) || 0;
-        b.attributes.size = Number(((cur / oldTotal) * remaining).toFixed(2));
-      }
-    });
-    blocks.push(makeBlockNode(node, Number(size.toFixed(2))));
+    blocks.push(
+      makeBlockNode(node, splitSiblingSizes(blocks, size, `the grid holding "${siblingId}"`))
+    );
   } else {
     // Equal split among existing siblings + new block
-    const newSize = Number((100 / (blocks.length + 1)).toFixed(2));
-    blocks.forEach((b) => {
-      if (b.attributes) b.attributes.size = newSize;
+    const row = equalSizes(blocks.length + 1);
+    blocks.forEach((b, i) => {
+      if (b.attributes) b.attributes.size = row[i];
     });
-    blocks.push(makeBlockNode(node, newSize));
+    blocks.push(makeBlockNode(node, row[row.length - 1]));
   }
   return node;
 }
@@ -395,9 +490,9 @@ function moveParticleToSection(structure, particleId, targetSectionId) {
   } else {
     // Re-balance sibling block sizes
     const remaining = gridEntry.node.children;
-    const newSize = Number((100 / remaining.length).toFixed(2));
-    remaining.forEach((b) => {
-      if (b.attributes) b.attributes.size = newSize;
+    const row = equalSizes(remaining.length);
+    remaining.forEach((b, i) => {
+      if (b.attributes) b.attributes.size = row[i];
     });
   }
   // Drop into a new full-width grid in the target
@@ -433,9 +528,9 @@ function moveParticleNextTo(structure, particleId, siblingId) {
   if (movingGrid.node === targetGrid.node) {
     // Already in same grid — no-op (but rebalance just in case)
     const blocks = targetGrid.node.children;
-    const newSize = Number((100 / blocks.length).toFixed(2));
-    blocks.forEach((b) => {
-      if (b.attributes) b.attributes.size = newSize;
+    const row = equalSizes(blocks.length);
+    blocks.forEach((b, i) => {
+      if (b.attributes) b.attributes.size = row[i];
     });
     return movingFound.node;
   }
@@ -448,9 +543,9 @@ function moveParticleNextTo(structure, particleId, siblingId) {
     if (sec) sec.children.splice(sec.children.indexOf(movingGrid.node), 1);
   } else {
     const remaining = movingGrid.node.children;
-    const newSize = Number((100 / remaining.length).toFixed(2));
-    remaining.forEach((b) => {
-      if (b.attributes) b.attributes.size = newSize;
+    const row = equalSizes(remaining.length);
+    remaining.forEach((b, i) => {
+      if (b.attributes) b.attributes.size = row[i];
     });
   }
 
@@ -458,9 +553,9 @@ function moveParticleNextTo(structure, particleId, siblingId) {
   const sibIdx = targetGrid.node.children.indexOf(sibBlock.node);
   targetGrid.node.children.splice(sibIdx + 1, 0, movingBlock.node);
   const after = targetGrid.node.children;
-  const newSize = Number((100 / after.length).toFixed(2));
-  after.forEach((b) => {
-    if (b.attributes) b.attributes.size = newSize;
+  const row = equalSizes(after.length);
+  after.forEach((b, i) => {
+    if (b.attributes) b.attributes.size = row[i];
   });
   return movingFound.node;
 }
@@ -1806,6 +1901,9 @@ module.exports = {
   makeParticleNode,
   makeBlockNode,
   makeGridNode,
+  splitSiblingSizes,
+  equalSizes,
+  roundSizesTo100,
   addParticleToSection,
   editParticleFromForm,
   addParticleNextTo,

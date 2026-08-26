@@ -504,7 +504,7 @@ const LEGACY_TOOLS = [
         subtype: { type: 'string', description: 'Subtype name from layout_available' },
         to: { type: 'string', description: 'Target section id (e.g. expanded, navigation)' },
         nextTo: { type: 'string', description: 'Place next to this existing particle id' },
-        size: { type: 'number', description: 'Width % when using nextTo (default: equal split)' },
+        size: { type: 'number', description: 'Width % for the new block. Works with `nextTo`, and with `to` when mode is "firstGrid". The existing siblings rescale into the remainder. Default: equal split. A split that leaves any block at 0% is refused — Gantry reads size 0 as unset and re-splits the row equally on save. For an overlay, set a block `class` and position it in CSS instead.' },
         title: { type: 'string', description: 'Display title for the new particle' },
         mode: { type: 'string', enum: ['newGrid', 'firstGrid'], default: 'newGrid' },
         dryRun: { type: 'boolean', description: 'Show the diff and skip the save POST' },
@@ -530,6 +530,7 @@ const LEGACY_TOOLS = [
             added = layoutApi.addParticleToSection(structure, args.to, args.type || 'particle', args.subtype, {
               title: args.title,
               mode: args.mode || 'newGrid',
+              size: args.size,
             });
           } else {
             throw new Error('Pass `to` (section) or `nextTo` (sibling particle id)');
@@ -3589,7 +3590,7 @@ const TOOLS = [
         type:    { type: 'string', description: 'add: node type (particle/position/spacer/system). find/edit: filter by type.' },
         to:      { type: 'string', description: 'add/move: target section id.' },
         nextTo:  { type: 'string', description: 'add/move: place beside this particle id instead of appending.' },
-        size:    { type: 'number', description: 'add: block width percentage.' },
+        size:    { type: 'number', description: 'add: block width percentage. Works with `nextTo`, and with `to` when mode is "firstGrid"; existing siblings rescale into the remainder. Default: equal split. A split that leaves any block at 0% is refused — Gantry reads size 0 as unset and re-splits the row equally on save. For an overlay, set a block `class` and position it in CSS instead.' },
         mode:    { type: 'string', enum: ['newGrid', 'firstGrid'], description: 'add: placement mode. Default newGrid.' },
         attributes: { type: 'object', additionalProperties: true, description: 'edit: settings object, deep-merged into the particle. Preferred over `edits`.' },
         blockClass: { type: 'string', description: 'edit: CSS class for the wrapping block.' },

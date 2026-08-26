@@ -592,14 +592,22 @@ function compile(design, context) {
 /* ─── Particle settings traps ────────────────────────────────────────────── */
 
 // Values a particle accepts silently but that do not do what the Gantry admin
-// UI implies. `display.title.enabled: "hide"` is offered in the admin select
-// yet the title renders anyway — "" is the value that hides it. Nothing in the
-// stack rejected it, so a hand-written YAML shipped visible titles and cost a
-// screenshot cycle to find. Reject it here instead.
+// UI implies. `article.display.title.enabled: "hide"` is offered in the admin
+// select yet the title renders anyway — "" is the value that hides it. Nothing
+// in the stack rejected it, so a hand-written YAML shipped visible titles and
+// cost a screenshot cycle to find. Reject it here instead.
+//
+// Each trap lists every path the value can arrive under. A live particle nests
+// these settings under `article`; a hand-written patch sometimes omits that
+// wrapper. The first version of this table held the bare `display...` path
+// only, so it matched the unit tests and never fired on a real particle.
 const PARTICLE_VALUE_TRAPS = [
   {
     subtypes: ['contentarray', 'blockcontent'],
-    path: ['display', 'title', 'enabled'],
+    paths: [
+      ['article', 'display', 'title', 'enabled'],
+      ['display', 'title', 'enabled'],
+    ],
     bad: 'hide',
     message:
       'does not hide the title — the title renders anyway. Use "" to hide it, or "show" to show it.',
@@ -628,8 +636,10 @@ function checkParticleSettings(subtype, attributes) {
   const out = [];
   for (const trap of PARTICLE_VALUE_TRAPS) {
     if (!trap.subtypes.includes(subtype)) continue;
-    if (readPath(attributes, trap.path) === trap.bad) {
-      out.push(`${subtype} ${trap.path.join('.')}: "${trap.bad}" ${trap.message}`);
+    for (const path of trap.paths) {
+      if (readPath(attributes, path) === trap.bad) {
+        out.push(`${subtype} ${path.join('.')}: "${trap.bad}" ${trap.message}`);
+      }
     }
   }
   return out;
