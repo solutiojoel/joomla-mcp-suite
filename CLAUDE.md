@@ -148,6 +148,7 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 | Doc name | Topic |
 |----------|-------|
 | `kb/tinymce-safe-html` | Article HTML rules that survive a human TinyMCE save — empty-element bug, CSS `::before` icons, growable lists. Read with `workflows/custom-page-agent`. |
+| `kb/module-class-suffix` | Module Class Suffix leading-space quirk — a suffix with no leading space fuses onto `moduletable` and kills both classes. Read with `workflows/custom-page-agent`. |
 | `kb/staff-grid` | Staff/team grid using contentarray particle |
 | `kb/staff-pages` | All staff page layouts (grid, teacherbox, table, contact form) |
 | `kb/teacher-pages` | Teacher/classroom pages with sidebar nav and user groups |
