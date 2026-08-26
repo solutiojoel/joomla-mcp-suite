@@ -23,6 +23,7 @@ Do this before any other tool call — the active scope controls which tools are
 | Support tickets, Freshdesk triage | `support` |
 | Menu build (PDF → spec → Joomla skeleton) | `menu-build` |
 | Content build (schematic → written pages on the skeleton) | `content-build` |
+| Site build (mockup / Figma / Claude Design export → live Gantry homepage) | `site-build` |
 | Everything else (design, content, config, investigation) | `super_shannon` |
 
 **Recognizing a support ticket (do not miss this):** if the user's message is **just a number** (e.g. `35478`), a `#`-prefixed number (`#35478`), a Freshdesk ticket URL, or mentions a "ticket" / "Freshdesk" / "support" — it is a **support ticket**. Switch to `support` and begin the Support Ticket Workflow immediately. A bare 4–6 digit number on its own is **always** a Freshdesk ticket ID — treat it as one; never respond with "what would you like to work on?" or fall through to `super_shannon`.
@@ -133,11 +134,15 @@ Every doc below is a Knowledge Gateway row. Call `read_agent_doc(doc: "<name>")`
 | `workflows/content-agent` | Standard article text, SEO, and publish state edits |
 | `workflows/custom-page-agent` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
 | `workflows/page-animation` | Animation and hover baseline for a custom page — scroll reveal, hover states, reduced-motion and no-JS fallbacks. Read it with `workflows/custom-page-agent` on every custom page build. |
-| `workflows/gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |
-| `workflows/gantry-particle-map` | Gantry particle settings, rendered HTML anchors, and particle selection/CSS targeting map |
-| `workflows/gantry-visual-qa` | Visual QA loop after any layout or CSS work — screenshots, checklist, CSS iteration |
+| `workflows/site-build` | Site build — visual reference → Design Spec → live Gantry outline. The content-binding contract, the Design Spec schema, the two approval gates, the sub-agent offload map, and the defect taxonomy. |
+| `workflows/gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, CSS selector conventions, and **the three CSS deployment approaches**. The authority for anything CSS. |
+| `workflows/gantry-visual-qa` | Visual QA loop after any layout or CSS work — deep `joomla_inspect_frontend` usage, three-width screenshots, per-section checklists |
 | `workflows/ftp-css-smoke-test` | End-to-end validation that FTP upload → Gantry Page Settings → live page emission works; use before custom page builds or after server migrations |
-| `workflows/gantry-design-agent` | Solutio Gantry design workflow — step-by-step process for building or rebuilding a homepage layout |
+
+> **Retired 2026-08-26:** `workflows/gantry-design-agent` and
+> `workflows/gantry-particle-map` no longer resolve. The first is replaced by
+> `workflows/site-build`; the second by `gantry_reference{topic:"particles"}`.
+> Both bodies survive in the gateway under `doc-group:archive`.
 
 The process improvement queue is no longer a doc — it is `knowledge_universal { tag: "improvements" }` for open findings, and `tag: "improvements-archive"` for resolved ones.
 

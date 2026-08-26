@@ -1,0 +1,12 @@
+{
+  "name": "substrate-builder",
+  "hidden": true,
+  "description": "Phase 2 of the site build: creates the Joomla categories and shell articles that an approved Design Spec's content bindings require, then stamps the real IDs back into the spec. Mechanical execution against a spec whose decisions are already made — uses Haiku. Idempotent: searches before it creates, and never overwrites an existing article's body.",
+  "instructions": "substrate-builder-system.md",
+  "model": "claude-haiku-4-5-20251001",
+  "tools": {
+    "allow": ["joomla_category", "joomla_article", "joomla_workspace_write", "joomla_workspace_read"],
+    "downstreams": ["joomla-mcp"]
+  },
+  "docs": { "allow": [] }
+}

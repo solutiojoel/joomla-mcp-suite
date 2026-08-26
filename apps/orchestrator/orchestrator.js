@@ -61,7 +61,8 @@ const ORCHESTRATOR_TOKEN = process.env.ORCHESTRATOR_TOKEN || '';
 // @solutio/mcp-downstream-client, shared with the agents-mcp bridge so the two
 // can never drift. `inject` names the argument that carries the active site on
 // every call — 'site_url' (joomla-mcp, ftp-mcp, agents-mcp), 'site' (gantry-mcp),
-// or null for servers that need no site context (freshdesk-mcp, mockup-analyzer).
+// or null for servers that need no site context (freshdesk-mcp,
+// knowledge-gateway-mcp).
 //
 // The orchestrator runs inside Docker, so it reaches the other servers on
 // host.docker.internal by default (override with DOWNSTREAM_HOST). Routing is
@@ -74,10 +75,10 @@ const DOWNSTREAM_HOST = process.env.DOWNSTREAM_HOST || 'host.docker.internal';
 
 // ─── In-process hosting (single-process mode) ────────────────────────────────
 // When INPROCESS_DOWNSTREAMS=1, the orchestrator hosts the Node downstream
-// servers in this process via the SDK's InMemoryTransport (no HTTP, no ports)
-// and runs the Python mockup-analyzer as a stdio child process. This is the
-// mode used in production (Autoscale runs one container with one web process).
-// Each module below exports buildServer() and has no side effects on require.
+// servers in this process via the SDK's InMemoryTransport (no HTTP, no ports).
+// This is the mode used in production (Autoscale runs one container with one
+// web process). Each module below exports buildServer() and has no side effects
+// on require.
 
 const INPROC = process.env.INPROCESS_DOWNSTREAMS === '1';
 
@@ -90,13 +91,11 @@ const INPROC_MODULES = {
 };
 
 // Downstreams that run as stdio child processes in single-process mode.
-const STDIO_CHILDREN = {
-  'mockup-analyzer': {
-    command: 'python3',
-    args: ['server.py'],
-    cwd: path.join(__dirname, '..', 'mockup-analyzer'),
-  },
-};
+// Currently empty — every downstream is a Node module hosted in-process. The
+// machinery below is kept because it is the only way to host a non-Node
+// downstream under Autoscale's one-process model. Add an entry as
+// `label: { command, args, cwd }` to use it.
+const STDIO_CHILDREN = {};
 
 function downstreamMode(label) {
   if (!INPROC) return 'http';
@@ -407,7 +406,6 @@ function getStdioClient(ds) {
       const env = { ...process.env };
       delete env.HTTP_PORT;
       delete env.PORT;
-      delete env.MOCKUP_MCP_PORT;
       const client = new Client(
         { name: `orchestrator→${ds.label}`, version: '1.0.0' },
         { capabilities: {} }
@@ -1074,7 +1072,7 @@ ${FAVICON_TAG}
 }</pre>
   <h2>4. Verify</h2>
   <ul>
-    <li>Ask your agent to list tools — you should see ~115 (joomla, gantry, freshdesk, ftp, knowledge-gateway, mockup-analyzer).</li>
+    <li>Ask your agent to list tools — you should see ~70 (joomla, gantry, freshdesk, ftp, knowledge-gateway, agents).</li>
     <li>Call <code>set_active_site</code> with your site URL before using site-specific tools.</li>
   </ul>
   <h2>Good to know</h2>
@@ -1154,7 +1152,8 @@ function buildServer(sessionCtx) {
         name: 'build_solutio_site',
         description:
           'Start a full site build following Solutio conventions. ' +
-          'Loads the complete style guide and guides the LLM through building a parish or school home outline correctly.',
+          'Switches to the site-build agent scope and states the phase map and the ' +
+          'content-binding rule before any layout work begins.',
       },
     ],
   }));
@@ -1185,19 +1184,28 @@ function buildServer(sessionCtx) {
                 '- Copyright always has the Solutio admin footer HTML',
                 '- CSS uses min(Nvw, Nrem) sizing, 50.99rem breakpoints, CSS variables only',
                 '',
-                '**Design workflow - required tool call order:**',
-                '1. `solutio_design_workflow` - load the full design process guide (do this now)',
-                '2. `gantry_outline_conventions` - load outline/subsite inheritance rules before creating or rewiring outlines',
-                '3. `gantry_design_patterns` - load the pattern knowledge base (why each particle+CSS choice is made)',
-                '4. `gantry_design_plan_from_brief(brief: "...")` - generate a plan with required IDs and guardrails before writing any YAML',
-                '5. `gantry_homepage_examples` - find a similar site and decompile it as a starting point',
-                '6. Resolve all content IDs via `joomla_list_categories` / `joomla_list_articles`',
-                '7. `gantry_validate_design_contract` - validate design YAML before applying',
-                '8. `gantry_layout_design(dryRun: true)` - dry run, then apply',
+                '**The content-binding rule — this one is absolute:**',
+                'Every piece of homepage content the client will ever edit lives in a',
+                'Joomla article or category, and the particle points at it by ID. Mass',
+                'times, rotator slides, news, mission, footer, alerts — all articles. Never',
+                'type client-editable copy into a particle attribute or a `custom` particle.',
+                'A layout that looks right but is not editable in the article manager is a',
+                'failed build.',
                 '',
-                'Call `solutio_style_guide` for structural conventions, `solutio_particles` for particle field schemas.',
+                '**Phase map — stop at every gate:**',
+                '1. `switch_agent(agent: "site-build")`, then `set_active_site`',
+                '2. Read the mockup or reference into a Design Spec — **gate: you approve the spec**',
+                '3. Provision the content substrate: categories + shell articles, IDs recorded',
+                '4. Compile the spec to design YAML, validate, dry run — **gate: you approve the diff**',
+                '5. Apply, then screenshot and compare against the mockup',
+                '6. Publish the build report',
                 '',
-                'Which site are we building, and is it a **parish home**, **school home**, or another page type?',
+                'Reference is loaded on demand, not up front: `gantry_reference{topic:"conventions"}`',
+                'before touching outlines, `{topic:"patterns"}` when choosing sections,',
+                '`{topic:"particles"}` when writing particle attributes.',
+                '',
+                'Which site are we building, is it a **parish home**, **school home**, or another',
+                'page type, and what is the mockup or reference I should work from?',
               ].join('\n'),
             },
           },

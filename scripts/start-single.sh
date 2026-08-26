@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Single-process entry point: the orchestrator hosts every Node downstream
-# server in-process (in-memory MCP transport) and runs the Python
-# mockup-analyzer as a stdio child. One web process, one port — exactly what
+# Single-process entry point: the orchestrator hosts every downstream server
+# in-process (in-memory MCP transport). One web process, one port — exactly what
 # Replit Autoscale expects. Used both by the dev workflow and the deployment.
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

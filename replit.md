@@ -12,8 +12,7 @@ scripts/start-single.sh → node apps/orchestrator/orchestrator.js  (port 5000)
   ├── gantry-mcp             hosted in-process
   ├── freshdesk-mcp          hosted in-process
   ├── ftp-mcp                hosted in-process
-  ├── knowledge-gateway-mcp  hosted in-process
-  └── mockup-analyzer        Python stdio child process
+  └── knowledge-gateway-mcp  hosted in-process
 ```
 
 One web process, one port — this is what lets the suite publish as a Replit
@@ -112,12 +111,6 @@ The TypeScript apps must be compiled before running:
 ```bash
 npm ci
 npm run build
-```
-
-Python dependencies for `mockup-analyzer`:
-
-```bash
-python3 -m pip install "mcp[cli]" pyyaml
 ```
 
 ## User Preferences
