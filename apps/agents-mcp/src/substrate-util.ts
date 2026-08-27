@@ -54,6 +54,8 @@ export interface SubstrateReport {
   build_type: "new" | "redesign";
   /** redesign only: the parent every created row nests under. */
   redesign_root_id?: number | null;
+  /** redesign only: its title, as resolved. */
+  redesign_root?: string | null;
   created: SubstrateItem[];
   would_create: SubstrateItem[];
   reused: SubstrateItem[];

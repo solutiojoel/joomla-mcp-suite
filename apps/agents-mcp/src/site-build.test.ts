@@ -6,6 +6,7 @@ import { validateDesignSpec } from "./design-spec-validator.js";
 import { buildSubstrate, seedOrPlaceholder } from "./substrate.js";
 import { deriveDesignYaml, deepMerge, DeriveError } from "./derive-design-yaml.js";
 import { verifyBuild, extractWidths, isStillPlaceholder, visibleLength } from "./verify-build.js";
+import { resolveRedesignRoot } from "./site-survey.js";
 import { customHoldsClientContent, parseFingerprint, DesignSpec, SpecBlock } from "./design-spec.js";
 
 let failures = 0;
@@ -119,7 +120,13 @@ function mockJoomla(opts: {
           categoryId: args.categoryId,
           state: args.state,
         };
-        created.push({ kind: "article", id, title: args.title, content: args.content });
+        created.push({
+          kind: "article",
+          id,
+          title: args.title,
+          content: args.content,
+          categoryId: args.categoryId,
+        });
         return { success: true, data: { id } };
       }
       if (args.action === "update") {
@@ -755,6 +762,149 @@ async function main() {
       noRoot.errors.some((e) => e.rule === "build-type"),
       "a redesign must name its parent category"
     );
+  });
+
+  // ─── resolving the redesign parent, whatever it is called ─────────────────
+  console.log("— resolveRedesignRoot —");
+
+  await check("infers the parent from a fleet skeleton nested under it", () => {
+    const r = resolveRedesignRoot([
+      { id: 2, title: "Other", parent: "" },
+      { id: 8, title: "Headlines / News", parent: "" },        // live, flat
+      { id: 50, title: "Parish Rebuild 2026", parent: "" },     // the parent
+      { id: 51, title: "Rotator", parent: "Parish Rebuild 2026" },
+      { id: 52, title: "Alert", parent: "Parish Rebuild 2026" },
+      { id: 53, title: "Homepage Articles", parent: "Parish Rebuild 2026" },
+    ]);
+    assert(r.resolved?.id === 50, `expected 50, got ${JSON.stringify(r)}`);
+    assert(!r.ambiguous, "not ambiguous");
+    assert(/fleet skeleton/.test(r.reason), `evidence names the skeleton: ${r.reason}`);
+  });
+
+  await check("resolves a parent named nothing like 'Redesign'", () => {
+    const r = resolveRedesignRoot([
+      { id: 60, title: "STM 2026", parent: "" },
+      { id: 61, title: "Rotator", parent: "STM 2026" },
+      { id: 62, title: "Alert", parent: "STM 2026" },
+      { id: 63, title: "Homepage Articles", parent: "STM 2026" },
+    ]);
+    assert(r.resolved?.title === "STM 2026", `resolved by structure, got ${JSON.stringify(r)}`);
+  });
+
+  await check("an explicit name wins over inference", () => {
+    const r = resolveRedesignRoot(
+      [
+        { id: 50, title: "Redesign", parent: "" },
+        { id: 51, title: "Rotator", parent: "Redesign" },
+        { id: 70, title: "New Site", parent: "" },
+        { id: 71, title: "Alert", parent: "New Site" },
+      ],
+      { explicit: "New Site" }
+    );
+    assert(r.resolved?.id === 70, "took the named one");
+  });
+
+  await check("site notes break a tie", () => {
+    const cats = [
+      { id: 50, title: "Bucket A", parent: "" },
+      { id: 51, title: "Rotator", parent: "Bucket A" },
+      { id: 60, title: "Bucket B", parent: "" },
+      { id: 61, title: "Alert", parent: "Bucket B" },
+    ];
+    const blind = resolveRedesignRoot(cats);
+    assert(blind.ambiguous, "ambiguous without help");
+    const helped = resolveRedesignRoot(cats, {
+      site_notes: "The redesign categories all live under Bucket B.",
+    });
+    assert(helped.resolved?.id === 60, `notes resolved it, got ${JSON.stringify(helped)}`);
+  });
+
+  await check("two plausible parents is AMBIGUOUS, never a guess", () => {
+    const r = resolveRedesignRoot([
+      { id: 50, title: "Redesign", parent: "" },
+      { id: 51, title: "Rotator", parent: "Redesign" },
+      { id: 52, title: "Alert", parent: "Redesign" },
+      { id: 60, title: "New Site", parent: "" },
+      { id: 61, title: "Rotator", parent: "New Site" },
+      { id: 62, title: "Alert", parent: "New Site" },
+    ]);
+    assert(r.ambiguous && r.resolved === null, "must refuse to pick");
+    assert(r.candidates.length === 2, "both reported");
+    assert(/split the build/.test(r.reason), "explains the consequence");
+  });
+
+  await check("a flat live install yields no candidate", () => {
+    const r = resolveRedesignRoot([
+      { id: 2, title: "Other", parent: "" },
+      { id: 8, title: "Headlines / News", parent: "" },
+      { id: 10, title: "Rotator", parent: "" },
+    ]);
+    assert(r.resolved === null && !r.ambiguous, "nothing to resolve, nothing to guess");
+  });
+
+  await check("substrate REFUSES an ambiguous redesign parent and writes nothing", async () => {
+    const s = redesignSpec({ content_scope: {} }); // no name given
+    const m = mockJoomla({
+      categories: [
+        { id: 50, title: "Redesign", parent: "" },
+        { id: 51, title: "Rotator", parent: "Redesign" },
+        { id: 52, title: "Alert", parent: "Redesign" },
+        { id: 60, title: "New Site", parent: "" },
+        { id: 61, title: "Rotator", parent: "New Site" },
+        { id: 62, title: "Alert", parent: "New Site" },
+      ],
+    });
+    const report = await buildSubstrate({ executor: m.executor, spec: s });
+    assert(report.errors.length === 1, `one error: ${JSON.stringify(report.errors)}`);
+    assert(/split the build/.test(report.errors[0].detail ?? ""), "names the risk");
+    assert(m.created.length === 0 && m.updated.length === 0, "NOTHING written");
+  });
+
+  await check("substrate refuses a redesign with no parent and no name", async () => {
+    const s = redesignSpec({ content_scope: {} });
+    const m = mockJoomla({ categories: [{ id: 2, title: "Other", parent: "" }] });
+    const report = await buildSubstrate({ executor: m.executor, spec: s });
+    assert(
+      report.errors.some((e) => /needs content_scope.redesign_root/.test(e.detail ?? "")),
+      `asks to be told the name: ${JSON.stringify(report.errors)}`
+    );
+    assert(m.created.length === 0, "did not invent a parent");
+  });
+
+  await check("substrate uses a resolved parent it was never told about", async () => {
+    const s = redesignSpec({
+      content_scope: {}, // nothing named — the resolver must find it
+      sections: [
+        {
+          id: "utility",
+          blocks: [
+            block({
+              content_binding: {
+                kind: "article", role: "mass_times", existing_id: null,
+                create: { title: "Mass Times", category: "Homepage Articles" },
+              },
+            }),
+          ],
+        },
+      ],
+    });
+    const m = mockJoomla({
+      categories: [
+        { id: 70, title: "Holy Family 2026", parent: "" },
+        { id: 71, title: "Rotator", parent: "Holy Family 2026" },
+        { id: 72, title: "Alert", parent: "Holy Family 2026" },
+        { id: 73, title: "Homepage Articles", parent: "Holy Family 2026" },
+        { id: 24, title: "Homepage Articles", parent: "" }, // LIVE duplicate title
+      ],
+      articles: { "55": { title: "Mass Times", content: "<p>LIVE</p>", categoryId: "24" } },
+    });
+    const report = await buildSubstrate({ executor: m.executor, spec: s });
+    assert(report.redesign_root === "Holy Family 2026", `resolved: ${report.redesign_root}`);
+    assert(report.errors.length === 0, `no errors: ${JSON.stringify(report.errors)}`);
+    // The live "Homepage Articles" (24) must not be used; the in-scope 73 must.
+    assert(report.copied.length === 1, "copied the live Mass Times into scope");
+    const made = m.created.find((c) => c.kind === "article");
+    assert(String(made.categoryId) === "73", `filed under the in-scope category, got ${made.categoryId}`);
   });
 
   // ─── derive ────────────────────────────────────────────────────────────────

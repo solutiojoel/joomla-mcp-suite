@@ -361,7 +361,9 @@ const TOOLS = [
       properties: {
         site_url: { type: "string", description: "The active site URL." },
         build_type: { type: "string", enum: ["new", "redesign"], description: "Overrule the inference. The operator usually knows; the survey reports a warning if this disagrees with what the install looks like." },
-        redesign_root: { type: "string", description: "Redesign only: the parent category title everything nests under. Default 'Redesign'." },
+        redesign_root: { type: "string", description: "Redesign only: the parent category title, when you know it. Omitted, the survey infers it from the category tree — the name varies per build (Redesign, New Site, STM 2026...) and is never defaulted." },
+        redesign_root_id: { type: "number", description: "Redesign only: the parent category id, when a previous survey already resolved it. Beats every other signal." },
+        site_notes: { type: "string", description: "Site notes text from get_site_notes. Pass it and the resolver can use a parent category name recorded there." },
         theme: { type: "string", description: "Theme in use, if known. A template outside the current fleet set is a strong redesign signal and means fleet block classes have no CSS." },
       },
     },
@@ -883,6 +885,8 @@ function buildServer(): Server {
             executor,
             build_type: request.params.arguments?.build_type as "new" | "redesign" | undefined,
             redesign_root: request.params.arguments?.redesign_root as string | undefined,
+            redesign_root_id: request.params.arguments?.redesign_root_id as number | undefined,
+            site_notes: request.params.arguments?.site_notes as string | undefined,
             theme: request.params.arguments?.theme as string | undefined,
           });
           console.error(

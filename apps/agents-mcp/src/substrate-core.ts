@@ -9,6 +9,7 @@ import {
   titleEq,
   seedOrPlaceholder,
 } from "./substrate-util.js";
+import { resolveRedesignRoot } from "./site-survey.js";
 
 /**
  * The resolution core of Phase 2. Split from the types/helpers so the scoping
@@ -38,45 +39,79 @@ export async function buildSubstrate(opts: SubstrateOptions): Promise<SubstrateR
   const scope = new Set<number>();
 
   if (isRedesign) {
-    const rootTitle = spec.content_scope?.redesign_root ?? "Redesign";
-    const existing = allCats.filter((c) => titleEq(c.title, rootTitle));
-    if (existing.length > 1) {
+    // The parent's name varies per build, so it is resolved by the same
+    // evidence-based resolver the survey uses — never defaulted. Creating a
+    // "Redesign" category on an install whose parent is called something else
+    // would split the build across two trees, which is worse than stopping.
+    const resolution = resolveRedesignRoot(allCats, {
+      explicit: spec.content_scope?.redesign_root,
+      explicitId: spec.content_scope?.redesign_root_id,
+    });
+
+    if (resolution.ambiguous) {
       report.errors.push({
         role: "(scope)",
         kind: "category",
-        title: rootTitle,
+        title: spec.content_scope?.redesign_root ?? "(unresolved)",
         outcome: "failed",
-        detail: `two or more categories are titled '${rootTitle}' — resolve by hand and set content_scope.redesign_root_id`,
+        detail: `${resolution.reason} Nothing was written. Run survey_site, then set content_scope.redesign_root (or redesign_root_id) in the spec.`,
       });
       return report;
     }
-    redesignRootId = toId(existing[0]?.id) ?? toId(spec.content_scope?.redesign_root_id);
 
-    if (!redesignRootId && !dry_run) {
-      const res = await callSafe(executor, "joomla_category", { action: "create", title: rootTitle });
-      redesignRootId = toId(res?.data?.id ?? res?.data?.categoryId);
-      if (!redesignRootId) {
+    redesignRootId = resolution.resolved?.id;
+    let rootName = resolution.resolved?.title ?? spec.content_scope?.redesign_root;
+
+    if (!redesignRootId) {
+      // Nothing exists yet. Only create when the caller actually named it —
+      // inventing a name here is how two parallel trees get started.
+      if (!spec.content_scope?.redesign_root) {
         report.errors.push({
           role: "(scope)",
           kind: "category",
-          title: rootTitle,
+          title: "(unnamed)",
           outcome: "failed",
-          detail: `could not create the redesign parent category: ${res.message ?? "no id returned"}`,
+          detail:
+            "a redesign needs content_scope.redesign_root — no parent category exists and none was named, so there is nothing safe to create. Run survey_site and set the name.",
         });
         return report;
       }
-      report.created.push({
-        role: "(scope)",
-        kind: "category",
-        title: rootTitle,
-        id: redesignRootId,
-        outcome: "created",
-      });
+      if (dry_run) {
+        report.would_create.push({
+          role: "(scope)",
+          kind: "category",
+          title: rootName!,
+          outcome: "would_create",
+          detail: "the redesign parent category",
+        });
+      } else {
+        const res = await callSafe(executor, "joomla_category", {
+          action: "create",
+          title: rootName,
+        });
+        redesignRootId = toId(res?.data?.id ?? res?.data?.categoryId);
+        if (!redesignRootId) {
+          report.errors.push({
+            role: "(scope)",
+            kind: "category",
+            title: rootName!,
+            outcome: "failed",
+            detail: `could not create the redesign parent category: ${res.message ?? "no id returned"}`,
+          });
+          return report;
+        }
+        report.created.push({
+          role: "(scope)",
+          kind: "category",
+          title: rootName!,
+          id: redesignRootId,
+          outcome: "created",
+        });
+      }
     }
 
     if (redesignRootId) {
       scope.add(redesignRootId);
-      const rootName = String(existing[0]?.title ?? rootTitle);
       for (const c of allCats) {
         if (titleEq(c.parent, rootName)) {
           const cid = toId(c.id);
@@ -85,6 +120,7 @@ export async function buildSubstrate(opts: SubstrateOptions): Promise<SubstrateR
       }
     }
     report.redesign_root_id = redesignRootId ?? null;
+    report.redesign_root = rootName ?? null;
   }
 
   /** Is this category inside the build's scope? On a new build, everything is. */
