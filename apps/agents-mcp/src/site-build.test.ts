@@ -578,6 +578,118 @@ async function main() {
     assert(out.design_yaml.includes("top_container"), "yaml renders");
   });
 
+  await check("main_container groups emit grids, not an ignored key", () => {
+    // compileSectionGroup reads `grids`. An earlier version emitted `particles`,
+    // which the compiler ignored — the group compiled to an empty section with
+    // no error anywhere. Pin the key the compiler actually reads.
+    const out = deriveDesignYaml(
+      spec({
+        sections: [
+          {
+            id: "sidebar",
+            blocks: [
+              block({ size: 25, content_binding: { kind: "article", role: "side", existing_id: 5 } }),
+            ],
+          },
+          {
+            id: "mainbar",
+            blocks: [
+              block({ size: 75, content_binding: { kind: "category", role: "news", existing_id: 6 } }),
+            ],
+          },
+        ],
+      })
+    );
+    const mc = out.design.main_container as any;
+    assert(mc.layout === "sidebar-main-aside", "layout named");
+    for (const g of ["sidebar", "mainbar"]) {
+      assert(Array.isArray(mc[g].grids), `${g} has a grids array`);
+      assert(mc[g].grids[0].blocks.length === 1, `${g} carries its block`);
+      assert(mc[g].particles === undefined, `${g} must not use the ignored 'particles' key`);
+      assert(mc[g].section_id === g, `${g} keeps its real section id`);
+      assert(mc[g].type === "section", `${g} is type section, not a generated wrapper`);
+    }
+    assert(mc.sidebar.size === 25 && mc.mainbar.size === 75, "group widths carried");
+  });
+
+  // ─── round-trip against the real Gantry compiler ──────────────────────────
+  // The strongest check available here: a key the compiler does not read is
+  // silently ignored, so unit-testing the deriver's own output cannot catch a
+  // shape mismatch. Emitting `particles` instead of `grids` compiled the
+  // sidebar/mainbar groups to EMPTY sections with valid:true and no error —
+  // exactly the failure this round-trip catches. Skipped if gantry-mcp is not
+  // resolvable (isolated checkouts), so it can never be a false red.
+  console.log("— round-trip: derived YAML → design-compiler —");
+
+  await check("derived YAML compiles, and no section comes out empty", () => {
+    let compiler: any;
+    try {
+      compiler = require("../../gantry-mcp/lib/design-compiler.js");
+    } catch {
+      console.log("      (skipped — gantry-mcp compiler not resolvable here)");
+      return;
+    }
+
+    const s = spec({
+      sections: [
+        {
+          id: "slideshow",
+          fingerprint: "70|30",
+          blocks: [
+            block({
+              size: 70, particle: "swiper", block_class: "fullwidth-swiper",
+              content_binding: { kind: "category", role: "hero_slides", existing_id: 12 },
+            }),
+            block({ size: 30 }),
+          ],
+        },
+        {
+          id: "sidebar",
+          blocks: [
+            block({ size: 25, content_binding: { kind: "article", role: "side", existing_id: 5 } }),
+          ],
+        },
+        {
+          id: "mainbar",
+          blocks: [
+            block({ size: 75, content_binding: { kind: "category", role: "news", existing_id: 6 } }),
+          ],
+        },
+        {
+          id: "extension",
+          blocks: [
+            block({ content_binding: { kind: "article", role: "mission", existing_id: 18 } }),
+          ],
+        },
+      ],
+    });
+
+    const out = deriveDesignYaml(s);
+    const res = compiler.compileYaml(out.design_yaml, {});
+    assert(res.valid, `compiler rejected the derived YAML: ${JSON.stringify(res.errors)}`);
+
+    const countParticles = (n: any): number => {
+      if (!n) return 0;
+      if (n.type === "particle") return 1;
+      return (n.children || []).reduce((a: number, c: any) => a + countParticles(c), 0);
+    };
+    const total = res.layout.reduce((a: number, n: any) => a + countParticles(n), 0);
+    assert(total >= 5, `expected every block to survive compilation, got ${total} particles`);
+
+    // container-main specifically — the group shape that was wrong
+    const cm = res.layout.find((n: any) => n.id === "container-main");
+    assert(!!cm, "container-main built");
+    assert(countParticles(cm) === 2, `sidebar+mainbar must carry their particles, got ${countParticles(cm)}`);
+
+    // Base Outline inheritance must survive a homepage build
+    const ids: string[] = [];
+    const walk = (n: any) => { if (n?.id) ids.push(n.id); (n.children || []).forEach(walk); };
+    res.layout.forEach(walk);
+    for (const id of ["navigation", "footer", "copyright", "offcanvas"]) {
+      assert(ids.includes(id), `Base Outline section '${id}' must be preserved`);
+    }
+  });
+
   // ─── verify ────────────────────────────────────────────────────────────────
   console.log("— verifyBuild —");
 

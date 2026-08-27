@@ -232,10 +232,15 @@ export function deriveDesignYaml(spec: DesignSpec): DeriveResult {
     if (TOP_CONTAINER_SECTIONS.has(id)) {
       topSections.push(compiled);
     } else if (MAIN_CONTAINER_SECTIONS.has(id)) {
+      // compileSectionGroup reads `grids`, not `particles` — emitting the wrong
+      // key compiles the group to an EMPTY section with no error anywhere.
+      // `size` is the group's width inside container-main (sidebar/mainbar/aside
+      // split), which is separate from the block sizes inside it.
       mainGroups[id] = {
         section_id: id,
+        type: "section",
         size: section.blocks.reduce((n, b) => n + b.size, 0) || 100,
-        particles: section.blocks.map((b) => blockToYaml(b, id)),
+        grids: [{ blocks: section.blocks.map((b) => blockToYaml(b, id)) }],
       };
     } else if (FOOTER_CONTAINER_SECTIONS.has(id)) {
       footerSections.push(compiled);
