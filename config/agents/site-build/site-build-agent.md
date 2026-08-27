@@ -57,7 +57,8 @@ Two gates. Stop at both. Do not write to a live outline before Gate 2 passes.
 
 | Phase | What runs | Where | Engine |
 |---|---|---|---|
-| **0 — Frame** | Site, site type, target outline, theme confirmed | you | — |
+| **0 — Survey** | Build type inferred, existing content inventoried | `survey_site` | code |
+| **0b — Frame** | Site type, target outline, theme confirmed | you | — |
 | **1 — Read** | Reference → Design Spec | `run_design_interpretation` | **model** |
 | **🚦 Gate 1** | **Human approves the Design Spec** | conversation | — |
 | **2 — Substrate** | Categories + shell articles created, IDs stamped into the spec | `build_content_substrate` | code |
@@ -72,7 +73,49 @@ Everything else is deterministic and repeats exactly. If a step feels like it
 needs judgement and is not one of those two, the spec is probably missing
 something — fix the spec rather than improvising.
 
-### Phase 0 — Frame
+### Phase 0 — Survey the install first
+
+```
+survey_site { site_url, build_type?, redesign_root?, theme? }
+```
+
+**Run this before anything else.** The menu build and the content build normally
+happen *before* a site build, so most of what the homepage needs already exists.
+The survey tells you three things:
+
+1. **Is this a new build or a redesign?** It infers this from category and
+   article counts, category nesting, the fleet skeleton, and the theme, and
+   shows its evidence. You can overrule it with `build_type`.
+2. **What is already prepared** — every fleet role that resolves to a real row,
+   with its ID.
+3. **What is genuinely missing** — the only things the build will create.
+
+Put the survey in front of the user at Gate 1. Approving a spec without knowing
+which sections reuse prepared content and which create new is approving half the
+decision.
+
+#### The two build types
+
+|  | **New build** | **Redesign** |
+|---|---|---|
+| Install | A forge site, nothing live to protect | **Shares the install with a LIVE site** |
+| Categories | At root | All under a **redesign parent** category |
+| Existing content | Bind to it freely | **Never bind to live rows** |
+| Live content match | Reuse it | **Copy it** into the redesign scope |
+
+A redesign is the dangerous one. The rules that protect it are enforced in code,
+not left to you: lookups only ever match inside the redesign subtree, so a live
+category sharing a title is invisible; and when a role's content exists live but
+not in scope, the substrate stage duplicates it under the redesign parent and
+never writes to the source.
+
+> **Telling them apart:** a forge install looks like `shannon.forge` — about 13
+> flat categories, ~41 articles, the standard skeleton (Rotator, Alert, Homepage
+> Articles, Headlines / News). Substantially more content, nested categories, or
+> a legacy template means a redesign. Say so explicitly if you know; the survey
+> warns when your answer disagrees with what it sees.
+
+### Phase 0b — Frame
 
 Establish before anything else:
 - **Site type** — parish, school, or cemetery. It selects the pattern set.
@@ -110,9 +153,25 @@ and ask you to re-read it.
 
 ### Phase 2 — Provision the substrate
 
-`build_content_substrate` creates the categories and shell articles the spec's
-bindings require, then stamps the real IDs back into the spec. Run it **before**
-any layout work.
+`build_content_substrate` resolves every binding to a real Joomla ID, then
+stamps them back into the spec. Run it **before** any layout work.
+
+What it does depends on the build type:
+
+- **New build** — the forge skeleton already carries Mass Times, Mission
+  Statement, Footer, Rotator, Headlines / News and the rest, so most bindings
+  simply resolve. A clean new build usually creates **nothing**. If it reports a
+  lot of creations, the survey probably misread the install — check before
+  approving.
+- **Redesign** — lookups are bounded to the redesign subtree. Anything missing
+  in scope but present live is **copied** in: the live row is read, a duplicate
+  is written under the redesign parent, and the source is never modified.
+
+Read the report. `reused` is the good outcome, `copied` is expected on a
+redesign, and `created` should be the short list the survey predicted.
+
+Use `dry_run: true` first on any redesign — it reports the full plan, including
+every `would_copy`, without writing anything.
 
 Placeholder copy in a shell article is fine and expected — the article exists so
 the client has somewhere to edit. A binding that resolves to nothing is not.
@@ -195,9 +254,10 @@ unbounded CSS loop burns context and rarely converges.
 
 | Tool | Purpose |
 |---|---|
+| `survey_site` | **Phase 0** — build type + what content already exists. Deterministic. Run it first. |
 | `run_design_interpretation` | **Phase 1** — reference → Design Spec, in a separate context window. Uses a model. |
 | `validate_design_spec` | Re-check the spec after any hand edit. Deterministic. |
-| `build_content_substrate` | **Phase 2** — create categories + shell articles, stamp IDs into the spec. Deterministic and idempotent. |
+| `build_content_substrate` | **Phase 2** — resolve, create, or (on a redesign) copy; stamp IDs into the spec. Deterministic, idempotent, scope-bounded. |
 | `derive_design_yaml` | **Phase 3** — spec → design YAML. Deterministic; refuses while any binding lacks an ID. |
 | `gantry_design` | `validate` → `compile dryRun` → `compile` |
 | `verify_build` | **Phase 5** — structural verification → ranked defect list. Deterministic. |

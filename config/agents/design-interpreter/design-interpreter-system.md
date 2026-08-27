@@ -92,6 +92,30 @@ particle.
 
 ### 5. Bind the content
 
+**Most of what you need already exists.** The menu build and the content build
+normally run before a site build, and every forge install ships with the fleet
+skeleton. Assume the article is already there and name it correctly rather than
+inventing a new one.
+
+Use these canonical roles — the substrate stage resolves them against the
+fleet's real titles, so a correct role is worth more than a clever title:
+
+| role | resolves to |
+|---|---|
+| `mass_times` | article "Mass Times" in Homepage Articles |
+| `mission` | article "Mission Statement" |
+| `footer` | article "Footer" |
+| `calendar` | article "Calendar" |
+| `facebook` / `instagram` / `social` | the matching Homepage Articles row |
+| `formed`, `flocknote`, `daily_readings` | the matching Homepage Articles row |
+| `hero_slides` | category "Rotator" |
+| `news_feed` | category "Headlines / News" |
+| `alert` | category "Alert" |
+
+Set `existing_id: null` regardless — resolving IDs is the substrate stage's job,
+and it knows whether this is a new build or a redesign. Your job is to name the
+role correctly and supply `create` as the fallback for when nothing matches.
+
 For each content-bearing block:
 
 ```json
@@ -150,6 +174,7 @@ Write the spec to the workspace with `joomla_workspace_write` as
 {
   "site": "https://example.com",
   "site_type": "parish",
+  "build_type": "new",
   "source": "stmary-mockup.png",
   "source_kind": "mockup_image",
   "target_outline": "#Home",
@@ -195,6 +220,7 @@ Refuse to emit a spec that fails any of these:
 
 1. Every `contentarray` and `swiper` has a `content_binding`. Every
    `blockcontent` is in exactly one mode — `subcontents` **or** a binding.
+   `build_type` is set to whatever the caller told you ("new" or "redesign").
 2. No block carries client-editable copy in a particle attribute.
 3. No embed code sits in a `custom` particle.
 4. Every `contentarray` binds a category **or** an article, never both.

@@ -8,6 +8,10 @@ import { validateDesignSpec, ValidationIssue } from "../design-spec-validator.js
 export interface DesignInterpreterArgs {
   site_url: string;
   site_type?: string;
+  /** new | redesign — from survey_site. The spec must carry it. */
+  build_type?: "new" | "redesign";
+  /** redesign only: the parent category everything nests under. */
+  redesign_root?: string;
   target_outline?: string;
   theme?: string;
   /** Absolute path to a mockup image, PDF, Figma export, or Claude Design
@@ -126,6 +130,7 @@ export async function runDesignInterpreter(
   const lines = [
     `Interpret the visual reference for site: ${site_url}`,
     `Site type: ${args.site_type ?? "parish"}`,
+    `Build type: ${args.build_type ?? "new"}${args.build_type === "redesign" ? ` (redesign root: ${args.redesign_root ?? "Redesign"})` : ""}`,
     `Target outline: ${args.target_outline ?? "#Home"}`,
     `Theme: ${args.theme ?? "rt_studius"}`,
     `Source kind: ${kind}`,
@@ -149,6 +154,7 @@ export async function runDesignInterpreter(
 
   lines.push(
     "Produce the Design Spec JSON following the rules in your system prompt.",
+    `Set "build_type": "${args.build_type ?? "new"}" in the spec.`,
     "Every content-bearing block MUST carry a content_binding — that rule is enforced",
     "by a validator after you return, so a spec that breaks it will be rejected.",
     "",

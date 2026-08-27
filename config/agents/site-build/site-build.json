@@ -1,6 +1,6 @@
 {
   "name": "site-build",
-  "description": "Site building — visual reference (mockup image, Figma export, Claude Design export, or reference URL) → Design Spec → live Gantry outline. Provisions the Joomla article/category substrate first, so every piece of homepage content stays editable in the article manager. Only two stages use a model; the rest is deterministic. Scope ends when the outline is applied, verified, and the build report is published.",
+  "description": "Site building — visual reference (mockup image, Figma export, Claude Design export, or reference URL) → Design Spec → live Gantry outline. Surveys the install first to tell a NEW build from a REDESIGN and to inventory content the menu/content builds already prepared. Provisions the Joomla article/category substrate before any layout work, so every piece of homepage content stays editable in the article manager; on a redesign it works only inside a redesign parent category and copies live content rather than binding to it. Only two stages use a model.",
   "instructions": "site-build-agent.md",
   "tools": {
     "allow": [
@@ -16,6 +16,7 @@
       "knowledge_universal",
       "knowledge_self_improving",
       "agent_audit",
+      "survey_site",
       "validate_design_spec",
       "run_design_interpretation",
       "build_content_substrate",

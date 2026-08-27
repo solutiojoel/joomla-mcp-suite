@@ -386,6 +386,7 @@ const TOOLS = [
     name: "run_design_interpretation",
     description:
       "Phase 1 of the site build: reads a visual reference and produces a validated Design Spec JSON. Runs the design-interpreter sub-agent in a separate context window (Claude Agent SDK on the operator's subscription), so the mockup and the pattern catalogue never enter the caller's context. " +
+      "Run survey_site first and pass its build_type through — a redesign spec that omits it is rejected by the validator. " +
       "Accepts a local file (mockup image, PDF, Figma export, or Claude Design .dc.html export), a reference_url, or a written brief — markup inputs give the highest fidelity because structure is read from the DOM rather than inferred. " +
       "The spec is persisted to the workspace and validated before it is returned; a spec that breaks the content-binding contract is rejected. " +
       "Returns { success, spec, spec_filename, warnings } or { success: false, error, errors, partial_spec }.",
@@ -398,6 +399,8 @@ const TOOLS = [
         reference_url: { type: "string", description: "A live page to reproduce, when there is no local file." },
         brief: { type: "string", description: "A written brief, when there is no visual reference at all." },
         site_type: { type: "string", description: "parish | school | cemetery. Selects the pattern set. Default parish." },
+        build_type: { type: "string", enum: ["new", "redesign"], description: "From survey_site. The spec must carry it, and the substrate stage behaves differently for each. Default new." },
+        redesign_root: { type: "string", description: "Redesign only: the parent category everything nests under. Default Redesign." },
         target_outline: { type: "string", description: 'Outline to build, e.g. "#Home". Default "#Home".' },
         theme: { type: "string", description: "Site theme. Default rt_studius; a different theme means fleet block classes have no CSS behind them." },
         spec_filename: { type: "string", description: "Workspace spec filename override." },
