@@ -36,11 +36,19 @@ export const SECTION_ORDER = [
 export type SectionId = (typeof SECTION_ORDER)[number];
 
 /**
- * Particles that render client-editable content. Every block using one of these
- * MUST carry a content_binding — that is the contract the whole pipeline exists
- * to enforce.
+ * Particles that ALWAYS render client-editable content. Every block using one
+ * of these MUST carry a content_binding — the contract the pipeline enforces.
+ *
+ * `blockcontent` is deliberately not here. It has two legitimate modes and only
+ * one of them is content:
+ *   - manual  — `subcontents` items (quicklinks, ministry cards). The labels and
+ *               URLs are structural: they are layout decisions made in the spec,
+ *               not rows a client edits in the article manager.
+ *   - joomla  — sourced from a category, which IS content and needs a binding.
+ * Requiring a binding on the manual form would have made the substrate stage
+ * create an article that nothing points at. See blockcontentMode().
  */
-export const CONTENT_PARTICLES = ["contentarray", "blockcontent", "swiper"] as const;
+export const CONTENT_PARTICLES = ["contentarray", "swiper"] as const;
 
 /**
  * Chrome. These render navigation, branding, or system output — nothing a
@@ -68,9 +76,16 @@ export const CHROME_PARTICLES = [
  */
 export const CUSTOM_PARTICLE = "custom";
 
+/**
+ * Every particle the fleet uses. `blockcontent` is listed explicitly because it
+ * is not in CONTENT_PARTICLES (it is only content in its joomla mode) — leaving
+ * it to be picked up from that list made the validator warn that a core fleet
+ * particle was unknown.
+ */
 export const ALL_PARTICLES = [
   ...CONTENT_PARTICLES,
   ...CHROME_PARTICLES,
+  "blockcontent",
   CUSTOM_PARTICLE,
   "timeline",
   "video",
@@ -80,6 +95,26 @@ export type ParticleType = (typeof ALL_PARTICLES)[number];
 
 export function isContentParticle(p: string): boolean {
   return (CONTENT_PARTICLES as readonly string[]).includes(p);
+}
+
+/**
+ * Which of blockcontent's two modes a block is in.
+ *
+ * `manual`   — has subcontents; structural, needs no binding
+ * `joomla`   — has a binding and no subcontents; content, needs the binding
+ * `ambiguous`— both, which is a spec error: the compiler reads one source and
+ *              silently drops the other
+ * `empty`    — neither, so the block renders nothing
+ */
+export function blockcontentMode(
+  block: Pick<SpecBlock, "subcontents" | "content_binding">
+): "manual" | "joomla" | "ambiguous" | "empty" {
+  const hasItems = Array.isArray(block.subcontents) && block.subcontents.length > 0;
+  const hasBinding = !!block.content_binding;
+  if (hasItems && hasBinding) return "ambiguous";
+  if (hasItems) return "manual";
+  if (hasBinding) return "joomla";
+  return "empty";
 }
 
 export function isChromeParticle(p: string): boolean {

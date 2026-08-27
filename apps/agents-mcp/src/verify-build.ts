@@ -26,10 +26,17 @@ import {
 
 export type Executor = (name: string, args: Record<string, any>) => Promise<any>;
 
+/**
+ * There is deliberately no `content_wrong` kind. "The wrong article rendered"
+ * is not decidable here: the spec's binding IS the definition of right, so if
+ * the binding names article 44 and article 44 renders, that is correct by
+ * construction. A wrong binding is caught by a human at Gate 1, not by this
+ * stage — declaring a kind nothing can emit would promise a check that does
+ * not exist.
+ */
 export type DefectKind =
   | "binding_violation"
   | "content_missing"
-  | "content_wrong"
   | "unstyled_block"
   | "layout_drift"
   | "broken_asset"
@@ -150,7 +157,7 @@ export async function verifyBuild(opts: VerifyOptions): Promise<VerifyReport> {
     }
   }
 
-  // ── 2. content_missing / content_wrong — read what each binding resolves to ─
+  // ── 2. content_missing — read what each binding actually resolves to ──────
   for (const { binding, section } of bindings) {
     if (!binding.existing_id) {
       add({

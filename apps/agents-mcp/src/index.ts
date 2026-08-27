@@ -885,16 +885,30 @@ function buildServer(): Server {
 
       case "run_design_interpretation": {
         console.error(`[run_design_interpretation] starting`);
-        const result = await runDesignInterpreter(
-          request.params.arguments as any,
-          sendProgress,
-          undefined
-        );
-        console.error(`[run_design_interpretation] done: success=${result.success}`);
-        return {
-          content: [{ type: "text" as const, text: JSON.stringify(result) }],
-          isError: !result.success,
-        };
+        try {
+          const site_url = request.params.arguments?.site_url as string;
+          if (!site_url) throw new Error("site_url is required");
+          const result = await runDesignInterpreter(
+            request.params.arguments as any,
+            sendProgress,
+            undefined
+          );
+          console.error(`[run_design_interpretation] done: success=${result.success}`);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify(result) }],
+            isError: !result.success,
+          };
+        } catch (err: unknown) {
+          // A downstream being unreachable, or a bad site_url, throws out of the
+          // runner. Return the same envelope shape as every other tool rather
+          // than an opaque transport error.
+          const error = err instanceof Error ? err.message : String(err);
+          console.error(`[run_design_interpretation] failed: ${error}`);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ success: false, error }) }],
+            isError: true,
+          };
+        }
       }
 
       case "build_content_substrate": {
@@ -1061,24 +1075,39 @@ function buildServer(): Server {
 
       case "run_css_authoring": {
         console.error(`[run_css_authoring] starting`);
-        const result = await runCssAuthor(
-          {
-            site_url: request.params.arguments?.site_url as string,
-            page_path: request.params.arguments?.page_path as string | undefined,
-            defects: (request.params.arguments?.defects ?? []) as Defect[],
-            existing_css: request.params.arguments?.existing_css as string | undefined,
-            css_filename: request.params.arguments?.css_filename as string | undefined,
-          },
-          sendProgress,
-          undefined
-        );
-        console.error(
-          `[run_css_authoring] done: success=${result.success}, ${result.rules_added ?? 0} rule(s)`
-        );
-        return {
-          content: [{ type: "text" as const, text: JSON.stringify(result) }],
-          isError: !result.success,
-        };
+        try {
+          const site_url = request.params.arguments?.site_url as string;
+          if (!site_url) throw new Error("site_url is required");
+          const defects = request.params.arguments?.defects;
+          if (!Array.isArray(defects)) {
+            throw new Error("defects must be an array — pass verify_build's report.defects");
+          }
+          const result = await runCssAuthor(
+            {
+              site_url,
+              page_path: request.params.arguments?.page_path as string | undefined,
+              defects: defects as Defect[],
+              existing_css: request.params.arguments?.existing_css as string | undefined,
+              css_filename: request.params.arguments?.css_filename as string | undefined,
+            },
+            sendProgress,
+            undefined
+          );
+          console.error(
+            `[run_css_authoring] done: success=${result.success}, ${result.rules_added ?? 0} rule(s)`
+          );
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify(result) }],
+            isError: !result.success,
+          };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err.message : String(err);
+          console.error(`[run_css_authoring] failed: ${error}`);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ success: false, error }) }],
+            isError: true,
+          };
+        }
       }
 
       default:

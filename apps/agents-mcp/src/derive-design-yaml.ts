@@ -4,7 +4,7 @@ import {
   SpecBlock,
   SpecSection,
   collectBindings,
-  isContentParticle,
+  blockcontentMode,
 } from "./design-spec.js";
 
 /**
@@ -128,19 +128,45 @@ function attributesFor(block: SpecBlock, sectionId: string): Record<string, unkn
       },
     };
   } else if (block.particle === "blockcontent") {
-    attrs = {
-      source: "manual",
-      subcontents: (block.subcontents ?? []).map((item) => ({
-        name: item.name,
-        button: item.name,
-        buttonlink: item.buttonlink,
-        buttontarget: item.buttontarget ?? "",
-        buttonclass: item.buttonclass ?? "",
-        icon: item.icon ?? "",
-        img: item.img ?? "",
-        description: item.description ?? "",
-      })),
-    };
+    // Two modes, and the wrong one silently renders an empty block. An earlier
+    // version always emitted `source: manual`, which dropped an article-sourced
+    // blockcontent's binding on the floor.
+    const mode = blockcontentMode(block);
+    if (mode === "joomla") {
+      const b = binding!;
+      if (!b.existing_id) {
+        throw new DeriveError(
+          `section '${sectionId}': blockcontent binding '${b.role}' has no id. Run build_content_substrate before deriving.`
+        );
+      }
+      const isCategory = b.kind === "category";
+      attrs = {
+        source: "joomla",
+        article: {
+          filter: {
+            categories: isCategory ? String(b.existing_id) : "",
+            articles: isCategory ? "" : String(b.existing_id),
+            featured: "include",
+          },
+          limit: { total: "6", columns: "3", start: "0" },
+          sort: { orderby: "ordering", ordering: "ASC" },
+        },
+      };
+    } else {
+      attrs = {
+        source: "manual",
+        subcontents: (block.subcontents ?? []).map((item) => ({
+          name: item.name,
+          button: item.name,
+          buttonlink: item.buttonlink,
+          buttontarget: item.buttontarget ?? "",
+          buttonclass: item.buttonclass ?? "",
+          icon: item.icon ?? "",
+          img: item.img ?? "",
+          description: item.description ?? "",
+        })),
+      };
+    }
   } else if (block.particle === "custom") {
     attrs = { html: block.html ?? "", enabled: 1 };
   }

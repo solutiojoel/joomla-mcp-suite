@@ -235,9 +235,7 @@ async function main() {
             blocks: [
               block({
                 particle: "blockcontent",
-                content_binding: {
-                  kind: "article", role: "quicklinks", existing_id: 7,
-                },
+                content_binding: undefined,
                 subcontents: [
                   { name: "Bulletin", buttonlink: "/bulletin" },
                   { name: "Giving", buttonlink: "" },
@@ -251,6 +249,99 @@ async function main() {
     assert(
       v.errors.some((e) => e.rule === "blockcontent-buttonlink"),
       "empty buttonlink rejected"
+    );
+  });
+
+  await check("every fleet particle is recognised, with no spurious warning", () => {
+    // blockcontent is not in CONTENT_PARTICLES (it is only content in joomla
+    // mode). It must still be a KNOWN particle — a live smoke test caught it
+    // warning as unknown after that split.
+    for (const particle of ["contentarray", "blockcontent", "swiper", "custom", "logo", "menu"]) {
+      const v = validateDesignSpec(
+        spec({
+          sections: [
+            {
+              id: "utility",
+              blocks: [
+                block({
+                  particle,
+                  content_binding: particle === "contentarray" || particle === "swiper"
+                    ? { kind: "article", role: "r", existing_id: 1 }
+                    : undefined,
+                  subcontents: particle === "blockcontent"
+                    ? [{ name: "X", buttonlink: "/x" }]
+                    : undefined,
+                  html: particle === "custom" ? "<h2>Hi</h2>" : undefined,
+                }),
+              ],
+            },
+          ],
+        })
+      );
+      assert(
+        !v.warnings.some((w) => w.rule === "particle-type"),
+        `'${particle}' must be recognised, got: ${JSON.stringify(v.warnings)}`
+      );
+    }
+  });
+
+  await check("manual blockcontent needs no binding — its labels are structural", () => {
+    // Requiring a binding here used to make the substrate stage create an
+    // article that nothing pointed at.
+    const v = validateDesignSpec(
+      spec({
+        sections: [
+          {
+            id: "above",
+            blocks: [
+              block({
+                particle: "blockcontent",
+                content_binding: undefined,
+                subcontents: [{ name: "Bulletin", buttonlink: "/bulletin" }],
+              }),
+            ],
+          },
+        ],
+      })
+    );
+    assert(v.valid, `manual blockcontent should be valid: ${JSON.stringify(v.errors)}`);
+  });
+
+  await check("blockcontent with both sources, or neither, is rejected", () => {
+    const both = validateDesignSpec(
+      spec({
+        sections: [
+          {
+            id: "above",
+            blocks: [
+              block({
+                particle: "blockcontent",
+                content_binding: { kind: "category", role: "ministries", existing_id: 9 },
+                subcontents: [{ name: "Bulletin", buttonlink: "/bulletin" }],
+              }),
+            ],
+          },
+        ],
+      })
+    );
+    assert(
+      both.errors.some((e) => e.rule === "blockcontent-source"),
+      "both sources rejected — the compiler reads one and drops the other"
+    );
+
+    const neither = validateDesignSpec(
+      spec({
+        sections: [
+          {
+            id: "above",
+            blocks: [block({ particle: "blockcontent", content_binding: undefined })],
+          },
+        ],
+      })
+    );
+    assert(
+      neither.errors.some((e) => e.rule === "blockcontent-source"),
+      "neither source rejected — the block would render nothing"
     );
   });
 
@@ -534,6 +625,50 @@ async function main() {
     );
     const b = (out.design.top_container as any).sections[0].grids[0].blocks[0];
     assert(b.attributes.slides_linkable === "disabled", "opt-in only");
+  });
+
+  await check("blockcontent derives the mode it is actually in", () => {
+    const manual = deriveDesignYaml(
+      spec({
+        sections: [
+          {
+            id: "utility",
+            blocks: [
+              block({
+                particle: "blockcontent",
+                content_binding: undefined,
+                subcontents: [{ name: "Bulletin", buttonlink: "/bulletin" }],
+              }),
+            ],
+          },
+        ],
+      })
+    );
+    const mb = (manual.design.sections as any[])[0].grids[0].blocks[0];
+    assert(mb.attributes.source === "manual", "manual mode");
+    assert(mb.attributes.subcontents[0].buttonlink === "/bulletin", "items carried");
+
+    // Article-sourced: an earlier version always emitted source:manual, which
+    // dropped the binding and rendered an empty block.
+    const sourced = deriveDesignYaml(
+      spec({
+        sections: [
+          {
+            id: "utility",
+            blocks: [
+              block({
+                particle: "blockcontent",
+                content_binding: { kind: "category", role: "ministries", existing_id: 9 },
+              }),
+            ],
+          },
+        ],
+      })
+    );
+    const sb = (sourced.design.sections as any[])[0].grids[0].blocks[0];
+    assert(sb.attributes.source === "joomla", "joomla mode, not manual");
+    assert(sb.attributes.article.filter.categories === "9", "binding honoured");
+    assert(sb.attributes.subcontents === undefined, "no empty manual items emitted");
   });
 
   await check("spec overrides win over derived defaults", () => {

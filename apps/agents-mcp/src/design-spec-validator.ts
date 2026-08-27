@@ -5,6 +5,7 @@ import {
   ALL_PARTICLES,
   isContentParticle,
   isChromeParticle,
+  blockcontentMode,
   collectBindings,
   parseFingerprint,
   customHoldsClientContent,
@@ -302,16 +303,25 @@ function validateBlock(
     }
   }
 
-  // ── 5. every blockcontent item has a non-empty buttonlink ────────────────
+  // ── 5. blockcontent: one source, and every item has a buttonlink ─────────
   if (block.particle === "blockcontent") {
-    const items = block.subcontents;
-    if (!Array.isArray(items) || items.length === 0) {
-      warn(
-        "blockcontent-items",
-        `${at}.subcontents`,
-        "blockcontent has no subcontents items — the block will render empty"
+    const mode = blockcontentMode(block);
+    if (mode === "ambiguous") {
+      err(
+        "blockcontent-source",
+        `${at}`,
+        "blockcontent has both subcontents and a content_binding — it renders one source and silently drops the other. Use manual items OR a category binding, not both."
       );
-    } else {
+    } else if (mode === "empty") {
+      err(
+        "blockcontent-source",
+        `${at}`,
+        "blockcontent has neither subcontents nor a content_binding — the block will render nothing. Add manual items, or bind it to a category."
+      );
+    }
+
+    const items = block.subcontents;
+    if (Array.isArray(items) && items.length > 0) {
       items.forEach((item, ii) => {
         if (!item || typeof item !== "object") {
           err("structure", `${at}.subcontents[${ii}]`, "item must be an object");

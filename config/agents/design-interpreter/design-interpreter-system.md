@@ -115,9 +115,19 @@ For each content-bearing block:
 - `create.seed_content` — the copy you read off the mockup, as article HTML.
   Placeholder is fine. The point is that the article exists.
 
-For `blockcontent` link rows, each `subcontents` item needs a `buttonlink`. If
-the mockup does not show a destination, use `"#"` and add an open question —
-never leave it empty.
+**`blockcontent` has two modes, and it must be in exactly one:**
+
+- **manual** — you write `subcontents` items. The labels and URLs are structural
+  layout decisions, so this mode needs **no** `content_binding`. This is the
+  normal shape for quicklinks and ministry card rows.
+- **joomla** — you give it a `content_binding` to a category and **no**
+  `subcontents`. Use this when the cards are a live feed the client adds to.
+
+Giving it both is an error: the particle reads one source and silently drops the
+other. Giving it neither renders an empty block.
+
+In manual mode each item needs a `buttonlink`. If the mockup does not show a
+destination, use `"#"` and add an open question — never leave it empty.
 
 ### 6. Raise open questions
 
@@ -183,11 +193,13 @@ Return only: `{ "success": true, "spec_path": "...", "section_count": N, "open_q
 
 Refuse to emit a spec that fails any of these:
 
-1. Every content-bearing block has a `content_binding`.
+1. Every `contentarray` and `swiper` has a `content_binding`. Every
+   `blockcontent` is in exactly one mode — `subcontents` **or** a binding.
 2. No block carries client-editable copy in a particle attribute.
 3. No embed code sits in a `custom` particle.
 4. Every `contentarray` binds a category **or** an article, never both.
-5. Every `blockcontent` `subcontents` item has a non-empty `buttonlink`.
+5. Every `blockcontent` `subcontents` item has a non-empty `buttonlink`, and no
+   `blockcontent` carries both `subcontents` and a binding, or neither.
 6. Every `content_binding.role` is unique within the spec.
 7. Section ids are drawn from the fleet list and appear in stack order.
 8. Every guess is written down as an `open_question` or an `assumption`.
