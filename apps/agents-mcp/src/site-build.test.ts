@@ -43,6 +43,7 @@ function spec(overrides: Partial<DesignSpec> = {}): DesignSpec {
   return {
     site: "https://example.com",
     site_type: "parish",
+    build_type: "new",
     source: "mockup.png",
     source_kind: "mockup_image",
     target_outline: "#Home",
@@ -50,6 +51,15 @@ function spec(overrides: Partial<DesignSpec> = {}): DesignSpec {
     sections: [{ id: "utility", fingerprint: "100", blocks: [block()] }],
     ...overrides,
   };
+}
+
+/** A redesign spec: same install as a live site, everything under a parent. */
+function redesignSpec(overrides: Partial<DesignSpec> = {}): DesignSpec {
+  return spec({
+    build_type: "redesign",
+    content_scope: { redesign_root: "Redesign" },
+    ...overrides,
+  });
 }
 
 /** Mock joomla executor. `articles`/`categories` are the "live site". */
@@ -69,7 +79,15 @@ function mockJoomla(opts: {
     if (name === "joomla_category") {
       if (args.action === "list") return { success: true, data: categories };
       if (args.action === "create") {
-        const row = { id: ++nextId, title: args.title, parent_id: args.parent_id };
+        // The real tool takes `parentId`; resolve it back to a parent TITLE so
+        // subsequent list calls report the tree the way Joomla does.
+        const parentRow = categories.find((c: any) => String(c.id) === String(args.parentId));
+        const row = {
+          id: ++nextId,
+          title: args.title,
+          parent: parentRow ? parentRow.title : "",
+          parent_id: args.parentId,
+        };
         categories.push(row);
         created.push({ kind: "category", ...row });
         return { success: true, data: { id: row.id } };
@@ -540,9 +558,203 @@ async function main() {
     });
     const m = mockJoomla();
     const report = await buildSubstrate({ executor: m.executor, spec: s, dry_run: true });
-    assert(report.would_create.length === 1, "plan reported");
+    // The fleet map supplies "Homepage Articles" for the mass_times role, so an
+    // empty install plans the category as well as the article.
+    assert(
+      report.would_create.some((w) => w.kind === "article" && w.title === "Mass Times"),
+      `article planned: ${JSON.stringify(report.would_create)}`
+    );
     assert(m.created.length === 0, "nothing created");
     assert(s.sections[0].blocks[0].content_binding!.existing_id === null, "no id stamped");
+  });
+
+  // ─── redesign safety — the rules that protect a live site ─────────────────
+  console.log("— buildSubstrate: redesign scoping —");
+
+  await check("a redesign NEVER binds to a live category that shares a title", async () => {
+    // The dangerous case: the live site has "News", the redesign needs "News".
+    // Binding to id 6 would put live content on the new homepage.
+    const s = redesignSpec({
+      sections: [
+        {
+          id: "utility",
+          blocks: [
+            block({
+              content_binding: {
+                kind: "category", role: "news_feed", existing_id: null,
+                create: { title: "News" },
+              },
+            }),
+          ],
+        },
+      ],
+    });
+    const m = mockJoomla({
+      categories: [
+        { id: 6, title: "News", parent: "" },          // LIVE — must be invisible
+        { id: 40, title: "Redesign", parent: "" },
+      ],
+    });
+    const report = await buildSubstrate({ executor: m.executor, spec: s });
+    const bound = s.sections[0].blocks[0].content_binding!.existing_id;
+    assert(bound !== 6, "must NOT bind to the live category id 6");
+    assert(typeof bound === "number" && bound > 0, "a new in-scope category was created");
+    assert(report.errors.length === 0, `no errors: ${JSON.stringify(report.errors)}`);
+    const made = m.created.find((c) => c.kind === "category" && c.title === "News");
+    assert(!!made && String(made.parent_id) === "40", "created under the Redesign parent");
+  });
+
+  await check("a redesign COPIES live article content instead of binding to it", async () => {
+    const s = redesignSpec({
+      sections: [
+        {
+          id: "utility",
+          blocks: [
+            block({
+              content_binding: {
+                kind: "article", role: "mass_times", existing_id: null,
+                create: { title: "Mass Times", category: "Homepage Articles" },
+              },
+            }),
+          ],
+        },
+      ],
+    });
+    const m = mockJoomla({
+      categories: [
+        { id: 24, title: "Homepage Articles", parent: "" },  // LIVE
+        { id: 40, title: "Redesign", parent: "" },
+      ],
+      articles: {
+        "55": { title: "Mass Times", content: "<p>LIVE MASS TIMES</p>", categoryId: "24" },
+      },
+    });
+    const report = await buildSubstrate({ executor: m.executor, spec: s });
+    const bound = s.sections[0].blocks[0].content_binding!.existing_id;
+    assert(bound !== 55, "must NOT bind to the live article 55");
+    assert(report.copied.length === 1, `expected one copy, got ${JSON.stringify(report.copied)}`);
+    assert(report.copied[0].copied_from === 55, "records the source it copied from");
+    const dupe = m.created.find((c) => c.kind === "article");
+    assert(!!dupe && /LIVE MASS TIMES/.test(String(dupe.content)), "the copy carries the live body");
+    assert(m.updated.length === 0, "the LIVE row was never written to");
+  });
+
+  await check("a redesign reuses a row already inside its own scope", async () => {
+    const s = redesignSpec({
+      sections: [
+        {
+          id: "utility",
+          blocks: [
+            block({
+              content_binding: {
+                kind: "article", role: "mass_times", existing_id: null,
+                create: { title: "Mass Times", category: "Homepage Articles" },
+              },
+            }),
+          ],
+        },
+      ],
+    });
+    const m = mockJoomla({
+      categories: [
+        { id: 40, title: "Redesign", parent: "" },
+        { id: 41, title: "Homepage Articles", parent: "Redesign" }, // IN SCOPE
+      ],
+      articles: {
+        "90": { title: "Mass Times", content: "<p>redesign copy</p>", categoryId: "41" },
+      },
+    });
+    const report = await buildSubstrate({ executor: m.executor, spec: s });
+    assert(s.sections[0].blocks[0].content_binding!.existing_id === 90, "bound to the in-scope row");
+    assert(report.copied.length === 0 && m.created.length === 0, "nothing copied or created");
+  });
+
+  await check("a redesign creates its parent category when absent", async () => {
+    const s = redesignSpec({
+      sections: [
+        {
+          id: "utility",
+          blocks: [
+            block({
+              content_binding: {
+                kind: "category", role: "hero_slides", existing_id: null,
+                create: { title: "Rotator" },
+              },
+            }),
+          ],
+        },
+      ],
+    });
+    const m = mockJoomla({ categories: [{ id: 10, title: "Rotator", parent: "" }] }); // live Rotator
+    const report = await buildSubstrate({ executor: m.executor, spec: s });
+    assert(report.created.some((c) => c.title === "Redesign"), "Redesign parent created");
+    assert(s.sections[0].blocks[0].content_binding!.existing_id !== 10, "did not take the live Rotator");
+  });
+
+  await check("a NEW build binds straight to the fleet skeleton", async () => {
+    // The forge baseline already carries Mass Times — nothing should be created.
+    const s = spec({
+      sections: [
+        {
+          id: "utility",
+          blocks: [
+            block({
+              content_binding: {
+                kind: "article", role: "mass_times", existing_id: null,
+                create: { title: "Mass Times", category: "Homepage Articles" },
+              },
+            }),
+          ],
+        },
+      ],
+    });
+    const m = mockJoomla({
+      categories: [{ id: 24, title: "Homepage Articles", parent: "" }],
+      articles: { "55": { title: "Mass Times", content: "<p>x</p>", categoryId: "24" } },
+    });
+    const report = await buildSubstrate({ executor: m.executor, spec: s });
+    assert(s.sections[0].blocks[0].content_binding!.existing_id === 55, "bound to the existing row");
+    assert(m.created.length === 0, "a new build creates nothing when content is prepared");
+    assert(report.copied.length === 0, "new builds never copy");
+  });
+
+  await check("a redesign dry run writes nothing at all", async () => {
+    const s = redesignSpec({
+      sections: [
+        {
+          id: "utility",
+          blocks: [
+            block({
+              content_binding: {
+                kind: "article", role: "mass_times", existing_id: null,
+                create: { title: "Mass Times", category: "Homepage Articles" },
+              },
+            }),
+          ],
+        },
+      ],
+    });
+    const m = mockJoomla({
+      categories: [{ id: 24, title: "Homepage Articles", parent: "" }],
+      articles: { "55": { title: "Mass Times", content: "<p>LIVE</p>", categoryId: "24" } },
+    });
+    const report = await buildSubstrate({ executor: m.executor, spec: s, dry_run: true });
+    assert(m.created.length === 0 && m.updated.length === 0, "nothing written");
+    assert(
+      report.would_create.some((w) => w.outcome === "would_copy"),
+      "the plan says it would copy, not bind"
+    );
+  });
+
+  await check("validator requires build_type, and a redesign root", () => {
+    const noType = validateDesignSpec({ ...spec(), build_type: undefined as any });
+    assert(noType.errors.some((e) => e.rule === "build-type"), "build_type required");
+
+    const noRoot = validateDesignSpec({ ...spec(), build_type: "redesign", content_scope: undefined });
+    assert(
+      noRoot.errors.some((e) => e.rule === "build-type"),
+      "a redesign must name its parent category"
+    );
   });
 
   // ─── derive ────────────────────────────────────────────────────────────────

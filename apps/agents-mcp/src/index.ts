@@ -21,6 +21,7 @@ import { validateDesignSpec } from "./design-spec-validator.js";
 import { buildSubstrate } from "./substrate.js";
 import { deriveDesignYaml, DeriveError } from "./derive-design-yaml.js";
 import { verifyBuild, Defect } from "./verify-build.js";
+import { surveySite } from "./site-survey.js";
 import { DesignSpec } from "./design-spec.js";
 
 function siteSlug(siteUrl: string): string {
@@ -343,9 +344,28 @@ const TOOLS = [
   },
 
   // ─── site build ────────────────────────────────────────────────────────────
-  // Six tools, two of which use a model. Reading a visual reference and writing
-  // CSS need judgement; everything else is deterministic on purpose, so a build
-  // repeats exactly and a rule cannot be forgotten.
+  // Seven tools, two of which use a model. Reading a visual reference and
+  // writing CSS need judgement; everything else is deterministic on purpose, so
+  // a build repeats exactly and a rule cannot be forgotten.
+  {
+    name: "survey_site",
+    description:
+      "Phase 0 of the site build: survey the Joomla install BEFORE anything is designed. Deterministic — no LLM. " +
+      "Answers the three questions a build cannot start safely without: (1) is this a NEW build or a REDESIGN — a redesign shares its install with a live site, so the substrate rules change completely; (2) what content is already prepared, since menu-build and content-build usually run first and most bindings should resolve to rows that already exist; (3) what is genuinely missing and must be created. " +
+      "Infers the build type from category/article counts, category nesting, presence of the fleet skeleton, and the theme (a legacy template is a strong redesign signal), and reports the evidence so you can overrule it. On a redesign it also locates the redesign parent category and flags which roles match LIVE content that will be copied rather than bound to. " +
+      "Run this before run_design_interpretation, and put its findings in front of the Gate 1 review. " +
+      "Returns { success, report: { build_type, confidence, signals, counts, redesign_root, prepared, missing, will_copy, warnings } }.",
+    inputSchema: {
+      type: "object",
+      required: ["site_url"],
+      properties: {
+        site_url: { type: "string", description: "The active site URL." },
+        build_type: { type: "string", enum: ["new", "redesign"], description: "Overrule the inference. The operator usually knows; the survey reports a warning if this disagrees with what the install looks like." },
+        redesign_root: { type: "string", description: "Redesign only: the parent category title everything nests under. Default 'Redesign'." },
+        theme: { type: "string", description: "Theme in use, if known. A template outside the current fleet set is a strong redesign signal and means fleet block classes have no CSS." },
+      },
+    },
+  },
   {
     name: "validate_design_spec",
     description:
@@ -847,6 +867,36 @@ function buildServer(): Server {
       }
 
       // ─── site build ──────────────────────────────────────────────────────
+      case "survey_site": {
+        console.error(`[survey_site] starting`);
+        const site_url = request.params.arguments?.site_url as string;
+        try {
+          if (!site_url) throw new Error("site_url is required");
+          const { executor } = await connectDownstreams(["joomla-mcp"], site_url, [
+            "joomla_category",
+            "joomla_article",
+          ]);
+          const report = await surveySite({
+            executor,
+            build_type: request.params.arguments?.build_type as "new" | "redesign" | undefined,
+            redesign_root: request.params.arguments?.redesign_root as string | undefined,
+            theme: request.params.arguments?.theme as string | undefined,
+          });
+          console.error(
+            `[survey_site] done: ${report.build_type} (${report.confidence}), ${report.prepared.length} prepared, ${report.missing.length} missing, ${report.will_copy.length} to copy`
+          );
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ success: true, report }) }],
+          };
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err.message : String(err);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ success: false, error }) }],
+            isError: true,
+          };
+        }
+      }
+
       case "validate_design_spec": {
         console.error(`[validate_design_spec] starting`);
         const site_url = request.params.arguments?.site_url as string;

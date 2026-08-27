@@ -79,6 +79,25 @@ export function validateDesignSpec(input: unknown): ValidationResult {
       err("structure", `$.${field}`, `missing or empty required field '${field}'`);
     }
   }
+  // ── build type: decides the substrate stage's safety rules ────────────────
+  if (spec.build_type !== "new" && spec.build_type !== "redesign") {
+    err(
+      "build-type",
+      "$.build_type",
+      `build_type must be 'new' or 'redesign' (got ${JSON.stringify(spec.build_type)}). Run survey_site first — a redesign shares its Joomla install with a live site and the substrate rules differ.`
+    );
+  }
+  if (spec.build_type === "redesign") {
+    const root = spec.content_scope?.redesign_root;
+    if (typeof root !== "string" || !root.trim()) {
+      err(
+        "build-type",
+        "$.content_scope.redesign_root",
+        "a redesign must name the parent category everything nests under, or the build can bind to live content"
+      );
+    }
+  }
+
   if (!Array.isArray(spec.sections) || spec.sections.length === 0) {
     err("structure", "$.sections", "spec needs at least one section");
     return { ...empty, errors, warnings };

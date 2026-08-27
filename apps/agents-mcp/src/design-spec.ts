@@ -190,9 +190,74 @@ export interface OpenQuestion {
   answer?: string;
 }
 
+/**
+ * Which kind of build this is. It changes what the substrate stage is allowed
+ * to do, so it is not optional.
+ *
+ * `new`      — a forge install with no live site to protect. Categories sit at
+ *              root, the fleet skeleton is already there, and bindings should
+ *              resolve to the existing articles rather than create new ones.
+ * `redesign` — the new site is built in the SAME Joomla install as a live one.
+ *              Everything the build touches lives under a redesign parent
+ *              category, and live content is **copied** into that scope, never
+ *              bound to. See substrate.ts for the enforcement.
+ */
+export type BuildType = "new" | "redesign";
+
+export interface ContentScope {
+  /** redesign only: title of the parent category everything nests under. */
+  redesign_root?: string;
+  /** Stamped once resolved or created. */
+  redesign_root_id?: number | null;
+}
+
+/**
+ * The fleet skeleton every forge install ships with, measured from
+ * shannon.forge. A binding role resolves against this first, which is far more
+ * reliable than free-text title matching — and it is why a new build usually
+ * creates nothing at all.
+ *
+ * `category` is where the article lives; for category-kind roles the title IS
+ * the category.
+ */
+export const FLEET_CONTENT: Record<
+  string,
+  { kind: "article" | "category"; title: string; category?: string }
+> = {
+  mass_times: { kind: "article", title: "Mass Times", category: "Homepage Articles" },
+  mission: { kind: "article", title: "Mission Statement", category: "Homepage Articles" },
+  footer: { kind: "article", title: "Footer", category: "Homepage Articles" },
+  calendar: { kind: "article", title: "Calendar", category: "Homepage Articles" },
+  formed: { kind: "article", title: "Formed", category: "Homepage Articles" },
+  facebook: { kind: "article", title: "Facebook", category: "Homepage Articles" },
+  instagram: { kind: "article", title: "Instagram", category: "Homepage Articles" },
+  social: { kind: "article", title: "Facebook", category: "Homepage Articles" },
+  flocknote: { kind: "article", title: "Flocknote", category: "Homepage Articles" },
+  daily_readings: { kind: "article", title: "Daily Readings", category: "Homepage Articles" },
+  hero_slides: { kind: "category", title: "Rotator" },
+  news_feed: { kind: "category", title: "Headlines / News" },
+  alert: { kind: "category", title: "Alert" },
+  popup: { kind: "category", title: "Pop Up" },
+};
+
+/** The categories a stock forge install carries, all at root. Used to tell a
+ *  fresh install from one with a live site in it. */
+export const FLEET_CATEGORIES = [
+  "Headlines / News",
+  "Rotator",
+  "Alert",
+  "Pop Up",
+  "Page Content (Menu Item Needed)",
+  "Homepage Articles",
+  "Other",
+] as const;
+
 export interface DesignSpec {
   site: string;
   site_type: "parish" | "school" | "cemetery" | string;
+  /** Required. `new` or `redesign` — decides the substrate stage's safety rules. */
+  build_type: BuildType;
+  content_scope?: ContentScope;
   source: string;
   source_kind:
     | "mockup_image"
