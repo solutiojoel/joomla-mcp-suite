@@ -1,0 +1,384 @@
+/* ============================================================
+   ST. ROSALIE HOMEPAGE — 2026 build (site-build agent, 2026-08-27)
+   Brand primary #0c3320. Homepage-only rules are scoped .site-home;
+   footer rules are deliberately unscoped because the footer is shared.
+
+   DEPLOYED: injected as an inline CSS row named "St Rosalie Homepage"
+   on the BASE outline (priority 0, so it loads last and wins).
+   PERMANENT HOME: append to /forge/st-rose/content/override.css once
+   st-rose has an ftp-sites.json entry with a write_paths entry for
+   /forge/st-rose/content. Move it, then delete the inline row.
+   ============================================================ */
+
+/* ---- Quicklinks: circular row -------------------------------- */
+.site-home #g-utility .ql-circle-row .g-blockcontent-subcontent {
+    display: grid;
+    grid-template-columns: repeat(var(--ql-num-boxes), minmax(0, 1fr));
+    gap: min(2vw, 1.75rem);
+    align-items: start;
+}
+
+.site-home #g-utility .ql-circle-row .g-blockcontent-subcontent-block {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 .5rem 1.25rem rgba(0, 0, 0, .28);
+}
+
+/* tint over the photo */
+.site-home #g-utility .ql-circle-row .g-blockcontent-subcontent-block::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgba(var(--primary-color-rgb), .62);
+    transition: background .3s ease;
+}
+
+/* inset hairline ring, as in the mockup */
+.site-home #g-utility .ql-circle-row .g-blockcontent-subcontent-block::after {
+    content: '';
+    position: absolute;
+    inset: .7rem;
+    z-index: 2;
+    border: 1px solid rgba(var(--default-white-rgb), .55);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.site-home #g-utility .ql-circle-row .g-blockcontent-subcontent-block:hover::before,
+.site-home #g-utility .ql-circle-row .g-blockcontent-subcontent-block:focus-within::before {
+    background: rgba(var(--primary-color-rgb), .38);
+}
+
+.site-home #g-utility .ql-circle-row .g-blockcontent-subcontent-block-content {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: min(2vw, 1.5rem);
+}
+
+.site-home #g-utility .ql-circle-row .g-blockcontent-subcontent-title {
+    margin: 0;
+    font-family: var(--title-font-family);
+    font-weight: 500;
+    font-size: min(1.15vw, 1.05rem);
+    line-height: 1.25;
+    color: rgb(var(--default-white-rgb));
+    text-shadow: 0 1px 4px rgba(0, 0, 0, .55);
+    text-wrap: balance;
+}
+
+/* the repeated label is the overlay anchor — keep it clickable, hide its text */
+.site-home #g-utility .ql-circle-row .g-blockcontent-buttons {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    margin: 0;
+    padding: 0;
+}
+
+.site-home #g-utility .ql-circle-row .g-blockcontent-buttons a {
+    position: absolute;
+    inset: 0;
+    display: block;
+    font-size: 0;
+    line-height: 0;
+    color: transparent;
+    text-decoration: none;
+    border-radius: 50%;
+}
+
+.site-home #g-utility .ql-circle-row .g-blockcontent-buttons a:focus-visible {
+    outline: 2px solid rgb(var(--secondary-color-rgb));
+    outline-offset: -.5rem;
+}
+
+@media only screen and (max-width: 50.99rem) {
+    .site-home #g-utility .ql-circle-row .g-blockcontent-subcontent {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+    .site-home #g-utility .ql-circle-row .g-blockcontent-subcontent-title {
+        font-size: 2.9vw;
+    }
+    .site-home #g-utility .ql-circle-row .g-blockcontent-subcontent-block::after {
+        inset: .45rem;
+    }
+}
+
+/* ---- Mass Times panel beside the rotator --------------------- */
+.site-home #g-slideshow .mass-times-block > .g-content {
+    height: 100%;
+    margin: 0;
+    padding: min(3vw, 2.5rem);
+    background: rgb(var(--primary-color-rgb));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.site-home .mass-times-block h2 {
+    margin: 0 0 .5rem;
+    font-family: var(--title-font-family);
+    font-weight: 500;
+    font-size: min(2.4vw, 2.1rem);
+    line-height: 1.1;
+    color: rgb(var(--default-white-rgb));
+}
+
+.site-home .mass-times-block h3 {
+    margin: 1.1rem 0 .35rem;
+    font-family: var(--body-font-family);
+    font-weight: 700;
+    font-size: min(1.05vw, .82rem);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: rgb(var(--secondary-color-rgb));
+}
+
+.site-home .mass-times-block p {
+    margin: 0;
+    font-size: min(1.1vw, .95rem);
+    line-height: 1.65;
+    color: rgba(var(--default-white-rgb), .92);
+}
+
+.site-home .mass-times-block strong {
+    color: rgb(var(--default-white-rgb));
+    font-weight: 700;
+}
+
+.site-home .mass-times-block a.button {
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: 1.4rem;
+    padding: .65rem 1.15rem;
+    background: transparent;
+    border: 1px solid rgb(var(--secondary-color-rgb));
+    color: rgb(var(--secondary-color-rgb));
+    font-family: var(--body-font-family);
+    font-size: min(1vw, .78rem);
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background .25s ease, color .25s ease;
+}
+
+.site-home .mass-times-block a.button:hover,
+.site-home .mass-times-block a.button:focus-visible {
+    background: rgb(var(--secondary-color-rgb));
+    color: rgb(var(--primary-color-rgb));
+}
+
+@media only screen and (max-width: 50.99rem) {
+    .site-home .mass-times-block h2 { font-size: 6vw; }
+    .site-home .mass-times-block h3 { font-size: 3.2vw; }
+    .site-home .mass-times-block p  { font-size: 3.6vw; }
+    .site-home .mass-times-block a.button { font-size: 3.2vw; }
+}
+
+/* ---- Staff contact: two text columns ------------------------- */
+.site-home .staff-contact-columns {
+    column-count: 2;
+    column-gap: min(3vw, 2.25rem);
+}
+
+.site-home .staff-contact-columns p {
+    break-inside: avoid;
+    margin: 0 0 .95rem;
+    font-size: min(1vw, .86rem);
+    line-height: 1.5;
+}
+
+@media only screen and (max-width: 50.99rem) {
+    .site-home .staff-contact-columns { column-count: 1; }
+    .site-home .staff-contact-columns p { font-size: 3.6vw; }
+}
+
+/* ---- Catholic Resources cards -------------------------------- */
+.site-home #g-extension .catholic-resources .g-blockcontent-subcontent {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: min(2.5vw, 2rem);
+}
+
+.site-home #g-extension .catholic-resources .g-blockcontent-subcontent-block {
+    position: relative;
+    min-height: min(18vw, 15rem);
+    border-radius: .2rem;
+    overflow: hidden;
+    background: rgb(var(--primary-color-rgb));
+    box-shadow: 0 .4rem 1rem rgba(0, 0, 0, .18);
+}
+
+.site-home #g-extension .catholic-resources .g-blockcontent-subcontent-block::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgba(var(--primary-color-rgb), .55);
+    transition: background .3s ease;
+}
+
+.site-home #g-extension .catholic-resources .g-blockcontent-subcontent-block:hover::before,
+.site-home #g-extension .catholic-resources .g-blockcontent-subcontent-block:focus-within::before {
+    background: rgba(var(--primary-color-rgb), .35);
+}
+
+.site-home #g-extension .catholic-resources .g-blockcontent-subcontent-block-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: .5rem;
+    padding: min(2.5vw, 2rem);
+}
+
+.site-home #g-extension .catholic-resources .g-blockcontent-subcontent-title {
+    margin: 0;
+    font-family: var(--title-font-family);
+    font-weight: 500;
+    font-size: min(1.7vw, 1.5rem);
+    line-height: 1.15;
+    color: rgb(var(--default-white-rgb));
+    text-wrap: balance;
+}
+
+.site-home #g-extension .catholic-resources .g-blockcontent-subcontent-desc {
+    margin: 0;
+    font-size: min(1vw, .85rem);
+    line-height: 1.5;
+    color: rgba(var(--default-white-rgb), .85);
+}
+
+.site-home #g-extension .catholic-resources .g-blockcontent-buttons {
+    position: static;
+    margin: .4rem 0 0;
+}
+
+.site-home #g-extension .catholic-resources .g-blockcontent-buttons a {
+    display: inline-block;
+    position: static;
+    padding: .5rem 1rem;
+    border: 1px solid rgb(var(--secondary-color-rgb));
+    background: transparent;
+    color: rgb(var(--secondary-color-rgb));
+    font-size: min(.95vw, .74rem);
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background .25s ease, color .25s ease;
+}
+
+.site-home #g-extension .catholic-resources .g-blockcontent-buttons a:hover,
+.site-home #g-extension .catholic-resources .g-blockcontent-buttons a:focus-visible {
+    background: rgb(var(--secondary-color-rgb));
+    color: rgb(var(--primary-color-rgb));
+}
+
+.site-home #g-extension .resources-title {
+    text-align: center;
+    margin-bottom: min(2vw, 1.5rem);
+}
+
+@media only screen and (max-width: 50.99rem) {
+    .site-home #g-extension .catholic-resources .g-blockcontent-subcontent {
+        grid-template-columns: 1fr;
+    }
+    .site-home #g-extension .catholic-resources .g-blockcontent-subcontent-title { font-size: 5.5vw; }
+    .site-home #g-extension .catholic-resources .g-blockcontent-subcontent-desc  { font-size: 3.6vw; }
+    .site-home #g-extension .catholic-resources .g-blockcontent-buttons a        { font-size: 3.2vw; }
+}
+
+/* ---- Footer (shared, NOT scoped to the homepage) ------------- */
+#g-footer h3 {
+    margin: 0 0 .4rem;
+    font-family: var(--title-font-family);
+    font-weight: 500;
+    font-size: min(2.2vw, 1.85rem);
+    line-height: 1.1;
+}
+
+#g-footer h3 a {
+    color: rgb(var(--secondary-color-rgb));
+    text-decoration: none;
+}
+
+#g-footer h4 {
+    margin: 0 0 .35rem;
+    font-family: var(--body-font-family);
+    font-weight: 700;
+    font-size: min(1.05vw, .88rem);
+    letter-spacing: .04em;
+    color: rgb(var(--default-white-rgb));
+}
+
+#g-footer p {
+    margin: 0;
+    font-size: min(1vw, .86rem);
+    line-height: 1.65;
+    color: rgba(var(--default-white-rgb), .85);
+}
+
+#g-footer a {
+    color: rgba(var(--default-white-rgb), .85);
+    text-decoration: none;
+}
+
+#g-footer a:hover,
+#g-footer a:focus-visible {
+    color: rgb(var(--secondary-color-rgb));
+    text-decoration: underline;
+}
+
+#g-footer .footer-campuses {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: min(4vw, 3rem);
+    max-width: 46rem;
+    margin-top: min(2vw, 1.6rem);
+    padding-top: min(2vw, 1.6rem);
+    border-top: 1px solid rgba(var(--default-white-rgb), .18);
+}
+
+@media only screen and (max-width: 50.99rem) {
+    #g-footer h3 { font-size: 5.5vw; }
+    #g-footer h4 { font-size: 3.6vw; }
+    #g-footer p  { font-size: 3.6vw; }
+    #g-footer .footer-campuses {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+/* ---- Section headings --------------------------------------- */
+.site-home #g-sidebar .news-title .g-title,
+.site-home #g-mainbar .calendar-title .g-title,
+.site-home #g-extension .resources-title .g-title {
+    font-family: var(--title-font-family);
+    font-weight: 500;
+    color: rgb(var(--primary-color-rgb));
+}
+
+/* ---- Motion preference -------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .site-home #g-utility .ql-circle-row .g-blockcontent-subcontent-block::before,
+    .site-home #g-extension .catholic-resources .g-blockcontent-subcontent-block::before,
+    .site-home .mass-times-block a.button,
+    .site-home #g-extension .catholic-resources .g-blockcontent-buttons a {
+        transition: none;
+    }
+}

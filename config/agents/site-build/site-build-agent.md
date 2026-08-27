@@ -115,6 +115,28 @@ never writes to the source.
 > a legacy template means a redesign. Say so explicitly if you know; the survey
 > warns when your answer disagrees with what it sees.
 
+#### Finding the redesign parent
+
+**The parent category is named different things on different builds** —
+`Redesign`, `New Site`, `STM 2026`, the site code. The survey resolves it rather
+than assuming, because creating a parent that duplicates an existing one under
+another name would split the build across two trees.
+
+It works in priority order: an explicit `redesign_root_id`, then an explicit
+`redesign_root` title, then inference. Inference scores every category that has
+children — the strongest signal is **children drawn from the fleet skeleton**,
+since recreating that skeleton one level down is what a redesign parent *is*.
+The name and anything in site notes add to the score.
+
+- **Resolved** → the report names it and shows the evidence.
+- **Ambiguous** → two plausible parents come back as candidates with their
+  scores. **Settle it with the user**, then pass `redesign_root`. The substrate
+  stage refuses to run until you do, and writes nothing.
+- **None found** → name it. The build will create it.
+
+Pass `site_notes` from `get_site_notes` — if the parent is recorded there, the
+resolver will use it.
+
 ### Phase 0b — Frame
 
 Establish before anything else:

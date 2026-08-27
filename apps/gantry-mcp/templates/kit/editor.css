@@ -1,0 +1,115 @@
+/* ============================================================================
+   editor.css — the TinyMCE content stylesheet
+   ----------------------------------------------------------------------------
+   PER-SITE FILE. Ships in the forge clone at /content/editor.css and is set in
+   Joomla > Plugins > Editor - TinyMCE > Custom CSS Classes / Style Sheet.
+
+   WHAT THIS FILE IS FOR
+   ---------------------
+   Making the editor show the client exactly what the page will show. It does
+   that by importing the same three files the front end loads, and then adding
+   only the chrome that exists inside the TinyMCE iframe and nowhere else.
+
+   The css2 version was 292 lines and defined its own copy of the brand colours,
+   the fonts, and all 78 heading variables. That copy had already drifted from
+   the real site. This file declares no design values at all, so it cannot.
+
+   HOW IT IS LOADED
+   ----------------
+   Plugins > Editor - TinyMCE > (each Set) > "Custom CSS Classes" takes a
+   comma-separated list, loaded in order. Set it to:
+
+     https://shared.solutiocdn.com/content/shared/kit/tokens.css,
+     https://shared.solutiocdn.com/content/shared/kit/typography.css,
+     /content/site-tokens.css,
+     /content/editor.css
+
+   (one line, no spaces after the commas)
+
+   That is the same set the front end loads, in the same order, which is the
+   whole mechanism. This file therefore does NOT @import anything — the list
+   does the loading, and importing as well would double-load every rule.
+
+   Two entries to remove from the old value: editor-base.css, now absorbed into
+   typography.css, and /images/pub/editor.css, which 404s on this site.
+
+   IF YOU ARE ABOUT TO ADD A RULE HERE, STOP
+   -----------------------------------------
+   A rule that styles article content belongs in kit/typography.css, where both
+   contexts get it. The only rules that belong here are ones that target
+   TinyMCE's own markup — .mce-content-body, .mce-edit-table, .mce-item-*,
+   #tinymce, #system-readmore. Anything else reintroduces the drift this file
+   exists to remove.
+   ============================================================================ */
+
+
+/* ============================================================================
+   TINYMCE CHROME
+   ============================================================================ */
+
+/* The iframe body. Give the writing area room so text is not flush against the
+   frame, and cap the measure so a paragraph does not run the full width of a
+   wide monitor — the article column on the site is never that wide, and an
+   editor that wraps differently from the page misleads about line breaks. */
+.mce-content-body {
+  padding: 1rem 1.25rem;
+  max-width: 60rem;
+  background: var(--default-white);
+}
+
+/* TinyMCE wraps a table in .mce-edit-table. The layout classes in
+   typography.css set display on the table itself, so they need re-asserting
+   inside that wrapper for the editor to show the same shape as the page. */
+.mce-edit-table .equaltable {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+}
+
+.mce-edit-table table.flextable,
+.mce-edit-table .flextable tbody,
+.mce-edit-table .flextable tr {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.mce-edit-table .bilingual {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+/* Make invisible structure visible while editing. A person cannot select or
+   fix a wrapper they cannot see, and an empty container is the single most
+   common thing a human save silently destroys. */
+.mce-content-body :is(.primary-back, .secondary-back, .whiteborder):empty::before,
+.mce-content-body .bilingual :is(.englishtext, .spanishtext):empty::before {
+  content: '(empty — type here)';
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: .85rem;
+}
+
+/* Show structure that is invisible in a WYSIWYG. A person cannot select or fix
+   a wrapper they cannot see.
+
+   editor-base.css did this with `div { border: 2px #ccc dashed; padding: .5rem }`
+   on EVERY div, which changed the box model — so spacing inside the editor
+   never matched the page, and a nested layout accumulated indents that do not
+   exist on the site. outline draws in the same place without taking up space,
+   so what the client sees is what the page renders. */
+.mce-content-body div,
+.mce-content-body table:not([class]) {
+  outline: 1px dashed var(--border-subtle);
+  outline-offset: 2px;
+}
+
+/* The Read More break. Loud on purpose — placing it wrongly is a common and
+   confusing mistake, because the article silently truncates on the page. */
+#system-readmore {
+  display: block;
+  border-top: 2px dashed var(--alert-red);
+  margin: var(--space-md) 0;
+}

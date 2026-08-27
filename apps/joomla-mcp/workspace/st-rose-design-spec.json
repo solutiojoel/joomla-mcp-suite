@@ -1,0 +1,432 @@
+{
+  "site": "https://st-rose.forge.solutiosoftware.com/",
+  "site_type": "parish",
+  "build_type": "new",
+  "source": "strose-hampton.solutiosoftware.com current homepage + 8.11.25 revision notes (Adam) + mockup-2.png (footer only)",
+  "source_kind": "reference_url",
+  "target_outline": "#Home",
+  "outline_id": 33,
+  "theme": "rt_studius",
+  "generated": "2026-08-27",
+  "sections": [
+    {
+      "id": "slideshow",
+      "fingerprint": "70|30",
+      "pattern": "hero-swiper-with-mass-times",
+      "reason": "Notes: 'Rotator: Image rotation with Mass Times on the right side.' Replaces the current rotator plus grey announcement panel.",
+      "attributes": {
+        "class": "floatator slideshow-spacing"
+      },
+      "blocks": [
+        {
+          "size": 70,
+          "block_class": "fullwidth-swiper",
+          "particle": "swiper",
+          "title": "Rotator",
+          "content_binding": {
+            "kind": "category",
+            "role": "hero_slides",
+            "existing_id": 10
+          },
+          "overrides": {
+            "slides_linkable": "disabled"
+          },
+          "notes": "Block carries id=\"rotate-addpic\" (set via gantry_particle block_edit) and class \"fullwidth-swiper\". The fleet rotator JS/CSS needs BOTH. The design/section YAML cannot express a block id, so it is applied as a separate step."
+        },
+        {
+          "size": 30,
+          "block_class": "mass-times-block",
+          "particle": "contentarray",
+          "title": "Mass Times",
+          "content_binding": {
+            "kind": "article",
+            "role": "mass_times",
+            "existing_id": 55
+          },
+          "notes": "REWRITE REQUIRED: forge article 55 holds another parish's boilerplate schedule. Replace with the corrected St. Rosalie condensed schedule (source of truth: live article 168)."
+        }
+      ]
+    },
+    {
+      "id": "utility",
+      "fingerprint": "100",
+      "pattern": "quicklinks-bar",
+      "reason": "Notes: circle quicklinks per Mockup #3. Six tiles carried from the current site; the school label is expanded per the notes.",
+      "blocks": [
+        {
+          "size": 100,
+          "block_class": "ql-circle-slant ql-dm",
+          "particle": "blockcontent",
+          "title": "Quicklinks",
+          "subcontents": [
+            {
+              "name": "Bulletin",
+              "buttonlink": "/news/bulletin",
+              "img": "gantry-media://stories/template/quicklinks/ql1.jpg",
+              "buttontarget": "_self",
+              "icon": "",
+              "description": "",
+              "buttonclass": ""
+            },
+            {
+              "name": "Faith Formation",
+              "buttonlink": "/parish-life/re-rcia",
+              "img": "gantry-media://stories/template/quicklinks/ql2.jpg",
+              "buttontarget": "_self",
+              "icon": "",
+              "description": "",
+              "buttonclass": ""
+            },
+            {
+              "name": "Online Giving",
+              "buttonlink": "https://membership.faithdirect.net/NY275",
+              "img": "gantry-media://stories/template/quicklinks/ql3.jpg",
+              "buttontarget": "_blank",
+              "icon": "",
+              "description": "",
+              "buttonclass": ""
+            },
+            {
+              "name": "Ministry Schedules",
+              "buttonlink": "/news/ministry-schedule",
+              "img": "gantry-media://stories/template/quicklinks/ql4.jpg",
+              "buttontarget": "_self",
+              "icon": "",
+              "description": "",
+              "buttonclass": ""
+            },
+            {
+              "name": "Our Lady of the Hamptons Regional Catholic School",
+              "buttonlink": "https://olh.org/",
+              "img": "gantry-media://stories/template/quicklinks/ql5.jpg",
+              "buttontarget": "_blank",
+              "icon": "",
+              "description": "",
+              "buttonclass": ""
+            },
+            {
+              "name": "Mental Health/Addiction Help",
+              "buttonlink": "/parish-life/psm",
+              "img": "gantry-media://stories/template/quicklinks/ql6.jpg",
+              "buttontarget": "_self",
+              "icon": "",
+              "description": "",
+              "buttonclass": ""
+            }
+          ],
+          "notes": "Destinations copied verbatim from live module 110. Images are fleet placeholders — the real ql1-ql6 photos must be uploaded."
+        }
+      ]
+    },
+    {
+      "id": "sidebar",
+      "fingerprint": "100|100|100",
+      "pattern": "news-feed-sidebar",
+      "reason": "Notes: 'Headlines(2 columns + Ads): Parish News(include images)' — column 1 of 3.",
+      "attributes": {
+        "class": "news-to-me headlines-spacing"
+      },
+      "blocks": [
+        {
+          "size": 100,
+          "block_class": "news-title",
+          "particle": "custom",
+          "title": "Parish News Title",
+          "html": "<h2 class=\"g-title\">Parish News</h2>",
+          "notes": "House heading pattern. A blockcontent/contentarray title attribute does not render."
+        },
+        {
+          "size": 100,
+          "block_class": "grid grid-articles grid-mobile-stacked grid-sideways grid-g-grid-box-shadow grid-g-grid-border-radius-1-point-5 grid-image-border-radius-1 grid-hover-scale grid-title-tertiary grid-text-white grid-mobile-horizontal-scroll grid-img-border-2-tertiary grid-bg-primary grid-wide",
+          "particle": "contentarray",
+          "title": "Parish News",
+          "content_binding": {
+            "kind": "category",
+            "role": "news_feed",
+            "existing_id": 8
+          },
+          "overrides": {
+            "article": {
+              "limit": {
+                "total": "3"
+              },
+              "display": {
+                "image": {
+                  "enabled": "full"
+                }
+              }
+            }
+          },
+          "notes": "Block carries id=\"grid-addpic\" plus the forge card-grid utility classes, preserved from the outline. Replacing them with ph-titlestack would have lost the card treatment."
+        },
+        {
+          "size": 100,
+          "block_class": "news-button",
+          "particle": "custom",
+          "title": "View All News Button",
+          "html": "<a href=\"news\" class=\"button\">View All</a>"
+        }
+      ]
+    },
+    {
+      "id": "mainbar",
+      "fingerprint": "100|100|100",
+      "pattern": null,
+      "reason": "Notes: 'agenda calendar' — column 2 of 3.",
+      "attributes": {
+        "class": "news-to-me headlines-spacing"
+      },
+      "blocks": [
+        {
+          "size": 100,
+          "block_class": "calendar-title",
+          "particle": "custom",
+          "title": "Calendar Title",
+          "html": "<h2 class=\"g-title\">Calendar</h2>"
+        },
+        {
+          "size": 100,
+          "block_class": "calendar-container widget-container",
+          "particle": "contentarray",
+          "title": "Calendar",
+          "content_binding": {
+            "kind": "article",
+            "role": "calendar",
+            "existing_id": 74
+          }
+        },
+        {
+          "size": 100,
+          "block_class": "calendar-button",
+          "particle": "custom",
+          "title": "View Full Calendar Button",
+          "html": "<a class=\"button\" href=\"/news/calendar\">View Full Calendar</a>"
+        }
+      ]
+    },
+    {
+      "id": "aside",
+      "fingerprint": "100",
+      "pattern": null,
+      "reason": "Notes: 'then Ads' — column 3 of 3.",
+      "attributes": {
+        "class": "news-to-me headlines-spacing"
+      },
+      "blocks": [
+        {
+          "size": 100,
+          "block_class": "ads-903 side-ads ads-901 ads-902",
+          "particle": "position",
+          "title": "Home Ads",
+          "notes": "PRE-EXISTING, NOT REBUILT. The outline already carries a wired home-ads module position. Rebuilding it would drop position_key, which the compiler discards."
+        }
+      ]
+    },
+    {
+      "id": "expanded",
+      "fingerprint": "50|50",
+      "pattern": null,
+      "reason": "Notes: '2 columns: Facebook widget and Staff contact info (just text like it is now, likely in two columns) on the right.'",
+      "attributes": {
+        "class": "widget-parthenon-alt"
+      },
+      "blocks": [
+        {
+          "size": 50,
+          "block_class": "facebook-widget-container widget-container",
+          "particle": "contentarray",
+          "title": "Parish Community",
+          "content_binding": {
+            "kind": "article",
+            "role": "social",
+            "existing_id": 76
+          },
+          "notes": "REWRITE REQUIRED: seed with the Elfsight app div from live article 221 (app b503df8b-1d3e-4d38-97f8-10ca7483b215)."
+        },
+        {
+          "size": 50,
+          "block_class": "staff-contact-container widget-container",
+          "particle": "contentarray",
+          "title": "Parish Staff Contact Info",
+          "content_binding": {
+            "kind": "article",
+            "role": "staff_contact",
+            "existing_id": 154,
+            "create": {
+              "title": "Parish Staff Contact Info",
+              "category": "Homepage Articles",
+              "seed_content": "<p>Rev. S. A. Maddaloni, Pastor  631-728-9461 X204; <a href=\"mailto:fr.smaddaloni@saintrosalie.com\">fr.smaddaloni@saintrosalie.com</a></p>\n<p>Rev. James Calledo, Associate Pastor  631-728-9461 X205; <a href=\"mailto:fr.jcalledo@saintrosalie.com\">fr.jcalledo@saintrosalie.com</a></p>\n<p>PARISH FACILITIES MANAGER  631-728-9461 X201<br />Deacon Chris Ervin <a href=\"mailto:dcn.cervin@saintrosalie.com\">dcn.cervin@saintrosalie.com</a></p>\n<p>PARISH DEACON<br />Deacon Jim Leopard  631-728-9248  <a href=\"mailto:dcn.jleopard@saintrosalie.com\">dcn.jleopard@saintrosalie.com</a></p>\n<p>COORDINATOR OF RELIGIOUS FORMATION  631-728-9248<br />Julia Brandimarte <a href=\"mailto:jbrandimarte@saintrosalie.com\">jbrandimarte@saintrosalie.com</a></p>\n<p>SECRETARY FOR RELIGIOUS FORMATION  631-728-9248<br />Lilianna Villa</p>\n<p>DIRECTOR MUSIC/LITURGY  631-728-9461 X208<br />Tom Humbert <a href=\"mailto:thumbert@saintrosalie.com\">thumbert@saintrosalie.com</a></p>\n<p>DIRECTOR OF PARISH SOCIAL MINISTRY  631-728-9249<br />Catherine Andrejack <a href=\"mailto:psm@saintrosalie.com\">psm@saintrosalie.com</a></p>\n<p>BUILDING MAINTENANCE..................... 631-728-9461</p>\n<p>ADMINISTRATIVE OFFICES........................ 631-728-9461 X200<br />Linda Magagnoli <a href=\"mailto:parish@saintrosalie.com\">parish@saintrosalie.com</a><br />Eileen McPhelin (Wednesdays Only)</p>\n<p>FAX:  631-728-2559</p>\n<p>CENTRO CORAZON DE MARIA  631-728-5558<br />ST. VINCENT DE PAUL SOCIETY 631-728-9461 X215</p>"
+            },
+            "created_by_build": true
+          },
+          "notes": "Copy is verbatim from live article 156. The 'two columns' is a CSS treatment on one article, not two blocks."
+        }
+      ]
+    },
+    {
+      "id": "extension",
+      "fingerprint": "100|100",
+      "pattern": null,
+      "reason": "Notes: 'Then catholic resources: diocese, readings, videos.' The current Holy See / Vatican card is swapped for Videos.",
+      "blocks": [
+        {
+          "size": 100,
+          "block_class": "resources-title",
+          "particle": "custom",
+          "title": "Catholic Resources Title",
+          "html": "<h2 class=\"g-title\">Catholic Resources</h2>"
+        },
+        {
+          "size": 100,
+          "block_class": "catholic-resources link-boxes",
+          "particle": "blockcontent",
+          "title": "Catholic Resources",
+          "subcontents": [
+            {
+              "name": "Diocese of Rockville Centre",
+              "button": "DRVC Website",
+              "buttonlink": "https://www.drvc.org/",
+              "buttontarget": "_blank",
+              "img": "",
+              "icon": "",
+              "description": "",
+              "buttonclass": ""
+            },
+            {
+              "name": "Daily Readings",
+              "button": "More",
+              "buttonlink": "https://bible.usccb.org/daily-bible-reading",
+              "buttontarget": "_blank",
+              "img": "",
+              "icon": "",
+              "description": "Click for today's Mass Readings",
+              "buttonclass": ""
+            },
+            {
+              "name": "Mass Videos",
+              "button": "Watch",
+              "buttonlink": "/news/mass-videos",
+              "buttontarget": "_self",
+              "img": "",
+              "icon": "",
+              "description": "Mass and devotional videos",
+              "buttonclass": ""
+            }
+          ],
+          "notes": "OPEN: the Mass Videos destination is a placeholder — see q2. Card artwork must be supplied."
+        }
+      ],
+      "attributes": {
+        "class": "s-vertical-padding-2"
+      }
+    },
+    {
+      "id": "bottom",
+      "fingerprint": "100",
+      "pattern": null,
+      "reason": "Sponsor banner strip above the footer, as on the current site.",
+      "blocks": [
+        {
+          "size": 100,
+          "block_class": "sponsor-strip",
+          "particle": "position",
+          "title": "Bottom Ads",
+          "notes": "PRE-EXISTING, NOT REBUILT. Already a wired bottom-ads module position, inherited from the Base Outline."
+        }
+      ]
+    },
+    {
+      "id": "footer",
+      "fingerprint": "100",
+      "pattern": "footer-shell",
+      "reason": "Notes: 'Footer: From Mockup #2 (Adam's preference).' Dark green band, crest, parish name, phone/fax/email, two campus addresses.",
+      "blocks": [
+        {
+          "size": 100,
+          "block_class": "footer-campuses",
+          "particle": "contentarray",
+          "title": "Footer",
+          "content_binding": {
+            "kind": "article",
+            "role": "footer",
+            "existing_id": 36
+          },
+          "notes": "NOT REBUILT. The Base Outline already binds contentarray -> article 36, and article 36 now holds the real St. Rosalie footer. Only CSS remains for the Mockup #2 look."
+        }
+      ]
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "q1",
+      "section": "top",
+      "question": "Add the fleet-standard Alert band above the navigation? The current site publishes an Alert module and the forge has the Alert category (9).",
+      "why_it_matters": "Your notes start at Header/Menu, so I left it out. Adding it is one section and gives the parish a banner they can switch on.",
+      "answer": "Already present. Outline 33 top already has System Messages + Alert (cat 9) + Pop Up. No work needed."
+    },
+    {
+      "id": "q2",
+      "section": "extension",
+      "question": "Where should the 'Videos' Catholic Resources card link, and does The Holy See / Vatican card really drop out?",
+      "why_it_matters": "The notes say 'diocese, readings, videos' (three), but the current site shows Diocese / Daily Readings / Holy See and carries Mass Videos as a separate block. The link is a placeholder today.",
+      "answer": "Swap the Vatican card for Videos. Destination /news/mass-videos is still a placeholder."
+    },
+    {
+      "id": "q3",
+      "section": "utility",
+      "question": "Reuse the six existing quicklink photos (ql1-ql6) from the current site, or is new artwork coming?",
+      "why_it_matters": "The circles need images uploaded to the forge before launch; right now they point at fleet placeholders.",
+      "answer": "New artwork is coming. Fleet placeholder images remain for now."
+    },
+    {
+      "id": "q4",
+      "section": "expanded",
+      "question": "The Facebook feed is an Elfsight widget (app b503df8b-1d3e-4d38-97f8-10ca7483b215). Is that app authorised for the forge domain and the launch domain?",
+      "why_it_matters": "Elfsight apps are domain-locked, so the block can render empty on the forge even when the markup is right.",
+      "answer": "Open. App b503df8b is domain-locked; confirm it is authorised for the forge and launch domains."
+    },
+    {
+      "id": "q5",
+      "section": "slideshow",
+      "question": "Confirm the corrected condensed Mass Times panel.",
+      "why_it_matters": "The prepared article 220 drops the Saturday 8:00 a.m. Mass and the Spanish Mass, labels the 5 p.m. Sunday vigil as 'Saturday', and invents an East Quogue weekday Mass. I am using the accurate schedule from live article 168 instead.",
+      "answer": "Confirmed. Built from live article 168, not the faulty prepared article 220."
+    },
+    {
+      "id": "q6",
+      "section": "aside",
+      "question": "Confirm I should hand-wire the two ad positions (home-ads, bottom-ads) after compile.",
+      "why_it_matters": "derive_design_yaml does not emit position_key and the compiler discards it, so the pipeline cannot build a module position. Everything else compiles normally.",
+      "answer": "Moot. Both ad positions already exist and were left untouched."
+    }
+  ],
+  "assumptions": [
+    "navigation, copyright and offcanvas inherit from the Base Outline — the notes say the header/menu stays similar to the existing site.",
+    "The Donate Now QR code from the current Mass & Confession band does not move to the homepage Mass Times panel.",
+    "The full Mass & Confession detail stays on its own page; the homepage panel is a condensed schedule plus a button, as in Mockup #2.",
+    "Parish News feeds from the existing Headlines / News category (8) and shows 3 items with images.",
+    "The ads columns reuse the fleet module positions home-ads and bottom-ads."
+  ],
+  "applied": {
+    "outline_id": 33,
+    "method": "gantry_section apply, per section",
+    "sections_applied": [
+      "slideshow",
+      "utility",
+      "sidebar",
+      "mainbar",
+      "expanded",
+      "extension"
+    ],
+    "sections_untouched": [
+      "top",
+      "navigation",
+      "aside",
+      "bottom",
+      "footer",
+      "copyright",
+      "offcanvas"
+    ],
+    "applied_on": "2026-08-27"
+  }
+}

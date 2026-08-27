@@ -1,0 +1,69 @@
+/* ============================================================================
+   site-tokens.css — THIS SITE's brand values
+   ----------------------------------------------------------------------------
+   PER-SITE FILE. Ships in the forge clone at /content/site-tokens.css and is
+   the only file a site build edits for brand.
+
+   WHY THIS FILE EXISTS
+   --------------------
+   In css2 the per-site values lived in Base outline > Page Settings > Custom
+   Head, and were then hand-copied into editor.css so TinyMCE could see them.
+   Nothing kept the two in sync. On the forge baseline they had already drifted
+   apart — the outline said navy and EB Garamond, editor.css said deep blue and
+   STIX Two Text — so every client was editing in a theme their site did not use.
+
+   This file is loaded from both places:
+     * front end — a Gantry asset row on the Base outline, priority 2
+     * editor    — imported by /content/editor.css
+   One file, both contexts. The editor cannot drift again.
+
+   RULES
+   -----
+   1. Do NOT wrap this file in @layer. kit/tokens.css is layered, so an
+      unlayered :root here wins on layer order no matter what the specificity
+      is. Adding a layer would silently invert that and the site would fall
+      back to kit defaults.
+
+   2. Override section 1 of kit/tokens.css and nothing else. If a build needs
+      to override anything further down, the kit is missing an axis — add it to
+      kit/tokens.css so every site gets it, rather than patching here.
+
+   3. The font @import must stay the first statement in the file. CSS ignores
+      an @import that appears after a rule.
+   ============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lato:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+:root {
+
+  /* --- Brand colours ------------------------------------------------------
+     Raw triplets. Every composed value in kit/tokens.css derives from these,
+     so changing a triplet restyles the whole site. */
+  --primary-color-rgb:    0, 13, 63;      /* Dark Navy Blue */
+  --secondary-color-rgb:  198, 147, 56;   /* Goldenrod */
+  --tertiary-color-rgb:   240, 234, 214;  /* Ivory Taupe */
+
+  /* --- Typefaces ----------------------------------------------------------
+     Must match the families requested in the @import above. */
+  --title-font-family:  'EB Garamond', Georgia, 'Times New Roman', serif;
+  --body-font-family:   'Lato', 'Helvetica Neue', Arial, sans-serif;
+
+  /* --- Layout envelope ---------------------------------------------------- */
+  --site-max-width:     1920px;
+
+  /* --- Component knobs ----------------------------------------------------
+     The few that genuinely vary per site. */
+  --ql-num-boxes:            5;
+  --slideshow-height:        min(56.25vw, 810px);
+  --slideshow-width:         min(100vw, 1440px);
+  --slideshow-height-mobile: 56.25vw;
+  --slideshow-width-mobile:  100vw;
+
+  /* --- Placeholder images -------------------------------------------------
+     Keep a half-built site from rendering broken. Point these at the site's
+     own uploads once real photography arrives. */
+  --default-rotator-image: url('/images/stories/template/default-rotator.jpg');
+  --default-grid-image:    url('/images/stories/template/default-grid.jpg');
+  --default-hero-image:    url('/images/stories/template/default-hero.jpg');
+  --default-staff-image:   url('/images/stories/template/default-staff.jpg');
+}

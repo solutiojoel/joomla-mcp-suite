@@ -1,0 +1,311 @@
+top_container:
+  sections:
+    - id: slideshow
+      type: section
+      grids:
+        - blocks:
+            - size: 70
+              particle: swiper
+              blockClass: fullwidth-swiper rotate-addpic
+              title: Rotator
+              attributes:
+                source: joomla
+                image: img
+                height: 36vw
+                heightMobile: 56vw
+                nav: enabled
+                pagination: bullets
+                autoplay: enabled
+                autoplayTimeout: '8000'
+                loop: enabled
+                speed: '800'
+                slides_linkable: disabled
+                touchmove: enabled
+                direction: horizontal
+                effect: slide
+                items: []
+                article:
+                  filter:
+                    categories: '10'
+                    articles: ''
+                    featured: include
+                  limit:
+                    total: '10'
+                    columns: '1'
+                    start: '0'
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+            - size: 30
+              particle: contentarray
+              blockClass: mass-times-block
+              title: Mass Times
+              attributes:
+                article:
+                  filter:
+                    categories: ''
+                    articles: '55'
+                    featured: include
+                  limit:
+                    total: '1'
+                    columns: '1'
+                    start: '0'
+                  display:
+                    pagination_buttons: ''
+                    title:
+                      enabled: ''
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+      attributes:
+        class: floatator slideshow-spacing
+sections:
+  - id: utility
+    type: section
+    grids:
+      - blocks:
+          - size: 100
+            particle: blockcontent
+            blockClass: ql-circle-slant ql-dm
+            title: Quicklinks
+            attributes:
+              source: manual
+              subcontents:
+                - name: Bulletin
+                  button: Bulletin
+                  buttonlink: /news/bulletin
+                  buttontarget: _self
+                  buttonclass: ''
+                  icon: ''
+                  img: gantry-media://stories/template/quicklinks/ql1.jpg
+                  description: ''
+                - name: Faith Formation
+                  button: Faith Formation
+                  buttonlink: /parish-life/re-rcia
+                  buttontarget: _self
+                  buttonclass: ''
+                  icon: ''
+                  img: gantry-media://stories/template/quicklinks/ql2.jpg
+                  description: ''
+                - name: Online Giving
+                  button: Online Giving
+                  buttonlink: https://membership.faithdirect.net/NY275
+                  buttontarget: _blank
+                  buttonclass: ''
+                  icon: ''
+                  img: gantry-media://stories/template/quicklinks/ql3.jpg
+                  description: ''
+                - name: Ministry Schedules
+                  button: Ministry Schedules
+                  buttonlink: /news/ministry-schedule
+                  buttontarget: _self
+                  buttonclass: ''
+                  icon: ''
+                  img: gantry-media://stories/template/quicklinks/ql4.jpg
+                  description: ''
+                - name: Our Lady of the Hamptons Regional Catholic School
+                  button: Our Lady of the Hamptons Regional Catholic School
+                  buttonlink: https://olh.org/
+                  buttontarget: _blank
+                  buttonclass: ''
+                  icon: ''
+                  img: gantry-media://stories/template/quicklinks/ql5.jpg
+                  description: ''
+                - name: Mental Health/Addiction Help
+                  button: Mental Health/Addiction Help
+                  buttonlink: /parish-life/psm
+                  buttontarget: _self
+                  buttonclass: ''
+                  icon: ''
+                  img: gantry-media://stories/template/quicklinks/ql6.jpg
+                  description: ''
+main_container:
+  layout: sidebar-main-aside
+  sidebar:
+    section_id: sidebar
+    type: section
+    size: 100
+    grids:
+      - blocks:
+          - size: 100
+            particle: contentarray
+            blockClass: ph-titlestack
+            title: Parish News
+            attributes:
+              article:
+                filter:
+                  categories: '8'
+                  articles: ''
+                  featured: include
+                limit:
+                  total: '3'
+                  columns: '1'
+                  start: '0'
+                display:
+                  pagination_buttons: ''
+                  title:
+                    enabled: ''
+                  read_more:
+                    enabled: show
+                  image:
+                    enabled: full
+                sort:
+                  orderby: ordering
+                  ordering: ASC
+  mainbar:
+    section_id: mainbar
+    type: section
+    size: 100
+    grids:
+      - blocks:
+          - size: 100
+            particle: contentarray
+            blockClass: calendar-container widget-container
+            title: Calendar
+            attributes:
+              article:
+                filter:
+                  categories: ''
+                  articles: '74'
+                  featured: include
+                limit:
+                  total: '1'
+                  columns: '1'
+                  start: '0'
+                display:
+                  pagination_buttons: ''
+                  title:
+                    enabled: ''
+                sort:
+                  orderby: ordering
+                  ordering: ASC
+  aside:
+    section_id: aside
+    type: section
+    size: 100
+    grids:
+      - blocks:
+          - size: 100
+            particle: position
+            blockClass: ads-903 side-ads ads-901 ads-902
+            title: Home Ads
+extra_sections:
+  - id: expanded
+    type: section
+    grids:
+      - blocks:
+          - size: 50
+            particle: contentarray
+            blockClass: facebook-widget-container widget-container
+            title: Parish Community
+            attributes:
+              article:
+                filter:
+                  categories: ''
+                  articles: '76'
+                  featured: include
+                limit:
+                  total: '1'
+                  columns: '1'
+                  start: '0'
+                display:
+                  pagination_buttons: ''
+                  title:
+                    enabled: ''
+                sort:
+                  orderby: ordering
+                  ordering: ASC
+          - size: 50
+            particle: contentarray
+            blockClass: staff-contact-container widget-container
+            title: Parish Staff Contact Info
+            attributes:
+              article:
+                filter:
+                  categories: ''
+                  articles: '154'
+                  featured: include
+                limit:
+                  total: '1'
+                  columns: '1'
+                  start: '0'
+                display:
+                  pagination_buttons: ''
+                  title:
+                    enabled: ''
+                sort:
+                  orderby: ordering
+                  ordering: ASC
+    attributes:
+      class: widget-parthenon-alt
+  - id: extension
+    type: section
+    grids:
+      - blocks:
+          - size: 100
+            particle: blockcontent
+            blockClass: catholic-resources link-boxes
+            title: Catholic Resources
+            attributes:
+              source: manual
+              subcontents:
+                - name: Diocese of Rockville Centre
+                  button: Diocese of Rockville Centre
+                  buttonlink: https://www.drvc.org/
+                  buttontarget: _blank
+                  buttonclass: ''
+                  icon: ''
+                  img: ''
+                  description: DRVC Website
+                - name: Daily Readings
+                  button: Daily Readings
+                  buttonlink: https://bible.usccb.org/daily-bible-reading
+                  buttontarget: _blank
+                  buttonclass: ''
+                  icon: ''
+                  img: ''
+                  description: Click for today's Mass readings
+                - name: Mass Videos
+                  button: Mass Videos
+                  buttonlink: /news/mass-videos
+                  buttontarget: _self
+                  buttonclass: ''
+                  icon: ''
+                  img: ''
+                  description: Watch Mass and devotional videos
+  - id: bottom
+    type: section
+    grids:
+      - blocks:
+          - size: 100
+            particle: position
+            blockClass: sponsor-strip
+            title: Bottom Ads
+footer_container:
+  sections:
+    - id: footer
+      type: section
+      grids:
+        - blocks:
+            - size: 100
+              particle: contentarray
+              blockClass: footer-campuses
+              title: Footer
+              attributes:
+                article:
+                  filter:
+                    categories: ''
+                    articles: '36'
+                    featured: include
+                  limit:
+                    total: '1'
+                    columns: '1'
+                    start: '0'
+                  display:
+                    pagination_buttons: ''
+                    title:
+                      enabled: ''
+                  sort:
+                    orderby: ordering
+                    ordering: ASC
+preserve_base_inheritance: true
