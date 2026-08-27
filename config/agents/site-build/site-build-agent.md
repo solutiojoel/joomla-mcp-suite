@@ -55,17 +55,22 @@ Load Gantry reference **on demand, not up front**:
 
 Two gates. Stop at both. Do not write to a live outline before Gate 2 passes.
 
-| Phase | What runs | Where |
-|---|---|---|
-| **0 — Frame** | Site, site type, target outline, theme confirmed | you |
-| **1 — Read** | Reference → Design Spec | `run_design_interpretation` |
-| **🚦 Gate 1** | **Human approves the Design Spec** | conversation |
-| **2 — Substrate** | Categories + shell articles created, IDs stamped into the spec | `build_content_substrate` |
-| **3 — Compile** | Spec → design YAML → validate → dry run | `derive_design_yaml`, `gantry_design` |
-| **🚦 Gate 2** | **Human approves the dry-run diff** | conversation |
-| **4 — Apply** | `gantry_design{action:"compile"}` | you |
-| **5 — QA** | Screenshot vs. reference → defects → CSS → re-check | `run_visual_qa`, `run_css_authoring` |
-| **6 — Report** | Build report, site notes, audit note | you |
+| Phase | What runs | Where | Engine |
+|---|---|---|---|
+| **0 — Frame** | Site, site type, target outline, theme confirmed | you | — |
+| **1 — Read** | Reference → Design Spec | `run_design_interpretation` | **model** |
+| **🚦 Gate 1** | **Human approves the Design Spec** | conversation | — |
+| **2 — Substrate** | Categories + shell articles created, IDs stamped into the spec | `build_content_substrate` | code |
+| **3 — Compile** | Spec → design YAML → validate → dry run | `derive_design_yaml`, `gantry_design` | code |
+| **🚦 Gate 2** | **Human approves the dry-run diff** | conversation | — |
+| **4 — Apply** | `gantry_design{action:"compile"}` | you | code |
+| **5 — QA** | Structural verification → CSS → re-check | `verify_build`, `run_css_authoring` | code, then **model** |
+| **6 — Report** | Build report, site notes, audit note | you | — |
+
+Exactly **two** stages use a model: reading the reference, and writing CSS.
+Everything else is deterministic and repeats exactly. If a step feels like it
+needs judgement and is not one of those two, the spec is probably missing
+something — fix the spec rather than improvising.
 
 ### Phase 0 — Frame
 
@@ -139,18 +144,28 @@ gantry_design { action: "compile", ... }
 Confirm `applied: true` and `verified: true`. The compiler backs up the outline
 first; `gantry_layout{action:"undo"}` reverts it.
 
-### Phase 5 — Visual QA
+### Phase 5 — Verify, then fix
 
-`run_visual_qa` takes the applied page and the original reference and returns a
-structured defect list. Then `run_css_authoring` writes `override.css` deltas
-from the real rendered DOM.
+`verify_build` checks the applied outline structurally — no screenshots, no
+model. It catches every defect class that blocks a ship: binding violations,
+bindings that resolve to nothing, unpublished shells, block classes with
+`ruleCount: 0`, rendered column widths that disagree with the spec fingerprint,
+empty `href=""` anchors, and `mainbar`/`aside` left inherited.
 
-**Scrutinize the screenshot; do not glance at it.** Raw byline text, broken
-image icons, and empty `href=""` anchors are exactly what a quick look misses.
+Defects come back ranked, each with a `suggested_owner`:
 
-Stop after **three** QA rounds. If defects remain, report them as open items
-rather than iterating further — an unbounded CSS loop burns context and rarely
-converges.
+- `css-author` → pass that subset to `run_css_authoring`, upload the result with
+  `ftp_upload_file`, re-run `verify_build`
+- `spec` → the spec is wrong; fix it and rebuild that section
+- `substrate` → re-run `build_content_substrate`
+- `human` → an open item for the report
+
+**Blockers gate the ship.** `verify_build` returns `blockers: 0` or it is not
+done. A screenshot is still worth a look for polish, but do not rely on eyes for
+anything in the list above — that is what this stage is for.
+
+Stop after **three** fix rounds. Remaining defects become open items — an
+unbounded CSS loop burns context and rarely converges.
 
 ### Phase 6 — Report
 
@@ -180,12 +195,13 @@ converges.
 
 | Tool | Purpose |
 |---|---|
-| `run_design_interpretation` | **Phase 1** — reference → Design Spec, in a separate context window |
-| `build_content_substrate` | **Phase 2** — create categories + shell articles, stamp IDs into the spec |
-| `derive_design_yaml` | **Phase 3** — deterministic spec → design YAML |
+| `run_design_interpretation` | **Phase 1** — reference → Design Spec, in a separate context window. Uses a model. |
+| `validate_design_spec` | Re-check the spec after any hand edit. Deterministic. |
+| `build_content_substrate` | **Phase 2** — create categories + shell articles, stamp IDs into the spec. Deterministic and idempotent. |
+| `derive_design_yaml` | **Phase 3** — spec → design YAML. Deterministic; refuses while any binding lacks an ID. |
 | `gantry_design` | `validate` → `compile dryRun` → `compile` |
-| `run_visual_qa` | **Phase 5** — rendered page vs. reference → defect list |
-| `run_css_authoring` | **Phase 5** — rendered DOM + defects → `override.css` |
+| `verify_build` | **Phase 5** — structural verification → ranked defect list. Deterministic. |
+| `run_css_authoring` | **Phase 5** — rendered DOM + defects → `override.css`. Uses a model. |
 | `gantry_reference` | Conventions, patterns, particles, section templates, homepage examples |
 | `gantry_layout{action:"undo"}` | Revert the last layout write |
 | `joomla_article` / `joomla_category` | The substrate — and the only home for editable content |

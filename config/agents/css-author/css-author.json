@@ -1,7 +1,7 @@
 {
   "name": "css-author",
   "hidden": true,
-  "description": "Phase 5 of the site build: turns a visual-qa defect list plus the real rendered DOM into override.css rules. Runs per batch in a fresh context window so DOM dumps never reach the caller. Writes one CSS file to the site workspace and returns a compact status JSON; the harness uploads it.",
+  "description": "Phase 5 of the site build: turns a verify_build defect list plus the real rendered DOM into override.css rules. The only stage after interpretation that needs a model — writing a rule that fixes a defect without breaking other pages is judgement, not a lookup. Runs in a fresh context window so DOM dumps never reach the caller. Writes one CSS file to the site workspace and returns a compact status JSON; the harness uploads it.",
   "instructions": "css-author-system.md",
   "model": "claude-sonnet-5",
   "tools": {
@@ -9,16 +9,14 @@
       "joomla_inspect_frontend",
       "joomla_workspace_write",
       "joomla_workspace_read",
-      "read_agent_doc"
+      "knowledge_universal"
     ],
     "downstreams": [
-      "joomla-mcp"
+      "joomla-mcp",
+      "knowledge-gateway-mcp"
     ]
   },
   "docs": {
-    "allow": [
-      "workflows/gantry-section-css",
-      "workflows/page-animation"
-    ]
+    "allow": []
   }
 }
