@@ -22,7 +22,8 @@
      https://shared.solutiocdn.com/content/shared/kit/tokens.css,
      https://shared.solutiocdn.com/content/shared/kit/typography.css,
      /content/site-tokens.css,
-     /content/editor.css
+     /content/editor.css,
+     /images/pub/editor.css
 
    (one line, no spaces after the commas)
 
@@ -30,16 +31,33 @@
    whole mechanism. This file therefore does NOT @import anything — the list
    does the loading, and importing as well would double-load every rule.
 
-   Two entries to remove from the old value: editor-base.css, now absorbed into
-   typography.css, and /images/pub/editor.css, which 404s on this site.
+   Remove only editor-base.css from the old value; it is absorbed into
+   typography.css. Keep /images/pub/editor.css — see below.
 
-   IF YOU ARE ABOUT TO ADD A RULE HERE, STOP
-   -----------------------------------------
-   A rule that styles article content belongs in kit/typography.css, where both
-   contexts get it. The only rules that belong here are ones that target
-   TinyMCE's own markup — .mce-content-body, .mce-edit-table, .mce-item-*,
-   #tinymce, #system-readmore. Anything else reintroduces the drift this file
-   exists to remove.
+   THE FIVE LAYERS, IN CASCADE ORDER
+   ---------------------------------
+   1. kit/tokens.css        shared    values only, layered
+   2. kit/typography.css    shared    the article vocabulary, layered
+   3. /content/site-tokens  per-site  this site's brand, UNLAYERED so it wins
+   4. /content/editor.css   per-site  this file — TinyMCE chrome
+   5. /images/pub/editor.css per-page AI-written, loaded last so it wins
+
+   Layer 5 is the custom-page agent's scratch space. It is the FTP upload target
+   (/images/pub), it accumulates editor-side rules for custom pages, and it is
+   normally absent on a fresh clone — a 404 there costs nothing, the browser
+   skips that one request. Do not remove it from the list because the file does
+   not exist yet.
+
+   WHERE A NEW RULE GOES
+   ---------------------
+   * Styles article content and is reusable  -> kit/typography.css
+   * Styles article content, one page only   -> /images/pub/editor.css
+   * Targets TinyMCE's own markup            -> here
+     (.mce-content-body, .mce-edit-table, .mce-item-*, #tinymce, #system-readmore)
+
+   That first boundary is the one that matters. A page-specific rule written
+   into the kit is how a 21,000-line stylesheet gets built one reasonable
+   decision at a time.
    ============================================================================ */
 
 
