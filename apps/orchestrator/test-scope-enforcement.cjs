@@ -81,10 +81,11 @@ check('support DENIED joomla_get_frontend_page (global, despite allow joomla_get
 check('menu-build DENIED joomla_get_frontend_page (global)', () => expectAccess(menuBuild, 'menu-build', 'joomla_get_frontend_page', false, 'global_deny'));
 
 console.log('— precedence 4: per-agent scope —');
-// support: the headline invariant — a support session cannot reach admin/design tools.
+// support: the headline invariant — a support session cannot reach admin/workspace tools or self-elevate.
 check('support ALLOWED joomla_user (joomla_user* in allow)', () => expectAccess(support, 'support', 'joomla_user', true, null));
 check('support DENIED joomla_workspace_write (deny)', () => expectAccess(support, 'support', 'joomla_workspace_write', false, 'scope'));
-check('support DENIED gantry_layout_edit (scope)',    () => expectAccess(support, 'support', 'gantry_layout_edit', false, 'scope'));
+check('support ALLOWED gantry_layout (gantry_* in allow)', () => expectAccess(support, 'support', 'gantry_layout', true, null));
+check('support ALLOWED gantry_particle (gantry_* in allow)', () => expectAccess(support, 'support', 'gantry_particle', true, null));
 check('support DENIED joomla_submit_admin_form (deny)', () => expectAccess(support, 'support', 'joomla_submit_admin_form', false, 'scope'));
 check('support ALLOWED joomla_article',     () => expectAccess(support, 'support', 'joomla_article', true, null));
 check('support ALLOWED joomla_menu_item (joomla_menu* wildcard)', () => expectAccess(support, 'support', 'joomla_menu_item', true, null));

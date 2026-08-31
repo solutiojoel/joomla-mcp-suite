@@ -62,8 +62,9 @@
   /* --- Placeholder images -------------------------------------------------
      Keep a half-built site from rendering broken. Point these at the site's
      own uploads once real photography arrives. */
-  --default-rotator-image: url('/images/stories/template/default-rotator.jpg');
-  --default-grid-image:    url('/images/stories/template/default-grid.jpg');
-  --default-hero-image:    url('/images/stories/template/default-hero.jpg');
-  --default-staff-image:   url('/images/stories/template/default-staff.jpg');
+  --default-rotator-image:        url('/images/stories/template/default-rotator.jpg');
+  --default-grid-image:           url('/images/stories/template/default-grid.jpg');
+  --default-hero-image:           url('/images/stories/template/default-hero.jpg');
+  --default-staff-image:          url('/images/stories/template/default-staff.jpg');
+  --default-photo-gallery-image:  url('/images/stories/template/default-photo-gallery.jpg');
 }

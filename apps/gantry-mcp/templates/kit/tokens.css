@@ -9,8 +9,8 @@
       If you are writing a selector that is not `:root`, you are in the wrong file.
 
    2. Nothing else in the kit defines a token. typography.css, boilerplate.css,
-      sections.css, features.css, vendor.css and blocks.css read from here and
-      never declare their own `--x:` at the top of the file.
+      sections.css, features.css, vendor.css, blocks.css and a11y-print.css
+      read from here and never declare their own `--x:` at the top of the file.
 
    3. Both the front end AND the TinyMCE editor stylesheet import this file.
       That is what stops the WYSIWYG drifting away from the rendered site.
@@ -26,6 +26,44 @@
    Anything a build overrides beyond section 1 is a signal the token is missing
    an axis — add the axis here rather than patching in override.css.
    ============================================================================ */
+
+/* ============================================================================
+   THE CASCADE ORDER FOR THE WHOLE KIT
+   ----------------------------------------------------------------------------
+   A layer's position in the cascade is fixed by where its name FIRST appears,
+   which means that without this line the kit's cascade order would be its
+   asset load order — a Gantry priority number on the Base outline, per site,
+   editable by anyone in the admin, and silently different on the six sites
+   where somebody once reordered an asset row to fix something else.
+
+   Declaring the order here removes that dependency completely. tokens.css is
+   the first kit file on every page and in the editor, so this line runs before
+   any layered rule exists. From that point the order below is the order, no
+   matter which sequence the files actually arrive in.
+
+   Later beats earlier:
+
+     kit.tokens       values only, no rules at all
+     kit.typography   element defaults for the HTML a person types
+     kit.boilerplate  corrections to Gantry's own framework behaviour
+     kit.sections     the #g-<section> background skeleton
+     kit.blocks       composite patterns built on particle markup
+     kit.vendor       third-party extension markup (DOCman, FILEman)
+     kit.features     default features — alert, bulletin, ads, sponsorship
+     kit.a11y-print   focus, skip link, sr-only, print — the floor every page gets
+
+   features is last of the design layers because a site-wide alert must win
+   over whatever it is sitting on top of. vendor is late because an
+   extension's markup lands inside the article column and would otherwise
+   inherit typography's table and list defaults. a11y-print is last of all:
+   a focus ring must never lose to a component's own hover/box-shadow rule,
+   and print has to be able to hide anything any other layer showed. Everything
+   a build writes per page stays UNLAYERED, so it beats all eight without
+   needing to know any of this.
+   ============================================================================ */
+
+@layer kit.tokens, kit.typography, kit.boilerplate, kit.sections,
+       kit.blocks, kit.vendor, kit.features, kit.a11y-print;
 
 @layer kit.tokens {
 
@@ -281,9 +319,10 @@
 
     /* ========================================================================
        7. MOTION
-       Every animated component reads these. Section 10 zeroes them under
-       prefers-reduced-motion, so honouring the setting costs each component
-       nothing — as long as it never hardcodes its own duration or transform.
+       Every animated component reads these. The accessibility block at the
+       end of this file zeroes them under prefers-reduced-motion, so honouring
+       the setting costs each component nothing — as long as it never hardcodes
+       its own duration or transform.
        ======================================================================== */
 
     --default-transition:  all .2s ease-in-out;
@@ -334,10 +373,69 @@
        rest of the site identity and both CSS and JS can read them.
        ======================================================================== */
 
-    --default-rotator-image: url('/images/stories/template/default-rotator.jpg');
-    --default-grid-image:    url('/images/stories/template/default-grid.jpg');
-    --default-hero-image:    url('/images/stories/template/default-hero.jpg');
-    --default-staff-image:   url('/images/stories/template/default-staff.jpg');
+    --default-rotator-image:        url('/images/stories/template/default-rotator.jpg');
+    --default-grid-image:           url('/images/stories/template/default-grid.jpg');
+    --default-hero-image:           url('/images/stories/template/default-hero.jpg');
+    --default-staff-image:          url('/images/stories/template/default-staff.jpg');
+    --default-photo-gallery-image:  url('/images/stories/template/default-photo-gallery.jpg');
+
+
+    /* ========================================================================
+       10. PAGE CHROME
+       The logo, the main navigation and the sidebar column. boilerplate.css
+       reads every one of these and declares none of them.
+
+       These are here rather than in boilerplate.css for the same reason the
+       section backgrounds are here rather than in sections.css: it is what
+       lets a site change the shape of its own header from site-tokens.css
+       without a build ever opening a shared file and editing a selector.
+
+       In css2 all of these were literals inside the rule — the logo was 400px,
+       the aside was 165px, the dropdown radius was 0 written out four times.
+       Changing any of them meant editing shared CSS, so nobody did; they
+       overrode it further down instead, which is how the file reached 21,000
+       lines.
+       ======================================================================== */
+
+    /* Logo. A wide wordmark and a tall crest are one token apart. */
+    --logo-width:         400px;
+    --logo-min-width:     40%;
+    --logo-width-mobile:  80%;
+
+    /* Main navigation. The type here is the nav bar's own, not a heading
+       role, because a nav item is neither a heading nor body copy and
+       borrowing either makes one of them wrong. */
+    --nav-font-family:     var(--body-font-family);
+    --nav-font-size:       1rem;
+    --nav-font-weight:     500;
+    --nav-letter-spacing:  .1rem;
+    --nav-text-transform:  var(--text-transform-none);
+
+    /* One radius for all four corners of a dropdown panel. Set to
+       --radius-none so the default matches what css2 shipped everywhere; a
+       design that wants rounded dropdowns changes this one value rather than
+       the four rules boilerplate.css derives from it. */
+    --nav-dropdown-radius: var(--radius-none);
+
+    /* The sidebar column on a subpage. A width, not a percentage: the column
+       holds an ad unit or a menu, both of which have a natural size, and a
+       percentage makes the article column pay for the difference. */
+    --aside-max-width:     18rem;
+
+
+    /* ========================================================================
+       11. FOCUS RING
+       One ring, used everywhere a11y-print.css applies :focus-visible. Not
+       --secondary-color by default: on a site whose secondary colour is pale
+       (gold, cream, a light tint) a ring in that colour can fail contrast
+       against both the page background and the element it rings. Default to
+       the darkest of the three brand colours; a build with a genuinely
+       high-contrast secondary can repoint it in site-tokens.css.
+       ======================================================================== */
+
+    --focus-ring-color:   var(--primary-color);
+    --focus-ring-width:   2px;
+    --focus-ring-offset:  2px;
   }
 
   /* NOT CARRIED OVER — dark mode.

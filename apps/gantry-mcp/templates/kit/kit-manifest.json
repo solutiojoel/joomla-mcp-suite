@@ -1,0 +1,128 @@
+{
+  "kitName": "AI-first Studius kit",
+  "kitVersion": "0.1.0",
+  "generatedAt": "2026-08-28T21:00:00Z",
+  "description": "Replaces the css2/ stylesheet set. Eight shared CSS files (one @layer cascade) plus two per-site files. No design system beyond tokens, typography, boilerplate fixes and section skeleton — everything else is a guide doc, not a CSS recipe. See README.md for the full contract.",
+
+  "cascadeLayers": [
+    "kit.tokens",
+    "kit.typography",
+    "kit.boilerplate",
+    "kit.sections",
+    "kit.blocks",
+    "kit.vendor",
+    "kit.features",
+    "kit.a11y-print"
+  ],
+
+  "cdnRoot": "https://shared.solutiocdn.com/content/shared/kit/",
+  "cdnRootStatus": "NOT YET DEPLOYED — no write access to this host from any tool in this repo. See 'testDeployment' below for the working substitute in use right now.",
+
+  "files": {
+    "shared": [
+      { "name": "tokens.css",      "layer": "kit.tokens",       "priority": 1, "repoPath": "apps/gantry-mcp/templates/kit/tokens.css",      "bytes": 22124, "sha256": "46c0f3b32cadcd5efcc7d56211abad5230e49aa1bcea4aa449ad7c8dff76f171" },
+      { "name": "typography.css",  "layer": "kit.typography",   "priority": 1, "repoPath": "apps/gantry-mcp/templates/kit/typography.css",  "bytes": 23508, "sha256": "74606b884cd4bedca33f96a14e5ea1d2bca86c029fa523b4a0c564035553cc43" },
+      { "name": "boilerplate.css", "layer": "kit.boilerplate",  "priority": 1, "repoPath": "apps/gantry-mcp/templates/kit/boilerplate.css", "bytes": 30725, "sha256": "942186fceb487400007beef417142db3cffd7d92947bdc82f11cad114ab85a96" },
+      { "name": "sections.css",    "layer": "kit.sections",     "priority": 1, "repoPath": "apps/gantry-mcp/templates/kit/sections.css",    "bytes": 11054, "sha256": "fa47a3580920f9692d7ece53721940050ff97e1f995c180c03530dfe80867537" },
+      { "name": "blocks.css",      "layer": "kit.blocks",       "priority": 1, "repoPath": "apps/gantry-mcp/templates/kit/blocks.css",      "bytes": 24872, "sha256": "f07c89e6dacff53165f1aaa3135c7229f7e30320eb7f504f91b078e7703ea08c" },
+      { "name": "vendor.css",      "layer": "kit.vendor",       "priority": 1, "repoPath": "apps/gantry-mcp/templates/kit/vendor.css",      "bytes": 12431, "sha256": "62772759a22bb43a11b7eea79c8d6a6761367b6f96bd7886497a6a35ec010782", "optional": "Drop on a site with no DOCman/FILEman." },
+      { "name": "features.css",    "layer": "kit.features",     "priority": 1, "repoPath": "apps/gantry-mcp/templates/kit/features.css",    "bytes": 29290, "sha256": "3bbd90364657c613b23811ffc8fab3c78b4746c9f4896342a23a7855cbadc80b", "optional": "Drop on a site with no alert/bulletin/ads/sponsorship." },
+      { "name": "a11y-print.css",  "layer": "kit.a11y-print",   "priority": 1, "repoPath": "apps/gantry-mcp/templates/kit/a11y-print.css",  "bytes": 8051,  "sha256": "91bac9be6deadacbdac08a7622c7105065759ed0e27626f0e82b02f5f84b97d2", "optional": false, "note": "Never optional." }
+    ],
+    "perSite": [
+      {
+        "name": "site-tokens.css",
+        "layer": null,
+        "note": "Unlayered on purpose — must win over kit.tokens regardless of specificity. The only file a build edits for brand.",
+        "shipsAt": "/content/site-tokens.css",
+        "alsoLoadedBy": "front end (Base outline CSS asset row, priority 2) and the editor (imported by /content/editor.css)",
+        "repoPath": "apps/gantry-mcp/templates/kit/site-tokens.css",
+        "bytes": 3664,
+        "sha256": "48ef3b90f05e424d1aacbc6354048c6056eb89bc687d045e074ce76d3bff01d4",
+        "genericTemplate": false,
+        "templateNote": "Repo copy currently holds shannon.forge's real brand values (navy/goldenrod/ivory taupe, EB Garamond/Lato) as a worked example, not placeholder values. A new clone must overwrite section 1 with its own brand before use."
+      },
+      {
+        "name": "editor.css",
+        "layer": null,
+        "note": "Declares no design values. TinyMCE chrome only — .mce-content-body padding/max-width, table-wrapper re-asserts, empty-block placeholders, the Read More divider.",
+        "shipsAt": "/content/editor.css",
+        "wiredVia": "Joomla > Plugins > Editor - TinyMCE > Custom CSS Classes (comma-separated list, no spaces after commas)",
+        "repoPath": "apps/gantry-mcp/templates/kit/editor.css",
+        "bytes": 5577,
+        "sha256": "b5ae752e460e887a7e49e5cc541686830f954b404d3dfbedaac54f0464fd17c4"
+      }
+    ]
+  },
+
+  "editorCustomCssClasses": [
+    "https://shared.solutiocdn.com/content/shared/kit/tokens.css",
+    "https://shared.solutiocdn.com/content/shared/kit/typography.css",
+    "/content/site-tokens.css",
+    "/content/editor.css",
+    "/images/pub/editor.css"
+  ],
+  "editorCustomCssClassesNote": "Layer 5 (/images/pub/editor.css) is the custom-page agent's per-page scratch space. It is normally absent on a fresh clone — a 404 there costs nothing — so do not point it at anything else.",
+
+  "baseOutlineAssetRows": {
+    "note": "Add the 8 shared files at priority 1, site-tokens.css at priority 2, then the site's own override.css last. Only vendor.css and features.css are optional.",
+    "order": [
+      "tokens.css", "typography.css", "boilerplate.css", "sections.css",
+      "blocks.css", "vendor.css", "features.css", "a11y-print.css",
+      "site-tokens.css", "override.css"
+    ]
+  },
+
+  "testDeployment": {
+    "status": "LIVE TEST ONLY — not the real CDN. Wired and verified on shannon.forge.solutiosoftware.com, 2026-08-28.",
+    "site": "shannon.forge.solutiosoftware.com",
+    "why": "No FTP/CDN credentials exist yet for shared.solutiocdn.com (see cdnRootStatus above). Jeremy authorized using this site's own /images/pub/ bucket as a stand-in so the kit could actually be tested end to end.",
+    "sharedFilesRoot": "https://shannon.forge.solutiosoftware.com/images/pub/kit/",
+    "siteTokensUrl": "https://shannon.forge.solutiosoftware.com/images/pub/site-tokens.css",
+    "editorCssUrl": "https://shannon.forge.solutiosoftware.com/images/pub/site-editor.css",
+    "editorCssUrlNote": "Named site-editor.css, not editor.css, specifically so it does not collide with the reserved /images/pub/editor.css scratch-layer path.",
+    "baseOutlineId": "default",
+    "verifiedVia": "joomla_verify_frontend_content (css_present for all 8 kit files, css_absent for the removed css2 rows) plus homepage, /documents and /sponsors-list/sponsor-this-site screenshots — all rendered cleanly.",
+    "restoredForTesting": "Menu items 173 (Sponsors List, heading, alias sponsors-list) and 174 (Sponsor This Site, Single Article -> article 53, #Sponsors outline, pageclass_sfx sponsorshippage) were recreated on Main Menu to restore the required /sponsors-list/sponsor-this-site route (kb/business-directory) — it had no route at all after the earlier demo-menu cleanup. The sibling /sponsors-list/sponsors-list listing page was NOT recreated; nothing is known about what should back it.",
+    "toPromoteToRealCdn": "Re-upload the 8 shared files to //shared.solutiocdn.com/content/shared/kit/ once write access exists, then repoint the Base outline's 8 kit asset rows and the TinyMCE Custom CSS Classes field from the shannon.forge test URLs to the real CDN URLs. Nothing else changes."
+  },
+
+  "whatCss2Became": [
+    { "css2File": "base.2.0.css",       "wentTo": "typography.css, boilerplate.css, features.css, vendor.css" },
+    { "css2File": "studius.2.0.css",    "wentTo": "boilerplate.css, blocks.css, features.css" },
+    { "css2File": "widgets.2.0.css",    "wentTo": "blocks.css (widget row, staff grid)" },
+    { "css2File": "headlines.2.0.css",  "wentTo": "Dropped. kb/news-grid-particle (guide doc, no CSS recipe)." },
+    { "css2File": "slideshow.2.0.css",  "wentTo": "blocks.css (two-rule rotator default only). Six named looks dropped, per kb/rotator-particle." },
+    { "css2File": "section.css",        "wentTo": "sections.css, boilerplate.css (subpage column fix)" },
+    { "css2File": "footer.css",         "wentTo": "sections.css" },
+    { "css2File": "local-images.css",   "wentTo": "sections.css" },
+    { "css2File": "solutio-font.css",   "wentTo": "typography.css" },
+    { "css2File": "editor-base.css",    "wentTo": "typography.css" },
+    { "css2File": "fonts2.css",         "wentTo": "tokens.css (dark mode block dropped — every declaration in it was invalid)" },
+    { "css2File": "variables.2.0.css",  "wentTo": "tokens.css" },
+    { "css2File": "sponsorship2.css",   "wentTo": "features.css (faithful port — confirmed by unlink test, see 'openQuestions' below)" },
+    { "css2File": "navigation.2.0.css", "wentTo": "boilerplate.css (menu chrome, offcanvas, dropdown)" },
+    { "css2File": "quicklinks.2.0.css", "wentTo": "Dropped. kb/quicklinks-particle (guide doc, no CSS recipe)." },
+    { "css2File": "pwa.css",            "wentTo": "features.css (PWA standalone-mode chrome)" },
+    { "css2File": "grid.2.0.css",       "wentTo": "UNRESOLVED — see openQuestions. Still linked on the test deployment." },
+    { "css2File": "(nothing)",          "wentTo": "a11y-print.css — focus, skip link, sr-only, print, reduced-motion. Nothing in css2 to migrate; written fresh." }
+  ],
+
+  "openQuestions": [
+    {
+      "item": "grid.2.0.css",
+      "status": "Still linked on the Base outline test wiring — not superseded by anything in the kit.",
+      "detail": "Two unrelated things in one file: (1) a `.grid-articles` / `.grid-title-style-N-color` (40 combos) / `.grid-sideways` / `.grid-circle-image` / `.grid-hexagons` named-variant library for the Joomla-Articles-particle grid — same category-1 shape as the already-dropped headlines.2.0.css and slideshow.2.0.css, and its class names do not even match kb/grid-layout's own documented example classes (grid-tiles/grid-square/grid-tiles-mobile), suggesting it may already be dead weight. (2) a `.fancy-galleries #fileman-folders` FILEman gallery-grid treatment, a second look alongside vendor.css's existing `.gallerycolorstrip` pattern for the same feature. Recommendation: likely safe to drop part 1 (superseded by the same guide-doc approach as headlines/slideshow); part 2 needs a decision on whether `.fancy-galleries` is still an active look on any real site before dropping it."
+    },
+    {
+      "item": "sponsorship2.css",
+      "status": "RESOLVED 2026-08-28 — unlinked from the Base outline test wiring. features.css's port is confirmed sufficient on its own.",
+      "detail": "Restored the required route (/sponsors-list/sponsor-this-site, per kb/business-directory — the menu item had been removed in the earlier demo cleanup) specifically to run this test. Screenshotted the live page (desktop + mobile) with sponsorship2.css linked, unlinked it, screenshotted again: pricing tiers, FAQ grid, sidebar suppression, and the FontAwesome nav-icon fix all rendered identically. Also line-by-line diffed the original CDN file's rules against features.css's :is()-consolidated port — full coverage, nothing missed. sponsorship2.css is no longer linked on the Base outline."
+    },
+    {
+      "item": "TinyMCE Custom CSS Classes admin field",
+      "status": "Not fixed — blocked by a 403 on this account.",
+      "detail": "The live field (Plugins > Editor - TinyMCE > Custom CSS Classes) already lists the intended 5-URL kit structure, but 2 of 5 URLs point at the real CDN (not deployed yet) and the /content/editor.css URL still serves the old 292-line legacy file with wrong brand colours and fonts. The correct replacement content is uploaded and hash-verified at the shannon.forge test URLs in testDeployment above; only the admin field itself still needs updating, and this account gets 403 Forbidden on com_plugins."
+    }
+  ]
+}

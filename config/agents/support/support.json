@@ -12,6 +12,7 @@
       "joomla_get_frontend_*", "joomla_verify_frontend_content", "joomla_inspect_frontend",
       "joomla_redirects_list", "joomla_site_config_inspect",
       "joomla_backend_inventory",
+      "gantry_*",
       "joomla_user*", "joomla_group*",
       "joomla_docman_*",
       "freshdesk_*",

@@ -1,0 +1,211 @@
+/* ============================================================================
+   a11y-print.css — the floor every page gets, regardless of build
+   ----------------------------------------------------------------------------
+   Part of the AI-first Studius kit. Requires tokens.css.
+
+   WHAT THIS FILE IS FOR
+   ----------------------
+   Gap 8 and gap 9 from the restructure plan: an accessibility floor and a
+   print stylesheet. Across the whole 21,192-line legacy kit: zero
+   prefers-reduced-motion rules, zero @media print rules, zero sr-only utility,
+   zero skip link, and ten total :focus-visible rules against a kit that
+   animates constantly. Written fresh here — there was nothing to migrate.
+
+   NOT HERE: MOTION. tokens.css already zeroes --default-transition,
+   --slow-transition, --default-scale-up, --default-scale-down and
+   --reveal-distance under prefers-reduced-motion, so every component that
+   reads a motion token is already safe. What IS here is the backstop for a
+   component that does not — tokens.css says outright "a component that
+   hardcodes a duration bypasses this, which is why they must not." The
+   universal rule below is what happens if one does anyway.
+
+   LAYER, NOT !important — except inside @media print. This file is last in
+   the cascade, so a plain rule here already beats every rule in the six
+   design layers below it without needing !important; focus, the skip link
+   and sr-only all hold to the kit's zero-!important discipline. Print is the
+   one context that does not: see the note above the print block for why.
+   ============================================================================ */
+
+@layer kit.a11y-print {
+
+  /* ==========================================================================
+     FOCUS
+     --------------------------------------------------------------------------
+     :focus-visible, not :focus. :focus alone rings an element after a mouse
+     click too, which is the annoyance that gets designers to remove focus
+     styling altogether — exactly what produced the ten leftover rules in the
+     legacy kit. :focus-visible only fires for keyboard and other
+     non-pointer focus, so there is no reason left to suppress it anywhere.
+     ========================================================================== */
+
+  :focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* A ring on a rounded pill button looks clipped without this — the outline
+     follows the box, the box should follow the same corners as its content. */
+  .button:focus-visible {
+    border-radius: inherit;
+  }
+
+
+  /* ==========================================================================
+     SKIP LINK
+     --------------------------------------------------------------------------
+     CSS alone cannot add this — the anchor itself has to exist in the page,
+     as the very first focusable element in #g-page-surround:
+
+       <a href="#g-container-main" class="skip-link">Skip to main content</a>
+
+     #g-container-main is Gantry's own id, already present on every outline,
+     so no matching id needs to be added anywhere for the link to land
+     somewhere sensible.
+     ========================================================================== */
+
+  .skip-link {
+    position: absolute;
+    top: -3rem;
+    left: var(--space-md);
+    z-index: 9999;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--primary-color);
+    color: var(--default-white);
+    font-family: var(--body-font-family);
+    font-weight: var(--bold-font-weight);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: var(--default-transition);
+  }
+
+  .skip-link:focus-visible {
+    top: var(--space-md);
+  }
+
+
+  /* ==========================================================================
+     SCREEN-READER-ONLY TEXT
+     --------------------------------------------------------------------------
+     .sr-only: content read by assistive tech, never shown visually. The clip
+     approach, not display:none or visibility:hidden — both of those remove
+     content from the accessibility tree as well as the screen, which is the
+     exact mistake documented in kb/subpage-hero-title's legacy hero-title bug.
+
+     .sr-only-focusable: the same content, EXCEPT when it (or something inside
+     it) receives focus — then it becomes visible in place. This is what the
+     skip link itself should use if the anchor sits somewhere it would
+     otherwise be visually awkward at rest.
+
+     Not a replacement for Koowa's own .k-visually-hidden inside DOCman/FILEman
+     markup — vendor.css owns that contract. This is the kit-wide equivalent
+     for everything else.
+     ========================================================================== */
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .sr-only-focusable:focus-within {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+
+  /* ==========================================================================
+     PRINT
+     --------------------------------------------------------------------------
+     Gap 9's scope, plus the two chrome elements added since it was written
+     that are exactly the same kind of thing: navigation, ads, and the
+     rotator, plus the offcanvas trigger, the PWA fixed nav bars (features.css
+     — irrelevant outside standalone mode, and standalone mode does not
+     print), and the subpage hero banner (kb/subpage-hero-title — a decorative
+     photograph, not content, and it drains ink a parishioner printing a
+     bulletin page does not want to pay for).
+
+     Alert banners are NOT hidden. A closure or schedule-change notice is
+     exactly the kind of thing worth having on a printed page, and unlike the
+     chrome above it is real content a build wrote on purpose.
+     ========================================================================== */
+
+  @media print {
+    #g-navigation,
+    #g-offcanvas,
+    #g-slideshow,
+    #hero,
+    #hero-grab,
+    #g-mobile-fixed-nav,
+    .admod,
+    .adside,
+    .skip-link {
+      display: none !important;
+    }
+
+    /* @media print is the one CONTEXT in the kit that gets an !important
+       exception, for the same reason vendor.css takes one against Koowa: a
+       plain rule in the last layer still loses to whatever a build wrote
+       unlayered per page or per site, and unlike a normal cascade conflict
+       there is no later, more-specific rule to write instead — print has to
+       reach past every screen rule a build ever wrote, on every page, without
+       knowing what any of them said. */
+
+    * {
+      background: transparent !important;
+      color: var(--default-black) !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+
+    a,
+    a:visited {
+      color: var(--default-black) !important;
+      text-decoration: underline;
+    }
+
+    body {
+      font-size: 12pt;
+      line-height: 1.4;
+    }
+
+    #g-container-main {
+      width: 100% !important;
+      max-width: none !important;
+    }
+
+    #g-aside {
+      display: none !important;
+    }
+  }
+
+
+  /* ==========================================================================
+     REDUCED MOTION — the backstop
+     --------------------------------------------------------------------------
+     See the file header. Everything that reads a motion token is already
+     safe via tokens.css; this catches whatever does not.
+     ========================================================================== */
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms;
+      animation-iteration-count: 1;
+      transition-duration: 0.01ms;
+      scroll-behavior: auto;
+    }
+  }
+
+}

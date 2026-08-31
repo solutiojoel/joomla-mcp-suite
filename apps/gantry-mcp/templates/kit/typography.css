@@ -529,22 +529,113 @@
 
 
   /* ==========================================================================
-     ICON FONT
-     css2 wrote `--webkit-font-smoothing` with two dashes, which parses as a
-     custom property and does nothing. Spelled correctly here.
+     ICON FONT — absorbed from solutio-font.css
+     ----------------------------------------------------------------------------
+     This lived in its own asset row on the front end and was never in the old
+     TinyMCE Custom CSS Classes list, so an inserted icon rendered as a blank
+     glyph in the editor and only appeared once the page saved. Folding it into
+     typography.css (loaded by both contexts) closes that gap the same way
+     moving site-tokens.css did for colours and fonts.
+
+     Two other fixes on the way in:
+     * solutio-font.css opened with `@import url('.../solutio.woff');` — @import
+       is for stylesheets, and a browser cannot parse a binary font file as one.
+       The real font load is the @font-face two lines below it; the @import
+       did nothing and is dropped.
+     * The font's own src url() was a relative path (`solutio.woff`), correct
+       only because the file sat next to solutio-font.css on the CDN. Written
+       as an absolute URL here so it still resolves now that the rule lives in
+       a different file.
      ========================================================================== */
 
-  .solutio-icons {
-    font-family: "Solutio";
-    font-weight: 900;
+  @font-face {
+    font-family: 'fontello';
+    src: url('//shared.solutiocdn.com/content/shared/solutio.woff') format('woff');
+    font-weight: normal;
     font-style: normal;
+  }
+
+  [class^="solutio-icons s-"]:before,
+  [class*=" solutio-icons s-"]:before {
     display: inline-block;
-    line-height: 1;
-    text-rendering: auto;
+    margin: 0 .2em 0 .2em;
+    width: 1em;
+    text-align: center;
+    text-decoration: inherit;
+    font-family: 'fontello';
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1em;
+    speak: never;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
+  .solutio-icons.s-caret-right-solid:before      { content: '\e800'; }
+  .solutio-icons.s-facebook-f:before              { content: '\e801'; }
+  .solutio-icons.s-dove-solid:before              { content: '\e802'; }
+  .solutio-icons.s-file-invoice-solid:before      { content: '\e803'; }
+  .solutio-icons.s-heart-solid:before             { content: '\e804'; }
+  .solutio-icons.s-folder-open-solid:before       { content: '\e805'; }
+  .solutio-icons.s-link-solid:before              { content: '\e806'; }
+  .solutio-icons.s-map-marker-alt-solid:before    { content: '\e807'; }
+  .solutio-icons.s-newspaper-solid:before         { content: '\e808'; }
+  .solutio-icons.s-instagram-square:before        { content: '\e809'; }
+  .solutio-icons.s-logo-x-twitter:before          { content: '\e80a'; }
+  .solutio-icons.s-school-solid:before            { content: '\e80b'; }
+  .solutio-icons.s-lock-solid:before              { content: '\e80c'; }
+  .solutio-icons.s-calendar-alt-solid:before      { content: '\e80d'; }
+  .solutio-icons.s-chevron-right-solid:before     { content: '\e80e'; }
+  .solutio-icons.s-utensils-solid:before          { content: '\e80f'; }
+  .solutio-icons.s-users-solid:before             { content: '\e810'; }
+  .solutio-icons.s-youtube:before                 { content: '\e811'; }
+  .solutio-icons.s-square-facebook:before         { content: '\e812'; }
+  .solutio-icons.s-internet:before                { content: '\e813'; }
+  .solutio-icons.s-pray-solid:before              { content: '\e814'; }
+  .solutio-icons.s-bible-solid:before             { content: '\e815'; }
+  .solutio-icons.s-church-solid:before            { content: '\e816'; }
+  .solutio-icons.s-calendar-regular:before        { content: '\e817'; }
+  .solutio-icons.s-graduation-cap-solid:before    { content: '\e818'; }
+  .solutio-icons.s-fax-solid:before               { content: '\e81a'; }
+  .solutio-icons.s-instagram:before               { content: '\e81b'; }
+  .solutio-icons.s-apple-alt-solid:before         { content: '\e81c'; }
+  .solutio-icons.s-hamburger-solid:before         { content: '\e81d'; }
+  .solutio-icons.s-user-graduate-solid:before     { content: '\e81e'; }
+  .solutio-icons.s-pencil-solid:before            { content: '\e81f'; }
+  .solutio-icons.s-pen-to-square-regular:before   { content: '\e820'; }
+  .solutio-icons.s-search-solid:before            { content: '\e821'; }
+  .solutio-icons.s-arrow-pointer-solid:before     { content: '\e822'; }
+  .solutio-icons.s-pizza-slice-solid:before       { content: '\e823'; }
+  .solutio-icons.s-shop-solid:before              { content: '\e824'; }
+  .solutio-icons.s-check-square-solid:before      { content: '\e825'; }
+  .solutio-icons.s-calendar-week-solid:before     { content: '\e826'; }
+  .solutio-icons.s-globe:before                   { content: '\e827'; }
+  .solutio-icons.s-pen-to-square-solid:before     { content: '\e828'; }
+  .solutio-icons.s-marker-solid:before            { content: '\e829'; }
+  .solutio-icons.s-phone-solid:before             { content: '\e82a'; }
+  .solutio-icons.s-cross-solid:before             { content: '\e82b'; }
+  .solutio-icons.s-globe-solid:before             { content: '\e82c'; }
+  .solutio-icons.s-check-square-regular:before    { content: '\e82d'; }
+  .solutio-icons.s-calendar-solid:before          { content: '\e82e'; }
+  .solutio-icons.s-right-long-solid:before        { content: '\e82f'; }
+  .solutio-icons.s-facebook:before                { content: '\e830'; }
+  .solutio-icons.s-envelope-solid:before          { content: '\e831'; }
+  .solutio-icons.s-book-open-solid:before         { content: '\e832'; }
+  .solutio-icons.s-folder-solid:before            { content: '\e833'; }
+  .solutio-icons.s-bars-solid:before              { content: '\e834'; }
+  .solutio-icons.s-arrow-up-long-solid:before     { content: '\e835'; }
+  .solutio-icons.s-mouse-pointer-solid:before     { content: '\e836'; }
+  .solutio-icons.s-calendar-alt-regular:before    { content: '\e837'; }
+  .solutio-icons.s-flocknote:before               { content: '\e838'; }
+  .solutio-icons.s-online-giving:before           { content: '\e83a'; }
+  .solutio-icons.s-sacraments:before              { content: '\e83b'; }
+  .solutio-icons.s-bulletin:before                { content: '\e83c'; }
+  .solutio-icons.s-adoration:before               { content: '\e83d'; }
+
+  /* Site-specific additions beyond the shared glyph set — kept, not part of
+     solutio-font.css itself. */
   .s-powerschool-icons::before { content: "p"; }
   .k-knight::before { content: "k"; }
 

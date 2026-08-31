@@ -1,0 +1,918 @@
+/* ============================================================================
+   features.css — default feature styling, consistent on every site
+   ----------------------------------------------------------------------------
+   Part of the AI-first Studius kit. Requires tokens.css.
+
+   WHAT THIS FILE IS FOR
+   ----------------------
+   Category 2 from your own list: features every site carries, styled once so
+   no build recodes them. Unlike vendor.css, this changes on YOUR schedule —
+   you decide when the alert restyles, not a third party. Five features are
+   confirmed and written below: the alert banner, the bulletin widget, ad
+   placement and sizing, the sponsorship page shell, and the PWA
+   standalone-mode chrome.
+
+   WHAT THIS FILE DOES NOT COVER, AND WHERE IT WENT INSTEAD
+   ----------------------------------------------------------
+   RESOLVED. Every item below now has a home; boilerplate.css and blocks.css
+   were written after this header and closed all four. The triage notes are
+   kept because the reasoning still explains why this file looks the way it
+   does — only the "not yet" parts are answered inline.
+
+   The plan doc originally listed "widgets, headlines, sponsorship2" as this
+   file's source material. Reading the actual files changed that:
+
+   * widgets.2.0.css turned out to be entirely the widget-parthenon /
+     widget-container pattern — the FlockNote, FORMED, Facebook and Daily
+     Readings feed-card block. That is a composite content pattern, category
+     1, bound for blocks.css, not a default feature.
+
+   * headlines.2.0.css (1,675 lines) has zero alert or bulletin content. It
+     is very likely the article/news teaser card patterns — also blocks.css.
+     READ IN FULL SINCE: the guess was right. It is one card grid written a
+     dozen times over, differing only in radius, column count and image shape.
+     blocks.css carries the one grid with those three as tokens.
+
+   * studius.2.0.css is a grab-bag: logo sizing and menu dropdown radius
+     resets (boilerplate.css, category 4), a "ministrypage" image-title grid
+     and a rounded-menu design variant (blocks.css, category 1), an AOS
+     scroll-reveal snippet (a11y-print.css territory), plus the bulletin
+     widget and ad-placeholder boxes that ARE this file's job and are
+     included below. The rest needs its own triage pass, not a quick fold
+     into this file.
+     TRIAGED SINCE, all four: the logo and dropdown resets are in
+     boilerplate.css; the ministrypage grid is in blocks.css; the rounded-menu
+     variant was absorbed into boilerplate.css's --nav-dropdown-radius rather
+     than carried as a class, so it no longer exists as a variant; and the AOS
+     snippet went to boilerplate.css, not to a11y-print.css. There is no
+     a11y-print.css and the kit is seven files, not eight — the reveal is the
+     only consumer of tokens.css's --reveal-distance, and putting it in a file
+     that does not exist would have left that token dead.
+
+   * "Default images" is category 2 in your own list and is NOT in this
+     file, confirmed. tokens.css carries the five --default-*-image tokens
+     (rotator, grid, hero, staff, photo-gallery); the actual binding stays
+     JS-side (studius2.js reads body data- attributes), same as before. No
+     CSS action needed here — noted for whoever does the JS pass.
+     PARTLY BOUND SINCE: three of the five now have a CSS consumer.
+     blocks.css reads --default-grid-image and --default-staff-image as
+     fallbacks for a card or a staff member with no image uploaded yet, and
+     vendor.css reads --default-photo-gallery-image. --default-rotator-image
+     and --default-hero-image have no CSS consumer, so the JS pass is still
+     owed for those two.
+   ============================================================================ */
+
+@layer kit.features {
+
+/* ----------------------------------------------------------------------------
+   ALERT — the dismissible site-wide banner
+   -------------------------------------------------------------------------- */
+
+/* .alert: the legacy look, styled to read as an error message. Still used by
+   a handful of older builds — kept, not extended.
+   .parish-alert: the same content model with no forced colour, so a build
+   can theme it through normal article styling instead. */
+.alert,
+.parish-alert {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.alert .g-content,
+.parish-alert .g-content {
+  margin: 0;
+  padding: 0;
+}
+.alert {
+  background-color: #ffcfcf;
+  color: red;
+}
+.parish-alert {
+  background-color: transparent;
+}
+.alert :is(h1, h2, h3, h4, h5, h6, p) {
+  margin-left: 20px;
+  color: red;
+  background: transparent;
+}
+.parish-alert :is(h1, h2, h3, h4, h5, h6, p) {
+  margin-left: 20px;
+  color: inherit;
+  background: transparent;
+}
+.alert .platform-content,
+.parish-alert .platform-content {
+  margin: 0;
+  padding: 0;
+}
+.alert h2.contentheading,
+.parish-alert h2.contentheading {
+  padding-top: 15px;
+}
+.parish-alert .g-content-array {
+  margin: 0;
+}
+.parish-alert .g-item-title {
+  pointer-events: none;
+}
+@media only screen and (min-width: 50.99rem) {
+  .parish-alert .g-array-item {
+    padding: min(1vw, 14.4px);
+  }
+  .parish-alert .g-array-item :is(h1, h2, h3, h4, h5, h6, p) {
+    margin-left: 0;
+    color: inherit;
+    background: transparent;
+  }
+}
+@media only screen and (max-width: 50.99rem) {
+  .parish-alert .g-array-item {
+    max-width: 80%;
+    margin: 0 auto;
+    padding: 1rem 0 1rem min(1vw, 14.4px);
+  }
+  .parish-alert .g-array-item :is(h1, h2, h3, h4, h5, h6, p) {
+    margin-left: 0;
+    color: inherit;
+    background: transparent;
+  }
+}
+
+/* .modern-alert: the current default — a dismissible red popup card grid at
+   the top of the page, an icon, a headline, and a close button. Add the
+   .modern-alert-padding class to #g-top so normal content clears the banner
+   while it is showing. */
+#g-top.modern-alert-padding {
+  background: var(--primary-color);
+}
+.modern-alert,
+.modern-alert > .g-content,
+.modern-alert .g-content-array > .g-grid > .g-block,
+.modern-alert .g-content-array > .g-grid > .g-block > .g-content,
+.modern-alert .g-array-item-title,
+.modern-alert .g-item-title,
+.modern-alert .g-array-item-text {
+  margin: 0;
+  padding: 0;
+}
+.modern-alert .g-content-array {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.modern-alert .g-content-array > .g-grid {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  border: 3px solid var(--default-white);
+  border-radius: 1rem;
+  background: rgba(var(--default-white-rgb), 0);
+  transition: var(--default-transition);
+}
+.modern-alert .g-content-array > .g-grid:hover {
+  transform: scale(.95);
+  background: rgba(var(--default-white-rgb), .15);
+  backdrop-filter: blur(4px);
+}
+.modern-alert .g-content-array > .g-grid > .g-block {
+  overflow: hidden;
+  border-radius: 1rem;
+}
+.modern-alert .g-content-array > .g-grid > .g-block > .g-content {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+}
+.modern-alert .g-array-alert-popup {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--alert-red);
+}
+.modern-alert .g-array-item {
+  margin: 0;
+  padding: 1rem;
+}
+.modern-alert .g-array-item :is(h1, h2, h3, h4, h5, h6, p, a) {
+  color: var(--default-white);
+}
+.modern-alert .g-array-item :is(h1, h2, h3, h4, h5, h6) {
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--default-white);
+  font-size: 6vw;
+  margin-bottom: min(1vw, 14.4px);
+}
+.modern-alert .g-array-item p {
+  font-size: 3.25vw;
+}
+.modern-alert .g-item-title a {
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+}
+.modern-alert .g-array-item-read-more,
+.modern-alert .g-array-item-read-more a {
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+}
+.modern-alert .g-array-item-read-more {
+  pointer-events: none;
+}
+.modern-alert .g-array-alert-icon {
+  font-size: 4vw;
+}
+.modern-alert .g-array-alert-icon > .fas {
+  border-radius: 50%;
+  border: 3px solid var(--default-white);
+  background: var(--default-white);
+  color: var(--alert-red);
+}
+.modern-alert .g-array-alert-title {
+  display: none;
+}
+.modern-alert .g-array-alert-title h1 {
+  margin: 0;
+  padding: 0;
+  text-transform: uppercase;
+  font-family: var(--title-font-family);
+  font-size: min(3vw, 43.2px);
+  line-height: min(2.5vw, 36px);
+  color: var(--default-white);
+}
+.modern-alert .alert-close {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 2.75rem;
+  width: 2.75rem;
+  border-radius: 50%;
+  background: var(--primary-color);
+  font-size: 2.5rem;
+  line-height: 2.5rem;
+  transition: var(--default-transition);
+}
+.modern-alert .alert-close:hover {
+  transform: var(--default-scale-up);
+}
+.modern-alert .alert-close .fas {
+  border-radius: 50%;
+  font-size: 2.5rem;
+  line-height: 2.5rem;
+  color: var(--default-white);
+}
+
+@media only screen and (min-width: 50.99rem) {
+  #g-top.modern-alert-padding,
+  .modern-alert-padding {
+    padding: 2rem min(2vw, 28.8px) !important;
+  }
+  .modern-alert .g-content-array {
+    gap: 1.5rem;
+  }
+  .modern-alert .g-array-item :is(h1, h2, h3, h4, h5, h6) {
+    font-size: min(min(2vw, 28.8px), 28.8px);
+  }
+  .modern-alert .g-array-item p {
+    font-size: min(min(1.25vw, 18px), 18px);
+  }
+  .modern-alert .g-array-alert-icon {
+    font-size: min(4vw, 57.6px);
+  }
+}
+@media only screen and (max-width: 50.99rem) {
+  #g-top.modern-alert-padding {
+    padding: 5rem 5% 2rem 5% !important;
+  }
+  .modern-alert-padding {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+  .modern-alert .g-content-array > .g-grid:hover {
+    transform: scale(.95);
+  }
+  .modern-alert .g-array-alert-title {
+    display: none !important;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   AD PLACEMENT AND SIZING
+   -------------------------------------------------------------------------- */
+
+/* An .admod table lays its ad units out as a flex row of list items instead
+   of a table grid, and drops the border a <table> gets by default. */
+.admod table,
+.admod td {
+  border: none;
+}
+.rt-block.admod,
+.admod .rt-block {
+  margin: 0;
+  padding: 0;
+}
+.admod table,
+.admod tr {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+.admod td {
+  display: list-item;
+  list-style-type: none;
+  margin: 0;
+  padding: 10px 0 0 0;
+}
+
+/* Ad units are a fixed IAB size, so they need their own hard pixel widths at
+   each breakpoint rather than the fluid clamps the rest of the kit uses. */
+@media only screen and (min-width: 768px) and (max-width: 959px) {
+  .adside table td div > div { width: 140px !important; }
+}
+@media only screen and (min-width: 401px) and (max-width: 480px) {
+  .admod table td [id$="-wide"] > div { width: 330px !important; }
+}
+@media only screen and (max-width: 400px) {
+  .admod table td [id$="-wide"] > div,
+  .admod table td ins { width: 300px !important; }
+}
+
+/* On the homepage, an empty ad slot (no ad network unit filled it) draws a
+   dashed placeholder box instead of collapsing to nothing, so a half-built
+   or unfilled ad position is visible to whoever is checking the page. */
+.site-home .admod.adside table:not(:has(tbody)),
+.site-home .admod:not(.adside) table:not(:has(tbody > tr > td)) {
+  display: flex;
+  gap: min(1vw, 14.4px);
+}
+.site-home .admod.adside table:not(:has(tbody)) {
+  flex-direction: column;
+}
+.site-home .admod:not(.adside) table:not(:has(tbody > tr > td)) {
+  flex-direction: row;
+}
+.site-home .admod.adside table:not(:has(tbody)):before,
+.site-home .admod.adside table:not(:has(tbody)):after,
+.site-home .admod:not(.adside) table:not(:has(tbody > tr > td)):before,
+.site-home .admod:not(.adside) table:not(:has(tbody > tr > td)):after {
+  content: 'Ad Placement';
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 4px dashed var(--primary-color);
+}
+.site-home .admod.adside table:not(:has(tbody)):before,
+.site-home .admod.adside table:not(:has(tbody)):after {
+  width: 165px;
+  max-width: 165px;
+  height: 150px;
+  max-height: 150px;
+}
+.site-home .admod:not(.adside) table:not(:has(tbody > tr > td)):before,
+.site-home .admod:not(.adside) table:not(:has(tbody > tr > td)):after {
+  flex: 1;
+  height: 75px;
+  max-height: 75px;
+}
+
+/* ----------------------------------------------------------------------------
+   SPONSORSHIP — the sponsorship page shell
+   -------------------------------------------------------------------------- */
+
+/* A sponsorship page (business directory listing, "adopt a ...") strips the
+   normal page chrome so the sponsorship component's own layout owns the full
+   width, instead of sitting inside the article column and sidebar. */
+:is(.site-1, .site-2, .site-3, .site-4, .site-5, .site-6, .site-7, .site-8, .site-9, .site-10).sponsorshippage #g-mainbar {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.sponsorshippage:not(.view-wrapper) #g-header {
+  display: none !important;
+}
+.sponsorshippage:not(.view-wrapper) :is(#g-container-main, #g-main, #g-mainbar) {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.sponsorshippage:not(.view-wrapper) #g-mainbar .page-header {
+  display: none !important;
+}
+.sponsorshippage:not(.view-wrapper) #g-mainbar > .g-grid > .g-block > .g-content {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.sponsorshippage:not(.view-wrapper) #g-main > .g-container {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.sponsorshippage:not(.view-wrapper) #g-container-main .g-side-column {
+  display: none !important;
+  width: 0 !important;
+}
+.sponsorshippage:not(.view-wrapper) #g-container-main .g-middle-column {
+  width: 100% !important;
+}
+.sponsorshippage:not(.view-wrapper) .g-container:has(#g-container-main) {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.sponsorshippage:not(.view-wrapper) #g-container-main > .g-container > .g-grid > .g-block:has(#g-mainbar),
+.sponsorshippage:not(.view-wrapper) #g-container-main > .g-grid > .g-block:has(#g-mainbar) {
+  width: 100% !important;
+  flex: 1;
+}
+.sponsorshippage:not(.view-wrapper) #g-container-main > .g-container > .g-grid > .g-block:has(#g-aside, #g-sidebar),
+.sponsorshippage:not(.view-wrapper) #g-container-main > .g-grid > .g-block:has(#g-aside, #g-sidebar) {
+  display: none !important;
+}
+/* The sponsorship component ships its own icon font stack; make sure the
+   nav's FontAwesome icons keep working alongside it rather than being
+   overridden by the component's font-family. */
+.sponsorshippage:not(.view-wrapper) #g-navigation .fa {
+  font-family: 'FontAwesome', 'Font Awesome 6 Free', 'Font Awesome 5 Free', 'Font Awesome 4 Free' !important;
+}
+
+/* ----------------------------------------------------------------------------
+   BULLETIN WIDGET — LPI bulletin feed
+   -------------------------------------------------------------------------- */
+
+/* The default look: a masonry-style grid, one large "current" bulletin and a
+   row of smaller past issues, each a cover-image tile with a date strip that
+   expands to show the title on hover. Every size and colour in the layout
+   below is a --bulletin-* custom property, so a variant only has to override
+   the ones it changes — see .bulletin-3-pack and .bulletin-picture-list. */
+.bulletin-variables {
+  --bulletin-border-radius: 1rem;
+  --load-more-border-radius: var(--bulletin-border-radius);
+  --big-bulletin-font-size: clamp(1.5rem, 25.2px, 2rem);
+  --small-bulletin-font-size: 1.1rem;
+  --bulletin-container-padding: 0rem;
+  --big-bulletin-size: 90%;
+  --bulletin-title-color: var(--default-black);
+  --bulletin-text-background-color: rgba(255, 255, 255, .95);
+  --bulletin-text-hover-color: var(--default-black);
+  --bulletin-gaps: 1.5rem;
+  --bulletin-margins: var(--bulletin-gaps);
+  --small-bulletin-min-width: 130px;
+  --bulletin-container-max-width: 899px;
+
+  /* Set to 'initial' via .bulletin-load-more-button to show the button. */
+  --load-more-button-display: none;
+}
+
+.bulletin-widget .bulletin-variables {
+  padding: var(--bulletin-container-padding);
+}
+.bulletin-widget p {
+  margin: 0;
+}
+.bulletin-widget .bulletin-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--small-bulletin-min-width), 1fr));
+  gap: var(--bulletin-gaps);
+  max-width: var(--bulletin-container-max-width);
+  margin: auto;
+  margin-bottom: var(--bulletin-margins);
+}
+.bulletin-widget .bulletin {
+  position: relative;
+  aspect-ratio: 238 / 308;
+  background: var(--bulletin-text-background-color);
+  box-shadow: var(--default-box-shadow);
+  border-radius: var(--bulletin-border-radius);
+  overflow: hidden;
+}
+.bulletin-widget .bulletin:not(.bulletin-container > .bulletin:first-child) {
+  min-width: var(--small-bulletin-min-width);
+}
+.bulletin-widget .bulletin:not(.bulletin-container > .bulletin:first-child) p {
+  font-size: var(--small-bulletin-font-size);
+}
+.bulletin-widget .bulletin-container > .bulletin:first-child {
+  grid-column: 1 / span 2;
+  grid-row: 1 / span 2;
+  width: var(--big-bulletin-size);
+  height: var(--big-bulletin-size);
+  max-width: 311px;
+  margin: auto;
+}
+.bulletin-widget .bulletin-container .bulletin:first-child p {
+  font-size: var(--big-bulletin-font-size);
+}
+.bulletin-widget .bulletin-img-container {
+  height: 100%;
+  width: 100%;
+  background-size: 109%;
+  background-position: center 42%;
+  background-repeat: no-repeat;
+  transition: all 300ms ease-in-out;
+}
+.bulletin-widget .bulletin-date-container {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 20%;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  background: var(--bulletin-text-background-color);
+  transition: all 300ms ease-in-out;
+}
+.bulletin-widget .bulletin-date-container:not(.bulletin-container > .bulletin:first-child .bulletin-date-container) {
+  height: 25%;
+}
+.bulletin-widget .bulletin-date-container p {
+  margin-bottom: 0;
+  color: var(--bulletin-title-color);
+}
+.bulletin-widget .bulletin:hover .bulletin-date-container:not(.bulletin-container > .bulletin:first-child .bulletin-date-container) {
+  height: 100% !important;
+  transition: all 400ms ease-in-out;
+}
+.bulletin-widget .bulletin-container > .bulletin:first-child:hover .bulletin-img-container {
+  background-size: 113%;
+  transition: all 400ms ease-in-out;
+}
+.bulletin-widget .bulletin a:hover {
+  color: var(--bulletin-text-hover-color);
+}
+
+.bulletin-widget #loadMoreButton {
+  display: var(--load-more-button-display);
+  padding: 1rem 2rem;
+  margin: 0 0 var(--bulletin-margins) 0;
+  background-color: var(--primary-color);
+  color: var(--default-white);
+  border-radius: var(--load-more-border-radius);
+  box-shadow: var(--default-box-shadow);
+  transition: all 300ms ease-in-out;
+}
+.bulletin-widget #loadMoreButton:hover {
+  transform: scale(.98);
+  transition: all 400ms ease-in-out;
+}
+.bulletin-widget .load-bulletin-button-container {
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  max-width: var(--bulletin-container-max-width);
+  margin: auto;
+}
+
+@keyframes bulletinLoadIn {
+  from { opacity: 0; height: 0; width: 100%; }
+  to   { opacity: 1; width: 100%; height: calc(var(--small-bulletin-min-width) * (308 / 238)); }
+}
+.bulletin-widget .loaded-bulletin {
+  animation: bulletinLoadIn 300ms ease-in-out;
+}
+
+/* Set on the module: shrinks the grid to a compact 3-tile row instead of the
+   default masonry layout — a sidebar or footer position, not the homepage
+   feature spot. */
+.bulletin-widget.bulletin-3-pack .bulletin-variables {
+  --big-bulletin-size: 100%;
+  --small-bulletin-min-width: 110px;
+  --bulletin-container-padding: 2rem;
+  --bulletin-container-max-width: 475px;
+}
+
+/* Set on the module: reveals the "load more" button below the grid, for a
+   build that wants the visitor to page through older bulletins in place. */
+.bulletin-load-more-button .bulletin-variables {
+  --load-more-button-display: initial !important;
+}
+
+/* Set on the module: a single-column list of rows instead of a grid — the
+   most recent bulletin as a cover-image card, older ones as plain text
+   rows below it. */
+.bulletin-picture-list .bulletin-variables {
+  --bulletin-border-radius: 1rem;
+  --load-more-border-radius: var(--bulletin-border-radius);
+  --big-bulletin-font-size: clamp(1.5rem, 21.6px, 2rem);
+  --small-bulletin-font-size: clamp(1.2rem, 21.6px, 1.5rem);
+  --bulletin-container-padding: 2rem;
+  --big-bulletin-size: 90%;
+  --bulletin-title-color: var(--default-black);
+  --bulletin-text-background-color: rgba(255, 255, 255, .95);
+  --bulletin-list-background-color: var(--default-white);
+  --bulletin-gaps: 1rem;
+  --bulletin-list-row-height: 3rem;
+  --bulletin-text-hover-color: var(--default-black);
+  --bulletin-margins: var(--bulletin-gaps);
+  --load-more-button-display: none;
+  --bulletin-min-width: 125px;
+  --bulletin-max-width: 350px;
+}
+.bulletin-picture-list {
+  width: 100%;
+}
+.bulletin-picture-list .bulletin-variables {
+  padding: var(--bulletin-container-padding);
+}
+.bulletin-picture-list p {
+  margin: 0 !important;
+  line-height: 1.5;
+}
+.bulletin-picture-list .bulletin-container {
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-auto-rows: var(--bulletin-list-row-height);
+  width: 100%;
+  min-width: var(--bulletin-min-width);
+  margin: auto;
+  margin-bottom: var(--bulletin-margins);
+  gap: var(--bulletin-gaps);
+}
+.bulletin-picture-list .bulletin-container .bulletin:first-child,
+.bulletin-picture-list .bulletin-container .bulletin:not(:first-child) a {
+  box-shadow: var(--default-box-shadow);
+}
+.bulletin-picture-list .bulletin-container .bulletin:first-child {
+  height: auto;
+  aspect-ratio: 238 / 308;
+  width: 100%;
+  max-width: var(--bulletin-max-width);
+  margin: auto;
+  position: relative;
+  border-radius: var(--bulletin-border-radius);
+  overflow: hidden;
+}
+.bulletin-picture-list .bulletin-container .bulletin:not(.bulletin:first-child) a {
+  width: 100%;
+  height: 100%;
+  max-width: var(--bulletin-max-width);
+  min-width: var(--bulletin-min-width);
+  margin: auto;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bulletin-list-background-color);
+  border-radius: var(--bulletin-border-radius);
+  overflow: hidden;
+}
+.bulletin-picture-list .bulletin-container .bulletin:not(.bulletin:first-child) p {
+  font-size: var(--small-bulletin-font-size);
+  color: var(--bulletin-title-color);
+}
+.bulletin-picture-list .bulletin-container .bulletin:first-child .bulletin-date-container {
+  position: absolute;
+  bottom: 0;
+  height: 20%;
+  width: 100%;
+  display: grid;
+  align-content: center;
+  justify-content: center;
+  background: var(--bulletin-text-background-color);
+}
+.bulletin-picture-list .bulletin-container .bulletin:first-child p {
+  font-weight: normal;
+  font-size: var(--big-bulletin-font-size);
+  color: var(--bulletin-title-color);
+}
+.bulletin-picture-list .bulletin-img-container:not(.bulletin-picture-list .bulletin-container .bulletin:first-child .bulletin-img-container) {
+  display: none;
+}
+.bulletin-picture-list .bulletin-container .bulletin:first-child .bulletin-img-container {
+  height: 100%;
+  width: 100%;
+  background-size: 109%;
+  background-position: center 42%;
+  background-repeat: no-repeat;
+  transition: all 300ms ease-in-out;
+}
+.bulletin-picture-list .bulletin a:hover {
+  color: var(--bulletin-text-hover-color);
+}
+.bulletin-picture-list .bulletin-container .bulletin:first-child:hover .bulletin-img-container {
+  background-size: 106%;
+  transition: all 400ms ease-in-out;
+}
+.bulletin-picture-list .bulletin-container .bulletin:not(:first-child):hover a {
+  transform: scale(.98);
+  transition: all 400ms ease-in-out;
+}
+.bulletin-picture-list #loadMoreButton {
+  display: var(--load-more-button-display);
+  padding: 1rem 2rem;
+  margin: 0 0 var(--bulletin-margins) 0;
+  background-color: var(--primary-color);
+  color: var(--default-white);
+  border-radius: var(--load-more-border-radius);
+  box-shadow: var(--default-box-shadow);
+  transition: all 300ms ease-in-out;
+}
+.bulletin-picture-list #loadMoreButton:hover {
+  transform: scale(.98);
+  transition: all 400ms ease-in-out;
+}
+.bulletin-picture-list .load-bulletin-button-container {
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  max-width: var(--bulletin-container-max-width);
+  margin: auto;
+}
+@keyframes bulletinListLoad {
+  from { opacity: 0; transform: scale(.85); width: 100%; }
+  to   { opacity: 1; transform: scale(1);   width: 100%; }
+}
+.bulletin-picture-list .loaded-bulletin {
+  animation: bulletinListLoad 400ms ease-in-out;
+}
+
+/* ----------------------------------------------------------------------------
+   PWA — standalone-mode chrome
+   -------------------------------------------------------------------------- */
+
+/* When a visitor adds the site to their home screen and opens it as an app
+   (display-mode: standalone), replace the normal responsive nav with a fixed
+   top bar (logo, centred) and a fixed bottom tab bar (the pwa-ql module
+   position) — the layout a native app shell is expected to have. Outside
+   standalone mode, or above the mobile breakpoint, none of this applies. */
+body {
+  background-color: var(--primary-color);
+}
+
+@media only screen and (max-width: 50.99rem) {
+  @media (display-mode: standalone) {
+    #g-top-nav,
+    #g-mobile-fixed-nav {
+      display: flex !important;
+    }
+    #g-top.modern-alert-padding {
+      padding: 2rem 5% !important;
+    }
+    #g-top {
+      margin-top: 40pt !important;
+    }
+    #g-offcanvas {
+      top: 40pt;
+      bottom: 80pt;
+      height: calc(100% - 120pt);
+    }
+    #g-page-surround {
+      background: var(--primary-color);
+    }
+    #g-page-surround .g-offcanvas-toggle {
+      display: none;
+    }
+    #g-container-footer {
+      padding-bottom: 80pt !important;
+    }
+
+    /* The fixed top bar: logo only, centred, replacing the normal nav. */
+    #g-navigation .g-logo {
+      display: none;
+    }
+    #g-top-nav {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 1000;
+      display: flex;
+      width: 100%;
+      height: 40pt;
+      background: var(--primary-color);
+      box-shadow: var(--default-box-shadow);
+    }
+    #g-top-nav .g-particle:has(.g-logo) {
+      width: 100%;
+    }
+    #g-top-nav .g-logo {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 40pt;
+      text-align: center;
+    }
+    #g-top-nav .g-logo img {
+      width: auto;
+      height: 80%;
+    }
+    .g-offcanvas-toggle {
+      position: fixed !important;
+      z-index: 101;
+      top: 0;
+      left: 10pt;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 40pt;
+      font-size: 23pt;
+      color: var(--default-white);
+      background: none !important;
+      border-radius: unset;
+      box-shadow: unset;
+    }
+    .g-offcanvas-toggle .fa-fw {
+      text-shadow: none;
+    }
+
+    /* The fixed bottom tab bar — the pwa-ql module position, a row of icon
+       links laid out as equal-width flex tabs. */
+    #g-mobile-fixed-nav {
+      position: fixed;
+      inset: auto 0 0 0;
+      z-index: 1000;
+      display: flex;
+      height: 80pt;
+      width: 100%;
+      background: var(--primary-color);
+      color: var(--default-white);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--default-box-shadow);
+    }
+    .mobile-fixed-nav {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      width: 100%;
+      height: 60pt;
+    }
+    .mobile-nav-link {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 60pt;
+      text-align: center;
+      color: var(--default-white);
+    }
+    .mobile-nav-link:hover {
+      color: var(--secondary-color);
+    }
+    .mobile-fixed-nav .g-particle,
+    .mobile-fixed-nav .g-particle > div,
+    .mobile-fixed-nav .g-blockcontent {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+    }
+    .mobile-fixed-nav .g-blockcontent-subcontent {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 1pt;
+    }
+    .mobile-fixed-nav .g-blockcontent-subcontent-block {
+      position: relative;
+      margin: 0;
+      padding: 0;
+      flex: 1;
+    }
+    .mobile-fixed-nav .g-blockcontent-subcontent-block-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+    }
+    .mobile-fixed-nav .g-blockcontent-subcontent-title-icon {
+      order: 1;
+      margin: 0;
+      padding: 0;
+      font-size: 5vw;
+      color: var(--default-white);
+    }
+    .mobile-fixed-nav .g-blockcontent-subcontent-title {
+      order: 2;
+      margin: 0;
+      padding: 0;
+    }
+    .mobile-fixed-nav .g-blockcontent-subcontent-title-text {
+      margin: 0;
+      padding: 0;
+      font-size: 4vw;
+      font-family: var(--body-font-family);
+      color: var(--default-white);
+    }
+    .mobile-fixed-nav .g-blockcontent-buttons,
+    .mobile-fixed-nav .g-blockcontent-buttons a {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      opacity: 0;
+    }
+  }
+}
+
+}
