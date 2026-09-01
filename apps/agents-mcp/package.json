@@ -16,7 +16,7 @@
     "fetch-content": "tsx src/run-content-fetch.ts",
     "build-content": "tsx src/run-content-build.ts",
     "dashboard": "tsx src/dashboard.ts",
-    "test": "tsx src/bridge.test.ts && tsx src/schematic.test.ts && tsx src/content-build.test.ts && tsx src/site-build.test.ts"
+    "test": "tsx src/bridge.test.ts && tsx src/schematic.test.ts && tsx src/content-build.test.ts && tsx src/credentials.test.ts && tsx src/site-build.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.201",
