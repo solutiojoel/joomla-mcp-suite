@@ -1,0 +1,642 @@
+/* ============================================================================
+   typography.css — element defaults and content-author classes
+   ----------------------------------------------------------------------------
+   Part of the AI-first Studius kit. Requires tokens.css.
+
+   THE CONTRACT
+   ------------
+   1. This file styles the HTML a person types into an article. Nothing here
+      knows about Gantry sections, particles or block classes — that is
+      boilerplate.css and blocks.css.
+
+   2. Every class in this file MUST render identically in the editor and on the
+      page. editor.css imports tokens.css and this file and adds nothing but
+      TinyMCE chrome. That is the whole mechanism that stops the WYSIWYG
+      drifting away from the site, so do not add a rule here that depends on
+      markup only the front end has.
+
+   3. No `!important`. No media queries for heading sizes — the clamps in
+      tokens.css handle the full viewport range, and a media query here would
+      override them and make the tokens dead again, which is exactly the bug
+      css2 shipped.
+
+   4. No hardcoded colours. If you need a neutral that tokens.css does not
+      have, add it there as a role.
+   ============================================================================ */
+
+@layer kit.typography {
+
+  /* ==========================================================================
+     BASE
+     ========================================================================== */
+
+  body {
+    font-family: var(--body-font-family);
+    font-size: var(--body-font-size);
+    line-height: var(--body-line-height);
+    color: var(--body-text-color);
+  }
+
+  p {
+    margin: 0 0 var(--space-md);
+    line-height: var(--body-line-height);
+  }
+
+  p:last-child { margin-bottom: 0; }
+
+  a {
+    color: var(--link-color);
+    text-decoration: none;
+    transition: var(--default-transition);
+  }
+
+  a:hover { color: var(--link-hover-color); }
+
+  hr {
+    border: 0;
+    border-bottom: 1px solid var(--rule-color);
+    margin: var(--space-lg) 0;
+  }
+
+  /* Images a person drops into an article. TinyMCE writes alignment as an
+     align attribute or an inline float, so both forms need the gutter. */
+  img { max-width: 100%; height: auto; }
+
+  img[align="left"],
+  img[style*="float:left"],
+  img[style*="float: left"] { padding-right: var(--space-sm); }
+
+  img[align="right"],
+  img[style*="float:right"],
+  img[style*="float: right"] { padding-left: var(--space-sm); }
+
+
+  /* ==========================================================================
+     HEADINGS
+     Six levels, each smaller than the one above at every width. Every axis
+     comes from a token so a site can restyle any level from the outline block.
+     Nothing decorative is welded on — see the utilities below.
+     ========================================================================== */
+
+  h1 {
+    color: var(--h1-color);
+    font-family: var(--h1-font-family);
+    font-size: var(--h1-font-size);
+    font-weight: var(--h1-font-weight);
+    font-variant-caps: var(--h1-font-variant-caps);
+    text-transform: var(--h1-text-transform);
+    line-height: var(--h1-line-height);
+    margin: var(--h1-margin);
+    padding: var(--h1-padding);
+    border-bottom: var(--h1-border-bottom);
+    border-radius: var(--h1-border-radius);
+    background: var(--h1-background);
+    text-wrap: balance;
+  }
+
+  h2 {
+    color: var(--h2-color);
+    font-family: var(--h2-font-family);
+    font-size: var(--h2-font-size);
+    font-weight: var(--h2-font-weight);
+    font-variant-caps: var(--h2-font-variant-caps);
+    text-transform: var(--h2-text-transform);
+    line-height: var(--h2-line-height);
+    margin: var(--h2-margin);
+    padding: var(--h2-padding);
+    border-bottom: var(--h2-border-bottom);
+    border-radius: var(--h2-border-radius);
+    background: var(--h2-background);
+    text-wrap: balance;
+  }
+
+  h3 {
+    color: var(--h3-color);
+    font-family: var(--h3-font-family);
+    font-size: var(--h3-font-size);
+    font-weight: var(--h3-font-weight);
+    font-variant-caps: var(--h3-font-variant-caps);
+    text-transform: var(--h3-text-transform);
+    line-height: var(--h3-line-height);
+    margin: var(--h3-margin);
+    padding: var(--h3-padding);
+    border-bottom: var(--h3-border-bottom);
+    border-radius: var(--h3-border-radius);
+    background: var(--h3-background);
+    text-wrap: balance;
+  }
+
+  h4 {
+    color: var(--h4-color);
+    font-family: var(--h4-font-family);
+    font-size: var(--h4-font-size);
+    font-weight: var(--h4-font-weight);
+    font-variant-caps: var(--h4-font-variant-caps);
+    text-transform: var(--h4-text-transform);
+    line-height: var(--h4-line-height);
+    margin: var(--h4-margin);
+    padding: var(--h4-padding);
+    border-bottom: var(--h4-border-bottom);
+    border-radius: var(--h4-border-radius);
+    background: var(--h4-background);
+  }
+
+  h5 {
+    color: var(--h5-color);
+    font-family: var(--h5-font-family);
+    font-size: var(--h5-font-size);
+    font-weight: var(--h5-font-weight);
+    font-variant-caps: var(--h5-font-variant-caps);
+    text-transform: var(--h5-text-transform);
+    line-height: var(--h5-line-height);
+    margin: var(--h5-margin);
+    padding: var(--h5-padding);
+    border-bottom: var(--h5-border-bottom);
+    border-radius: var(--h5-border-radius);
+    background: var(--h5-background);
+  }
+
+  h6 {
+    color: var(--h6-color);
+    font-family: var(--h6-font-family);
+    font-size: var(--h6-font-size);
+    font-weight: var(--h6-font-weight);
+    font-variant-caps: var(--h6-font-variant-caps);
+    text-transform: var(--h6-text-transform);
+    line-height: var(--h6-line-height);
+    margin: var(--h6-margin);
+    padding: var(--h6-padding);
+    border-bottom: var(--h6-border-bottom);
+    border-radius: var(--h6-border-radius);
+    background: var(--h6-background);
+  }
+
+
+  /* ==========================================================================
+     HEADING UTILITIES
+     The treatments css2 welded onto h5 and h6. They now apply to any level, so
+     a page can use the right heading for its structure and still get the look.
+     ========================================================================== */
+
+  /* Was h5: filled pill, used as a section label. */
+  .h-pill {
+    color: var(--default-white);
+    background: var(--primary-color);
+    padding: var(--space-xs);
+    border-radius: var(--radius-sm);
+    display: inline-block;
+  }
+
+  /* Was h6: uppercase eyebrow above a heading. */
+  .h-eyebrow {
+    color: var(--secondary-color);
+    text-transform: var(--text-transform-upper);
+    letter-spacing: .08em;
+    font-weight: var(--bold-font-weight);
+  }
+
+  /* Was h3: rule under a section title. */
+  .h-ruled { border-bottom: var(--title-border-bottom); }
+
+  /* Was h2. */
+  .h-smallcaps { font-variant-caps: var(--font-small-caps); }
+
+  .h-centered { text-align: center; }
+
+
+  /* ==========================================================================
+     DECORATIVE HEADINGS
+     A heading with a rule running out to one or both sides.
+     ========================================================================== */
+
+  .decorative {
+    display: grid;
+    align-items: center;
+    gap: var(--space-xl);
+    width: 100%;
+    border-bottom: none;
+    text-align: center;
+  }
+
+  h1.decorative,
+  h4.decorative { grid-template-columns: auto minmax(10px, 1fr); }
+
+  h2.decorative,
+  h3.decorative { grid-template-columns: minmax(20px, 1fr) auto minmax(20px, 1fr); }
+
+  .decorative::after,
+  h2.decorative::before,
+  h3.decorative::before {
+    content: '';
+    border-top: 1px solid var(--primary-color);
+  }
+
+  .background {
+    color: var(--default-white);
+    background: var(--secondary-color);
+    padding: var(--space-lg) var(--space-2xl);
+  }
+
+  .dropcap {
+    font-size: 2.5em;
+    line-height: 1;
+    float: left;
+    padding-right: var(--space-2xs);
+  }
+
+
+  /* ==========================================================================
+     BUTTONS
+     Written as classes on an <a>, by hand, in the article editor.
+     ========================================================================== */
+
+  .button,
+  .transparentbutton,
+  .whitebutton {
+    display: inline-block;
+    font-family: var(--body-font-family);
+    font-size: .95rem;
+    font-weight: 500;
+    line-height: 1.15;
+    text-transform: none;
+    padding: .7rem 1.2rem;
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    transition: var(--default-transition);
+    cursor: pointer;
+  }
+
+  a.button {
+    background: var(--primary-color);
+    color: var(--default-white);
+    border-color: var(--primary-color);
+  }
+
+  a.button:hover {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: var(--default-white);
+  }
+
+  a.transparentbutton {
+    background: transparent;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+
+  a.transparentbutton:hover {
+    background: var(--primary-color);
+    color: var(--default-white);
+  }
+
+  a.whitebutton {
+    background: transparent;
+    color: var(--default-white);
+    border-color: var(--default-white);
+    border-radius: var(--radius-none);
+    letter-spacing: 3px;
+  }
+
+  a.whitebutton:hover {
+    background: var(--default-white);
+    color: var(--primary-color);
+    border-color: var(--secondary-color);
+  }
+
+
+  /* ==========================================================================
+     CONTENT BLOCKS
+     ========================================================================== */
+
+  .primary-back,
+  .secondary-back {
+    padding: var(--space-lg);
+    margin: var(--space-sm) 0;
+  }
+
+  .primary-back { background: var(--primary-color); color: var(--default-white); }
+  .secondary-back { background: var(--secondary-color); color: var(--primary-color); }
+
+  .primary-back :is(p, li, h1, h2, h3, h4, h5, h6) { color: var(--default-white); }
+  .secondary-back :is(p, li, h1, h2, h3, h4, h5, h6) { color: var(--primary-color); }
+
+  .whiteborder {
+    border: 2px solid var(--default-white);
+    padding: var(--space-xl);
+  }
+
+  .circle img { border-radius: var(--radius-circle); }
+
+  blockquote {
+    color: var(--body-text-color);
+    font-family: var(--title-font-family);
+    font-style: italic;
+    font-size: 1.2rem;
+    line-height: 1.4;
+    padding: 0 0 0 var(--space-md);
+    margin: 0 0 var(--space-lg);
+    border-left: 5px solid var(--border-subtle);
+  }
+
+  address {
+    font-style: italic;
+    font-weight: var(--bold-font-weight);
+    line-height: 1.3;
+  }
+
+  /* Side-by-side English / Spanish. Used heavily on bilingual parishes. */
+  .bilingual {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: var(--space-md);
+  }
+
+  .bilingual .englishtext,
+  .bilingual .spanishtext { flex: 1; }
+  .bilingual .spanishtext { font-style: italic; }
+
+  @media only screen and (max-width: 50.99rem) {
+    .bilingual { flex-direction: column; }
+  }
+
+
+  /* ==========================================================================
+     LISTS
+     ========================================================================== */
+
+  ul, ol { margin: 0 0 var(--space-md); padding-left: 1.35rem; }
+  li { margin-bottom: var(--space-2xs); line-height: var(--body-line-height); }
+  li:last-child { margin-bottom: 0; }
+  li > ul, li > ol { margin-top: var(--space-2xs); margin-bottom: 0; }
+
+
+  /* ==========================================================================
+     LAYOUT UTILITIES
+     The vocabulary a content author uses to lay out an article: a flex row of
+     divs, how it centres, and how it collapses on a phone.
+
+     These lived in TWO hand-maintained copies — base.2.0.css for the page and
+     editor-base.css for the editor — and had already diverged. Two examples:
+
+       * .reverseonmobile was `column-reverse` on the page and `column` plus
+         explicit order:1/2/3/4 on nth-child(4..1) in the editor. Identical for
+         exactly four children, different for any other count.
+       * the mobile collapse fired at 50.99rem on the page and at 767px in the
+         editor, so a table restacked at two different widths.
+
+     One definition now, loaded by both. editor-base.css is retired.
+     ========================================================================== */
+
+  .flextable { display: flex; }
+
+  .flextable.equalcells > div { flex: 1; }
+  .flextable.wrapitems { flex-wrap: wrap; }
+  .flextable.flexcolumn,
+  .flexcolumn { flex-direction: column; }
+
+  .flextable.spacedcells > div { padding-right: var(--space-lg); }
+  .flextable.spacedcells > div:last-child { padding-right: 0; }
+
+  .flextable.border > div {
+    border: 1px solid var(--border-subtle);
+    padding: var(--space-lg);
+  }
+
+  .flextable.centervertically,
+  .centervertically { align-items: center; }
+  .flextable.centerhorizontally { justify-content: center; }
+  .centercellvertically { align-self: center; }
+  .centercellhorizontally { justify-self: center; }
+
+  .boxshadow {
+    box-shadow: 0 0 8px rgba(var(--default-black-rgb), .5);
+    margin: var(--space-sm) var(--space-lg);
+  }
+
+  @media only screen and (max-width: 50.99rem) {
+    .flowflexonmobile.flextable { display: flex; flex-wrap: wrap; }
+    .flowflexonmobile.flextable > div { min-width: 40%; }
+    .blockonmobile.flextable { display: block; }
+    .flextable.columnonmobile { flex-direction: column; display: flex; }
+    .flextable.rowonmobile { display: flex; flex-wrap: nowrap; }
+
+    /* The page's behaviour wins: column-reverse works for any number of
+       children, where the editor's order:1..4 only ever worked for four. */
+    .flextable.reverseonmobile { flex-direction: column-reverse; }
+
+    .flextable.spacedcells > div {
+      padding-right: 0;
+      padding-bottom: var(--space-lg);
+    }
+    .flextable.spacedcells > div:last-child { padding-bottom: 0; }
+  }
+
+
+  /* ==========================================================================
+     TABLES
+     A person builds these in TinyMCE, so the classes have to be forgiving and
+     they have to survive a re-save. Widths stay auto; the responsive collapse
+     is opt-in per class rather than global.
+     ========================================================================== */
+
+  table { width: auto; border-collapse: collapse; }
+
+  td, th { line-height: 1.3; }
+
+  .noborder td,
+  .noborder tr { border: 1px solid transparent; }
+
+  .alternaterows td { padding: var(--space-xs) var(--space-sm); }
+  .alternaterows tr:nth-child(even) { background: var(--default-white); border-bottom: 1px solid var(--border-subtle); }
+  .alternaterows tr:nth-child(odd) { background: var(--surface-muted); border-bottom: 1px solid var(--border-subtle); }
+
+  .topheadertable td,
+  .leftheadertable td {
+    border: 1px solid var(--border-strong);
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .topheadertable tr:first-child,
+  .leftheadertable td:first-child {
+    background: var(--surface-inverse);
+    color: var(--text-on-inverse);
+    font-weight: var(--bold-font-weight);
+  }
+
+  .alternaterows.topheadertable td,
+  .alternaterows.leftheadertable td { border: none; }
+  .alternaterows.topheadertable tr:last-child { border-bottom: 1px solid var(--border-strong); }
+  .alternaterows.topheadertable tbody,
+  .alternaterows.leftheadertable tbody { border: 1px solid var(--border-strong); }
+
+  .fancytable th {
+    color: var(--text-on-inverse);
+    background: var(--surface-inverse);
+    border: 1px solid var(--border-strong);
+    padding: var(--space-xs);
+  }
+
+  .fancytable td {
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--border-strong);
+  }
+
+  .equaltable { width: 100%; display: table; table-layout: fixed; }
+  .equaltable td { width: 2%; }
+
+  table.flextable,
+  .flextable tbody,
+  .flextable tr {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+
+  /* Striped table that also restacks on a phone. */
+  .alternaterowsm { width: 100%; }
+  .alternaterowsm tr { border-bottom: 1px solid var(--border-subtle); }
+  .alternaterowsm tr:nth-child(odd) { background: var(--surface-muted); }
+  .alternaterowsm tr:nth-child(even) { background: var(--default-white); }
+  .alternaterowsm tr:hover { background: var(--surface-muted); }
+
+  /* A wide table on a phone. Collapse the layout classes to blocks rather than
+     letting the page scroll sideways. enableScrollableTables() handles tables
+     with no layout class.
+
+     .mtable is the opt-in for a table that should look untouched on desktop
+     and restack on mobile — the most common thing a parish actually needs. */
+  @media only screen and (max-width: 50.99rem) {
+    :is(.equaltable, table.flextable, .fancytable, .alternaterowsm, .mtable),
+    :is(.equaltable, table.flextable, .fancytable, .alternaterowsm, .mtable) :is(div, tbody, tr, td) {
+      display: block;
+      table-layout: auto;
+      width: 100%;
+      border: none;
+      margin: 0;
+    }
+
+    .mtable tr,
+    .alternaterowsm tr { border-bottom: 1px solid var(--border-subtle); }
+
+    :is(.equaltable, .alternaterowsm, .mtable) img {
+      display: block;
+      margin: 0 auto;
+      width: 100%;
+    }
+  }
+
+
+  /* ==========================================================================
+     ICON FONT — absorbed from solutio-font.css
+     ----------------------------------------------------------------------------
+     This lived in its own asset row on the front end and was never in the old
+     TinyMCE Custom CSS Classes list, so an inserted icon rendered as a blank
+     glyph in the editor and only appeared once the page saved. Folding it into
+     typography.css (loaded by both contexts) closes that gap the same way
+     moving site-tokens.css did for colours and fonts.
+
+     Two other fixes on the way in:
+     * solutio-font.css opened with `@import url('.../solutio.woff');` — @import
+       is for stylesheets, and a browser cannot parse a binary font file as one.
+       The real font load is the @font-face two lines below it; the @import
+       did nothing and is dropped.
+     * The font's own src url() was a relative path (`solutio.woff`), correct
+       only because the file sat next to solutio-font.css on the CDN. Written
+       as an absolute URL here so it still resolves now that the rule lives in
+       a different file.
+     ========================================================================== */
+
+  @font-face {
+    font-family: 'fontello';
+    src: url('//shared.solutiocdn.com/content/shared/solutio.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  [class^="solutio-icons s-"]:before,
+  [class*=" solutio-icons s-"]:before {
+    display: inline-block;
+    margin: 0 .2em 0 .2em;
+    width: 1em;
+    text-align: center;
+    text-decoration: inherit;
+    font-family: 'fontello';
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1em;
+    speak: never;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .solutio-icons.s-caret-right-solid:before      { content: '\e800'; }
+  .solutio-icons.s-facebook-f:before              { content: '\e801'; }
+  .solutio-icons.s-dove-solid:before              { content: '\e802'; }
+  .solutio-icons.s-file-invoice-solid:before      { content: '\e803'; }
+  .solutio-icons.s-heart-solid:before             { content: '\e804'; }
+  .solutio-icons.s-folder-open-solid:before       { content: '\e805'; }
+  .solutio-icons.s-link-solid:before              { content: '\e806'; }
+  .solutio-icons.s-map-marker-alt-solid:before    { content: '\e807'; }
+  .solutio-icons.s-newspaper-solid:before         { content: '\e808'; }
+  .solutio-icons.s-instagram-square:before        { content: '\e809'; }
+  .solutio-icons.s-logo-x-twitter:before          { content: '\e80a'; }
+  .solutio-icons.s-school-solid:before            { content: '\e80b'; }
+  .solutio-icons.s-lock-solid:before              { content: '\e80c'; }
+  .solutio-icons.s-calendar-alt-solid:before      { content: '\e80d'; }
+  .solutio-icons.s-chevron-right-solid:before     { content: '\e80e'; }
+  .solutio-icons.s-utensils-solid:before          { content: '\e80f'; }
+  .solutio-icons.s-users-solid:before             { content: '\e810'; }
+  .solutio-icons.s-youtube:before                 { content: '\e811'; }
+  .solutio-icons.s-square-facebook:before         { content: '\e812'; }
+  .solutio-icons.s-internet:before                { content: '\e813'; }
+  .solutio-icons.s-pray-solid:before              { content: '\e814'; }
+  .solutio-icons.s-bible-solid:before             { content: '\e815'; }
+  .solutio-icons.s-church-solid:before            { content: '\e816'; }
+  .solutio-icons.s-calendar-regular:before        { content: '\e817'; }
+  .solutio-icons.s-graduation-cap-solid:before    { content: '\e818'; }
+  .solutio-icons.s-fax-solid:before               { content: '\e81a'; }
+  .solutio-icons.s-instagram:before               { content: '\e81b'; }
+  .solutio-icons.s-apple-alt-solid:before         { content: '\e81c'; }
+  .solutio-icons.s-hamburger-solid:before         { content: '\e81d'; }
+  .solutio-icons.s-user-graduate-solid:before     { content: '\e81e'; }
+  .solutio-icons.s-pencil-solid:before            { content: '\e81f'; }
+  .solutio-icons.s-pen-to-square-regular:before   { content: '\e820'; }
+  .solutio-icons.s-search-solid:before            { content: '\e821'; }
+  .solutio-icons.s-arrow-pointer-solid:before     { content: '\e822'; }
+  .solutio-icons.s-pizza-slice-solid:before       { content: '\e823'; }
+  .solutio-icons.s-shop-solid:before              { content: '\e824'; }
+  .solutio-icons.s-check-square-solid:before      { content: '\e825'; }
+  .solutio-icons.s-calendar-week-solid:before     { content: '\e826'; }
+  .solutio-icons.s-globe:before                   { content: '\e827'; }
+  .solutio-icons.s-pen-to-square-solid:before     { content: '\e828'; }
+  .solutio-icons.s-marker-solid:before            { content: '\e829'; }
+  .solutio-icons.s-phone-solid:before             { content: '\e82a'; }
+  .solutio-icons.s-cross-solid:before             { content: '\e82b'; }
+  .solutio-icons.s-globe-solid:before             { content: '\e82c'; }
+  .solutio-icons.s-check-square-regular:before    { content: '\e82d'; }
+  .solutio-icons.s-calendar-solid:before          { content: '\e82e'; }
+  .solutio-icons.s-right-long-solid:before        { content: '\e82f'; }
+  .solutio-icons.s-facebook:before                { content: '\e830'; }
+  .solutio-icons.s-envelope-solid:before          { content: '\e831'; }
+  .solutio-icons.s-book-open-solid:before         { content: '\e832'; }
+  .solutio-icons.s-folder-solid:before            { content: '\e833'; }
+  .solutio-icons.s-bars-solid:before              { content: '\e834'; }
+  .solutio-icons.s-arrow-up-long-solid:before     { content: '\e835'; }
+  .solutio-icons.s-mouse-pointer-solid:before     { content: '\e836'; }
+  .solutio-icons.s-calendar-alt-regular:before    { content: '\e837'; }
+  .solutio-icons.s-flocknote:before               { content: '\e838'; }
+  .solutio-icons.s-online-giving:before           { content: '\e83a'; }
+  .solutio-icons.s-sacraments:before              { content: '\e83b'; }
+  .solutio-icons.s-bulletin:before                { content: '\e83c'; }
+  .solutio-icons.s-adoration:before               { content: '\e83d'; }
+
+  /* Site-specific additions beyond the shared glyph set — kept, not part of
+     solutio-font.css itself. */
+  .s-powerschool-icons::before { content: "p"; }
+  .k-knight::before { content: "k"; }
+
+}

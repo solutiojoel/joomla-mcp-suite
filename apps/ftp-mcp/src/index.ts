@@ -56,18 +56,27 @@ const tools = [
   {
     name: "ftp_upload_file",
     description:
-      "Upload text content to a file on the FTP server, replacing it entirely. Target path must be within upload_path if configured. " +
-      "USE ftp_append_file INSTEAD when the file already exists and you are adding to the end of it. This tool makes you " +
+      "Upload a file to the FTP server, replacing it entirely. Target path must be within upload_path if configured. " +
+      "TEXT (default): pass `content` as the text and leave `encoding` unset. " +
+      "BINARY (PDF, image, font): pass `encoding: \"base64\"` and `content` as the file's base64. This carries the bytes " +
+      "in the call itself, so it works regardless of where ftp-mcp runs — it is the remote-safe replacement for " +
+      "ftp_upload_local_file. A plain text upload to a binary path (.pdf, .png, …) is refused, because it would corrupt the file. " +
+      "USE ftp_append_file INSTEAD when a text file already exists and you are adding to the end of it. This tool makes you " +
       "resend every existing byte, and a character altered in that carried-over text ships silently — checking the part you " +
       "meant to change never looks at it. " +
-      "Returns the sha256 of the bytes written: when you assembled `content` from anything other than a direct copy, " +
-      "compare that hash against the local file (sha256sum / Get-FileHash) to confirm the WHOLE file round-tripped. " +
+      "Returns the sha256 of the bytes written and reads the file back to verify: when you assembled `content` from anything " +
+      "other than a direct copy, compare that hash against the local file (sha256sum / Get-FileHash) to confirm the WHOLE file round-tripped. " +
       "Spot-checking a few lines of a whole-file write does not verify it.",
     inputSchema: {
       type: "object",
       properties: {
         path: { type: "string", description: "Absolute remote destination path" },
-        content: { type: "string", description: "Text content to write" },
+        content: { type: "string", description: "The file content: plain text when encoding is unset, or base64 when encoding is \"base64\"." },
+        encoding: {
+          type: "string",
+          enum: ["utf8", "base64"],
+          description: "How `content` is encoded. Default \"utf8\" (text). Use \"base64\" for any binary file — required for .pdf/.png/.jpg/.woff and similar.",
+        },
         domain: { type: "string", description: "Site domain. Defaults to active site's domain." },
       },
       required: ["path", "content"],
@@ -112,7 +121,7 @@ const tools = [
     description:
       "Upload a file from the FTP SERVER's OWN filesystem to the FTP server. Supports any file type including images and PDFs. " +
       "Only usable when this server runs on the same machine as the caller — on a remote deployment the caller's paths do not exist here. " +
-      "For text use ftp_upload_file with inline content; for binaries use the Gateway Files bridge.",
+      "Prefer ftp_upload_file for everything: inline `content` for text, or `encoding: \"base64\"` for a binary. That path works no matter where ftp-mcp runs.",
     inputSchema: {
       type: "object",
       properties: {
@@ -206,7 +215,8 @@ export function buildServer(): Server {
         case "ftp_upload_file": {
           const ftpPath = args?.path as string;
           const content = (args?.content as string) || "";
-          const result = await ftpClient.uploadFile(ftpPath, content, domain);
+          const encoding = args?.encoding === "base64" ? "base64" : "utf8";
+          const result = await ftpClient.uploadFile(ftpPath, content, domain, encoding);
           return { content: [{ type: "text", text: formatResult(result) }], isError: !result.success };
         }
 
@@ -233,8 +243,8 @@ export function buildServer(): Server {
                 success: false,
                 message:
                   "ftp_upload_local_file is disabled on this deployment (FTP_LOCAL_UPLOAD=0) because this server does not " +
-                  "share a filesystem with the caller. Use ftp_upload_file with inline content for text, or the Gateway " +
-                  "Files bridge for binaries.",
+                  "share a filesystem with the caller. Use ftp_upload_file instead: inline `content` for text, or " +
+                  "`encoding: \"base64\"` with the file's base64 for a binary.",
               }) }],
               isError: true,
             };

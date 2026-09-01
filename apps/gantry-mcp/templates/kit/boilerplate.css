@@ -1,0 +1,765 @@
+/* ============================================================================
+   boilerplate.css — making Gantry behave the same way on every site
+   ----------------------------------------------------------------------------
+   Part of the AI-first Studius kit. Requires tokens.css.
+
+   WHAT THIS FILE IS FOR
+   ----------------------
+   Category 4, the tricky one. Gantry 5 ships its own opinions about page
+   width, column flex, menu chrome, offcanvas and the copyright bar. Some of
+   those opinions are wrong for a Studius site, and the correction is the same
+   on every site, on every build, forever. That correction is boilerplate.
+
+   THE TEST FOR "DOES THIS BELONG HERE"
+   -------------------------------------
+   A rule belongs in this file only if all three are true:
+
+     1. It targets markup Gantry or Joomla emits, not markup a person types
+        and not markup an extension emits. (Otherwise: typography.css, or
+        vendor.css.)
+     2. Removing it makes the page structurally wrong — overlapping, collapsed,
+        unreachable, or unreadable — not merely off-brand.
+     3. Every site wants it, and no build has ever wanted the opposite.
+
+   If a rule fails test 2 it is a design choice: it belongs in blocks.css if it
+   is a reusable pattern, or nowhere at all, because the AI writes it fresh.
+   If a rule fails test 3 it is a variant, and variants are not shared code.
+
+   NO COLOURS, NO SIZES, NO OPINIONS
+   ----------------------------------
+   Like every other file in the kit this one reads tokens and never declares
+   them. Where a value looks like a design choice — the aside column width, the
+   page width cap — it is a token, so a build changes it in site-tokens.css and
+   never edits a selector here.
+
+   WHERE THIS CONTENT CAME FROM
+   -----------------------------
+   Four legacy files, split by the six-category rule rather than by which file
+   they happened to live in:
+
+   * base.2.0.css      column helpers, breadcrumb, module helpers, scroll,
+                       and the .withmaxwidth container cap.
+   * studius.2.0.css   logo sizing, the main-nav resets, the dropdown
+                       border-radius removals, offcanvas, the side-menu
+                       module, the copyright bar, the error page.
+   * section.css       the ~40 lines of subpage #g-mainbar / #g-aside :has()
+                       overrides that sections.css parked here so it could
+                       stay pure token plumbing.
+   * base.2.0.css      the .g- half of the DOCman container override, which
+                       vendor.css parked here because it is Gantry's layout
+                       and not Koowa's markup.
+
+   RECONSTRUCTED, NOT COPIED: the subpage column block below. The old
+   section.css is no longer served from the shared CDN, so this is written
+   from the behaviour sections.css documented, plus the identical pattern that
+   survives in headlines.2.0.css and in the sponsorship block of features.css.
+   It is the same shape, expressed once, driven by a token. If a legacy site
+   ever renders its sidebar differently from this, that is the block to check.
+
+   THREE BROKEN TOKEN NAMES WERE FIXED ON THE WAY IN
+   --------------------------------------------------
+   The legacy files referenced --site-box-shadow, --site-border-radius and
+   --default-scale. None of the three is defined anywhere in the kit, and none
+   was defined in css2 either — they resolved to nothing, so those rules had
+   been dead for as long as they had been shipped. Written here against the
+   real tokens: --default-box-shadow, --radius-md and --default-scale-up.
+
+   WHAT WAS DELIBERATELY DROPPED
+   ------------------------------
+   * .fullheight / .ninetyheight / .eightyheight and the matching width and
+     padding ladders — a lookup table of viewport fractions, category 1. An AI
+     build writes the one height a design actually calls for.
+   * .removecontentbuffer / .rmtopbotcontentbuffer / .rmleftrightcontentbuffer
+     — three classes for "unset the padding Gantry added". Kept as ONE class,
+     .flush, with two modifiers, because the concept is real boilerplate even
+     though three spellings of it were not.
+   * a[href*="?option=com_fileman"]::before — injected a FontAwesome 4 glyph
+     by codepoint into every FILEman link. It is extension markup (vendor.css's
+     job), it hardcodes a font family the kit does not load, and
+     kb/tinymce-safe-html already covers CSS ::before icons. Dropped.
+   * .topright, .marginzero, .align-right, .moveintoabovemodule — one-off
+     nudges from named old builds. Not boilerplate by test 3.
+   ============================================================================ */
+
+@layer kit.boilerplate {
+
+  /* ==========================================================================
+     PAGE WIDTH
+     --------------------------------------------------------------------------
+     css2 capped the page only when a build remembered to put `withmaxwidth` on
+     the body. Forgetting it was the most common reason a site looked right on
+     the builder's laptop and stretched to unreadable line lengths on a wide
+     monitor.
+
+     Here the cap is unconditional and the value is a token. --site-max-width
+     defaults to 1920px in tokens.css; a site that genuinely wants edge-to-edge
+     sets it to `none` in site-tokens.css. There is no class to forget.
+
+     Only the inner .g-container is capped, never the section itself, so a
+     full-bleed background still reaches both edges of the viewport.
+     ========================================================================== */
+
+  :is(#g-top, #g-navigation, #g-slideshow, #g-header, #g-above, #g-feature,
+      #g-showcase, #g-utility, #g-container-main, #g-expanded, #g-extension,
+      #g-bottom, #g-footer, #g-copyright) > .g-container {
+    max-width: var(--site-max-width);
+    margin-inline: auto;
+  }
+
+
+  /* ==========================================================================
+     GRID AND BLOCK PLUMBING
+     --------------------------------------------------------------------------
+     Gantry gives every .g-block a percentage width from the layout manager and
+     every .g-content a padding buffer. These are the corrections a build needs
+     often enough that rewriting them each time is waste.
+     ========================================================================== */
+
+  /* Collapse a column the layout still emits. Gantry cannot conditionally drop
+     a block, so a page with no sidebar module still gets an empty one holding
+     its share of the row. */
+  .g-block.remove-column {
+    flex: 0 0 0%;
+    width: 0;
+    padding: 0;
+  }
+
+  /* The other half of the same problem: let the surviving column take the
+     space the removed one gave up. */
+  .g-block.fullwidth-column {
+    flex: 0 0 100%;
+    width: 100%;
+  }
+
+  /* Blocks in a row are only as tall as their own content, so two cards side
+     by side end at different heights. This makes the content box fill the
+     block it was given, which is what "equal height" means in practice. */
+  .equal-height .g-content {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Remove Gantry's content buffer. Three legacy classes collapsed into one
+     with modifiers — the concept is boilerplate, the three spellings were not. */
+  .flush > .g-content,
+  .flush .g-content {
+    margin: 0;
+    padding: 0;
+  }
+  .flush-block > .g-content,
+  .flush-block .g-content {
+    margin-block: 0;
+    padding-block: 0;
+  }
+  .flush-inline > .g-content,
+  .flush-inline .g-content {
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  /* Gantry's reset leaves a bottom margin on menu list items, which shows up
+     as a ragged gap under a horizontal nav. */
+  .g-menu-item-container,
+  .g-toplevel li {
+    margin-bottom: 0;
+  }
+
+  /* A rotator swaps images into a container with no intrinsic width, so the
+     first paint is zero-width and the section visibly jumps when the image
+     arrives. */
+  .sprocket-features-img-container {
+    width: 100%;
+  }
+
+
+  /* ==========================================================================
+     SUBPAGE COLUMNS — #g-mainbar and #g-aside
+     --------------------------------------------------------------------------
+     Parked here by sections.css, which was right to refuse it: this is a fix
+     to Gantry's container behaviour, not a section background, and sections.css
+     promises to do nothing but token plumbing.
+
+     THE PROBLEM. On a subpage the main column and the sidebar are two .g-block
+     children of one .g-grid, each carrying a percentage width from the layout
+     manager. Percentages do not respond to content, so a sidebar holding a
+     165px ad renders as a 25% column with 165px of ad and a lot of nothing,
+     and the article column loses a quarter of its measure for no reason. Below
+     the breakpoint the two percentages stack and the sidebar lands in the
+     middle of the article.
+
+     THE FIX. Above the breakpoint, make the row a flex row: the sidebar takes
+     its natural width up to --aside-max-width, and the article column takes
+     everything else. Below it, stack them and let the sidebar go full width.
+
+     The :has() selectors are what let this key off the sections actually
+     present rather than off a body class a build has to remember. Both the
+     .g-container-wrapped and unwrapped shapes are matched, because Gantry
+     emits one or the other depending on whether the section is boxed.
+
+     The sponsorship page opts out — features.css hides the sidebar entirely
+     there, and this block would fight it. The DOCman document view opts out
+     for the same reason vendor.css parked it here: the Koowa listing manages
+     its own width and does not want a shared row.
+     ========================================================================== */
+
+  @media only screen and (min-width: 50.99rem) {
+
+    body[class*="-sub"]:not(.sponsorshippage) #g-container-main > .g-container > .g-grid,
+    body[class*="-sub"]:not(.sponsorshippage) #g-container-main > .g-grid {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: var(--space-lg);
+    }
+
+    body[class*="-sub"]:not(.sponsorshippage) #g-container-main > .g-container > .g-grid > .g-block:has(#g-mainbar),
+    body[class*="-sub"]:not(.sponsorshippage) #g-container-main > .g-grid > .g-block:has(#g-mainbar) {
+      flex: 1 1 auto;
+      width: auto;
+      min-width: 0;
+    }
+
+    body[class*="-sub"]:not(.sponsorshippage) #g-container-main > .g-container > .g-grid > .g-block:has(#g-aside, #g-sidebar),
+    body[class*="-sub"]:not(.sponsorshippage) #g-container-main > .g-grid > .g-block:has(#g-aside, #g-sidebar) {
+      flex: 0 1 auto;
+      width: auto;
+      max-width: var(--aside-max-width);
+    }
+
+    /* A DOCman or FILEman listing manages its own width. Give the whole row
+       back to it rather than letting the sidebar rule above squeeze it. */
+    body[class*="-sub"]:not(.sponsorshippage) #g-container-main:has(.k-ui-namespace.com_docman) > .g-container > .g-grid > .g-block:has(#g-aside, #g-sidebar),
+    body[class*="-sub"]:not(.sponsorshippage) #g-container-main:has(.k-ui-namespace.com_docman) > .g-grid > .g-block:has(#g-aside, #g-sidebar) {
+      max-width: none;
+    }
+  }
+
+  /* The rule vendor.css actually parked here, verbatim in behaviour: Koowa
+     draws its own header band at the top of a document listing, and Gantry's
+     container padding above it doubles the gap. The percentage top padding is
+     what css2 wrote; it resolves against the container width, so on a wide
+     screen it was a large gap and on a phone it was almost none — which is why
+     the fix reads "0%" rather than "0". Kept as 0 because zero is zero in any
+     unit, and stated here so the odd original does not look like a typo. */
+  body[class*="-sub"]:not(.sponsorshippage) #g-page-surround #g-container-main:has(.k-ui-namespace.com_docman) {
+    padding-top: 0;
+  }
+
+  @media only screen and (max-width: 50.99rem) {
+
+    #g-container-main > .g-container > .g-grid > .g-block:has(#g-aside, #g-sidebar),
+    #g-container-main > .g-grid > .g-block:has(#g-aside, #g-sidebar) {
+      width: 100%;
+      max-width: none;
+    }
+  }
+
+  /* Gantry's aside can inherit a flex context that collapses it. This is the
+     one line that keeps a sidebar visible at all, so it stays outside the
+     media queries above. */
+  #g-container-main #g-aside {
+    display: block;
+  }
+
+
+  /* ==========================================================================
+     LOGO
+     --------------------------------------------------------------------------
+     The Gantry logo particle wraps the image in a flex container with a
+     max-width that assumes a small square mark. A Studius header logo is a
+     wide lockup, so it was squeezed to a fraction of its artwork.
+
+     Sized from --logo-width rather than the legacy hardcoded 400px, so a site
+     with a tall crest and a site with a wide wordmark are one token apart.
+     ========================================================================== */
+
+  .g-logo {
+    max-width: none;
+    justify-content: flex-start;
+  }
+
+  .g-logo img {
+    width: 100%;
+    height: auto;
+  }
+
+  @media only screen and (min-width: 50.99rem) {
+    #g-navigation .g-logo img {
+      width: var(--logo-width);
+      min-width: var(--logo-min-width);
+      max-width: 100%;
+    }
+  }
+
+  @media only screen and (max-width: 50.99rem) {
+    #g-navigation .g-logo {
+      max-width: var(--logo-width-mobile);
+      margin-inline: auto;
+      justify-content: center;
+    }
+  }
+
+
+  /* ==========================================================================
+     MAIN NAVIGATION
+     --------------------------------------------------------------------------
+     Structure only. Colours, weights and sizes come from tokens, and the
+     decorative treatments a design wants — underline on hover, pill hover,
+     rounded dropdown corners — are NOT here. Those are blocks.css and per-build
+     CSS. What is here is the set of Gantry defaults that are wrong regardless
+     of design.
+     ========================================================================== */
+
+  /* Gantry centres the toplevel and lets items size to their text, so a long
+     menu crowds one end of the bar. Spread it. */
+  .g-main-nav .g-toplevel {
+    justify-content: space-around;
+    text-transform: var(--nav-text-transform);
+  }
+
+  /* Items are inline blocks by default, so a two-line item and a one-line item
+     do not share a baseline. */
+  .g-main-nav .g-toplevel > li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .g-main-nav .g-toplevel > li > .g-menu-item-container > .g-menu-item-content {
+    font-family: var(--nav-font-family);
+    font-size: var(--nav-font-size);
+    font-weight: var(--nav-font-weight);
+    letter-spacing: var(--nav-letter-spacing);
+  }
+
+  /* Gantry sets white-space: nowrap on dropdown items, so a long submenu title
+     extends the dropdown off the side of the viewport instead of wrapping. */
+  .g-main-nav .g-sublevel > li > .g-menu-item-container > .g-menu-item-content {
+    white-space: normal;
+  }
+
+  /* The theme draws a hover marker with a ::before on the item content. It
+     sits under the text at the wrong offset on a flex toplevel, and every
+     Studius design has replaced it. Off by default; a build that wants a
+     marker draws its own. */
+  .g-main-nav .g-toplevel > li:hover > .g-menu-item-container > .g-menu-item-content::before,
+  .g-main-nav .g-toplevel > li.active > .g-menu-item-container > .g-menu-item-content::before {
+    display: none;
+  }
+
+  /* Gantry's dropdown corner radii are set in four places — the dropdown, the
+     full-width column, the first item and the last item — and they must agree
+     or the panel shows a light sliver at the corner where an item's square
+     edge escapes the parent's rounded one. Driving all four from one token
+     means they cannot disagree. --nav-dropdown-radius defaults to
+     --radius-none, which is the css2 behaviour that shipped everywhere. */
+  .g-main-nav .g-standard .g-dropdown,
+  .g-main-nav .g-dropdown .g-dropdown-column > .g-grid > .g-block.size-100 {
+    border-radius: var(--nav-dropdown-radius);
+  }
+  .g-main-nav .g-dropdown .size-100 > .g-sublevel > li.g-go-back + li > .g-menu-item-container {
+    border-start-start-radius: var(--nav-dropdown-radius);
+    border-start-end-radius: var(--nav-dropdown-radius);
+  }
+  .g-main-nav .g-dropdown .size-100 > .g-sublevel > li:last-child > .g-menu-item-container {
+    border-end-start-radius: var(--nav-dropdown-radius);
+    border-end-end-radius: var(--nav-dropdown-radius);
+  }
+
+  /* The caret after a toplevel parent. Hidden on the toplevel because the
+     dropdown opens on hover and the caret only adds noise; kept in the
+     offcanvas below, where it is the tap target that opens the submenu. */
+  .g-main-nav .g-toplevel > li.g-parent .g-menu-parent-indicator {
+    display: none;
+  }
+
+
+  /* ==========================================================================
+     OFFCANVAS AND THE MOBILE TOGGLE
+     --------------------------------------------------------------------------
+     Below the breakpoint the toggle is the only way to reach the menu, so
+     everything here is a reachability fix rather than a style.
+     ========================================================================== */
+
+  @media only screen and (max-width: 50.99rem) {
+
+    /* The toggle is absolutely positioned over #g-top. When #g-top holds an
+       alert the two overlap and the alert text runs under the hamburger.
+       Reserving the inline start of #g-top is the fix that does not depend on
+       whether an alert is present. */
+    #g-top {
+      padding-inline: 10% 2%;
+    }
+
+    .g-offcanvas-toggle {
+      top: var(--space-md);
+      left: var(--space-md);
+      display: grid;
+      place-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      background: var(--default-white);
+      color: var(--primary-color);
+      border-radius: var(--radius-circle);
+      box-shadow: var(--default-box-shadow);
+    }
+
+    /* css2 gave the icon a text-shadow so it stayed visible against whatever
+       was behind it. The solid circle above does that job properly, so the
+       shadow is removed rather than kept and fought with. */
+    .g-offcanvas-toggle .fa-fw {
+      text-shadow: none;
+    }
+
+    #g-offcanvas {
+      padding-left: var(--space-xl);
+    }
+
+    /* The parent indicator IS the submenu tap target in the offcanvas, so it
+       needs to be a target and not a hover effect. */
+    #g-offcanvas #g-mobilemenu-container ul > li.g-menu-item-link-parent > .g-menu-item-container > .g-menu-parent-indicator {
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: var(--radius-sm);
+      margin: -0.3rem 0 -0.2rem 0.5rem;
+      padding: 0.2rem;
+    }
+    #g-offcanvas #g-mobilemenu-container ul > li.g-menu-item-link-parent > .g-menu-item-container > .g-menu-parent-indicator:hover {
+      background: transparent;
+    }
+  }
+
+
+  /* ==========================================================================
+     SIDE MENU MODULE
+     --------------------------------------------------------------------------
+     A Joomla menu module rendered into #g-aside. Joomla's markup is a bare
+     <ul class="nav menu">, which inherits the article list styling from
+     typography.css and reads as body copy rather than as navigation. Every
+     site needs it to look like a menu; which colours it uses is a token.
+
+     css2 hardcoded #333 for the list background, white for the link, and
+     rgba(0,0,0,.5) for hover, then a later pass half-converted them and left
+     the #333 behind. All three are roles here.
+     ========================================================================== */
+
+  #g-aside .moduletable[class*="box"] {
+    padding: 0;
+  }
+
+  #g-aside .g-content {
+    padding-inline: 0;
+  }
+
+  .moduletable .nav.menu,
+  .moduletable .unstyled {
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-none);
+    background: var(--surface-inverse);
+  }
+
+  .moduletable .nav.menu li {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border-radius: var(--radius-sm);
+    transition: var(--default-transition);
+  }
+
+  .moduletable .nav.menu li a,
+  .moduletable .nav.menu li span {
+    display: block;
+    width: 100%;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-none);
+    background: var(--primary-color);
+    color: var(--text-on-inverse);
+    font-weight: var(--normal-font-weight);
+  }
+
+  .moduletable .nav.menu li.current.active a,
+  .moduletable .nav.menu li a:hover {
+    background: var(--secondary-color);
+    color: var(--text-on-inverse);
+    font-weight: var(--normal-font-weight);
+  }
+
+  .moduletable .nav.menu li:last-child {
+    margin-bottom: var(--space-lg);
+    padding-bottom: 0;
+  }
+
+  .moduletable .nav .nav-child {
+    margin-top: 0;
+  }
+
+  .moduletable .nav.menu .nav-child li {
+    margin-left: var(--space-lg);
+    padding-right: var(--space-lg);
+    border: none;
+  }
+
+  .moduletable .nav.menu .nav-child li:last-child {
+    margin-bottom: 0;
+  }
+
+  /* typography.css gives list items a marker. A navigation list is not prose,
+     so the marker comes off — for every Joomla list module, not only the menu,
+     because they all share this markup. */
+  .moduletable :is(.nav.menu, .mostread, .latestnews, .archive-module,
+                   .relateditems, .categories-module, .category-module,
+                   .latestusers, .unstyled) li a::before {
+    display: none;
+  }
+
+
+  /* ==========================================================================
+     BREADCRUMBS
+     --------------------------------------------------------------------------
+     Joomla emits the divider as its own element, unspaced, and the glyph's
+     line box is taller than the text around it so the row sits crooked.
+     ========================================================================== */
+
+  .breadcrumb > li > .divider {
+    margin-right: .25em;
+    padding-inline: var(--space-2xs);
+    color: var(--text-muted);
+  }
+
+  .breadcrumb span.divider::before {
+    line-height: 1.3;
+  }
+
+  /* Joomla omits the divider before the first crumb and then, on some
+     overrides, before the second as well. */
+  .breadcrumb li:nth-child(2) .divider {
+    display: inline-block;
+  }
+
+
+  /* ==========================================================================
+     COPYRIGHT BAR
+     --------------------------------------------------------------------------
+     #g-copyright is the admin strip under the footer: credit on one side, the
+     admin login lock on the other. Gantry lays it out as a normal grid, which
+     leaves the two ends unaligned and a content buffer above them.
+     ========================================================================== */
+
+  #g-copyright {
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: var(--space-lg);
+  }
+
+  #g-copyright .g-content {
+    margin: 0;
+    padding: 0;
+  }
+
+  #g-copyright .g-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #g-copyright .g-grid:last-child .g-block {
+    justify-content: flex-end;
+  }
+
+  /* The admin login lock. Dimmed so it does not read as site navigation, and
+     brought to the alert colour on hover so it stays findable by the one
+     person who needs it. */
+  #g-copyright a .fa.fa-lock {
+    color: rgba(var(--default-white-rgb), .9);
+    transition: var(--default-transition);
+  }
+
+  #g-copyright a:hover .fa.fa-lock {
+    color: var(--alert-red);
+  }
+
+  .adminfootericon {
+    z-index: 100;
+  }
+
+  /* The footer's top rule is drawn by the theme. A design that ends the page
+     on a colour block does not want it. */
+  #g-footer.notopline {
+    border-top: none;
+  }
+
+  @media only screen and (max-width: 50.99rem) {
+    #g-copyright,
+    #g-copyright .g-block:last-child {
+      display: block;
+    }
+    #g-copyright .g-block {
+      justify-content: center;
+    }
+  }
+
+
+  /* ==========================================================================
+     ERROR PAGE
+     --------------------------------------------------------------------------
+     Gantry's error outline renders through the simplecontent particle, which
+     ships a narrow header and its own title colour. See kb/error-pages for the
+     outline and content side of this.
+     ========================================================================== */
+
+  .g-error #g-container-main {
+    padding: 0;
+  }
+
+  .g-simplecontent .g-simplecontent-layout-header {
+    width: 100%;
+  }
+
+  .g-simplecontent .g-simplecontent-layout-header .g-simplecontent-item-content-title {
+    color: var(--heading-color);
+  }
+
+
+  /* ==========================================================================
+     JOOMLA SEARCH
+     --------------------------------------------------------------------------
+     com_search renders raw, outside the article column's padding, and its
+     inputs inherit the surrounding colour — which is white text on white when
+     the results page sits on a dark section.
+     ========================================================================== */
+
+  .com_search #g-container-main > .g-container > .g-grid {
+    padding: var(--space-md) var(--space-xl);
+  }
+
+  #searchForm input[type="text"],
+  .ordering-box .inputbox,
+  .form-limit .inputbox {
+    color: var(--body-text-color);
+    background: var(--default-white);
+  }
+
+
+  /* ==========================================================================
+     VISIBILITY HELPERS
+     --------------------------------------------------------------------------
+     Kept because Gantry particles and Joomla modules cannot be conditionally
+     rendered by viewport — hiding is the only mechanism available. Both
+     spellings of each are kept, because both are in use across live sites and
+     dropping one silently un-hides content.
+
+     These use !important on purpose. They exist to beat a `display` set by the
+     particle being hidden, and a helper that loses to the thing it is helping
+     is not a helper. They are the only !important declarations in this file.
+     (blocks.css has two, for Elfsight's script-set heights; features.css has
+     many, which its own header should account for.)
+     ========================================================================== */
+
+  @media only screen and (max-width: 50.99rem) {
+    .hiddenmobile,
+    .hidden-mobile,
+    .hiddenphone {
+      display: none !important;
+    }
+  }
+
+  @media only screen and (min-width: 50.99rem) {
+    .showmobile,
+    .show-mobile {
+      display: none !important;
+    }
+  }
+
+  /* Joomla emits a menu item of type "spacer" as a real, clickable, empty
+     <li>. It is a grouping label in the admin, never content on the page. */
+  [name="spacer"] {
+    display: none !important;
+  }
+
+
+  /* ACCESSIBILITY FLOOR moved to a11y-print.css — :focus-visible, .skip-link
+     and .sr-only used to be defined here, written before a11y-print.css
+     existed. a11y-print.css loads after this file, so its versions always
+     won and these were dead weight. Deleted rather than left as a silent
+     duplicate. See a11y-print.css for the real definitions and the reasoning
+     behind each (:focus-visible only, not :focus; the clip-based .sr-only,
+     not display:none). */
+
+
+  /* ==========================================================================
+     SCROLL REVEAL — the AOS baseline
+     --------------------------------------------------------------------------
+     AOS (Animate On Scroll) is the library the Studius sites load for reveal
+     animations. It does one thing: it adds .aos-animate to an element carrying
+     a data-aos attribute once that element enters the viewport. The "from" and
+     "to" states are entirely CSS's problem.
+
+     WHY THIS IS BOILERPLATE AND NOT A DESIGN CHOICE. The contract between the
+     library and the stylesheet — the attribute name, the class name, and which
+     element carries them — is fixed by AOS, not by the design. Every site that
+     loads AOS needs a working default for data-aos="default-animation", and
+     kb/animate-on-scroll and workflows/page-animation both assume one exists.
+     A design that wants a different reveal writes its own data-aos value; it
+     does not rewrite this.
+
+     THIS IS THE ONLY CONSUMER OF --reveal-distance. tokens.css defines that
+     token and zeroes it under prefers-reduced-motion, which is what makes the
+     whole reveal motion-safe without a second media query here. The transition
+     reads --slow-transition for the same reason. Do not hardcode either: a
+     hardcoded duration bypasses the reduced-motion guard silently, and a
+     reveal that ignores the setting is the exact failure the token exists to
+     prevent.
+
+     NO-JS FALLBACK. If the library never loads — a blocked CDN, a script
+     error earlier on the page — then .aos-animate is never added, and a
+     stylesheet that hid the element unconditionally would leave the page
+     blank. So the hidden state is gated on .aos-init, which AOS itself adds
+     to every element it prepares. No library, no .aos-init, nothing hidden.
+
+     .aos-init and .aos-animate are the two class names in the AOS build
+     actually served at shared.solutiocdn.com/content/shared/aos.js, checked
+     against that file rather than against the library's documentation. It
+     sets no class on <html>, so do not gate on one.
+     ========================================================================== */
+
+  [data-aos="default-animation"].aos-init {
+    opacity: 0;
+    transform: translateY(var(--reveal-distance));
+    transition: var(--slow-transition);
+  }
+
+  [data-aos="default-animation"].aos-init.aos-animate {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+
+  /* ==========================================================================
+     SCROLL
+     --------------------------------------------------------------------------
+     Smooth scrolling for in-page anchors, and enough scroll-margin that an
+     anchor target does not land underneath a sticky header.
+
+     scroll-behavior sits inside its own reduced-motion guard on purpose. It is
+     the one motion in the kit that is not driven by a transition token, so
+     tokens.css cannot switch it off from a distance.
+     ========================================================================== */
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  :target {
+    scroll-margin-top: var(--space-2xl);
+  }
+
+}

@@ -1,0 +1,466 @@
+/* ============================================================================
+   tokens.css — the single source of truth for every design value
+   ----------------------------------------------------------------------------
+   Part of the AI-first Studius kit. Legacy sites on css2/ never load this file.
+
+   THE CONTRACT
+   ------------
+   1. This file defines values. It contains no rules that style anything.
+      If you are writing a selector that is not `:root`, you are in the wrong file.
+
+   2. Nothing else in the kit defines a token. typography.css, boilerplate.css,
+      sections.css, features.css, vendor.css, blocks.css and a11y-print.css
+      read from here and never declare their own `--x:` at the top of the file.
+
+   3. Both the front end AND the TinyMCE editor stylesheet import this file.
+      That is what stops the WYSIWYG drifting away from the rendered site.
+
+   4. This file is wrapped in `@layer kit.tokens`. The site's own token block
+      in Base outline > Page Settings > Custom Head stays UNLAYERED, so it
+      always wins regardless of specificity. Do not wrap the site block in a
+      layer, and do not raise the specificity here to try to beat it.
+
+   PER-SITE OVERRIDES
+   ------------------
+   A site build normally overrides only section 1. Everything below it derives.
+   Anything a build overrides beyond section 1 is a signal the token is missing
+   an axis — add the axis here rather than patching in override.css.
+   ============================================================================ */
+
+/* ============================================================================
+   THE CASCADE ORDER FOR THE WHOLE KIT
+   ----------------------------------------------------------------------------
+   A layer's position in the cascade is fixed by where its name FIRST appears,
+   which means that without this line the kit's cascade order would be its
+   asset load order — a Gantry priority number on the Base outline, per site,
+   editable by anyone in the admin, and silently different on the six sites
+   where somebody once reordered an asset row to fix something else.
+
+   Declaring the order here removes that dependency completely. tokens.css is
+   the first kit file on every page and in the editor, so this line runs before
+   any layered rule exists. From that point the order below is the order, no
+   matter which sequence the files actually arrive in.
+
+   Later beats earlier:
+
+     kit.tokens       values only, no rules at all
+     kit.typography   element defaults for the HTML a person types
+     kit.boilerplate  corrections to Gantry's own framework behaviour
+     kit.sections     the #g-<section> background skeleton
+     kit.blocks       composite patterns built on particle markup
+     kit.vendor       third-party extension markup (DOCman, FILEman)
+     kit.features     default features — alert, bulletin, ads, sponsorship
+     kit.a11y-print   focus, skip link, sr-only, print — the floor every page gets
+
+   features is last of the design layers because a site-wide alert must win
+   over whatever it is sitting on top of. vendor is late because an
+   extension's markup lands inside the article column and would otherwise
+   inherit typography's table and list defaults. a11y-print is last of all:
+   a focus ring must never lose to a component's own hover/box-shadow rule,
+   and print has to be able to hide anything any other layer showed. Everything
+   a build writes per page stays UNLAYERED, so it beats all eight without
+   needing to know any of this.
+   ============================================================================ */
+
+@layer kit.tokens, kit.typography, kit.boilerplate, kit.sections,
+       kit.blocks, kit.vendor, kit.features, kit.a11y-print;
+
+@layer kit.tokens {
+
+  :root {
+
+    /* ========================================================================
+       1. BRAND
+       The only block a site build normally edits. Copy these into the outline
+       token block and change the values there; never edit them in this file.
+       ======================================================================== */
+
+    /* Colours are stored as raw triplets so any rule can take them at an
+       arbitrary alpha with rgba(var(--primary-color-rgb), .4). Composed
+       opaque values are derived in section 2. */
+    --primary-color-rgb:    0, 13, 63;
+    --secondary-color-rgb:  198, 147, 56;
+    --tertiary-color-rgb:   240, 234, 214;
+    --default-white-rgb:    255, 255, 255;
+    --default-black-rgb:    0, 0, 0;
+    --alert-red-rgb:        234, 54, 54;
+
+    --title-font-family:    'EB Garamond', Georgia, 'Times New Roman', serif;
+    --body-font-family:     'Lato', 'Helvetica Neue', Arial, sans-serif;
+
+    /* Layout envelope */
+    --site-max-width:       1920px;
+    --last-break-point:     50.99rem;
+
+    /* The handful of component knobs that genuinely vary per site.
+       Everything else lives with its component. */
+    --ql-num-boxes:         5;
+    --slideshow-height:        min(56.25vw, 810px);
+    --slideshow-width:         min(100vw, 1440px);
+    --slideshow-height-mobile: 56.25vw;
+    --slideshow-width-mobile:  100vw;
+
+
+    /* ========================================================================
+       2. COMPOSED COLOURS
+       Derived from section 1. Do not edit; change the triplet instead.
+       ======================================================================== */
+
+    --primary-color:     rgba(var(--primary-color-rgb), 1);
+    --secondary-color:   rgba(var(--secondary-color-rgb), 1);
+    --tertiary-color:    rgba(var(--tertiary-color-rgb), 1);
+    --default-white:     rgba(var(--default-white-rgb), 1);
+    --default-black:     rgba(var(--default-black-rgb), 1);
+    --alert-red:         rgba(var(--alert-red-rgb), 1);
+    --transparent:       rgba(255, 255, 255, 0);
+
+    /* Aliases. styles.js reads --primary-rgb / --secondary-rgb / --tertiary-rgb
+       to build the branding-kit table on the Styles article. Those names were
+       never defined in css2, so the colour rows silently filtered themselves
+       out and the Styles page has only ever shown fonts. Defining them here
+       fixes that page without touching the script. */
+    --primary-rgb:       var(--primary-color-rgb);
+    --secondary-rgb:     var(--secondary-color-rgb);
+    --tertiary-rgb:      var(--tertiary-color-rgb);
+    --black-color:       var(--default-black);
+    --background-color-rgb: var(--default-white-rgb);
+
+
+    /* ========================================================================
+       3. SEMANTIC ROLES
+       What a colour is FOR. Components reference these, not section 1, so a
+       site can repoint a role without touching every component.
+       ======================================================================== */
+
+    --heading-color:        var(--primary-color);
+    --heading-font-family:  var(--title-font-family);
+    --body-text-color:      #333333;
+    --link-color:           var(--primary-color);
+    --link-hover-color:     var(--default-black);
+    --rule-color:           var(--secondary-color);
+    --title-border-bottom:  1px solid var(--secondary-color);
+
+    /* Neutrals. Tables, blockquotes and rules used to hardcode #333, #ddd,
+       #e8e8e8 and #d5d5d5 directly in editor.css, which is why a site could
+       never restyle them. They are roles now, so a build can. */
+    --surface-muted:        #f0f0f0;
+    --surface-inverse:      #333333;
+    --text-muted:           #666666;
+    --text-on-inverse:      var(--default-white);
+    --border-subtle:        #dddddd;
+    --border-strong:        #333333;
+
+
+    /* ========================================================================
+       4. TYPE PRIMITIVES
+       ======================================================================== */
+
+    --normal-font-weight:      400;
+    --bold-font-weight:        700;
+
+    --font-normal-variant:     normal;
+    --font-small-caps:         small-caps;
+    --font-all-small-caps:     all-small-caps;
+
+    --text-transform-cap:      capitalize;
+    --text-transform-upper:    uppercase;
+    --text-transform-lower:    lowercase;
+    --text-transform-none:     none;
+    --text-transform-full:     full-width;
+
+    --standard-line-height:    1.3;
+    --standard-text-margin:    .75rem 0;
+    --standard-text-padding:   0;
+
+    --body-font-size:          clamp(1rem, .97rem + .16vw, 1.1rem);
+    --body-line-height:        1.55;
+
+
+    /* ========================================================================
+       5. HEADING SCALE
+       ------------------------------------------------------------------------
+       A standard hierarchy: six levels, each smaller than the one above it, at
+       every viewport width. Nothing decorative is welded onto a level.
+
+       In css2 the size tokens were dead — fonts2.css declared --h1-size: 3.5rem
+       and then overrode it with `h1 { font-size: 2.2rem }` inside BOTH a
+       min-width and a max-width media query holding identical values. h2, h3
+       and h4 all rendered at 1.75rem, and h5 and h6 were not size steps at all:
+       h5 was a filled pill and h6 an uppercase eyebrow. A reader got no
+       structure from them and a content build had no way to signal any.
+
+       Those two treatments still exist, as .h-pill and .h-eyebrow in
+       typography.css, so the look is one class away. They just no longer
+       occupy a heading level.
+
+       typography.css applies these with NO media queries, which is what keeps
+       the tokens live. The clamps stay monotonic at both ends of the range.
+       ======================================================================== */
+
+    --h1-size:  clamp(1.9rem,  1.55rem + 1.25vw, 2.6rem);
+    --h2-size:  clamp(1.55rem, 1.33rem + .8vw,   2.05rem);
+    --h3-size:  clamp(1.3rem,  1.17rem + .48vw,  1.6rem);
+    --h4-size:  clamp(1.12rem, 1.04rem + .29vw,  1.3rem);
+    --h5-size:  clamp(1.02rem, .97rem + .16vw,   1.15rem);
+    --h6-size:  clamp(.92rem,  .89rem + .1vw,    1rem);
+
+    /* Each heading carries the same twelve axes so any level can be restyled
+       from the token block alone. Names match css2 exactly — typography.css
+       and editor.css both read them. */
+
+    --h1-color:              var(--heading-color);
+    --h1-font-family:        var(--title-font-family);
+    --h1-font-size:          var(--h1-size);
+    --h1-font-weight:        var(--normal-font-weight);
+    --h1-font-variant-caps:  var(--font-normal-variant);
+    --h1-text-transform:     var(--text-transform-none);
+    --h1-line-height:        1.15;
+    --h1-margin:             var(--standard-text-margin);
+    --h1-padding:            var(--standard-text-padding);
+    --h1-border-bottom:      none;
+    --h1-border-radius:      0;
+    --h1-background:         none;
+
+    --h2-color:              var(--heading-color);
+    --h2-font-family:        var(--title-font-family);
+    --h2-font-size:          var(--h2-size);
+    --h2-font-weight:        var(--normal-font-weight);
+    --h2-font-variant-caps:  var(--font-normal-variant);
+    --h2-text-transform:     var(--text-transform-none);
+    --h2-line-height:        1.2;
+    --h2-margin:             var(--standard-text-margin);
+    --h2-padding:            var(--standard-text-padding);
+    --h2-border-bottom:      none;
+    --h2-border-radius:      0;
+    --h2-background:         none;
+
+    --h3-color:              var(--heading-color);
+    --h3-font-family:        var(--title-font-family);
+    --h3-font-size:          var(--h3-size);
+    --h3-font-weight:        var(--normal-font-weight);
+    --h3-font-variant-caps:  var(--font-normal-variant);
+    --h3-text-transform:     var(--text-transform-none);
+    --h3-line-height:        var(--standard-line-height);
+    --h3-margin:             0 0 .625rem 0;
+    --h3-padding:            var(--standard-text-padding);
+    --h3-border-bottom:      none;
+    --h3-border-radius:      0;
+    --h3-background:         none;
+
+    --h4-color:              var(--heading-color);
+    --h4-font-family:        var(--body-font-family);
+    --h4-font-size:          var(--h4-size);
+    --h4-font-weight:        var(--bold-font-weight);
+    --h4-font-variant-caps:  var(--font-normal-variant);
+    --h4-text-transform:     var(--text-transform-none);
+    --h4-line-height:        var(--standard-line-height);
+    --h4-margin:             var(--standard-text-margin);
+    --h4-padding:            var(--standard-text-padding);
+    --h4-border-bottom:      none;
+    --h4-border-radius:      0;
+    --h4-background:         none;
+
+    --h5-color:              var(--heading-color);
+    --h5-font-family:        var(--body-font-family);
+    --h5-font-size:          var(--h5-size);
+    --h5-font-weight:        var(--bold-font-weight);
+    --h5-font-variant-caps:  var(--font-normal-variant);
+    --h5-text-transform:     var(--text-transform-none);
+    --h5-line-height:        var(--standard-line-height);
+    --h5-margin:             var(--standard-text-margin);
+    --h5-padding:            var(--standard-text-padding);
+    --h5-border-bottom:      none;
+    --h5-border-radius:      0;
+    --h5-background:         none;
+
+    --h6-color:              var(--heading-color);
+    --h6-font-family:        var(--body-font-family);
+    --h6-font-size:          var(--h6-size);
+    --h6-font-weight:        var(--bold-font-weight);
+    --h6-font-variant-caps:  var(--font-normal-variant);
+    --h6-text-transform:     var(--text-transform-none);
+    --h6-line-height:        var(--standard-line-height);
+    --h6-margin:             var(--standard-text-margin);
+    --h6-padding:            var(--standard-text-padding);
+    --h6-border-bottom:      none;
+    --h6-border-radius:      0;
+    --h6-background:         none;
+
+
+    /* ========================================================================
+       6. SPACE, SHAPE, ELEVATION
+       ======================================================================== */
+
+    --space-2xs:  .25rem;
+    --space-xs:   .5rem;
+    --space-sm:   .75rem;
+    --space-md:   1rem;
+    --space-lg:   1.5rem;
+    --space-xl:   2.5rem;
+    --space-2xl:  4rem;
+
+    /* Section padding scales with the viewport, capped so it stops growing
+       on very wide screens. */
+    --section-padding-block:  clamp(1.5rem, 1rem + 2.5vw, 4rem);
+    --section-padding-inline: clamp(1rem, .6rem + 2vw, 3rem);
+
+    --radius-none:  0;
+    --radius-sm:    .2rem;
+    --radius-md:    .5rem;
+    --radius-lg:    1rem;
+    --radius-pill:  999px;
+    --radius-circle: 50%;
+
+    --default-box-shadow:        0 0 10px rgba(var(--default-black-rgb), .5);
+    --default-box-shadow-hover:  0 2px 14px rgba(var(--default-black-rgb), .55);
+    --default-text-shadow:       0 0 5px rgba(var(--default-black-rgb), .3);
+    --card-box-shadow:           0 2px 4px rgba(var(--default-black-rgb), .12);
+
+
+    /* ========================================================================
+       7. MOTION
+       Every animated component reads these. The accessibility block at the
+       end of this file zeroes them under prefers-reduced-motion, so honouring
+       the setting costs each component nothing — as long as it never hardcodes
+       its own duration or transform.
+       ======================================================================== */
+
+    --default-transition:  all .2s ease-in-out;
+    --slow-transition:     all .4s ease-in-out;
+    --default-scale-up:    scale(1.05);
+    --default-scale-down:  scale(.95);
+    --reveal-distance:     1.5rem;
+
+
+    /* ========================================================================
+       8. SECTION BACKGROUNDS
+       One token per Gantry section slot. sections.css maps each to its
+       #g-<section> and does nothing else. Defining them here rather than in
+       sections.css is what lets a site restyle the page skeleton from the
+       outline token block alone.
+       ======================================================================== */
+
+    --section-page-surround-bg:     var(--default-white);
+    --section-container-top-bg:     var(--default-white);
+    --section-top-bg:               var(--primary-color);
+    --section-navigation-bg:        var(--primary-color);
+    --section-slideshow-bg:         var(--default-white);
+    --section-header-bg:            var(--default-white);
+    --section-above-bg:             var(--default-white);
+    --section-feature-bg:           var(--default-white);
+    --section-showcase-bg:          var(--default-white);
+    --section-utility-bg:           var(--default-white);
+    --section-container-main-bg:    var(--default-white);
+    --section-sidebar-bg:           transparent;
+    --section-mainbar-bg:           transparent;
+    --section-aside-bg:             transparent;
+    --section-expanded-bg:          var(--default-white);
+    --section-extension-bg:         var(--default-white);
+    --section-bottom-bg:            var(--default-white);
+    --section-container-footer-bg:  var(--default-white);
+    --section-footer-bg:            var(--primary-color);
+    --section-copyright-bg:         var(--primary-color);
+    --section-offcanvas-bg:         var(--primary-color);
+    --section-offcanvas-bg-overlay: rgba(var(--default-black-rgb), .25);
+
+
+    /* ========================================================================
+       9. DEFAULT IMAGES
+       The placeholder fallbacks that keep a half-built site from rendering
+       broken. In css2 these lived as data- attributes on the body tag, which
+       put them out of reach of CSS and split them across two hosts — hero on
+       the CDN, rotator and grid on the local site. As tokens they sit with the
+       rest of the site identity and both CSS and JS can read them.
+       ======================================================================== */
+
+    --default-rotator-image:        url('/images/stories/template/default-rotator.jpg');
+    --default-grid-image:           url('/images/stories/template/default-grid.jpg');
+    --default-hero-image:           url('/images/stories/template/default-hero.jpg');
+    --default-staff-image:          url('/images/stories/template/default-staff.jpg');
+    --default-photo-gallery-image:  url('/images/stories/template/default-photo-gallery.jpg');
+
+
+    /* ========================================================================
+       10. PAGE CHROME
+       The logo, the main navigation and the sidebar column. boilerplate.css
+       reads every one of these and declares none of them.
+
+       These are here rather than in boilerplate.css for the same reason the
+       section backgrounds are here rather than in sections.css: it is what
+       lets a site change the shape of its own header from site-tokens.css
+       without a build ever opening a shared file and editing a selector.
+
+       In css2 all of these were literals inside the rule — the logo was 400px,
+       the aside was 165px, the dropdown radius was 0 written out four times.
+       Changing any of them meant editing shared CSS, so nobody did; they
+       overrode it further down instead, which is how the file reached 21,000
+       lines.
+       ======================================================================== */
+
+    /* Logo. A wide wordmark and a tall crest are one token apart. */
+    --logo-width:         400px;
+    --logo-min-width:     40%;
+    --logo-width-mobile:  80%;
+
+    /* Main navigation. The type here is the nav bar's own, not a heading
+       role, because a nav item is neither a heading nor body copy and
+       borrowing either makes one of them wrong. */
+    --nav-font-family:     var(--body-font-family);
+    --nav-font-size:       1rem;
+    --nav-font-weight:     500;
+    --nav-letter-spacing:  .1rem;
+    --nav-text-transform:  var(--text-transform-none);
+
+    /* One radius for all four corners of a dropdown panel. Set to
+       --radius-none so the default matches what css2 shipped everywhere; a
+       design that wants rounded dropdowns changes this one value rather than
+       the four rules boilerplate.css derives from it. */
+    --nav-dropdown-radius: var(--radius-none);
+
+    /* The sidebar column on a subpage. A width, not a percentage: the column
+       holds an ad unit or a menu, both of which have a natural size, and a
+       percentage makes the article column pay for the difference. */
+    --aside-max-width:     18rem;
+
+
+    /* ========================================================================
+       11. FOCUS RING
+       One ring, used everywhere a11y-print.css applies :focus-visible. Not
+       --secondary-color by default: on a site whose secondary colour is pale
+       (gold, cream, a light tint) a ring in that colour can fail contrast
+       against both the page background and the element it rings. Default to
+       the darkest of the three brand colours; a build with a genuinely
+       high-contrast secondary can repoint it in site-tokens.css.
+       ======================================================================== */
+
+    --focus-ring-color:   var(--primary-color);
+    --focus-ring-width:   2px;
+    --focus-ring-offset:  2px;
+  }
+
+  /* NOT CARRIED OVER — dark mode.
+     css2 shipped a full `.dark-mode` rule set in fonts2.css that consumed five
+     --dark-theme-* tokens defined nowhere. Every declaration in it was invalid
+     and dropped, so the feature has never done anything on any site. It is not
+     reimplemented here. If dark mode is ever wanted it should be designed
+     against prefers-color-scheme, not resurrected from a body class. */
+
+
+  /* ==========================================================================
+     ACCESSIBILITY — motion
+     Zeroing the motion tokens here means every component that uses them is
+     motion-safe without writing its own media query. Components that hardcode
+     a duration bypass this, which is why they must not.
+     ========================================================================== */
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --default-transition: none;
+      --slow-transition:    none;
+      --default-scale-up:   none;
+      --default-scale-down: none;
+      --reveal-distance:    0;
+    }
+  }
+
+}

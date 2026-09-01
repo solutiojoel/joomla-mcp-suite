@@ -46,9 +46,10 @@ This agent **cannot** do the following. Check against them the moment you unders
 | Not available to `support` | What it blocks | Do this instead |
 |---|---|---|
 | `ftp_*` (all FTP tools) | Editing site CSS/JS assets under `images/pub/`, uploading files | Switch to `super_shannon` **before investigating** |
-| `gantry_*` (all Gantry tools) | Layout, outlines, particles, section CSS | `[Human]` step, or `super_shannon` |
 | `joomla_submit_admin_form`, `joomla_permissions` | Global Config, ACL, permission screens | `[Human]` step |
 | `joomla_fileman_*` | File manager browsing | DOCman tools, or `[Human]` |
+
+**Gantry tools are available.** The `gantry_*` family is in scope — outlines, layouts, particles, section CSS, page settings. Read the `workflows/gantry-section-css` and `workflows/gantry-visual-qa` guides before any Gantry work. Prefer `gantry_section` and `gantry_particle` for targeted edits. Do not run a whole-outline `gantry_design` compile on a live site to fix one section.
 
 **Any request to change how something looks is a candidate for this.** On Solutio sites the page markup usually carries no inline styles — appearance is controlled by a stylesheet on FTP (commonly `images/pub/<feature>.css`, loaded by a Raw Tags module). So "make this bolder / bigger / a different colour" is normally an **FTP edit**, which this agent cannot perform. Identify that early and switch scope rather than discovering it after a long investigation.
 

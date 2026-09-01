@@ -6,13 +6,21 @@ A self-contained Docker image that gives an AI agent complete programmatic contr
 
 ## 🏗️ What's in the Suite
 
-Three cooperating servers behind a single orchestrator endpoint:
+Six downstream servers behind a single orchestrator endpoint:
 
 | Server | Path | Tools | What it does |
 |--------|------|-------|-------------|
-| **Joomla MCP** | `apps/joomla-mcp` | 100+ | Every major Joomla admin workflow via form-level HTTP automation |
-| **Gantry MCP** | `apps/gantry-mcp` | 42 | Gantry 5 layouts, particles, styles, outlines — via JSON API |
-| **Orchestrator** | `apps/orchestrator` | — | Single `/mcp` endpoint that aggregates both servers |
+| **Joomla MCP** | `apps/joomla-mcp` | 29 | Every major Joomla admin workflow via form-level HTTP automation |
+| **Gantry MCP** | `apps/gantry-mcp` | 9 | Gantry 5 layouts, particles, styles, outlines — via JSON API |
+| **Freshdesk MCP** | `apps/freshdesk-mcp` | 7 | Ticket, contact, and conversation access |
+| **FTP MCP** | `apps/ftp-mcp` | 8 | Direct server file operations for CSS/JS assets |
+| **Knowledge Gateway MCP** | `apps/knowledge-gateway-mcp` | 5 | Workflow docs, KB articles, site notes, audit log |
+| **Agents MCP** | `apps/agents-mcp` | 9 | LLM-backed sub-agent stages that run in their own context windows |
+| **Orchestrator** | `apps/orchestrator` | 15 | Single `/mcp` endpoint that aggregates every downstream and scopes tools per agent |
+
+Tool counts are the surface an agent actually sees. Both entity servers use
+action dispatch (`joomla_article { action: "list" }`) rather than one tool per
+verb — Gantry's nine tools route to sixty-plus internal handlers.
 
 No direct database writes. Every Joomla operation goes through the same code paths the admin UI uses — CSRF tokens, session state, extension hooks all work correctly.
 
@@ -20,13 +28,13 @@ No direct database writes. Every Joomla operation goes through the same code pat
 
 ## ✨ What You Can Do
 
-**🔨 Build a site from scratch.** Use `joomla_plan_site_build` to generate a structured build plan from a natural-language brief, then `joomla_apply_site_build` to execute it — categories, articles, menus, modules, and Gantry layout regions created in the right order. `joomla_validate_site_build` audits the result and `joomla_launch_checklist` runs a pre-launch check.
+**🔨 Build a site from scratch.** Three staged pipelines, each driven by a dedicated agent scope and a human-reviewable spec: **menu-build** turns a client menu PDF into a Joomla skeleton, **content-build** writes the pages onto that skeleton, and **site-build** turns a mockup into a live Gantry outline. Every stage stops at an approval gate before it writes.
 
 **📝 Manage all content.** Create, update, and organize articles and categories. Assign categories, set publish states, manage metadata, and bulk check-in locked items.
 
-**🗂️ Control navigation.** Create menus and menu items of any type. The `joomla_list_menu_item_types` and `joomla_inspect_menu_item_type` tools let the agent discover every available link type before creating one.
+**🗂️ Control navigation.** Create menus and menu items of any type. `joomla_menu_item_type { action: "list" | "inspect" }` lets the agent discover every available link type and its parameter schema before creating one.
 
-**📦 Place and configure modules.** List every available type and position, inspect a type's full parameter schema, then create or update modules with precise placement. Export and import module blueprints to reproduce configurations across sites.
+**📦 Place and configure modules.** List every available type and position with `joomla_module_type`, inspect a type's full parameter schema, then create or update modules with precise placement.
 
 **🎨 Design layouts with Gantry 5.** Read the live layout tree of any outline, add particles into sections, move them, resize blocks, edit particle settings, apply inheritance — all via JSON, not the drag-and-drop UI.
 
@@ -36,7 +44,7 @@ No direct database writes. Every Joomla operation goes through the same code pat
 
 **🎫 Handle support tickets.** Pull Freshdesk tickets, contacts, and conversation history; add internal notes; update ticket status — all from the same agent workflow.
 
-**🛡️ Operate safely.** Snapshot any target before a risky operation and restore it if something goes wrong. Every Gantry write tool auto-backs up and supports `dryRun: true`.
+**🛡️ Operate safely.** Every Gantry write tool auto-backs up before saving and supports `dryRun: true`. `gantry_layout { action: "backups" | "undo" }` lists those backups and reverts the last write.
 
 **🌐 Work across multiple sites.** Switch the active site at any time. Gantry tools accept a `site` parameter and maintain per-site login sessions.
 
@@ -54,8 +62,8 @@ apps/
   knowledge-gateway-mcp/   AI Knowledge Gateway access
   agents-mcp/              LLM-backed sub-agent tool handlers
   agent-runtime/           Dashboard backend (auth, chat sessions, jobs)
-  mockup-analyzer/         Python MCP server — mockup image analysis
 packages/                  Shared workspace libraries (env, logging, transport)
+reference/design-corpus/   Scraped fleet design data (read-only, no code)
 config/                    Agent scopes, user registry (gitignored), examples
 docs/                      Architecture and API notes
 scripts/                   See the table below
@@ -196,285 +204,149 @@ The next phase adds a web frontend for the team, backed by a new `apps/agent-run
 
 ## 🛠️ Joomla MCP — Tool Reference
 
-Form-level HTTP automation against the Joomla admin backend. Logs in with your credentials, captures CSRF tokens, and submits the same forms the admin UI uses. All operations reversible via snapshot/restore.
+Form-level HTTP automation against the Joomla admin backend. Logs in with your credentials, captures CSRF tokens, and submits the same forms the admin UI uses. No direct database writes — extension hooks and workflow state stay correct.
+
+**29 tools.** Every entity tool is action-dispatched (`joomla_article { action: "list" | "get" | "create" | … }`) rather than one tool per verb. Destructive actions are dry-run by default and take `confirm: true` to execute.
 
 ---
 
 ### 🔑 Session
 
-**`joomla_login`** — Authenticates and initializes session cookies. Most tools call this automatically, but you can call it explicitly to verify credentials or refresh an expired session.
+**`joomla_login`** — Logs in to Joomla admin. Pass `site_url` to switch sites; omitted, it uses `JOOMLA_BASE_URL`. Normally implicit — `set_active_site` on the orchestrator primes the session for you.
 
 ---
 
-### 📄 Articles
+### 📄 Content
 
-**`joomla_list_articles`** — Paginated article list with IDs, titles, categories, publish states, authors, and creation dates. Filters: category, state, search text.
+**`joomla_article`** — `list | get | create | update | delete | checkin`. Body content is raw HTML: write literal `<` and `>`, never entity-encoded tags. `list` reports a warning in its message whenever Joomla applied a different filter than the one requested — read it, and treat the rows as incomplete when it appears.
 
-**`joomla_get_article`** — Full content and metadata for a single article — HTML body, introtext, fulltext, meta fields, access level, language, custom fields.
+**`joomla_category`** — `list | get | create | update | delete | checkin`.
 
-**`joomla_create_article`** — Creates a new article with full control over title, content, category, alias, publish state, featured flag, access level, metadata, and publishing dates.
-
-**`joomla_update_article`** — Updates any field on an existing article by ID. Partial updates are safe — only provided fields change.
-
-**`joomla_delete_article`** — Moves an article to trash (Joomla's two-step delete).
-
-**`joomla_checkin_article`** — Releases a checked-out article locked by a previous session.
-
----
-
-### 🗂️ Categories
-
-**`joomla_list_categories`** — Lists all content categories with IDs, titles, aliases, parent IDs, publish states, and nesting levels.
-
-**`joomla_get_category`** — Full details for a single category including description, parent, access level, and metadata.
-
-**`joomla_create_category`** — Creates a new content category with title, alias, description, parent, publish state, and access.
-
-**`joomla_update_category`** — Updates an existing category. Safe for partial updates.
-
-**`joomla_delete_category`** — Moves a category to trash. Child categories and articles are not automatically moved.
-
-**`joomla_checkin_category`** — Releases a checked-out category lock.
+**`joomla_bulk_checkin`** — Lists every checked-out item site-wide. Pass `confirm: true` to release them all.
 
 ---
 
 ### 📦 Modules
 
-**`joomla_list_modules`** — Lists all modules with IDs, titles, types, positions, publish states, and menu assignments.
+**`joomla_module`** — `list | get | create | update | delete | toggle | checkin`.
 
-**`joomla_list_module_types`** — Every available module type installed on the site.
+**`joomla_module_type`** — `list | inspect | list_positions`. Call this to discover types and positions before creating a module.
 
-**`joomla_list_module_positions`** — All template positions defined by the active template.
-
-**`joomla_inspect_module_type`** — Full parameter schema for a given module type. Call before creating.
-
-**`joomla_get_module`** — Full configuration of an existing module including all custom parameters.
-
-**`joomla_create_module`** — Creates a module of any type with position, ordering, menu assignment, and all type-specific parameters.
-
-**`joomla_update_module`** — Updates an existing module. Partial updates preserve existing settings.
-
-**`joomla_delete_module`** — Moves a module to trash.
-
-**`joomla_toggle_module`** — Publishes or unpublishes a module in a single call.
-
-**`joomla_checkin_module`** — Releases a checked-out module lock.
-
-**`joomla_export_module_blueprint`** — Exports a module's full configuration as a portable YAML file.
-
-**`joomla_import_module_blueprint`** — Creates a module from a previously exported YAML blueprint.
+> **Known bug:** `joomla_module { action: "update" }` silently no-ops the `content` field on `mod_custom`. `create` respects it. To change content, delete and recreate, then verify with `get` — not with the `verification.verified` flag.
 
 ---
 
-### 🗺️ Menus & Menu Items
+### 🗺️ Menus
 
-**`joomla_list_menus`** — All menus on the site with IDs, titles, types, and item counts.
+**`joomla_menu`** — `list | create` (menu containers).
 
-**`joomla_create_menu`** — Creates a new menu container.
+**`joomla_menu_item`** — `list | get | create | update | delete | destroy | toggle | checkin`. `delete` trashes the item — the row survives and keeps reserving its alias. `destroy` removes the row for real.
 
-**`joomla_list_menu_items`** — All items in a given menu including full hierarchy and ordering.
+**`joomla_menu_item_type`** — `list | inspect`. Call before creating a menu item.
 
-**`joomla_list_menu_item_types`** — Every available menu item type grouped by component.
-
-**`joomla_inspect_menu_item_type`** — Full parameter schema for a specific menu item type. Always call before creating a non-trivial item.
-
-**`joomla_get_menu_item`** — Full configuration of an existing menu item.
-
-**`joomla_create_menu_item`** — Creates a new menu item of any type. Supports all advanced options: CSS class, browser target, access level, language, ordering.
-
-**`joomla_update_menu_item`** — Updates an existing menu item. Safe for partial updates.
-
-**`joomla_delete_menu_item`** — Moves a menu item to trash. Child items are not automatically affected.
-
-**`joomla_toggle_menu_item`** — Publishes or unpublishes a menu item without a full form cycle.
-
-**`joomla_checkin_menu_item`** — Releases a checked-out menu item lock.
+> `list` shows the top-level ancestor as `parentId`/`parentTitle` for display grouping, not the true immediate parent. Use `get` to verify actual nesting.
 
 ---
 
-### 👥 Users & Groups
+### 👥 Users & Access
 
-**`joomla_list_users`** — Lists all user accounts with IDs, usernames, emails, groups, and states.
+**`joomla_user`** — `list | get | create | update`. Set `requireReset: 1` on every new account. Usernames are the full email address.
 
-**`joomla_get_user`** — Full details for a single user account.
+**`joomla_group`** — `list | create | delete`.
 
-**`joomla_create_user`** — Creates a new user account with username, email, password, and group assignments.
-
-**`joomla_update_user`** — Updates an existing user account.
-
-**`joomla_list_groups`** — Lists all user groups defined on the site.
-
-**`joomla_create_group`** — Creates a new user group.
-
-**`joomla_delete_group`** — Deletes a user group.
-
----
-
-### 🔐 Permissions
-
-**`joomla_get_category_permissions`** — Returns the current permission settings for a category across all user groups.
-
-**`joomla_set_category_permissions`** — Sets category-level permissions (create, edit, delete, etc.) for one or more user groups.
-
-**`joomla_get_article_permissions`** — Returns article-level permission overrides for a specific article.
-
-**`joomla_set_article_permissions`** — Sets article-level permission overrides, useful for restricting access to individual articles within a shared category.
+**`joomla_permissions`** — `get | set` ACL rules. `resource: category | article`.
 
 ---
 
 ### 🔍 Admin Introspection & Generic Automation
 
-**`joomla_backend_inventory`** — Map of every accessible admin section with menu paths and URLs. Starting point for components without a dedicated tool.
+The escape hatch for any admin screen without a dedicated tool.
 
-**`joomla_inspect_admin_form`** — Loads any admin form and returns its full field structure — every input with its current value, type, name, and options. Read the form, build a payload, submit with `joomla_submit_admin_form`.
+**`joomla_backend_inventory`** — Discovers the admin surface: components, module types, menu item types, Gantry outlines.
 
-**`joomla_inspect_admin_list`** — Loads any admin list view and returns rows with IDs, titles, states, and other visible columns.
+**`joomla_inspect_admin_form`** — Inspects any admin edit form by path. Returns fields, options, hidden fields, token. `rawHtml: true` returns the raw page HTML.
 
-**`joomla_submit_admin_form`** — Posts a form to any admin URL with a provided field payload. Handles CSRF injection automatically.
+**`joomla_inspect_admin_list`** — Inspects an admin list page. Returns filters, headers, row IDs, toolbar tasks.
 
-**`joomla_page_content`** — Returns raw HTML/text of any admin page. Useful for reading status messages, errors, or info not exposed by structured APIs.
+**`joomla_submit_admin_form`** — Submits an admin form. Preserves existing fields and injects CSRF. Dry-run by default; set `confirm: true` to submit.
 
-**`joomla_bulk_checkin`** — Releases all checked-out items of a given type in a single call.
+**`joomla_component_inspect`** — Explores any admin component path in form or list mode.
+
+**`joomla_site_config_inspect`** — Reads global site configuration fields.
+
+**`joomla_redirects_list`** — Lists URL redirects.
 
 ---
 
 ### 📸 Frontend Verification
 
-**`joomla_get_frontend_page`** — Fetches a rendered frontend page by URL and returns HTML. Verifies published content appears correctly after backend changes.
+**`joomla_get_frontend_page`** — Fetches a frontend page. Returns title, headings, body text, links, images, OG meta, template, and module positions.
 
-**`joomla_get_frontend_screenshot`** — Captures a screenshot of a frontend page for visual verification.
+**`joomla_get_frontend_screenshot`** — Captures a browser screenshot. Injects admin session cookies so unpublished preview content renders.
 
-**`joomla_verify_frontend_content`** — Checks a frontend page for specific text or element presence, returning pass/fail with context.
+**`joomla_inspect_frontend`** — Inspects one region of a rendered page in a real browser: DOM structure, box-model geometry, and the CSS rules that actually match. Use it when a screenshot shows something off and you need to know which rule is responsible. `ruleCount: 0` on a block class means the class has no CSS on this site.
 
----
-
-### 🗄️ Media Library
-
-**`joomla_media_list`** — Lists files and folders in the Joomla media library at a given path.
-
-**`joomla_media_create_folder`** — Creates a new folder in the media library.
-
-**`joomla_media_upload`** — Uploads a file to the media library at a specified path.
-
-**`joomla_media_delete`** — Deletes a file or folder from the media library.
-
-**`joomla_media_rename`** — Renames a media file or folder.
-
-**`joomla_media_move`** — Moves a media file to a different folder.
+**`joomla_verify_frontend_content`** — Asserts that specific strings and CSS classes are present or absent in a rendered page.
 
 ---
 
-### 📡 FTP File Operations
+### 🗄️ Media & Documents
 
-Direct file access to the site's server — useful for custom CSS/JS, service key files, hero images, and any asset not manageable through Joomla's media library.
+**`joomla_media`** — `list | create_folder | upload | delete | rename | move`. **Images only.** Never browse it for PDFs, forms, or documents — those live in DOCman or FILEman.
 
-**`ftp_list_files`** — Lists files and directories at a given FTP path.
+**`joomla_docman_document`** — `list | get | create | update | delete`.
 
-**`ftp_read_file`** — Reads the contents of a file on the server.
+**`joomla_docman_category`** — `list | get | create | update | delete`.
 
-**`ftp_upload_file`** — Uploads content as a new file at the specified path. Whole-file overwrite.
-
-**`ftp_append_file`** — Adds text to the end of an existing file. The server keeps the existing bytes, so they never pass back through the caller. Prefer this over `ftp_upload_file` when you add a section to a file that already exists.
-
-**`ftp_upload_local_file`** — Uploads a local file from the workspace to the server.
-
-**`ftp_delete_file`** — Deletes a file from the server.
-
-**`ftp_mkdir`** — Creates a directory on the server.
-
-**`ftp_site_config`** — Returns FTP connection details for the active site.
+**`joomla_fileman_list_files`** — Lists FILEman files and subfolders. Paths are relative to the FILEman container root, typically `images/stories`.
 
 ---
 
-### 🎫 Freshdesk Integration
+### 📁 Workspace
 
-Read and update support tickets without leaving the agent workflow. Used during the support ticket resolution flow (see the Support Agent Workflow in the Knowledge Gateway: `knowledge_universal { action: "list", tag: "workflow" }`).
+**`joomla_workspace_write`** — Writes a file into the server sandbox at `/app/workspace/`. Use it to hand generated JSON/YAML/HTML to another tool without re-emitting the content through the model.
 
-**`freshdesk_list_tickets`** — Lists open tickets with filters for status, priority, and assignee.
-
-**`freshdesk_get_ticket`** — Full details for a single ticket including description, status, priority, and requester.
-
-**`freshdesk_get_contact`** — Returns contact details for a ticket requester.
-
-**`freshdesk_get_company`** — Returns company details associated with a ticket, including the site URL used to switch the active Joomla site.
-
-**`freshdesk_get_conversations`** — Returns the full conversation thread for a ticket — all replies, notes, and timestamps. Always call this before working a ticket.
-
-**`freshdesk_add_note`** — Adds a private internal note to a ticket. Used to document what was investigated and what was changed.
-
-**`freshdesk_update_ticket`** — Updates ticket fields — status, priority, assignee. Requires user confirmation before resolving.
+**`joomla_workspace_read`** — Reads a file back out of `/app/workspace/`.
 
 ---
 
-### 📊 DOCman Document Management
+### 📡 FTP File Operations — `ftp-mcp` (8 tools)
 
-For sites running the DOCman document management extension.
+`ftp_site_config` · `ftp_list_files` · `ftp_read_file` · `ftp_mkdir` · `ftp_upload_file` · `ftp_upload_local_file` · `ftp_append_file` · `ftp_delete_file`
 
-**`joomla_docman_list_documents`** — Lists documents with IDs, titles, categories, and download URLs.
-
-**`joomla_docman_list_categories`** — Lists DOCman categories.
-
-**`joomla_docman_get_document`** — Full details for a single document.
-
-**`joomla_docman_get_category`** — Full details for a DOCman category.
-
-**`joomla_docman_create_document`** — Creates a new document entry.
-
-**`joomla_docman_create_category`** — Creates a new DOCman category.
-
-**`joomla_docman_update_document`** — Updates an existing document.
-
-**`joomla_docman_update_category`** — Updates a DOCman category.
-
-**`joomla_docman_delete_document`** — Deletes a document.
-
-**`joomla_docman_delete_category`** — Deletes a DOCman category.
-
-**`joomla_fileman_list_files`** — Lists files in a file manager extension (eXtplorer / Phoca Download).
+> `upload_path` and `pub_path` are one aliased directory, not two. See `workflows/ftp-css-smoke-test`.
 
 ---
 
-### 🔄 Snapshot & Restore
+### 🎫 Freshdesk Integration — `freshdesk-mcp` (7 tools)
 
-**`joomla_snapshot_target`** — Captures the current state of any supported entity (article, module, menu item, outline) as a named snapshot. Use before any risky change.
-
-**`joomla_restore_snapshot`** — Restores a previously captured snapshot, reverting the entity to its saved state.
+`freshdesk_list_tickets` · `freshdesk_get_ticket` · `freshdesk_get_conversations` · `freshdesk_add_note` · `freshdesk_update_ticket` · `freshdesk_get_contact` · `freshdesk_get_company`
 
 ---
 
-### 🏗️ Site Build Pipeline
+### 🧠 Knowledge Gateway — `knowledge-gateway-mcp` (5 tools)
 
-**`joomla_plan_site_build`** — Takes a natural-language brief and produces a structured, ordered build plan: categories, articles, menus, modules, and layout regions.
+`knowledge_universal` · `knowledge_client` · `knowledge_self_improving` · `knowledge_audit` · `agent_audit`
 
-**`joomla_apply_site_build`** — Executes a build plan in dependency order. Returns a report of every action with success/failure status and created IDs.
-
-**`joomla_validate_site_build`** — Audits the site against a build plan. Checks every planned item was created correctly, relationships are intact, and no orphaned items exist.
-
-**`joomla_launch_checklist`** — Runs a comprehensive pre-launch audit independent of any build plan. Returns a prioritized list of issues to address before going live.
+Workflow guides and KB articles are rows in `knowledge_universal`, read by name through `read_agent_doc`. See `kb/knowledge-gateway`.
 
 ---
 
-### 🎨 Gantry 5 Blueprints (via Joomla MCP)
+### 🤖 Sub-Agent Handlers — `agents-mcp` (9 tools)
 
-**`joomla_gantry5_export_outline_blueprint`** — Exports a complete Gantry 5 outline (layout, styles, page settings) as a portable YAML file.
+LLM-backed and deterministic stages that run in their own context windows.
 
-**`joomla_gantry5_import_outline_blueprint`** — Imports a blueprint, recreating the layout and settings in a target outline.
-
----
-
-### ⚙️ Site & Component Tools
-
-**`joomla_site_config_inspect`** — Returns full Joomla Global Configuration: database, SEO, cache, mail, metadata defaults.
-
-**`joomla_component_inspect`** — Configuration and current state of any installed component by option name.
-
-**`joomla_redirects_list`** — All URL redirects with source, destination, status code, and enabled state.
-
-**`joomla_subsites_list`** — Lists subsites in multi-site installations.
-
-**`joomla_sponsors_list`** / **`joomla_sponsor_inspect`** — Sponsor records from the sponsors component.
-
-**`joomla_workspace_write`** — Writes content to the agent's local workspace (useful for staging files before FTP upload).
+| Tool | Stage | Engine |
+|---|---|---|
+| `run_menu_interpretation` | Menu PDF → Menu Spec | Sonnet 5 |
+| `run_menu_build` | Menu Spec → Joomla skeleton | Haiku 4.5 |
+| `derive_content_schematic` | Menu Spec → Content Schematic | deterministic |
+| `run_content_interpretation` | PDF → schematic content fields | Sonnet 5 |
+| `discover_source_urls` | Find old-site source pages | deterministic |
+| `fetch_source_content` | Fetch source pages to markdown | deterministic |
+| `run_content_build` | Source → house-style article HTML | Sonnet 5 |
+| `apply_content` | Written HTML → live articles | deterministic |
+| `agent_ping` | Health check | — |
 
 ---
 
@@ -563,7 +435,7 @@ Always call `gantry_layout{action:"sections"}` or `gantry_layout{action:"tree"}`
 
 **`gantry_layout{action:"undo"}`** — Restores the most recent backup — one-step undo of the last write.
 
-**`gantry_layout_restore`** — Restores a specific backup by filename or the keyword `latest`.
+> A specific backup is restored by passing its filename to `gantry_layout { action: "undo" }`; omit the filename to revert the most recent write.
 
 ---
 
@@ -624,4 +496,4 @@ Workflow guides and knowledge base articles live under `docs/agents/`. Agents re
 
 **Snapshot before mutating.** Any operation that could cause data loss is guarded by a snapshot or auto-backup. Restore tools are first-class, not an afterthought.
 
-**Discover before acting.** Introspection tools (`joomla_inspect_module_type`, `joomla_inspect_menu_item_type`, `joomla_inspect_admin_form`, `gantry_layout{action:"sections"}`, `gantry_layout{action:"tree"}`) are designed to be called before write operations so the agent can read a form's schema, understand what parameters exist, and construct a correct payload — rather than guessing.
+**Discover before acting.** Introspection tools (`joomla_module_type{action:"inspect"}`, `joomla_menu_item_type{action:"inspect"}`, `joomla_inspect_admin_form`, `gantry_layout{action:"sections"}`, `gantry_layout{action:"tree"}`) are designed to be called before write operations so the agent can read a form's schema, understand what parameters exist, and construct a correct payload — rather than guessing.

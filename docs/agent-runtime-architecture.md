@@ -32,7 +32,7 @@ The MCP suite already has the *hands* (Joomla/Gantry/Freshdesk/FTP tool servers)
         ▼                       ▼   ▼   ▼   ▼   ▼                       ▼
   joomla-mcp :9300      gantry-mcp :9301  ...  freshdesk :9303    agents-mcp :3506
   Joomla admin          Gantry layouts        ftp :9304           LLM sub-agents:
-  + site workspace      + outlines/styles     mockup :9305        • menu-interpreter
+  + site workspace      + outlines/styles                         • menu-interpreter
   (specs, schematics,                                             • menu-builder
    source md, html)     knowledge-gateway-mcp :9306               • content-interpreter
                         thin proxy ──────────────────────┐        • content-writer

@@ -2154,6 +2154,30 @@ export class JoomlaClient {
     return this.inspectAdminForm(data.path, data.formId);
   }
 
+  /**
+   * The Media Manager root is not the web root, and it is not `images/` on every site —
+   * some serve from `images/stories/`. Nothing in the com_media UI states the root, so a
+   * caller cannot tell whether `folder: "stories"` means "the subfolder stories" or "the
+   * root, which happens to be named stories". Derive it from the src of any listed file:
+   * the listing already returns a correct public path for every file, so the root is that
+   * path with the file name and the folder being listed stripped off.
+   */
+  private deriveMediaRoot(files: Array<{ src?: string }>, currentFolder: string): string | null {
+    const first = files.find((file) => file.src)?.src;
+    if (!first) return null;
+    let pathname = first;
+    try {
+      pathname = new URL(first, this.getBaseUrl()).pathname;
+    } catch {
+      // Already a site-relative path — use it as-is.
+    }
+    const dir = decodeURIComponent(pathname).replace(/\/[^/]*$/, "");
+    const folder = currentFolder.replace(/^\/+|\/+$/g, "");
+    const suffix = folder && folder !== "root" ? "/" + folder : "";
+    const root = suffix && dir.endsWith(suffix) ? dir.slice(0, -suffix.length) : dir;
+    return root.replace(/^\/+|\/+$/g, "") + "/";
+  }
+
   async mediaList(pathOrFolder = "index.php?option=com_media"): Promise<JoomlaResponse> {
     const pathValue = pathOrFolder.includes("index.php")
       ? pathOrFolder
@@ -2219,6 +2243,9 @@ export class JoomlaClient {
       data: {
         path: pathValue,
         folder: currentFolderDecoded || "root",
+        // The resolved Media Manager root, so a caller can tell a subfolder name from a
+        // root that merely shares that name. upload rejects a folder the root already is.
+        mediaRoot: this.deriveMediaRoot(files, currentFolderDecoded),
         files,
         subfolders,
         forms: this.parseAdminForms(html).map((form) => ({
@@ -3392,8 +3419,21 @@ export class JoomlaClient {
       [token.name]: token.value,
     };
 
+    let orderingWarning = "";
     if (data.ordering !== undefined) {
-      formData["jform[ordering]"] = data.ordering;
+      // `ordering` is the raw jos_content.ordering column, NOT a 1-based list position.
+      // com_content's article.xml defines the field, so Joomla binds and saves it, but the
+      // edit layout never renders it — there is no select to validate against, and no error
+      // path either. Joomla sorts the category by this column, so a value past the highest
+      // one in the category puts the article last no matter what position was intended, and
+      // every readback still reports verified. Warn on every write until the tool reorders
+      // through articles.saveOrderAjax, which is the only route with true positional meaning.
+      formData["jform[ordering]"] = String(data.ordering);
+      orderingWarning =
+        `ordering "${data.ordering}" was written to the article's raw ordering column, not to ` +
+        `position ${data.ordering} in the category. Joomla sorts the category by that column, ` +
+        `so a value above the category's highest lands the article last. Confirm the result in ` +
+        `the category list (sorted by Ordering) before you rely on it.`;
     }
 
     const result = await this.postPage(editUrl, formData, { prefetchedHtml: html });
@@ -3437,6 +3477,7 @@ export class JoomlaClient {
       success: verified,
       message: verified ? "Article saved" : (errorMsg ?? (successMsg ? "Article save submitted, but updated values were not verified" : "Unknown result")),
       data: this.buildOperationData("article", id, {
+        warnings: orderingWarning ? [orderingWarning] : [],
         title: article.title || expectedTitle,
         state: article.state || expectedState,
         verification: this.collapseVerification(verification, verified),
@@ -3673,6 +3714,7 @@ export class JoomlaClient {
     parentId?: string;
     description?: string;
     published?: string;
+    access?: string;
     extension?: string;
   }): Promise<JoomlaResponse> {
     const ext = data.extension || "com_content";
@@ -3695,7 +3737,7 @@ export class JoomlaClient {
       "jform[parent_id]": data.parentId || "1",
       "jform[description]": data.description || "",
       "jform[published]": data.published ?? "1",
-      "jform[access]": "1",
+      "jform[access]": data.access ?? "1",
       [token.name]: token.value,
     };
 
@@ -3752,6 +3794,7 @@ export class JoomlaClient {
         parentMatches: !!verify?.success && category.parentId === String(data.parentId || "1"),
         descriptionMatches: !!verify?.success && this.isEquivalentRichText(String(category.description || ""), String(data.description || "")),
         publishedMatches: !!verify?.success && category.published === String(data.published ?? "1"),
+        accessMatches: !!verify?.success && String(category.access || "") === String(data.access ?? "1"),
       };
     };
     let verification = buildVerification(verify);
@@ -3791,6 +3834,7 @@ export class JoomlaClient {
       parentId?: string;
       description?: string;
       published?: string;
+      access?: string;
       ordering?: string;
     }
   ): Promise<JoomlaResponse> {
@@ -3813,7 +3857,7 @@ export class JoomlaClient {
       "jform[parent_id]": data.parentId ?? existingCategory.parentId,
       "jform[description]": data.description ?? existingCategory.description,
       "jform[published]": data.published ?? existingCategory.published,
-      "jform[access]": existingCategory.access || "1",
+      "jform[access]": data.access ?? existingCategory.access ?? "1",
       [token.name]: token.value,
     };
 
@@ -3846,6 +3890,7 @@ export class JoomlaClient {
       parentMatches: verify.success && category.parentId === String(formData["jform[parent_id]"] || ""),
       descriptionMatches: verify.success && this.isEquivalentRichText(String(category.description || ""), String(formData["jform[description]"] || "")),
       publishedMatches: verify.success && category.published === String(formData["jform[published]"] || ""),
+      accessMatches: verify.success && String(category.access || "") === String(formData["jform[access]"] || ""),
     };
     const verified = Object.values(verification).every((value) => value === true);
 
@@ -4655,7 +4700,8 @@ export class JoomlaClient {
       formData["jform[assigned][]"] = data.assigned;
     }
 
-    for (const [key, value] of Object.entries(data.params || {})) {
+    const paramWarnings: string[] = [];
+    for (const [key, value] of Object.entries(this.normalizeModuleParams(data.params || {}, paramWarnings))) {
       formData[`jform[params][${key}]`] = value;
     }
 
@@ -4710,6 +4756,7 @@ export class JoomlaClient {
       success: verified,
       message: verified ? "Module saved" : (errorMsg ?? (successMsg ? "Module save submitted, but updated values were not verified" : "Unknown result")),
       data: this.buildOperationData("module", id, {
+        warnings: paramWarnings,
         title: String(module.title || formData["jform[title]"] || ""),
         state: String(module.published || formData["jform[published]"] || ""),
         position: String(module.position || formData["jform[position]"] || ""),
@@ -4718,6 +4765,34 @@ export class JoomlaClient {
       }),
       html: result.html,
     };
+  }
+
+  /**
+   * Joomla core module chrome writes the class suffix straight onto the wrapper:
+   * `<div class="moduletable<?php echo $params->get('moduleclass_sfx'); ?>">`. A suffix
+   * with no leading space fuses onto `moduletable` and destroys both classes. Nothing an
+   * agent can read shows the fault: the admin field, the tool readback and the saved
+   * record all echo the value exactly as typed, so only the rendered page reveals it.
+   * Gantry 5's own chrome inserts a space of its own, so the same value works on a Gantry
+   * position and fails through {loadposition} — which is what makes this expensive to spot.
+   * A leading space is harmless where it is not needed (HTML collapses the pair), so
+   * normalize every time rather than guessing which chrome will render the module.
+   */
+  private normalizeModuleParams(
+    params: Record<string, string>,
+    warnings: string[],
+  ): Record<string, string> {
+    const normalized: Record<string, string> = { ...params };
+    const suffix = normalized.moduleclass_sfx;
+    if (typeof suffix === "string" && suffix.trim() !== "" && !/^\s/.test(suffix)) {
+      normalized.moduleclass_sfx = ` ${suffix}`;
+      warnings.push(
+        `moduleclass_sfx "${suffix}" was saved as " ${suffix}" — a leading space was added. ` +
+        `Joomla core chrome concatenates the suffix onto the wrapper class, so without it the ` +
+        `module renders class="moduletable${suffix}" and neither class matches any CSS rule.`,
+      );
+    }
+    return normalized;
   }
 
   async createModule(data: {
@@ -4791,7 +4866,8 @@ export class JoomlaClient {
       formData["jform[assigned][]"] = data.assigned;
     }
 
-    for (const [key, value] of Object.entries(data.params || {})) {
+    const paramWarnings: string[] = [];
+    for (const [key, value] of Object.entries(this.normalizeModuleParams(data.params || {}, paramWarnings))) {
       formData[`jform[params][${key}]`] = value;
     }
 
@@ -4869,6 +4945,7 @@ export class JoomlaClient {
         ? "Module saved"
         : (errorMsg ?? (successMsg ? "Module save submitted, but creation was not verified" : "Module save was rejected by Joomla and no alert message was returned")),
       data: this.buildOperationData("module", savedId, {
+        warnings: paramWarnings,
         title: String(module.title || data.title),
         state: String(module.published || data.published || "1"),
         position: String(module.position || data.position || ""),
@@ -7566,7 +7643,7 @@ export class JoomlaClient {
     folder?: string;
     dryRun?: boolean;
     confirm?: boolean;
-  }): Promise<JoomlaResponse> {
+  }, internal: { rootRetry?: boolean } = {}): Promise<JoomlaResponse> {
     if (!data.fileUrl && !(data.base64Content && data.fileName)) {
       return { success: false, message: "Either fileUrl or (base64Content + fileName) is required" };
     }
@@ -7666,6 +7743,30 @@ export class JoomlaClient {
           verifiedInListing: resolved.found,
         },
       };
+    }
+
+    // "Invalid folder provided." with a folder that IS the media root's own last segment
+    // means the folder was appended to a root it already names (root images/stories/ plus
+    // folder "stories" resolves to images/stories/stories). list accepts that value and
+    // upload does not, so the two calls disagree and the raw Joomla string explains
+    // neither. Retry once at the root and say plainly what was dropped and why.
+    if (!internal.rootRetry && targetFolder && /invalid folder provided/i.test(errorMsg || "")) {
+      const rootListing = await this.mediaList("index.php?option=com_media");
+      const mediaRoot = String(((rootListing.data || {}) as Record<string, unknown>).mediaRoot || "");
+      const rootTail = mediaRoot.replace(/\/+$/, "").split("/").pop() || "";
+      const wanted = targetFolder.replace(/^\/+|\/+$/g, "");
+      if (rootTail && rootTail.toLowerCase() === wanted.toLowerCase()) {
+        const retried = await this.uploadMediaFile({ ...data, folder: "" }, { rootRetry: true });
+        if (retried.success) {
+          return {
+            ...retried,
+            message:
+              `${retried.message} — NOTE: the folder "${targetFolder}" was dropped. This site's ` +
+              `Media Manager root is already "${mediaRoot}", so "${targetFolder}" resolved to ` +
+              `"${mediaRoot}${wanted}", which does not exist. Omit the folder parameter to upload here.`,
+          };
+        }
+      }
     }
 
     // Some sites (FILEman/Koowa-guarded media roots) reject the plain com_media

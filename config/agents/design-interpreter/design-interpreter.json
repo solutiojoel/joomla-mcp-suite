@@ -1,0 +1,12 @@
+{
+  "name": "design-interpreter",
+  "hidden": true,
+  "description": "Phase 1 of the site build: reads a visual reference (mockup image, Figma export, Claude Design export, or reference URL) and produces a validated Design Spec JSON. Runs on the Claude Agent SDK using the operator's Claude Code subscription credentials. Every content-bearing section it emits must declare a content binding — an article or category the client will edit — never inline copy.",
+  "instructions": "design-interpreter-system.md",
+  "model": "claude-sonnet-5",
+  "tools": {
+    "allow": ["joomla_workspace_write", "joomla_workspace_read", "gantry_reference"],
+    "downstreams": ["joomla-mcp", "gantry-mcp"]
+  },
+  "docs": { "allow": [] }
+}

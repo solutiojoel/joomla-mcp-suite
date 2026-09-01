@@ -23,6 +23,7 @@ Do this before any other tool call — the active scope controls which tools are
 | Support tickets, Freshdesk triage | `support` |
 | Menu build (PDF → spec → Joomla skeleton) | `menu-build` |
 | Content build (schematic → written pages on the skeleton) | `content-build` |
+| Site build (mockup / Figma / Claude Design export → live Gantry homepage) | `site-build` |
 | Everything else (design, content, config, investigation) | `super_shannon` |
 
 **Recognizing a support ticket (do not miss this):** if the user's message is **just a number** (e.g. `35478`), a `#`-prefixed number (`#35478`), a Freshdesk ticket URL, or mentions a "ticket" / "Freshdesk" / "support" — it is a **support ticket**. Switch to `support` and begin the Support Ticket Workflow immediately. A bare 4–6 digit number on its own is **always** a Freshdesk ticket ID — treat it as one; never respond with "what would you like to work on?" or fall through to `super_shannon`.
@@ -114,7 +115,7 @@ knowledge_universal { action: "list", tag: "workflow" }  ← working a specific 
 
 Working a specific ticket returns **two** docs under `tag: "workflow"` — follow both:
 - **Support Agent Workflow** — Steps 1–10 (load context, switch site, investigate, plan, execute, log, draft notes, resolve). Includes how to **read ticket attachments** (the `attachment_url` is a ~5-min signed S3 link — re-fetch the ticket for a fresh URL, download with curl, open with `Read`; never use `WebFetch`).
-- **Support Agent — Human Handoff** — the `human_agent` model. Every fix is presented as **one ordered resolution roadmap** whose steps are tagged by owner — **[AI]**, **[Human]**, or **[Client]** — with dependencies inline and a separate **Blockers** section for anything (usually a client decision or missing info) that must be resolved before a step can run. Route to **[Human]** (don't attempt) anything needing contracts, Google Workspace / calendar, mailbox access, Jotform / PDF Filler fillable PDFs & forms, Gantry troubleshooting, or cost estimates. Do not resolve a ticket while [Human]/[Client] steps or blockers are outstanding.
+- **Support Agent — Human Handoff** — the `human_agent` model. Every fix is presented as **one ordered resolution roadmap** whose steps are tagged by owner — **[AI]**, **[Human]**, or **[Client]** — with dependencies inline and a separate **Blockers** section for anything (usually a client decision or missing info) that must be resolved before a step can run. Route to **[Human]** (don't attempt) anything needing contracts, Google Workspace / calendar, mailbox access, Jotform / PDF Filler fillable PDFs & forms, Gantry template install/recovery, or cost estimates. Routine Gantry edits (outlines, particles, section CSS, page settings) are an `[AI]` step — the support agent has the `gantry_*` tools. Do not resolve a ticket while [Human]/[Client] steps or blockers are outstanding.
 
 The old `workflows/freshdesk-agent` doc is retired and no longer resolves — the Knowledge Gateway holds the live workflow. The support agent's `get_agent_instructions` handles this correctly; this note is for any other agent or human referencing CLAUDE.md.
 
@@ -133,11 +134,16 @@ Every doc below is a Knowledge Gateway row. Call `read_agent_doc(doc: "<name>")`
 | `workflows/content-agent` | Standard article text, SEO, and publish state edits |
 | `workflows/custom-page-agent` | Pages with custom CSS/JS, FTP asset uploads, Raw Tags modules |
 | `workflows/page-animation` | Animation and hover baseline for a custom page — scroll reveal, hover states, reduced-motion and no-JS fallbacks. Read it with `workflows/custom-page-agent` on every custom page build. |
-| `workflows/gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, and CSS selector conventions |
-| `workflows/gantry-particle-map` | Gantry particle settings, rendered HTML anchors, and particle selection/CSS targeting map |
-| `workflows/gantry-visual-qa` | Visual QA loop after any layout or CSS work — screenshots, checklist, CSS iteration |
+| `workflows/site-build` | Site build — visual reference → Design Spec → live Gantry outline. The content-binding contract, the Design Spec schema, the two approval gates, the sub-agent offload map, and the defect taxonomy. |
+| `workflows/gantry-section-css` | Gantry rendered section HTML, max-width containers, section backgrounds, CSS selector conventions, and **the three CSS deployment approaches**. The authority for anything CSS. |
+| `workflows/gantry-visual-qa` | Visual QA loop after any layout or CSS work — deep `joomla_inspect_frontend` usage, three-width screenshots, per-section checklists |
 | `workflows/ftp-css-smoke-test` | End-to-end validation that FTP upload → Gantry Page Settings → live page emission works; use before custom page builds or after server migrations |
-| `workflows/gantry-design-agent` | Solutio Gantry design workflow — step-by-step process for building or rebuilding a homepage layout |
+| `workflows/kit-testing` | Wiring and verifying the AI-first Studius kit (`apps/gantry-mcp/templates/kit/`) on a reference/test site — the test-path CDN substitute, the Base outline asset-row swap, editor wiring, verification steps. Read `workflows/gantry-section-css` for the older css2 model it replaces; the two are not merged. |
+
+> **Retired 2026-08-26:** `workflows/gantry-design-agent` and
+> `workflows/gantry-particle-map` no longer resolve. The first is replaced by
+> `workflows/site-build`; the second by `gantry_reference{topic:"particles"}`.
+> Both bodies survive in the gateway under `doc-group:archive`.
 
 The process improvement queue is no longer a doc — it is `knowledge_universal { tag: "improvements" }` for open findings, and `tag: "improvements-archive"` for resolved ones.
 
@@ -149,6 +155,10 @@ Knowledge base articles for specific issue types — call `read_agent_doc(doc: "
 |----------|-------|
 | `kb/tinymce-safe-html` | Article HTML rules that survive a human TinyMCE save — empty-element bug, CSS `::before` icons, growable lists. Read with `workflows/custom-page-agent`. |
 | `kb/module-class-suffix` | Module Class Suffix leading-space quirk — a suffix with no leading space fuses onto `moduletable` and kills both classes. Read with `workflows/custom-page-agent`. |
+| `kb/quicklinks-particle` | Quicklinks particle requirements for the AI-first Studius kit — content shape, a11y floor, tokens available. No CSS recipe; the AI writes the CSS fresh per build. |
+| `kb/rotator-particle` | Rotator/slideshow particle requirements for the AI-first Studius kit — what the particle's own settings already handle vs. what needs CSS. No CSS recipe. |
+| `kb/news-grid-particle` | News/article grid particle requirements for the AI-first Studius kit — content shape, image/title/overlay choices left to the AI, a11y floor, tokens available. No CSS recipe. Pairs with `kb/grid-layout` for the Joomla/Gantry setup mechanics. |
+| `kb/subpage-hero-title` | Subpage hero/title banner requirements for the AI-first Studius kit — image sources, the one-real-heading a11y floor (legacy JS destroyed it), missing-image fallback. No CSS recipe. |
 | `kb/staff-grid` | Staff/team grid using contentarray particle |
 | `kb/staff-pages` | All staff page layouts (grid, teacherbox, table, contact form) |
 | `kb/teacher-pages` | Teacher/classroom pages with sidebar nav and user groups |

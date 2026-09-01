@@ -1,0 +1,662 @@
+/* ============================================================================
+   blocks.css — the composite patterns worth sharing
+   ----------------------------------------------------------------------------
+   Part of the AI-first Studius kit. Requires tokens.css.
+
+   WHAT THIS FILE IS FOR
+   ----------------------
+   Category 1 is design variation, and the whole point of the AI-first kit is
+   that category 1 mostly goes away: the AI writes a design's CSS fresh, faster
+   than a person can look up which variant class to type. kb/quicklinks-particle
+   and kb/rotator-particle say this outright — they describe what the particle
+   needs and deliberately ship no CSS recipe.
+
+   So this file is small on purpose. A pattern earns a place here only if it
+   passes the one test category 1 does not usually pass:
+
+     The CSS has to know markup the build cannot restructure.
+
+   That is true in exactly three situations, and each block below is one of
+   them:
+
+     * A Gantry particle emits a fixed .g-content-array nest. You cannot move
+       those wrappers; you can only reset them. Doing that once is real reuse.
+     * A Joomla component emits a fixed blog-layout nest (.items-row .item
+       .page-header h2 a). Same argument.
+     * A third-party embed emits markup nobody here controls and the vendor
+       changes without warning — Elfsight, FORMED, a bare iframe.
+
+   A pattern that is only "the way this design happens to look" is not here.
+   There is no rounded-corner variant, no lower-titles variant, no three-pack.
+   headlines.2.0.css was 1,675 lines of exactly that; it is not carried over.
+
+   THE CARD GRID WAS WRITTEN, THEN CUT
+   -------------------------------------
+   A .card-grid block distilled from the .ph-* family sat here briefly — one
+   grid, three knobs, passing the same .g-content-array-nest test the reset
+   above passes. It came out anyway: the news/article grid is a look, and a
+   fixed nest does not change that a design brief still has real choices to
+   make about it — column count, image shape, hover, card surface. That is
+   exactly the AI-writes-it-fresh case, same as quicklinks and the rotator's
+   arrows and dots. kb/news-grid-particle is the requirements guide; there is
+   no CSS recipe here or anywhere else in the kit.
+
+   THE NAMED VARIANTS OTHER KIT FILES FORWARD-REFERENCE TO THIS ONE
+   -----------------------------------------------------------------
+   Two file headers promised these to blocks.css before it existed. Each one
+   was considered and each one is deliberately absent, so the promises resolve
+   here rather than dangling:
+
+   * .rounded-menu (studius.2.0.css, promised by features.css) — a nav with
+     rounded dropdown corners and a hover colour. It is not dropped so much as
+     absorbed: boilerplate.css drives all four dropdown corner radii from
+     --nav-dropdown-radius, so "rounded menu" is now one token override in
+     site-tokens.css instead of a nine-rule class. That is the better outcome,
+     and it is why there is no .rounded-menu here.
+
+   * .grand-entry, .floatator, .ql-swiper-sidelinks (slideshow.2.0.css,
+     promised by vendor.css) — plus .modern-dots, .round-swiper-buttons and
+     .fullwidth-swiper from the same file. All six are named looks for one
+     specific homepage: a slideshow with mass times beside it, a slideshow with
+     buttons down one side. kb/rotator-particle calls this category by name and
+     says it is "a one-off composition for that specific build, not a default
+     this particle ships with". Dropped, all six. The rotator default above is
+     the two rules that KB does ask for.
+
+   vendor.css also parks a genuine "restyle Swiper's own bullets and arrows"
+   baseline as unwritten, and it is still unwritten. That is correct: it needs
+   Swiper's actual unstyled output to diff against, and guessing at it is how
+   the six variants above got written in the first place.
+
+   WHAT THIS FILE IS NOT
+   ----------------------
+   Not a token dictionary. widgets.2.0.css declared roughly 60 custom
+   properties — one per CSS property, none with a default — so nothing rendered
+   until a build set all sixty, and a missed one failed silently. Every block
+   below reads the kit's real tokens and exposes only the handful of knobs a
+   design genuinely varies: how many columns, what shape the image is, which
+   surface the card sits on. Every knob has a working default.
+
+   WHERE THIS CONTENT CAME FROM
+   -----------------------------
+   * widgets.2.0.css    the widget-parthenon / widget-container feed cards,
+                        and .staff-grid-open.
+   * studius.2.0.css    the .ministrypage.img-title image-and-title grid.
+   * slideshow.2.0.css  the two-rule rotator default, and nothing else. See
+                        the note above for the six variants that were read and
+                        rejected.
+
+   headlines.2.0.css contributed nothing here. See "THE CARD GRID WAS WRITTEN,
+   THEN CUT" above — its content is a requirements guide, not CSS.
+
+   TWO NAMES ARE KEPT EXACTLY AS THEY WERE
+   ----------------------------------------
+   .staff-grid-open and .ministrypage are live on client sites and named in
+   kb/staff-grid and kb/staff-pages. Renaming them would silently unstyle those
+   pages on the first site that upgrades to the kit, so they keep their names
+   even though neither reads the way the rest of the kit does.
+   ============================================================================ */
+
+@layer kit.blocks {
+
+  /* ==========================================================================
+     THE CONTENT-ARRAY RESET
+     --------------------------------------------------------------------------
+     Every Gantry particle that repeats an item wraps it five deep:
+
+       .g-content-array > .g-grid > .g-block > .g-content > .g-array-item
+
+     Gantry gives four of those five a margin and a padding, so a grid built on
+     a particle has four nested buffers between the gap you asked for and the
+     content you can see. Every block below had its own copy of the same reset;
+     it is written once here instead.
+
+     This is the reason .block-grid exists as a class rather than the reset
+     being applied to .g-content-array globally: a particle that is NOT being
+     used as a grid still wants Gantry's buffers.
+     ========================================================================== */
+
+  .block-grid,
+  .block-grid > .g-content,
+  .block-grid .g-content-array,
+  .block-grid .g-content-array > .g-grid,
+  .block-grid .g-content-array > .g-grid > .g-block,
+  .block-grid .g-content-array > .g-grid > .g-block > .g-content,
+  .block-grid .g-array-item {
+    margin: 0;
+    padding: 0;
+  }
+
+  .block-grid .g-content-array > .g-grid > .g-block,
+  .block-grid .g-content-array > .g-grid > .g-block > .g-content,
+  .block-grid .g-array-item {
+    height: 100%;
+  }
+
+
+  /* ==========================================================================
+     ROTATOR DEFAULT — the swiper particle
+     --------------------------------------------------------------------------
+     Two rules, and deliberately only two. kb/rotator-particle is explicit
+     about this: arrows, dots, autoplay, loop, speed, effect and slides-per-
+     breakpoint are all particle SETTINGS, and writing CSS to fight one of them
+     is almost always wrong. What the particle cannot do from its settings form
+     is crop a badly-shaped source photo and take its size from a token.
+
+     WHY IT IS IN THIS FILE. It is not composite, so it sits oddly next to the
+     three grids below. It is here because this is the file that owns particle
+     markup, and because the alternative — leaving it to each build — is what
+     produced slideshow.2.0.css. That file was 1,498 lines: .modern-dots,
+     .round-swiper-buttons, .fullwidth-swiper, .grand-entry, .floatator and
+     .ql-swiper-sidelinks, every one of them a named look for one homepage.
+     None of them is carried over. They are exactly the "one-off composition
+     for that specific build" kb/rotator-particle says not to make a default.
+
+     THESE FOUR TOKENS HAD NO CONSUMER BEFORE THIS BLOCK. tokens.css and
+     site-tokens.css both define --slideshow-height / -width and the -mobile
+     pair, and nothing in the kit read any of them, so a site that changed its
+     rotator size in site-tokens.css saw no effect at all. This is the rule
+     that makes that token do what site-tokens.css promises it does.
+     ========================================================================== */
+
+  .g-swiper .swiper-slide img {
+    width: var(--slideshow-width);
+    height: var(--slideshow-height);
+    object-fit: cover;
+    object-position: center;
+  }
+
+  @media only screen and (max-width: 50.99rem) {
+    .g-swiper .swiper-slide img {
+      width: var(--slideshow-width-mobile);
+      height: var(--slideshow-height-mobile);
+    }
+  }
+
+
+  /* ==========================================================================
+     WIDGET ROW — .widget-row and .widget-card
+     --------------------------------------------------------------------------
+     The feed-card band: two to four cards across, each one a title, a
+     third-party embed, and a button under it. FlockNote, FORMED, the Facebook
+     feed and the Daily Readings feed are the four that exist today.
+
+     THIS IS THE CLEAREST CASE FOR THE FILE. The middle of each card is markup
+     from somebody else's script — an iframe with no height, or an Elfsight
+     div tree six levels deep. The card has to impose a height on something
+     that does not declare one, and it has to do it without knowing what the
+     vendor emits this month. That is not design variation; that is a contract
+     with a third party, and it belongs in shared code where one fix reaches
+     every site.
+
+     RENAMED. The legacy names were .widget-parthenon (the section) and
+     .widget-container (the card). "Parthenon" described how one 2019 homepage
+     looked, not what the class does, and there was a .widget-parthenon-alt
+     that differed only in padding. One name, one behaviour.
+
+     KNOBS
+       --widget-row-columns   cards across above the breakpoint         (3)
+       --widget-row-gap       gap between cards               (--space-lg)
+       --widget-card-surface  the feed panel background   (--default-white)
+       --widget-card-radius   feed panel radius              (--radius-md)
+     ========================================================================== */
+
+  .widget-row {
+    --widget-row-columns:  3;
+    --widget-row-gap:      var(--space-lg);
+    --widget-card-surface: var(--default-white);
+    --widget-card-radius:  var(--radius-md);
+  }
+
+  .widget-row > .g-container > .g-grid,
+  .widget-row > .g-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--widget-row-columns), 1fr);
+    gap: var(--widget-row-gap);
+    align-items: stretch;
+  }
+
+  @media only screen and (max-width: 50.99rem) {
+    .widget-row > .g-container > .g-grid,
+    .widget-row > .g-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .widget-row > .g-container > .g-grid > .g-block.widget-card,
+  .widget-row > .g-grid > .g-block.widget-card {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* The card is a column: title, then feed, then button. The feed takes all
+     the leftover height, which is what makes three cards holding three
+     different embeds end at the same line. */
+  .widget-card .widget-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    height: 100%;
+  }
+
+  .widget-card .widget-title .g-title {
+    margin: 0;
+    padding: 0;
+    color: var(--h3-color);
+    font-family: var(--h3-font-family);
+    font-size: var(--h3-font-size);
+    font-weight: var(--h3-font-weight);
+    line-height: var(--h3-line-height);
+    text-align: center;
+    border-bottom: none;
+  }
+
+  .widget-card .widget-feed {
+    flex: 1;
+    overflow: hidden;
+    background: var(--widget-card-surface);
+    border-radius: var(--widget-card-radius);
+    box-shadow: var(--card-box-shadow);
+  }
+
+  .widget-card .widget-feed .widget-feed-inner-box {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* An embedded iframe reports no useful intrinsic height, so without this it
+     renders at the HTML default of 150px regardless of its content. */
+  .widget-card .widget-feed iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  /* Elfsight (the Facebook feed) renders into nested wrappers that each set
+     their own height from script. Letting them fill rather than fighting each
+     measurement is the only stable way to sit one inside a fixed-height card. */
+  .widget-card .widget-feed .eapps-widget,
+  .widget-card .widget-feed .widget-feed-inner-box > div {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  /* FORMED supplies a poster image rather than a feed. */
+  .widget-card .widget-feed-inner-box > img,
+  .widget-card .widget-feed-inner-box img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .widget-card .widget-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* The button itself is typography.css's a.button. Nothing is restated here;
+     only the placement is this file's business. */
+
+  /* A row where the cards are links in their own right and a button under each
+     would be redundant. */
+  .widget-row.no-buttons .widget-button {
+    display: none;
+  }
+
+  /* --- Daily Readings feed ------------------------------------------------
+     A Joomla newsfeed module, so this is Joomla's markup rather than a
+     vendor's, but it sits in the same card and needs the same height
+     discipline. */
+
+  .widget-card.daily-readings .widget-feed-inner-box {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .widget-card.daily-readings .dr-feed-image img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .widget-card.daily-readings .dr-feed-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .widget-card.daily-readings .dr-feed-box .newsfeed {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .widget-card.daily-readings .dr-feed-box .newsfeed > li {
+    margin: 0;
+    padding: var(--space-2xs) 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .widget-card.daily-readings .dr-feed-box .newsfeed > li:last-child {
+    border-bottom: none;
+  }
+
+  .widget-card.daily-readings .dr-feed-box .newsfeed > li .feed-link a {
+    color: var(--link-color);
+    transition: var(--default-transition);
+  }
+
+  .widget-card.daily-readings .dr-feed-box .newsfeed > li .feed-link a:hover {
+    color: var(--link-hover-color);
+  }
+
+
+  /* ==========================================================================
+     IMAGE-TITLE GRID — .ministrypage.img-title
+     --------------------------------------------------------------------------
+     A Joomla category blog whose every item becomes a photo with its title
+     centred on top of it. Used for ministry, sacrament and club index pages,
+     which is how it got its name.
+
+     WHY IT IS HERE. com_content's blog layout emits a fixed nest —
+     .items-row > .item > .page-header > h2 > a — and puts the image in a
+     sibling .item-image. Turning that into an overlay means absolutely
+     positioning one over the other, which only works if the CSS knows the nest
+     exactly. A build cannot restructure com_content's output, so it cannot
+     write this fresh.
+
+     THE OVERLAY IS THE ACCESSIBILITY RISK. Title text sits on a photograph
+     the client chooses, so contrast cannot be guaranteed by the palette. The
+     scrim below is not decoration: it is the floor that keeps the text legible
+     over an unknown image, and it darkens on hover rather than lightening, so
+     contrast only ever improves. Do not reduce --img-title-scrim below .35
+     without checking the actual photographs.
+
+     KNOBS
+       --img-title-columns   items across above the breakpoint          (3)
+       --img-title-height    tile height             (clamped, viewport-scaled)
+       --img-title-scrim     overlay opacity at rest                   (.35)
+       --img-title-radius    tile corner radius             (--radius-md)
+     ========================================================================== */
+
+  .ministrypage.img-title {
+    --img-title-columns: 3;
+    --img-title-height:  clamp(9rem, 13vw, 11.7rem);
+    --img-title-scrim:   .35;
+    --img-title-radius:  var(--radius-md);
+  }
+
+  .ministrypage.img-title .items-row {
+    display: grid;
+    grid-template-columns: repeat(var(--img-title-columns), 1fr);
+    gap: var(--space-md);
+  }
+
+  @media only screen and (max-width: 50.99rem) {
+    .ministrypage.img-title .items-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .ministrypage.img-title .row-fluid {
+    margin-bottom: var(--space-lg);
+    border-bottom: none;
+  }
+
+  .ministrypage.img-title .items-row .item {
+    position: relative;
+    height: var(--img-title-height);
+    border-radius: var(--img-title-radius);
+    overflow: hidden;
+  }
+
+  /* The image and the header are siblings; both are stretched over the tile so
+     the header can sit on the image. */
+  .ministrypage.img-title .items-row .item > div {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+  }
+
+  .ministrypage.img-title .items-row .item .item-image img,
+  .ministrypage.img-title #g-container-main .blogministrypage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .ministrypage.img-title .items-row .item .page-header {
+    z-index: 10;
+    inset: 0;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .ministrypage.img-title .items-row .item .page-header h2 {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border-bottom: none;
+    text-shadow: var(--default-text-shadow);
+  }
+
+  .ministrypage.img-title .items-row .item .page-header h2 a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: var(--default-white);
+    background: rgba(var(--default-black-rgb), var(--img-title-scrim));
+    transition: var(--slow-transition);
+  }
+
+  .ministrypage.img-title .items-row .item .page-header h2 a:hover,
+  .ministrypage.img-title .items-row .item .page-header h2 a:focus-visible {
+    background: rgba(var(--default-black-rgb), calc(var(--img-title-scrim) + .25));
+  }
+
+  /* The tile IS the link. A "read more" under it links to the same place and
+     falls outside the tile's clipped box. */
+  .ministrypage.img-title .items-row .item > p.readmore {
+    display: none;
+  }
+
+  /* The plain (non-overlay) ministry list still wants a consistent thumbnail
+     rather than whatever height the uploaded photo happens to be. */
+  .ministrypage .item .pull-left.item-image img {
+    width: 100%;
+    height: var(--img-title-height, clamp(9rem, 13vw, 11.7rem));
+    object-fit: cover;
+    object-position: center;
+  }
+
+  @media only screen and (max-width: 50.99rem) {
+    .ministrypage.img-title .row-fluid {
+      margin-bottom: 0;
+    }
+    .ministrypage.img-title .items-row .item {
+      margin-bottom: var(--space-xs);
+    }
+    .ministrypage.img-title .items-row .item .page-header h2 {
+      font-size: var(--h4-size);
+    }
+  }
+
+
+  /* ==========================================================================
+     STAFF GRID, EXPANDING — .staff-grid-open
+     --------------------------------------------------------------------------
+     A staff grid where the card opens in place to show the bio. Name kept
+     verbatim: it is live on client sites and named in kb/staff-grid.
+
+     WHY IT IS HERE. The open and closed states are driven by a script that
+     toggles .is-open on .g-array-item. CSS and JS have to agree on a class
+     name and on which element carries it, and that agreement is the thing
+     worth sharing. See kb/staff-grid for the particle setup and the script.
+
+     THE CARET. The legacy version drew it with a FontAwesome codepoint in
+     `content`, which fails silently to a blank box on any site where the icon
+     font did not load — and it announced that box to a screen reader. Drawn
+     with a CSS border here, so it has no font dependency, and marked
+     aria-hidden by being a pseudo-element with no text.
+
+     KNOBS
+       --sgo-columns          cards across above the breakpoint         (4)
+       --sgo-columns-mobile   cards across below it                     (2)
+       --sgo-gap              gap between cards               (--space-lg)
+       --sgo-surface          card background            (--default-white)
+       --sgo-portrait-size    portrait width as a share of the card   (50%)
+     ========================================================================== */
+
+  .staff-grid-open {
+    --sgo-columns:        4;
+    --sgo-columns-mobile: 2;
+    --sgo-gap:            var(--space-lg);
+    --sgo-surface:        var(--default-white);
+    --sgo-portrait-size:  50%;
+  }
+
+  .staff-grid-open .g-content-array {
+    display: grid;
+    grid-template-columns: repeat(var(--sgo-columns), 1fr);
+    gap: var(--sgo-gap);
+    align-items: start;
+  }
+
+  @media only screen and (max-width: 50.99rem) {
+    .staff-grid-open {
+      --sgo-columns: var(--sgo-columns-mobile);
+      --sgo-gap: var(--space-md);
+    }
+  }
+
+  .staff-grid-open .g-content-array > .g-grid {
+    background: var(--sgo-surface);
+    box-shadow: var(--card-box-shadow);
+    border-radius: var(--radius-md);
+    transition: var(--default-transition);
+  }
+
+  .staff-grid-open .g-array-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    cursor: pointer;
+  }
+
+  .staff-grid-open .g-array-item:hover {
+    filter: brightness(.98);
+  }
+
+  .staff-grid-open .g-array-item-image {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-xl) var(--space-xl) 0;
+  }
+
+  /* The portrait links to the article. The card's own click handler opens the
+     bio, so letting the image swallow the click sends people to a page they
+     did not ask for. */
+  .staff-grid-open .g-array-item-image a {
+    width: 100%;
+    pointer-events: none;
+  }
+
+  .staff-grid-open .g-array-item-image img {
+    width: var(--sgo-portrait-size);
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-circle);
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* No portrait uploaded yet. Same reasoning as the card grid: a placeholder
+     keeps the row aligned where a missing image would ragged it. */
+  .staff-grid-open .g-array-item:not(:has(.g-array-item-image img)) .g-array-item-image::before,
+  .staff-grid-open .g-array-item:not(:has(.g-array-item-image))::before {
+    content: '';
+    display: block;
+    width: var(--sgo-portrait-size);
+    aspect-ratio: 1 / 1;
+    margin-inline: auto;
+    border-radius: var(--radius-circle);
+    background-image: var(--default-staff-image);
+    background-size: cover;
+    background-position: center;
+  }
+
+  .staff-grid-open .g-array-item-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2xs);
+    padding: var(--space-sm) var(--space-md);
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .staff-grid-open .g-item-title,
+  .staff-grid-open .g-item-title a {
+    margin: 0;
+    padding: 0;
+    border: none;
+    color: var(--h5-color);
+    font-family: var(--h5-font-family);
+    font-size: var(--h5-font-size);
+    font-weight: var(--h5-font-weight);
+    line-height: var(--h5-line-height);
+    text-align: center;
+  }
+
+  /* Closed. `visibility: hidden` rather than `display: none` so the height
+     transition has something to animate and so the bio is out of the tab
+     order while it is closed. */
+  .staff-grid-open .g-array-item-text {
+    height: 0;
+    padding-inline: var(--space-md);
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--default-transition);
+  }
+
+  .staff-grid-open .g-array-item.is-open .g-array-item-text {
+    height: auto;
+    padding-block: var(--space-md);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* The caret. A rotated border triangle, so it does not depend on an icon
+     font, and it points down when closed and up when open. */
+  .staff-grid-open .g-array-item::after {
+    content: '';
+    align-self: center;
+    width: .6rem;
+    height: .6rem;
+    margin-bottom: var(--space-md);
+    border-right: 2px solid var(--border-strong);
+    border-bottom: 2px solid var(--border-strong);
+    transform: rotate(45deg);
+    transform-origin: center;
+    transition: var(--default-transition);
+  }
+
+  .staff-grid-open .g-array-item.is-open::after {
+    transform: rotate(225deg);
+  }
+
+}

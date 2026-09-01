@@ -34,7 +34,6 @@ export interface DownstreamDef {
 export const DOWNSTREAM_DEFAULTS: readonly DownstreamDef[] = Object.freeze([
   { label: "freshdesk-mcp", port: 9303, inject: null },
   { label: "ftp-mcp", port: 9304, inject: "site_url" },
-  { label: "mockup-analyzer", port: 9305, inject: null },
   { label: "knowledge-gateway-mcp", port: 9306, inject: null },
   { label: "joomla-mcp", port: 9300, inject: "site_url" },
   { label: "gantry-mcp", port: 9301, inject: "site" },

@@ -14,7 +14,6 @@
 #   orchestrator          -> 9302  (what Claude Desktop and mcp-target.ps1 connect to)
 #
 # Optional services (opt in with a switch):
-#   -WithMockup        mockup-analyzer -> 9305   (needs Python)
 #   -WithDashboard     sub-agent run dashboard -> 3507
 #   -WithAgentRuntime  agent-runtime -> 18310
 #   -All               all three of the above
@@ -30,7 +29,6 @@
 # and skipped, or freed first with -Restart.
 
 param(
-    [switch]$WithMockup,
     [switch]$WithDashboard,
     [switch]$WithAgentRuntime,
     [switch]$All,
@@ -40,7 +38,6 @@ param(
 $ErrorActionPreference = 'Stop'
 
 if ($All) {
-    $WithMockup       = $true
     $WithDashboard    = $true
     $WithAgentRuntime = $true
 }
@@ -56,7 +53,6 @@ $core = @(
 )
 
 $optional = @()
-if ($WithMockup)       { $optional += @{ Name = 'mockup-mcp';    Port = 9305 } }
 if ($WithDashboard)    { $optional += @{ Name = 'dashboard';     Port = 3507 } }
 if ($WithAgentRuntime) { $optional += @{ Name = 'agent-runtime'; Port = 18310 } }
 

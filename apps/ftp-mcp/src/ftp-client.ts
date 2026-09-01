@@ -15,6 +15,66 @@ export interface JoomlaResponse {
 
 const MAX_TEXT_FILE_BYTES = 200 * 1024;
 
+// A base64 upload carries the bytes inside the MCP call itself, so it needs a
+// ceiling. 12 MB of source decodes to ~9 MB — comfortably above any CSS/JS
+// asset or a scanned-form PDF, well below a memory problem.
+const MAX_BASE64_DECODED_BYTES = 12 * 1024 * 1024;
+
+/**
+ * Extensions whose bytes are not UTF-8 text. `ftp_upload_file` encodes its
+ * `content` as UTF-8, so writing one of these from a plain string rewrites
+ * every non-ASCII byte — the file lands corrupt with no error (record 120).
+ * A caller must pass `encoding: "base64"` for these.
+ */
+export const BINARY_EXTENSIONS = new Set<string>([
+  "pdf",
+  "png", "jpg", "jpeg", "gif", "webp", "bmp", "ico", "tif", "tiff", "avif", "heic",
+  "zip", "gz", "tgz", "tar", "rar", "7z", "bz2",
+  "woff", "woff2", "ttf", "otf", "eot",
+  "mp3", "mp4", "m4a", "mov", "avi", "wmv", "wav", "ogg", "webm", "flac",
+  "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+  "odt", "ods", "odp", "rtf",
+]);
+
+/** Lower-cased extension of a path, or "" when it has none. */
+export function extensionOf(p: string): string {
+  const base = p.slice(p.lastIndexOf("/") + 1);
+  const dot = base.lastIndexOf(".");
+  return dot > 0 ? base.slice(dot + 1).toLowerCase() : "";
+}
+
+/**
+ * True when `s` survives a UTF-8 round trip byte-for-byte — i.e. it is safe to
+ * store as `Buffer.from(s, "utf8")` with no silent loss. Lone surrogates and
+ * bytes that are not valid UTF-8 text fail this.
+ */
+export function isUtf8Safe(s: string): boolean {
+  return Buffer.from(s, "utf8").toString("utf8") === s;
+}
+
+/**
+ * Decode base64 strictly. Node's decoder silently drops invalid characters and
+ * tolerates missing padding, so a truncated or mangled payload would write a
+ * short file with no error. Re-encode the result and require it to match the
+ * input (padding aside); reject anything that does not.
+ */
+export function decodeBase64Strict(input: string): { buffer: Buffer } | { error: string } {
+  const cleaned = input.replace(/\s+/g, "");
+  if (cleaned === "") return { error: "base64 content is empty." };
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleaned)) {
+    return { error: 'content is not valid base64 (unexpected characters). Send the file\'s raw base64 with encoding:"base64".' };
+  }
+  const buffer = Buffer.from(cleaned, "base64");
+  const reencoded = buffer.toString("base64").replace(/=+$/, "");
+  if (reencoded !== cleaned.replace(/=+$/, "")) {
+    return { error: "base64 content did not round-trip — it is truncated or corrupted. Re-encode the whole file and retry." };
+  }
+  if (buffer.length > MAX_BASE64_DECODED_BYTES) {
+    return { error: `decoded file is ${buffer.length} bytes; the limit for a base64 upload is ${MAX_BASE64_DECODED_BYTES} bytes. Upload it another way.` };
+  }
+  return { buffer };
+}
+
 interface FtpSiteConfig {
   host: string;
   web_root: string;
@@ -340,7 +400,57 @@ export class FtpClient {
     return Buffer.concat(chunks);
   }
 
-  async uploadFile(remotePath: string, content: string, domain: string): Promise<JoomlaResponse> {
+  /**
+   * Write `content` to `remotePath`, replacing it.
+   *
+   * `encoding` decides how `content` becomes bytes:
+   *  - "utf8" (default) — `content` is text. A binary file cannot survive this:
+   *    every non-ASCII byte is rewritten and the file lands corrupt with no
+   *    error. Refused when the path has a binary extension or the text itself
+   *    is not UTF-8-safe.
+   *  - "base64" — `content` is the file's base64. The bytes travel inside the
+   *    MCP call, so this works no matter where ftp-mcp runs — the remote-safe
+   *    path for a PDF or an image, replacing the co-located-only
+   *    `ftp_upload_local_file`.
+   *
+   * The payload is resolved before the FTP session opens, so a bad `content`
+   * fails without a connection. After the write the file is read back and its
+   * sha256 compared; a base64 mismatch is a hard failure.
+   */
+  async uploadFile(
+    remotePath: string,
+    content: string,
+    domain: string,
+    encoding: "utf8" | "base64" = "utf8"
+  ): Promise<JoomlaResponse> {
+    const ext = extensionOf(remotePath);
+    let buffer: Buffer;
+
+    if (encoding === "base64") {
+      const decoded = decodeBase64Strict(content);
+      if ("error" in decoded) return { success: false, message: decoded.error };
+      buffer = decoded.buffer;
+    } else {
+      if (BINARY_EXTENSIONS.has(ext)) {
+        return {
+          success: false,
+          message:
+            `Refusing to write "${remotePath}" as UTF-8 text: ".${ext}" is a binary format and a text ` +
+            `upload corrupts it — every non-ASCII byte is rewritten. Re-send with encoding:"base64" and ` +
+            `the file's base64 content. That path works regardless of where ftp-mcp runs.`,
+        };
+      }
+      if (!isUtf8Safe(content)) {
+        return {
+          success: false,
+          message:
+            `Refusing to write "${remotePath}": the content has bytes that are not valid UTF-8 text, so ` +
+            `storing it as text would corrupt it. If this is a binary file, re-send with encoding:"base64".`,
+        };
+      }
+      buffer = Buffer.from(content, "utf8");
+    }
+
     const conn = await this.connect(domain, "write");
     if ("error" in conn) return { success: false, message: conn.error };
 
@@ -360,7 +470,6 @@ export class FtpClient {
     }
 
     try {
-      const buffer = Buffer.from(content, "utf8");
       await this.putBuffer(client, remotePath, buffer);
 
       // sha256 of exactly the bytes written. Callers that built `content` by
@@ -369,13 +478,48 @@ export class FtpClient {
       // file round-tripped — not just the lines they thought to spot-check.
       const sha256 = crypto.createHash("sha256").update(buffer).digest("hex");
 
+      // Read the file back and prove the bytes landed. A text file can differ
+      // by line-ending translation — a warning, not a failure. A base64 upload
+      // must match exactly; a mismatch there means real corruption, so fail.
+      let verified: boolean | null = null;
+      let remoteSha256: string | null = null;
+      try {
+        const readback = await this.getBuffer(client, remotePath);
+        remoteSha256 = crypto.createHash("sha256").update(readback).digest("hex");
+        verified = readback.equals(buffer);
+        if (!verified) {
+          if (encoding === "base64") {
+            client.close();
+            return {
+              success: false,
+              message:
+                `Upload of "${remotePath}" did not verify: ${buffer.length} bytes sent, ${readback.length} read back ` +
+                `(local sha256 ${sha256.slice(0, 12)}…, remote ${remoteSha256.slice(0, 12)}…). The file on the server is ` +
+                `wrong — retry, and check the FTP path is not behind a transform.`,
+              data: { path: remotePath, bytes_sent: buffer.length, bytes_readback: readback.length, sha256, remote_sha256: remoteSha256 },
+            };
+          }
+          warnings.push(
+            "Read-back does not match the bytes sent — the server may have translated line endings. " +
+            "Compare sha256 against a local copy before you rely on this file."
+          );
+        }
+      } catch {
+        warnings.push("Upload succeeded but the read-back check could not run. Confirm the file with ftp_read_file.");
+      }
+
       return {
         success: true,
-        message: `Uploaded ${buffer.length} bytes to ${remotePath} on ${domain} (sha256 ${sha256.slice(0, 12)}…)`,
+        message:
+          `Uploaded ${buffer.length} bytes to ${remotePath} on ${domain} ` +
+          `(${encoding}, sha256 ${sha256.slice(0, 12)}…${verified === true ? ", verified" : ""})`,
         data: {
           path: remotePath,
           bytes: buffer.length,
+          encoding,
           sha256,
+          remote_sha256: remoteSha256,
+          verified,
           verify_hint: "Compare against the local file: sha256sum <file> (or Get-FileHash -Algorithm SHA256 <file>). Equal hashes mean the whole file matches; a byte count alone does not.",
           warnings,
         },
@@ -572,9 +716,9 @@ export class FtpClient {
           `Local file not found: ${localPath}\n\n` +
           `Note: local_path is resolved on the ftp-mcp server's filesystem (host ${os.hostname()}), ` +
           `not the caller's. If this server is running remotely, the caller's local paths will never resolve here.\n` +
-          `Alternatives:\n` +
-          `  • Text/CSS/JS — use ftp_upload_file with the content inline, then verify the returned sha256 against the local file.\n` +
-          `  • Binaries (images, PDFs) — upload via the Gateway Files UI and use the resulting public URL.`,
+          `Use ftp_upload_file instead — it works no matter where ftp-mcp runs:\n` +
+          `  • Text/CSS/JS — pass the content inline, then verify the returned sha256 against the local file.\n` +
+          `  • Binaries (images, PDFs, fonts) — pass encoding:"base64" with the file's base64 content.`,
       };
     }
 
@@ -658,6 +802,11 @@ export class FtpClient {
           "Do not change upload_path to match pub_path. " +
           "upload_path is the images/pub asset bucket; a write target outside it (a DOCman files " +
           "root, for example) must be listed in write_paths for this domain in ftp-sites.json.",
+        binary_upload:
+          "For a PDF, image, or font, call ftp_upload_file with encoding:\"base64\" and the file's " +
+          "base64 content. It carries the bytes in the call, so it works regardless of where ftp-mcp " +
+          "runs. A plain (text) ftp_upload_file to a binary path is refused. Then serve the file from " +
+          "pub_url, e.g. a Gantry particle button link of /images/pub/<name>.pdf.",
       },
     };
   }

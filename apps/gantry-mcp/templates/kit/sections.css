@@ -1,0 +1,180 @@
+/* ============================================================================
+   sections.css — the Gantry section skeleton
+   ----------------------------------------------------------------------------
+   Part of the AI-first Studius kit. Requires tokens.css.
+
+   WHAT THIS FILE IS FOR
+   ----------------------
+   One background rule per Gantry section slot, reading the --section-*-bg
+   tokens tokens.css already defines. Nothing else. tokens.css says this
+   plainly: "sections.css maps each to its #g-<section> and does nothing
+   else" — that promise is why a site can restyle the whole page skeleton by
+   changing tokens alone, never a selector.
+
+   WHAT WAS LEFT OUT OF THE OLD section.css, AND WHERE IT WENT
+   -------------------------------------------------------------
+   The old file (313 lines) mixed three different concerns. Splitting them is
+   the six-category system doing its job, not scope creep:
+
+   * ~175 lines of s-padding-N / s-horizontal-padding-N / s-top-padding-N ...
+     classes (25 vw values x 7 direction variants, every one !important).
+     This is a design-variation lookup table — category 1, the one you said
+     can mostly go because the AI is fast. An AI build sets padding on a
+     section directly when a design calls for it. Cut, not carried forward.
+
+   * ~40 lines of body[class*="-sub"] :has(...) overrides fixing how
+     #g-mainbar and #g-aside share space on subpages. That is a boilerplate
+     adjustment to Gantry's default container behaviour — category 4, "the
+     tricky one." It belongs in boilerplate.css, not here, so it lives next
+     to the rest of the .g- fixes instead of hiding inside the one file that
+     is supposed to be pure token plumbing. Picked up: boilerplate.css now
+     carries it, under SUBPAGE COLUMNS, scoped to body[class*="-sub"] the way
+     the original was. It is reconstructed from behaviour rather than copied,
+     because the old section.css no longer answers on the shared CDN.
+
+   ALSO ABSORBED: footer.css and local-images.css
+   ------------------------------------------------
+   Two more section-level files turned out to belong here once the real
+   Base outline asset list was read end to end:
+
+   * footer.css was one rule — a footer link's hover colour. It is about
+     #g-footer, the section this file already owns, so it sits right after
+     the footer background binding below instead of getting its own file.
+
+   * local-images.css is per-site (content/local-images.css), not shared —
+     the same PNG/JPG background-image toggle repeated for all 24 section
+     slots, wired to --bg-<section>-* custom properties nothing in the old
+     kit ever defined a default for. Kept as a second part of this file,
+     documented in its own section below, since it is the same job as the
+     background-colour bindings above: one #g-<section> selector, one set
+     of tokens, nothing else.
+
+   HOW IT WORKS
+   ------------
+   Every token below already has a default in tokens.css. This file never
+   sets a colour — it only tells each section slot which token to read.
+   Restyling the skeleton for one site is a token override in site-tokens.css,
+   never a new rule here.
+   ============================================================================ */
+
+@layer kit.sections {
+
+/* ----------------------------------------------------------------------------
+   SECTION BACKGROUND COLOURS
+   -------------------------------------------------------------------------- */
+
+#g-page-surround     { background: var(--section-page-surround-bg); }
+#g-container-top     { background: var(--section-container-top-bg); }
+#g-top                { background: var(--section-top-bg); }
+#g-navigation         { background: var(--section-navigation-bg); }
+#g-slideshow          { background: var(--section-slideshow-bg); }
+#g-header             { background: var(--section-header-bg); }
+#g-above              { background: var(--section-above-bg); }
+#g-feature            { background: var(--section-feature-bg); }
+#g-showcase           { background: var(--section-showcase-bg); }
+#g-utility            { background: var(--section-utility-bg); }
+#g-container-main     { background: var(--section-container-main-bg); }
+#g-sidebar            { background: var(--section-sidebar-bg); }
+#g-mainbar            { background: var(--section-mainbar-bg); }
+#g-aside              { background: var(--section-aside-bg); }
+#g-expanded           { background: var(--section-expanded-bg); }
+#g-extension          { background: var(--section-extension-bg); }
+#g-bottom             { background: var(--section-bottom-bg); }
+#g-container-footer   { background: var(--section-container-footer-bg); }
+#g-footer             { background: var(--section-footer-bg); }
+
+/* footer.css: keep footer links readable against whatever --section-footer-bg
+   is set to. */
+#g-footer a:hover {
+  color: var(--default-white);
+}
+
+#g-copyright          { background: var(--section-copyright-bg); }
+#g-offcanvas          { background: var(--section-offcanvas-bg); }
+
+/* The offcanvas mobile menu draws its own dimmed backdrop behind it, and the
+   menu list inside must stay transparent so the backdrop shows through. */
+#g-offcanvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--section-offcanvas-bg-overlay);
+}
+
+#g-offcanvas #g-mobilemenu-container ul {
+  background: transparent;
+}
+
+/* ----------------------------------------------------------------------------
+   SECTION BACKGROUND IMAGES — absorbed from local-images.css
+   ----------------------------------------------------------------------------
+   Opt-in, per section, per use. Add .bg-<section>-p or .bg-<section>-j to a
+   section (PNG or JPG) and set its --bg-position / --bg-repeat / --bg-size /
+   --bg-attachment custom properties — in site-tokens.css for a site-wide
+   background, or inline in that outline's Custom Head for one page. Nothing
+   here has a default: a section with the class but no tokens set renders no
+   image, not a broken one.
+
+   The old file gave every section its own --bg-<section>-position-horiz /
+   -vert / -repeat / -size / -attachment set — 24 sections x 5 axes, no two
+   ever used at once. Collapsed to one shared --bg-* axis set here; a build
+   styling two background sections differently sets the class on each and
+   the shared vars take whatever that section needs at the time.
+   -------------------------------------------------------------------------- */
+
+#g-container-top.bg-container-top-p, #g-container-top.bg-container-top-j,
+#g-top.bg-top-p, #g-top.bg-top-j,
+#g-navigation.bg-navigation-p, #g-navigation.bg-navigation-j,
+#g-slideshow.bg-slideshow-p, #g-slideshow.bg-slideshow-j,
+#g-header.bg-header-p, #g-header.bg-header-j,
+#g-above.bg-above-p, #g-above.bg-above-j,
+#g-feature.bg-feature-p, #g-feature.bg-feature-j,
+#g-showcase.bg-showcase-p, #g-showcase.bg-showcase-j,
+#g-utility.bg-utility-p, #g-utility.bg-utility-j,
+#g-container-main.bg-container-main-p, #g-container-main.bg-container-main-j,
+#g-expanded.bg-expanded-p, #g-expanded.bg-expanded-j,
+#g-extension.bg-extension-p, #g-extension.bg-extension-j,
+#g-bottom.bg-bottom-p, #g-bottom.bg-bottom-j,
+#g-container-footer.bg-container-footer-p, #g-container-footer.bg-container-footer-j,
+#g-footer.bg-footer-p, #g-footer.bg-footer-j,
+#g-copyright.bg-copyright-p, #g-copyright.bg-copyright-j {
+  background-position: var(--bg-position, center);
+  background-repeat: var(--bg-repeat, no-repeat);
+  background-size: var(--bg-size, cover);
+  background-attachment: var(--bg-attachment, scroll);
+}
+
+#g-container-top.bg-container-top-p       { background-image: url('/images/template/bg/bg-container-top.png'); }
+#g-container-top.bg-container-top-j       { background-image: url('/images/template/bg/bg-container-top.jpg'); }
+#g-top.bg-top-p                           { background-image: url('/images/template/bg/bg-top.png'); }
+#g-top.bg-top-j                           { background-image: url('/images/template/bg/bg-top.jpg'); }
+#g-navigation.bg-navigation-p             { background-image: url('/images/template/bg/bg-navigation.png'); }
+#g-navigation.bg-navigation-j             { background-image: url('/images/template/bg/bg-navigation.jpg'); }
+#g-slideshow.bg-slideshow-p               { background-image: url('/images/template/bg/bg-slideshow.png'); }
+#g-slideshow.bg-slideshow-j               { background-image: url('/images/template/bg/bg-slideshow.jpg'); }
+#g-header.bg-header-p                     { background-image: url('/images/template/bg/bg-header.png'); }
+#g-header.bg-header-j                     { background-image: url('/images/template/bg/bg-header.jpg'); }
+#g-above.bg-above-p                       { background-image: url('/images/template/bg/bg-above.png'); }
+#g-above.bg-above-j                       { background-image: url('/images/template/bg/bg-above.jpg'); }
+#g-feature.bg-feature-p                   { background-image: url('/images/template/bg/bg-feature.png'); }
+#g-feature.bg-feature-j                   { background-image: url('/images/template/bg/bg-feature.jpg'); }
+#g-showcase.bg-showcase-p                 { background-image: url('/images/template/bg/bg-showcase.png'); }
+#g-showcase.bg-showcase-j                 { background-image: url('/images/template/bg/bg-showcase.jpg'); }
+#g-utility.bg-utility-p                   { background-image: url('/images/template/bg/bg-utility.png'); }
+#g-utility.bg-utility-j                   { background-image: url('/images/template/bg/bg-utility.jpg'); }
+#g-container-main.bg-container-main-p     { background-image: url('/images/template/bg/bg-container-main.png'); }
+#g-container-main.bg-container-main-j     { background-image: url('/images/template/bg/bg-container-main.jpg'); }
+#g-expanded.bg-expanded-p                 { background-image: url('/images/template/bg/bg-expanded.png'); }
+#g-expanded.bg-expanded-j                 { background-image: url('/images/template/bg/bg-expanded.jpg'); }
+#g-extension.bg-extension-p               { background-image: url('/images/template/bg/bg-extension.png'); }
+#g-extension.bg-extension-j               { background-image: url('/images/template/bg/bg-extension.jpg'); }
+#g-bottom.bg-bottom-p                     { background-image: url('/images/template/bg/bg-bottom.png'); }
+#g-bottom.bg-bottom-j                     { background-image: url('/images/template/bg/bg-bottom.jpg'); }
+#g-container-footer.bg-container-footer-p { background-image: url('/images/template/bg/bg-container-footer.png'); }
+#g-container-footer.bg-container-footer-j { background-image: url('/images/template/bg/bg-container-footer.jpg'); }
+#g-footer.bg-footer-p                     { background-image: url('/images/template/bg/bg-footer.png'); }
+#g-footer.bg-footer-j                     { background-image: url('/images/template/bg/bg-footer.jpg'); }
+#g-copyright.bg-copyright-p               { background-image: url('/images/template/bg/bg-copyright.png'); }
+#g-copyright.bg-copyright-j               { background-image: url('/images/template/bg/bg-copyright.jpg'); }
+
+}

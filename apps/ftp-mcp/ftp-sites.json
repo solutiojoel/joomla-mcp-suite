@@ -3148,6 +3148,12 @@
     "web_root": "/forge/shannon",
     "upload_path": "/forge/shannon/pub"
   },
+  "shannons-playground.forge.solutiosoftware.com": {
+    "host": "forge.solutiosoftware.net",
+    "port": 990,
+    "web_root": "/forge/shannons-playground",
+    "upload_path": "/forge/shannons-playground/pub"
+  },
   "stpat-mockup-restore.forge.solutiosoftware.com": {
     "host": "forge.solutiosoftware.net",
     "port": 990,

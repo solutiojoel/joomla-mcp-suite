@@ -152,7 +152,7 @@ const tools = [
         content: { type: "string", description: "Article body as raw HTML — write literal `<` and `>` (e.g. `<h2>Welcome</h2>`); do NOT entity-encode tags (`&lt;h2&gt;`). Escaped input saves without error but renders as literal tag text on the frontend." },
         state: { type: "string", description: "1=published, 0=unpublished, -2=trashed, 2=archived" },
         access: { type: "string", description: "1=Public, 2=Special, 3=Registered" },
-        ordering: { type: "string", description: "1-based target position within the category's current admin list order (unpublished items included); -1 for first (update only)" },
+        ordering: { type: "string", description: "Raw ordering column value within the category (update only) — NOT a 1-based list position. Joomla sorts the category by this number, so a value above the category's current highest puts the article last. Read the category list sorted by Ordering to see the numbers in use, pick one, then verify the result: an ordering that landed wrong still reports verified." },
         introImage: { type: "string" },
         introImageAlt: { type: "string" },
         featuredImage: { type: "string", description: "Used in listing/blog views" },
@@ -181,6 +181,7 @@ const tools = [
         description: { type: "string", description: "HTML description" },
         published: { type: "string", description: "1=published, 0=unpublished" },
         extension: { type: "string", description: "Component extension (default: com_content)" },
+        access: { type: "string", description: "View access level ID. Site-defined, so read the real options from the category edit form field jform[access] rather than assuming 1/2/3. Gating a category gates every article in it, now and later." },
         ordering: { type: "string", description: "Place after category with this ID. Use -1 for first." },
         search: { type: "string", description: "Server-side title filter (list only)." },
         limit: { type: "number", description: "Per page (default: 200, max: 500)" },
@@ -889,6 +890,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
               description: args?.description as string,
               published: args?.published as string,
               extension: args?.extension as string,
+              access: args?.access as string,
             });
             break;
           }
@@ -902,6 +904,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name
               description: args?.description as string,
               published: args?.published as string,
               ordering: args?.ordering as string,
+              access: args?.access as string,
             });
             break;
           }

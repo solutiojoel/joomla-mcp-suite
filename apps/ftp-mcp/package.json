@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
-    "start:http": "cross-env HTTP_PORT=9304 tsx src/index.ts"
+    "start:http": "cross-env HTTP_PORT=9304 tsx src/index.ts",
+    "test": "npm run build && node --test \"test/*.test.js\""
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

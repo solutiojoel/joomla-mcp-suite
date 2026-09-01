@@ -9,7 +9,6 @@ export GANTRY_MCP_PORT="${GANTRY_MCP_PORT:-9301}"
 export ORCHESTRATOR_PORT="${ORCHESTRATOR_PORT:-5000}"
 export FRESHDESK_MCP_PORT="${FRESHDESK_MCP_PORT:-9307}"
 export FTP_MCP_PORT="${FTP_MCP_PORT:-9304}"
-export MOCKUP_MCP_PORT="${MOCKUP_MCP_PORT:-9305}"
 export KNOWLEDGE_GATEWAY_MCP_PORT="${KNOWLEDGE_GATEWAY_MCP_PORT:-9306}"
 
 # Internal servers bind loopback only; the orchestrator alone is exposed
@@ -22,7 +21,6 @@ export JOOMLA_MCP_URL="${JOOMLA_MCP_URL:-http://127.0.0.1:${JOOMLA_MCP_PORT}/mcp
 export GANTRY_MCP_URL="${GANTRY_MCP_URL:-http://127.0.0.1:${GANTRY_MCP_PORT}/mcp}"
 export FRESHDESK_MCP_URL="${FRESHDESK_MCP_URL:-http://127.0.0.1:${FRESHDESK_MCP_PORT}/mcp}"
 export FTP_MCP_URL="${FTP_MCP_URL:-http://127.0.0.1:${FTP_MCP_PORT}/mcp}"
-export MOCKUP_MCP_URL="${MOCKUP_MCP_URL:-http://127.0.0.1:${MOCKUP_MCP_PORT}/mcp}"
 export KNOWLEDGE_GATEWAY_MCP_URL="${KNOWLEDGE_GATEWAY_MCP_URL:-http://127.0.0.1:${KNOWLEDGE_GATEWAY_MCP_PORT}/mcp}"
 
 # Self-check: the workflow's waitForPort 5000 only resolves when .replit maps
@@ -102,11 +100,6 @@ run_ftp() {
   HTTP_PORT="${FTP_MCP_PORT}" exec node dist/index.js
 }
 
-run_mockup() {
-  cd "$ROOT/apps/mockup-analyzer"
-  HTTP_PORT="${MOCKUP_MCP_PORT}" exec python3 server.py
-}
-
 run_knowledge_gateway() {
   cd "$ROOT/apps/knowledge-gateway-mcp"
   HTTP_PORT="${KNOWLEDGE_GATEWAY_MCP_PORT}" exec node dist/index.js
@@ -136,7 +129,6 @@ supervise joomla-mcp run_joomla &
 supervise gantry-mcp run_gantry &
 supervise freshdesk-mcp run_freshdesk &
 supervise ftp-mcp run_ftp &
-supervise mockup-analyzer run_mockup &
 supervise knowledge-gateway-mcp run_knowledge_gateway &
 
 # The orchestrator opens fresh per-call connections to downstream MCP
@@ -155,7 +147,6 @@ for port in \
   "${GANTRY_MCP_PORT}" \
   "${FRESHDESK_MCP_PORT}" \
   "${FTP_MCP_PORT}" \
-  "${MOCKUP_MCP_PORT}" \
   "${KNOWLEDGE_GATEWAY_MCP_PORT}" \
   "${ORCHESTRATOR_PORT}"; do
   wait_for_port 127.0.0.1 "${port}" &

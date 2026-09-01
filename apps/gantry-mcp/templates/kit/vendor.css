@@ -1,0 +1,306 @@
+/* ============================================================================
+   vendor.css — skinning third-party extension markup
+   ----------------------------------------------------------------------------
+   Part of the AI-first Studius kit. Requires tokens.css.
+
+   WHAT THIS FILE IS FOR
+   ----------------------
+   Fixes for markup this kit does not control: DOCman and FILEman, both built
+   on the Koowa UI framework. This looks like category 2 (default feature
+   styling) and it is not. Category 2 changes on your schedule — you decide
+   when the alert restyles. This file changes on DOCman's or Koowa's release
+   schedule, and it can break on every site at once without any build touching
+   it. Keeping it in its own file means an extension update is one file to
+   check, not a search through the whole kit.
+
+   VERSION THIS WAS WRITTEN AGAINST
+   ---------------------------------
+   DOCman (Koowa UI, `k-ui-namespace` markup) and FILEman, as installed on the
+   forge clone, September 2025. If a document listing or photo gallery folder
+   stops matching this file after an extension update, this is the first place
+   to look — check the vendor's changelog before assuming the bug is here.
+
+   WHAT WAS LEFT OUT, AND WHERE IT WENT
+   ---------------------------------------
+   * The old base.2.0.css buried a `.table-striped` zebra-stripe rule inside
+     the DOCMAN comment block. It is not DOCman markup, and typography.css's
+     `.alternaterows` already does the same job as a class an author can type.
+     Dropped as a duplicate.
+
+   * `body[class*="-sub"]:not(.sponsorshippage) #g-container-main:has(...
+     .com_docman) { padding-top: 0% }` is a fix for how Gantry's own
+     container reacts to DOCman's presence, not a DOCman style. That is
+     boilerplate.css's job (the .g- fixes), not this file's. Now written
+     there, at the end of the SUBPAGE COLUMNS block.
+
+   * Swiper (the slideshow library) is NOT in this file yet. The old kit's
+     Swiper rules (slideshow.2.0.css) are mostly Solutio's own composite
+     block patterns built on top of Swiper — .grand-entry, .floatator,
+     .ql-swiper-sidelinks — which were passed to blocks.css and rejected
+     there as one-off compositions; see its header for the reasoning, and for
+     the two-rule rotator default that replaced all of them. A genuine
+     "restyle Swiper's own default bullets and arrows" baseline needs Swiper's
+     actual unstyled output to diff against, which this audit does not have.
+     Do not guess at it; open a real ticket against Swiper's shipped CSS
+     before writing that section.
+   ============================================================================ */
+
+@layer kit.vendor {
+
+/* ----------------------------------------------------------------------------
+   DOCMAN — document listing modules and inline links
+   -------------------------------------------------------------------------- */
+
+/* DOCman prints a file-size/date line under every listed document by default.
+   Every build here hides it — the title and download link are enough. */
+.docman_download__info,
+.doclink .docman_download__info {
+  display: none;
+}
+
+/* An inline DOCman link (.doclink) repeats the file type twice; the trailing
+   span is the redundant copy. */
+.doclink span:last-child {
+  display: none;
+}
+
+/* Koowa renders a document block's own <h3> header even when the module
+   title already says the same thing above it. */
+.k-ui-namespace .k-js-grid-controller .koowa_table_list > .docman_block > h3.koowa_header {
+  display: none;
+}
+
+/* Koowa's header wraps to a new line by default inside a document list item;
+   force it inline so the list reads as one row per document, not two. */
+.k-ui-namespace .mod_docman ul li .koowa_header {
+  display: flex;
+  padding: 0 0 2px 0;
+}
+
+/* Koowa marks up its own header with generated icon pseudo-elements this kit
+   does not use, and lays several of its own wrapper elements out as blocks
+   where an inline flow reads better inside a module. */
+.k-ui-namespace .koowa_header:before,
+.k-ui-namespace .koowa_header:after {
+  display: none;
+}
+.k-ui-namespace .koowa_header,
+.k-ui-namespace .koowa_header__item,
+.k-ui-namespace .koowa_wrapped_content,
+.k-ui-namespace .mod_docman ul {
+  display: inline-block;
+  width: auto;
+}
+
+/* Koowa's per-document info line (size, date) inside a module listing —
+   same call as .docman_download__info above, different template. */
+.k-ui-namespace .mod_docman ul .module_document__info {
+  display: none;
+}
+
+/* On the homepage layout, lay a DOCman module's document list out as a
+   centred row instead of Koowa's default stacked list. */
+.homelayout .k-ui-namespace .mod_docman.mod_docman--documents {
+  display: flex;
+  justify-content: center;
+}
+
+.k-ui-namespace .mod_docman_icons {
+  padding-bottom: 10px;
+}
+
+/* studius.2.0.css: the document-count category label under a DOCman listing,
+   hidden everywhere it appears. */
+.k-ui-namespace .docman_category {
+  display: none;
+}
+
+/* ----------------------------------------------------------------------------
+   FILEMAN — links and photo-gallery folder grids
+   -------------------------------------------------------------------------- */
+
+/* A plain link to a FILEman folder gets a folder icon in front of its text,
+   so it reads as a file link rather than a normal page link. */
+a[href*="?option=com_fileman"]:before {
+  content: "\f1c1";
+  font-family: FontAwesome;
+  font-weight: normal;
+  margin-right: 10px;
+  display: inline;
+}
+
+/* FILEman's photo-gallery view (opened with the .gallerycolorstrip class on
+   the container) renders each folder as a Koowa media-gallery item. This
+   turns Koowa's grid into the site's folder-tile pattern: a fixed-ratio
+   cover image, a lightbox link for a single file, and a caption strip
+   pinned to the tile's bottom edge. */
+.gallerycolorstrip .koowa_media {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item {
+  padding: 0;
+  width: auto;
+  max-width: auto;
+}
+
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-4 .koowa_media__item {
+  width: auto;
+}
+
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item__content {
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+/* A folder tile (not a single file) — the cover photo, or the placeholder
+   image while a folder has none of its own. */
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item .koowa_media__item__content:not(.file) .koowa_media__item__link {
+  position: relative;
+  width: min(20vw, 288px);
+  height: min(15vw, 216px);
+  max-width: 400px;
+  max-height: 300px;
+  margin-bottom: min(2vw, 28.8px);
+  background: var(--default-photo-gallery-image) 0 0 no-repeat;
+  background-size: cover;
+  box-shadow: 2px 2px 5px rgba(var(--default-black-rgb), .2);
+  transition: all .4s ease-in-out;
+}
+
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item__content img:not(.k-js-image-preview) {
+  position: absolute;
+  inset: 0;
+  width: min(20vw, 288px);
+  height: min(15vw, 216px);
+  max-width: 400px;
+  max-height: 300px;
+  object-fit: cover;
+  object-position: center;
+  z-index: 10;
+}
+
+/* A single-file tile — smaller, no placeholder background. */
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item .koowa_media__item__content.file .koowa_media__item__link {
+  position: relative;
+  width: min(15vw, 216px);
+  max-width: 300px;
+  margin-bottom: min(2vw, 28.8px);
+  background-size: cover;
+  box-shadow: 2px 2px 5px rgba(var(--default-black-rgb), .2);
+  transition: all .4s ease-in-out;
+}
+
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item__content img.k-js-image-preview {
+  width: min(15vw, 216px);
+  max-width: 300px;
+}
+
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item .koowa_media__item__content.file .koowa_media__item__link.js-lightbox-item {
+  margin: 0 auto min(1.2vw, 17.28px) auto;
+  padding: 0;
+  border-radius: min(1vw, 14.4px);
+}
+
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item .koowa_media__item__content.file .koowa_media__item__link.js-lightbox-item:hover {
+  opacity: .8;
+}
+
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item__link {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Widths repeat per column count because Koowa sets its own per-column width
+   inline; each rule here has to out-specify one particular column count. */
+.k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-2 .koowa_media__item,
+.k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-3 .koowa_media__item,
+.k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-4 .koowa_media__item,
+.k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-5 .koowa_media__item,
+.k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-6 .koowa_media__item,
+.k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-7 .koowa_media__item,
+.k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-8 .koowa_media__item,
+.k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-9 .koowa_media__item {
+  width: min(16vw, 230.4px);
+  max-width: 350px;
+}
+
+/* The folder-name caption bar pinned to the bottom of a tile. */
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .overflow_container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .overflow_container > span {
+  width: 100%;
+  padding-block: min(.4vw, 5.76px);
+  margin-bottom: min(2vw, 28.8px);
+  text-align: center;
+  background: rgba(var(--primary-color-rgb), .8);
+  color: var(--default-white);
+  font-weight: 400;
+  transition: all .4s ease-in-out;
+  z-index: 20;
+}
+
+.gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item__link:hover .overflow_container > span {
+  margin-bottom: min(3vw, 43.2px);
+  background: rgba(var(--primary-color-rgb), .8);
+}
+
+/* Koowa's own header positions itself relative to its normal document-list
+   parent; inside a gallery tile that parent is absolutely positioned, so pin
+   the header to the static flow instead or it drifts off the tile. */
+.gallerycolorstrip .k-ui-namespace .koowa_header {
+  position: initial;
+}
+
+/* Koowa's folder icon duplicates the cover photo already shown on the tile. */
+.gallerycolorstrip .k-icon-document-folder.k-icon--size-medium {
+  display: none;
+}
+
+#g-page-surround .gallerycolorstrip .g-content {
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
+@media only screen and (max-width: 767px) {
+  .gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item .koowa_media__item__content:not(.file) .koowa_media__item__link,
+  .gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item__content img:not(.k-js-image-preview) {
+    width: 80vw;
+    height: min(60vw, 864px);
+    max-width: auto;
+    max-height: auto;
+  }
+  .gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item .koowa_media__item__content:not(.file) .koowa_media__item__link {
+    margin-bottom: min(8vw, 115.2px);
+  }
+  .gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item .koowa_media__item__content.file .koowa_media__item__link {
+    width: min(40vw, 576px);
+  }
+  .gallerycolorstrip .k-ui-namespace .koowa_media--gallery .koowa_media__item__content img.k-js-image-preview {
+    width: min(40vw, 576px);
+  }
+  .k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-2 .koowa_media__item,
+  .k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-3 .koowa_media__item,
+  .k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-4 .koowa_media__item,
+  .k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-5 .koowa_media__item,
+  .k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-6 .koowa_media__item,
+  .k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-7 .koowa_media__item,
+  .k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-8 .koowa_media__item,
+  .k-ui-namespace .koowa_media--gallery .koowa_media_contents.columns-9 .koowa_media__item {
+    width: min(45vw, 648px);
+  }
+}
+
+}
