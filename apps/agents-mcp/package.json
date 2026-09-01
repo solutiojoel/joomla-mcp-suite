@@ -16,21 +16,23 @@
     "fetch-content": "tsx src/run-content-fetch.ts",
     "build-content": "tsx src/run-content-build.ts",
     "dashboard": "tsx src/dashboard.ts",
-    "test": "tsx src/bridge.test.ts && tsx src/schematic.test.ts && tsx src/content-build.test.ts && tsx src/credentials.test.ts"
+    "test": "tsx src/bridge.test.ts && tsx src/schematic.test.ts && tsx src/content-build.test.ts && tsx src/site-build.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.201",
     "@anthropic-ai/sdk": "^0.110.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@mozilla/readability": "^0.6.0",
+    "@solutio/env": "^0.1.0",
     "@solutio/logging": "^0.1.0",
     "@solutio/mcp-downstream-client": "^0.1.0",
     "@solutio/mcp-transport": "^0.1.0",
+    "@types/js-yaml": "^4.0.9",
     "dotenv": "^17.4.2",
+    "js-yaml": "^5.4.1",
     "jsdom": "^29.1.1",
     "turndown": "^7.2.4",
-    "zod": "^4.4.3",
-    "@solutio/env": "^0.1.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/jsdom": "^28.0.3",
