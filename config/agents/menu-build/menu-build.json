@@ -12,6 +12,7 @@
       "run_menu_interpretation", "run_menu_build",
       "derive_content_schematic", "run_content_interpretation",
       "joomla_article", "joomla_category", "joomla_menu*",
+      "joomla_module", "joomla_module_type",
       "joomla_media", "joomla_bulk_checkin",
       "joomla_get_frontend_*", "joomla_verify_frontend_content", "joomla_inspect_frontend",
       "joomla_redirects_list", "joomla_site_config_inspect",
@@ -36,6 +37,7 @@
       "kb/grid-layout",
       "kb/staff-grid",
       "kb/staff-pages",
+      "kb/business-directory",
       "kb/content-standards",
       "kb/css-table-classes"
     ]

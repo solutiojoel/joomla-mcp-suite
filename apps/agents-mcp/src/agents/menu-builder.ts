@@ -32,8 +32,10 @@ export interface MenuBuilderResult {
  * interpretation decisions and open_questions already resolved by a human)
  * and mechanically creates the Joomla categories, placeholder articles, and
  * menu items it describes, in a separate context window via the Claude Agent
- * SDK (operator subscription auth — no API key). Runs on Haiku since Phase 4
- * is execution against a spec, not interpretation.
+ * SDK (operator subscription auth — no API key). Model is set in
+ * config/agents/menu-builder/menu-builder.json (Sonnet): Phase 4 is
+ * execution against a spec, but Sonnet holds idempotent search-then-create
+ * discipline and recovers from mid-build errors more reliably than Haiku.
  */
 export async function runMenuBuilder(
   args: MenuBuilderArgs,

@@ -1,9 +1,9 @@
 {
   "name": "menu-builder",
   "hidden": true,
-  "description": "Phase 4 of the menu build: builds the Joomla skeleton (categories, placeholder articles, menu items) from an approved, human-reviewed Menu Spec JSON. Runs on the Claude Agent SDK using the operator's Claude Code subscription credentials (CLAUDE_CODE_OAUTH_TOKEN or local claude login). Uses Haiku — Phase 4 is mechanical execution against a spec whose interpretation decisions are already made.",
+  "description": "Phase 4 of the menu build: builds the Joomla skeleton (categories, placeholder articles, menu items) from an approved, human-reviewed Menu Spec JSON. Runs on the Claude Agent SDK using the operator's Claude Code subscription credentials (CLAUDE_CODE_OAUTH_TOKEN or local claude login). Uses Sonnet for the build. Phase 4 is execution against a human-approved spec, but Sonnet gives more reliable idempotent search-then-create behaviour and better recovery from mid-build errors.",
   "instructions": "menu-builder-system.md",
-  "model": "claude-haiku-4-5-20251001",
+  "model": "claude-sonnet-5",
   "tools": {
     "allow": [
       "joomla_category",

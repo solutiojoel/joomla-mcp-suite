@@ -339,7 +339,7 @@ LLM-backed and deterministic stages that run in their own context windows.
 | Tool | Stage | Engine |
 |---|---|---|
 | `run_menu_interpretation` | Menu PDF → Menu Spec | Sonnet 5 |
-| `run_menu_build` | Menu Spec → Joomla skeleton | Haiku 4.5 |
+| `run_menu_build` | Menu Spec → Joomla skeleton | Sonnet 5 |
 | `derive_content_schematic` | Menu Spec → Content Schematic | deterministic |
 | `run_content_interpretation` | PDF → schematic content fields | Sonnet 5 |
 | `discover_source_urls` | Find old-site source pages | deterministic |

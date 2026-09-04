@@ -155,7 +155,7 @@ const TOOLS = [
     name: "run_menu_build",
     description:
       "Phase 4 of the menu build workflow: mechanically builds the Joomla skeleton (categories, placeholder articles, menu items) from an already-approved Menu Spec JSON. " +
-      "Runs the menu-builder sub-agent in a separate context window (Claude Agent SDK, Haiku — Phase 4 is execution against a spec, not interpretation). " +
+      "Runs the menu-builder sub-agent in a separate context window (Claude Agent SDK, Sonnet — Phase 4 is execution against a spec; Sonnet holds idempotent search-then-create discipline and recovers from mid-build errors). " +
       "Requires 'joomla_ids.menu_map' in the spec, mapping each spec.menus key (e.g. mainmenu, hiddenmenu) to the real Joomla menuType slug created during the Pre-Phase-4 confirmation — " +
       "the sub-agent never creates menus itself. " +
       "It is idempotent (searches before creating), skips items it can't safely build (TBD targets, docman), persists the updated spec with joomla_ids populated via joomla_workspace_write, " +

@@ -83,7 +83,13 @@ Out of scope for this builder. Skip and append: `"DOCman item '<title>' needs ma
 Rare — only when the spec explicitly uses these. Ensure the category exists. Use `joomla_menu_item_type(action: "list")` to find the matching Joomla type (Category Blog / Category List under `com_content`), then create the menu item with `request: { id: "<categoryId>" }`.
 
 ### `alias`
-If `item.target` names another menu item's title, search for it with `joomla_menu_item(action: "list", search: "<target>")` (no `menuId` — it may live on a different menu) and use its ID as `request: { id: "<foundId>" }`. If no match is found, skip and append a `build_notes` entry naming the missing target.
+The alias target is stored in `params.aliasoptions` (a menu item ID) — **not** in `request`.
+
+1. Resolve the target ID: if `item.target` names another menu item's title, search with `joomla_menu_item(action: "list", search: "<target>")` (no `menuId` — it may live on a different menu) and take its ID. If no match, skip and append a `build_notes` entry naming the missing target.
+2. Create the alias item: `itemType: "alias"`, plus `parentId`, `alias`, and `params: { aliasoptions: "<targetId>" }`.
+3. `get` it and confirm `params.aliasoptions` is the target ID and `link` is `index.php?Itemid=<targetId>`. If the target isn't set (a stale joomla-mcp server), `update` it with `fieldOverrides: { "jform[params][aliasoptions]": "<targetId>" }` and re-check; if it still isn't set, log it in `build_notes`.
+
+**Sponsors sub-site block — do not build.** If a root-level item titled `Sponsors` or `Sponsors List` carries `alias` children (a school / sub-site Sponsors block), skip the whole block and append one `build_notes` entry: `"Sponsors sub-site block needed: '<title>' + alias children — build in-session per kb/business-directory"`. The menu-build agent finishes it.
 
 ---
 

@@ -1,0 +1,710 @@
+{
+  "site": "https://shannons-playground.forge.solutiosoftware.com/",
+  "source": "Copy of Copy of SFDP-Geneva.pdf",
+  "generated": "2026-09-03",
+  "menus": {
+    "mainmenu": [
+      {
+        "title": "School",
+        "type": "single_article",
+        "category": "School Page Content",
+        "content_source": "existing",
+        "notes": "School landing / home menu item (JM 2026-09-03: titled 'School', not 'Home'). Document does not specify content sourcing."
+      },
+      {
+        "title": "About SFDS",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "Welcome from the Principal",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content (client to provide)."
+          },
+          {
+            "title": "Welcome from Father",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Solutio will generate content."
+          },
+          {
+            "title": "Our Mission & History",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "pull",
+            "notes": "Send us the history; pull mission statement from https://sfdslg.org/school"
+          },
+          {
+            "title": "Faculty & Staff",
+            "type": "category_grid",
+            "category": "School Staff Items",
+            "content_source": "pull",
+            "notes": "Grid: image, name, position, email. Pull current pictures from https://sfdslg.org/school/faculty-staff/. Send list of current staff. School-namespaced grid category per JM 2026-09-03."
+          },
+          {
+            "title": "Contact Us",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "pull",
+            "notes": "Pull from website."
+          },
+          {
+            "title": "Our Patron Saint",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Generate the content."
+          },
+          {
+            "title": "Accreditation",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content."
+          },
+          {
+            "title": "Fast Facts",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content/flyer; client to send examples."
+          }
+        ]
+      },
+      {
+        "title": "Academics",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "Why SFDS?",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Generate content."
+          },
+          {
+            "title": "Spiritual Life at SFDS",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Generate content using school building notes. Title corrected from PDF typo 'SFDA' to 'SFDS'."
+          },
+          {
+            "title": "Curriculum",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Intended as an external link to the diocese's curriculum information — exact URL not yet provided. Built as a placeholder page (JM 2026-09-03); convert to External URL when the diocese URL is supplied."
+          },
+          {
+            "title": "Preschool",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "3yr & 4yr programs. Send content."
+          },
+          {
+            "title": "Before & After Care",
+            "type": "alias",
+            "target": "Before & After Care",
+            "content_source": "existing",
+            "notes": "Resolved (JM 2026-09-03): aliases to Parents > 'Before & After Care'. Target menu item is created later in the same build, so Phase 4 logs this to build_notes; wired in a manual link pass afterward."
+          },
+          {
+            "title": "STREAM",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content."
+          },
+          {
+            "title": "Bilingual Assistance",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Generate content."
+          },
+          {
+            "title": "Wisconsin Parental Choice Program",
+            "type": "alias",
+            "target": "Wisconsin Parental Choice Program",
+            "content_source": "existing",
+            "notes": "Resolved (JM 2026-09-03): aliases to Admissions > 'Wisconsin Parental Choice Program'. Target menu item is created later in the same build, so Phase 4 logs this to build_notes; wired in a manual link pass afterward."
+          },
+          {
+            "title": "Special Needs Scholarship Program",
+            "type": "alias",
+            "target": "Special Needs Scholarship Program",
+            "content_source": "existing",
+            "notes": "Resolved (JM 2026-09-03): aliases to Admissions > 'Special Needs Scholarship Program'. Target menu item is created later in the same build, so Phase 4 logs this to build_notes; wired in a manual link pass afterward."
+          },
+          {
+            "title": "Student Support",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Generate content: Para Professional, Nurse."
+          },
+          {
+            "title": "Technology",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "PDF said 'redirect to Parent' but no matching Parents page exists. Built as a placeholder page (JM 2026-09-03); confirm the intended target."
+          }
+        ]
+      },
+      {
+        "title": "Admissions",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "Schedule a Tour or Shadow Visit",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "pull",
+            "notes": "Pull from https://stfrancis-geneva.solutiosoftware.com/schedule-a-tour"
+          },
+          {
+            "title": "New Student Enrollment",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "pull",
+            "notes": "Pull from website."
+          },
+          {
+            "title": "Tuition & Financial Aid",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "pull",
+            "notes": "Pull from https://stfrancis-geneva.solutiosoftware.com/apply & https://sfdslg.org/school"
+          },
+          {
+            "title": "Refer a Family",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content."
+          },
+          {
+            "title": "Wisconsin Parental Choice Program",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "pull",
+            "notes": "Pull from https://stjames-eagle.solutiosoftware.com/school-affordability/291-school-choice"
+          },
+          {
+            "title": "Special Needs Scholarship Program",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content."
+          }
+        ]
+      },
+      {
+        "title": "Parents",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "Parents/Student Handbook",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content."
+          },
+          {
+            "title": "Important Documents & Forms",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Was docman in the PDF. Built as a single_article placeholder for now (JM 2026-09-03); convert to a DOCman category later."
+          },
+          {
+            "title": "TADS",
+            "type": "external_url",
+            "target": "https://www.mytads.com/",
+            "content_source": "redirect"
+          },
+          {
+            "title": "Calendar",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send yearly calendar and Public Google Calendar URL."
+          },
+          {
+            "title": "Before & After Care",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send document or flyer. Target of Academics > 'Before & After Care' alias."
+          },
+          {
+            "title": "Option C Portal",
+            "type": "external_url",
+            "target": "https://signin.optionc.com/",
+            "content_source": "redirect"
+          },
+          {
+            "title": "Lunch Menus",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send pdf. Kept as a single_article page with an attached PDF rather than a docman category (JM 2026-09-03)."
+          },
+          {
+            "title": "Uniform Policy",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "pull",
+            "notes": "Pull from handbook."
+          },
+          {
+            "title": "Spirit Wear",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content."
+          },
+          {
+            "title": "Transportation",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content."
+          },
+          {
+            "title": "Newsletters",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "pull",
+            "notes": "Was docman in the PDF. Built as a single_article placeholder for now (JM 2026-09-03); convert to a DOCman document list later."
+          },
+          {
+            "title": "Volunteers",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "pull",
+            "notes": "Pull from https://sfdslg.org/school/parent-volunteers/"
+          },
+          {
+            "title": "School Advisory Committee",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "pull",
+            "notes": "Pull from https://sfdslg.org/school/school-advisory-commission-sac/ and include minutes."
+          },
+          {
+            "title": "Home and School",
+            "type": "heading",
+            "content_source": "none",
+            "notes": "Pull overview from https://sfdslg.org/school/home-school-association/",
+            "children": [
+              {
+                "title": "Upcoming events",
+                "type": "single_article",
+                "category": "School Page Content",
+                "content_source": "pull",
+                "notes": "Pull from https://sfdslg.org/school/home-school-association/"
+              },
+              {
+                "title": "Minutes",
+                "type": "single_article",
+                "category": "School Page Content",
+                "content_source": "pull",
+                "notes": "Pull from https://sfdslg.org/school/home-school-association/"
+              }
+            ]
+          },
+          {
+            "title": "Safe Environment",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Intended as an external link to the diocese's safe-environment page — exact URL not yet provided. Built as a placeholder page (JM 2026-09-03); convert to External URL when the URL is supplied."
+          },
+          {
+            "title": "Angel Fund",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content."
+          }
+        ]
+      },
+      {
+        "title": "Student Life",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "Field trips",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content."
+          },
+          {
+            "title": "Eighth Grade Trip",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content."
+          },
+          {
+            "title": "Visual Arts",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Generate content; parents run and teach various items."
+          },
+          {
+            "title": "Community Service",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content."
+          },
+          {
+            "title": "Athletics",
+            "type": "heading",
+            "content_source": "none",
+            "notes": "Resolved (JM 2026-09-03): Athletics is a grid page. Built with the grid-landing + real-sub-page edge-case pattern — heading type with a matching grids entry (menu_ref 'Athletics'). The three teams are grid members, not menu items. 'Athletic forms' stays a sub-page nested under Athletics.",
+            "children": [
+              {
+                "title": "Athletic forms",
+                "type": "single_article",
+                "category": "School Page Content",
+                "content_source": "pull",
+                "notes": "Was docman in the PDF. Built as a single_article placeholder for now (JM 2026-09-03); convert to a DOCman list later."
+              }
+            ]
+          },
+          {
+            "title": "Clubs",
+            "type": "category_grid",
+            "category": "Clubs Items",
+            "content_source": "generate",
+            "notes": "Generate info if content cannot be pulled from https://sfdslg.org/school/academics/. Classified as category_grid per clubs pattern."
+          }
+        ]
+      },
+      {
+        "title": "Support SFDS",
+        "type": "heading",
+        "content_source": "none",
+        "children": [
+          {
+            "title": "Angel fund",
+            "type": "single_article",
+            "category": "School Page Content",
+            "content_source": "generate",
+            "notes": "Send content. Same concept as Parents > 'Angel Fund'; shares the computed alias, so Phase 4 gives this one a site-specific alias suffix."
+          },
+          {
+            "title": "Give online",
+            "type": "external_url",
+            "target": "https://secure.myvanco.com/L-ZDEW/campaign/C-1179Y",
+            "content_source": "redirect"
+          }
+        ]
+      },
+      {
+        "title": "Sponsors List",
+        "type": "heading",
+        "content_source": "none",
+        "notes": "School / sub-site Sponsors convention (JM 2026-09-03). A 'Sponsors List' heading holds two alias children that point to the MAIN-site sponsor menu items. The main-site aliases /sponsors-list/sponsors-list and /sponsors-list/sponsor-this-site must never change (kb/business-directory). Root-level alias 'sponsors-list' is already used by the main menu, so this school heading takes alias 'sponsors'; the child aliases keep the canonical last segments.",
+        "children": [
+          {
+            "title": "View Directory",
+            "type": "alias",
+            "target": "View Directory",
+            "content_source": "existing",
+            "notes": "Alias -> main-menu 'View Directory' (site menu item 130 -> article 25 business directory). Alias segment 'sponsors-list'."
+          },
+          {
+            "title": "Sponsor This Site!",
+            "type": "alias",
+            "target": "Sponsor This Site!",
+            "content_source": "existing",
+            "notes": "Alias -> main-menu 'Sponsor This Site!' (site menu item 131 -> article 53). Alias segment 'sponsor-this-site'."
+          }
+        ]
+      }
+    ],
+    "hiddenmenu": [
+      {
+        "title": "Apply Now",
+        "type": "single_article",
+        "category": "School Page Content",
+        "content_source": "generate",
+        "notes": "TOP RIGHT quicklink target. No obvious existing subpage, so built as a hidden-menu placeholder page per JM instruction 2026-09-03."
+      },
+      {
+        "title": "Parish",
+        "type": "single_article",
+        "category": "School Page Content",
+        "content_source": "generate",
+        "notes": "TOP RIGHT quicklink target. No obvious existing subpage, so built as a hidden-menu placeholder page per JM instruction 2026-09-03."
+      }
+    ]
+  },
+  "modules": {
+    "toplinks": {
+      "items": [
+        {
+          "label": "Apply Now",
+          "type": "single_article",
+          "menu_item": "Apply Now"
+        },
+        {
+          "label": "Parish",
+          "type": "single_article",
+          "menu_item": "Parish"
+        },
+        {
+          "label": "Schedule a Tour",
+          "type": "single_article",
+          "menu_item": "Schedule a Tour or Shadow Visit"
+        },
+        {
+          "label": "Option C Portal",
+          "type": "external_url",
+          "menu_item": "Option C Portal"
+        },
+        {
+          "label": "Lunch Menus",
+          "type": "single_article",
+          "menu_item": "Lunch Menus"
+        },
+        {
+          "label": "Weekly Newsletter",
+          "type": "single_article",
+          "menu_item": "Newsletters"
+        },
+        {
+          "label": "School Calendar",
+          "type": "single_article",
+          "menu_item": "Calendar"
+        }
+      ]
+    }
+  },
+  "grids": [
+    {
+      "page": "Faculty & Staff",
+      "menu_ref": "Faculty & Staff",
+      "type": "category_grid",
+      "category": "School Staff Items",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "notes": "Rendered by a Gantry 5 Particle module at content-bottom-a, category 'School Staff Items', assigned to the Faculty & Staff landing menu item. No module class suffix / no CSS."
+    },
+    {
+      "page": "Athletics",
+      "menu_ref": "Athletics",
+      "type": "category_grid",
+      "category": "Athletics Items",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "members": [
+        "Girls Volleyball",
+        "Boys Basketball",
+        "Girls Basketball"
+      ],
+      "notes": "Grid-landing + real-sub-page edge case. Rendered by a Gantry 5 Particle module at content-bottom-a, category 'Athletics Items', assigned to the Athletics landing menu item. No module class suffix / no CSS."
+    },
+    {
+      "page": "Clubs",
+      "menu_ref": "Clubs",
+      "type": "category_grid",
+      "category": "Clubs Items",
+      "particle": "joomla_articles",
+      "member_menu_items": "none",
+      "members": [
+        "Art Club",
+        "Choir of Angels",
+        "Mary's FIAT",
+        "School Musical",
+        "Ski Program",
+        "Spelling Bee",
+        "Spanish Club",
+        "Battle of the Books"
+      ],
+      "notes": "Rendered by a Gantry 5 Particle module at content-bottom-a, category 'Clubs Items', assigned to the Clubs landing menu item. No module class suffix / no CSS. 'Battle of the Books' is 'Keep hidden for now' — unpublish that article after the build."
+    }
+  ],
+  "open_questions": [
+    "Curriculum / Safe Environment / Technology: URLs pending — built as placeholder pages.",
+    "Apply Now / Parish hidden-menu placeholder pages need real content or an external target.",
+    "Battle of the Books built unpublished in the Clubs grid per 'keep hidden for now'.",
+    "Academics aliases wired in a manual link pass after Phase 4.",
+    "Important Documents & Forms, Newsletters, Athletic forms are single_article placeholders — convert to DOCman later.",
+    "School Sponsors URLs resolve at /sponsors/sponsors-list and /sponsors/sponsor-this-site (root alias 'sponsors-list' is reserved by the main menu). The main-site sponsor pages keep the canonical /sponsors-list/* URLs and were not touched."
+  ],
+  "assumptions": [
+    "Menus: fresh 'SFDS School Menu' (sfds-school-menu) and 'SFDS School Hidden Menu' (sfds-school-hidden); no existing menu touched.",
+    "No Gantry outline changes; grids rendered by Gantry 5 Particle modules created after Phase 4, no class suffix, no CSS.",
+    "Home menu item titled 'School'.",
+    "Faculty & Staff grid category is 'School Staff Items', not the existing 'Staff Items' (id 30).",
+    "Athletics built with the grid-landing + real-sub-page edge-case pattern.",
+    "Docman items converted to single_article placeholders for now.",
+    "Curriculum, Safe Environment, Technology built as placeholder pages.",
+    "Apply Now and Parish are hidden-menu single_article placeholders.",
+    "Sponsors: school sub-site convention — a 'Sponsors List' heading with two alias children pointing to the main-menu sponsor items 130 (View Directory) and 131 (Sponsor This Site!). Heading alias 'sponsors' (root-level 'sponsors-list' is taken by the main menu); child aliases keep the canonical last segments 'sponsors-list' and 'sponsor-this-site'.",
+    "Default category 'School Page Content' for all single_article items and grid landings.",
+    "Typo 'SFDA' corrected to 'SFDS'."
+  ],
+  "joomla_ids": {
+    "menu_map": {
+      "mainmenu": "sfds-school-menu",
+      "hiddenmenu": "sfds-school-hidden"
+    },
+    "categories": {
+      "School Page Content": "50",
+      "School Staff Items": "51",
+      "Athletics Items": "52",
+      "Clubs Items": "53"
+    },
+    "articles": {
+      "School": "154",
+      "Welcome from the Principal": "155",
+      "Welcome from Father": "156",
+      "Our Mission & History": "157",
+      "Faculty & Staff (landing)": "158",
+      "Contact Us": "159",
+      "Our Patron Saint": "160",
+      "Accreditation": "161",
+      "Fast Facts": "162",
+      "Why SFDS?": "163",
+      "Spiritual Life at SFDS": "164",
+      "Curriculum": "165",
+      "Preschool": "166",
+      "STREAM": "167",
+      "Bilingual Assistance": "168",
+      "Student Support": "169",
+      "Technology": "170",
+      "Schedule a Tour or Shadow Visit": "171",
+      "New Student Enrollment": "172",
+      "Tuition & Financial Aid": "173",
+      "Refer a Family": "174",
+      "Wisconsin Parental Choice Program": "175",
+      "Special Needs Scholarship Program": "176",
+      "Parents/Student Handbook": "177",
+      "Important Documents & Forms": "178",
+      "Calendar": "179",
+      "Before & After Care": "180",
+      "Lunch Menus": "181",
+      "Uniform Policy": "182",
+      "Spirit Wear": "183",
+      "Transportation": "184",
+      "Newsletters": "185",
+      "Volunteers": "186",
+      "School Advisory Committee": "187",
+      "Upcoming events": "188",
+      "Minutes": "189",
+      "Safe Environment": "190",
+      "Angel Fund": "191",
+      "Field trips": "192",
+      "Eighth Grade Trip": "193",
+      "Visual Arts": "194",
+      "Community Service": "195",
+      "Athletics (landing)": "196",
+      "Athletic forms": "197",
+      "Clubs (landing)": "198",
+      "Angel fund": "199",
+      "Apply Now": "200",
+      "Parish": "201",
+      "Girls Volleyball": "202",
+      "Boys Basketball": "203",
+      "Girls Basketball": "204",
+      "Art Club": "205",
+      "Choir of Angels": "206",
+      "Mary's FIAT": "207",
+      "School Musical": "208",
+      "Ski Program": "209",
+      "Spelling Bee": "210",
+      "Spanish Club": "211",
+      "Battle of the Books": "212"
+    },
+    "menu_items": {
+      "School": "173",
+      "About SFDS": "174",
+      "Welcome from the Principal": "175",
+      "Welcome from Father": "176",
+      "Our Mission & History": "177",
+      "Faculty & Staff": "178",
+      "Contact Us": "179",
+      "Our Patron Saint": "180",
+      "Accreditation": "181",
+      "Fast Facts": "182",
+      "Academics": "183",
+      "Why SFDS?": "184",
+      "Spiritual Life at SFDS": "185",
+      "Curriculum": "186",
+      "Preschool": "187",
+      "STREAM": "188",
+      "Bilingual Assistance": "189",
+      "Student Support": "190",
+      "Technology": "191",
+      "Admissions": "192",
+      "Schedule a Tour or Shadow Visit": "193",
+      "New Student Enrollment": "194",
+      "Tuition & Financial Aid": "195",
+      "Refer a Family": "196",
+      "Wisconsin Parental Choice Program": "197",
+      "Special Needs Scholarship Program": "198",
+      "Parents": "199",
+      "Parents/Student Handbook": "200",
+      "Important Documents & Forms": "201",
+      "TADS": "202",
+      "Calendar": "203",
+      "Before & After Care": "204",
+      "Option C Portal": "205",
+      "Lunch Menus": "206",
+      "Uniform Policy": "207",
+      "Spirit Wear": "208",
+      "Transportation": "209",
+      "Newsletters": "210",
+      "Volunteers": "211",
+      "School Advisory Committee": "212",
+      "Home and School": "213",
+      "Upcoming events": "214",
+      "Minutes": "215",
+      "Safe Environment": "216",
+      "Angel Fund": "217",
+      "Student Life": "218",
+      "Field trips": "219",
+      "Eighth Grade Trip": "220",
+      "Visual Arts": "221",
+      "Community Service": "222",
+      "Athletics": "223",
+      "Athletic forms": "224",
+      "Clubs": "225",
+      "Support SFDS": "226",
+      "Angel fund": "227",
+      "Give online": "228",
+      "Sponsors List": "229",
+      "View Directory (Sponsors alias)": "235",
+      "Sponsor This Site! (Sponsors alias)": "236",
+      "Apply Now (hidden)": "230",
+      "Parish (hidden)": "231",
+      "Before & After Care (Academics alias)": "232",
+      "Wisconsin Parental Choice Program (Academics alias)": "233",
+      "Special Needs Scholarship Program (Academics alias)": "234"
+    },
+    "grid_modules": {
+      "Faculty & Staff Grid": "149",
+      "Athletics Grid": "150",
+      "Clubs Grid": "151"
+    },
+    "notes": "Post-build (JM 2026-09-03): 3 Academics aliases created + wired manually (232->204, 233->197, 234->198); ordering set within Academics. 3 grid particle modules created at content-bottom-a, menu-assigned, no class suffix. Battle of the Books article 212 left unpublished. Sponsors reworked 2026-09-03 to the school sub-site convention: heading 'Sponsors List' (229, alias 'sponsors') + two alias children — 'View Directory' (235 -> site menu item 130) and 'Sponsor This Site!' (236 -> site menu item 131). fieldOverrides jform[params][aliasoptions] was required to set each alias target; the plain params arg is silently dropped on create."
+  }
+}

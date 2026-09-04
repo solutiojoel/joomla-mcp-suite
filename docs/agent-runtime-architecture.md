@@ -77,7 +77,7 @@ The MCP suite already has the *hands* (Joomla/Gantry/Freshdesk/FTP tool servers)
 | `menu-build` | ✔ | (session's) | Menu build Phases 1–4 |
 | `content-build` | ✔ | (session's) | Content build Phase 5 |
 | `menu-interpreter` | hidden | Sonnet | PDF → Menu Spec (runs inside agents-mcp) |
-| `menu-builder` | hidden | Haiku | Spec → Joomla skeleton (runs inside agents-mcp) |
+| `menu-builder` | hidden | Sonnet | Spec → Joomla skeleton (runs inside agents-mcp) |
 | `content-interpreter` | hidden | Sonnet | PDF → schematic content fields (runs inside agents-mcp) |
 | `content-writer` | hidden | Sonnet | Schematic → article HTML, batched (runs inside agents-mcp) |
 
@@ -90,7 +90,7 @@ Nine tools; four run an LLM, five are deterministic:
 | Tool | LLM | What it does |
 |---|---|---|
 | `run_menu_interpretation` | Sonnet | Menu PDF/text → validated Menu Spec JSON |
-| `run_menu_build` | Haiku | Approved spec → Joomla categories/articles/menu items |
+| `run_menu_build` | Sonnet | Approved spec → Joomla categories/articles/menu items |
 | `run_content_interpretation` | Sonnet | Same PDF → fills schematic content fields (structure locked) |
 | `run_content_build` | Sonnet | Writes final article HTML per ~8-entry batch, auto-applies |
 | `derive_content_schematic` | — | Spec → schematic scaffold; THE sync mechanism after spec edits |
