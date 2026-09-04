@@ -6262,13 +6262,20 @@ export class JoomlaClient {
 
     // item.setType round-trips the form so the server returns hidden fields — component_id
     // above all — matching the chosen type. That only tells us something for component
-    // types. A system link type (url, separator, alias, heading) has an empty request and
+    // types. Most system link types (url, separator, heading) have an empty request and
     // no component, so the typed form comes back with the same hidden fields we already
     // hold, and the round trip costs two requests and ~70KB for nothing.
+    //
+    // Exception: `alias` is a system link type but carries a params field — aliasoptions,
+    // the target menu item id. Joomla only registers that field on the form after
+    // item.setType, so without the round trip it filters jform[params][aliasoptions] out
+    // on save and the alias points nowhere. The browser always does this round trip
+    // before the alias field is even visible; mirror it here.
     const isSystemLinkType = Object.keys(type.request).length === 0;
+    const needsTypedForm = !isSystemLinkType || type.title === "alias";
     let typedHtml = html;
     let typedToken = token;
-    if (!isSystemLinkType) {
+    if (needsTypedForm) {
       const setTypeFormData: FormDataMap = {
         ...this.extractFormFields(html),
         task: "item.setType",
@@ -6293,6 +6300,13 @@ export class JoomlaClient {
     // base64 encoded JSON payload. Sending the encoded payload for system link types
     // causes Joomla to save the item with "Unknown" type.
     const jformType = Object.keys(type.request).length === 0 ? type.title : type.encoded;
+    // For an alias item the target id lives in params.aliasoptions (accept it from either
+    // params or a raw fieldOverride). Joomla also wants jform[link] to reflect the target
+    // as index.php?Itemid=<id>, same as the update path does.
+    const aliasTarget = type.title === "alias"
+      ? (data.params?.aliasoptions ?? data.fieldOverrides?.["jform[params][aliasoptions]"])
+      : undefined;
+    const aliasLink = aliasTarget ? `index.php?Itemid=${aliasTarget}` : undefined;
     const formData: FormDataMap = {
       ...this.extractFormFields(html),
       ...this.extractFormFields(typedHtml),
@@ -6302,7 +6316,7 @@ export class JoomlaClient {
       "jform[alias]": data.alias || "",
       "jform[menutype]": data.menuType,
       "jform[type]": jformType,
-      "jform[link]": data.link || this.buildLinkFromRequest(request),
+      "jform[link]": data.link || aliasLink || this.buildLinkFromRequest(request),
       "jform[parent_id]": data.parentId || "1",
       "jform[published]": data.published ?? "1",
       "jform[access]": data.access || "1",
@@ -6390,6 +6404,21 @@ export class JoomlaClient {
       }
       if (!verify) verify = await this.fetchMenuItemForm(savedId);
       if (verify.success) await this.quickCheckIn(savedId, verify.token ?? null);
+    }
+    // Alias target backstop: if the caller asked for an aliasoptions target and the
+    // freshly-saved item still doesn't carry it (some Joomla builds drop it on the
+    // create POST even with the typed-form round trip), set it through the update path,
+    // which submits jform[params][aliasoptions] on an already-typed form and persists it.
+    if (savedId && aliasTarget) {
+      const savedTarget = ((verify?.data as Record<string, unknown> | undefined)?.params as Record<string, string> | undefined)?.aliasoptions;
+      if (String(savedTarget || "") !== String(aliasTarget)) {
+        await this.updateMenuItem(savedId, {
+          menuType: data.menuType,
+          fieldOverrides: { "jform[params][aliasoptions]": String(aliasTarget) },
+        });
+        verify = await this.fetchMenuItemForm(savedId);
+        if (verify?.success) await this.quickCheckIn(savedId, verify.token ?? null);
+      }
     }
     if (JoomlaClient.TIMING) console.error(`[joomla-mcp][timing] verify readback ${Date.now() - tVerify}ms`);
     const item = ((verify?.data || {}) as Record<string, unknown>);
